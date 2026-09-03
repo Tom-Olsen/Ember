@@ -15,6 +15,7 @@ namespace vulkanRendererBackend
 		// Constructor/Destructor:
 		ForwardPipeline(
 			VkPipelineLayout vkPipelineLayout,
+			VkRenderPass vkRenderPass,
 			emberCommon::ForwardRenderMode renderMode,
 			const std::vector<char>& vertexCode,
 			const std::vector<char>& fragmentCode,
@@ -26,6 +27,7 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		void CreatePipeline(
 			VkPipelineLayout vkPipelineLayout,
+			VkRenderPass vkRenderPass,
 			emberCommon::ForwardRenderMode renderMode,
 			const VkShaderModule& vertexShaderModule,
 			const VkShaderModule& fragmentShaderModule,

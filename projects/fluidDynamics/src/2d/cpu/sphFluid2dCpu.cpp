@@ -370,10 +370,8 @@ namespace fluidDynamics
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-		DebugRenderer::SetColor(Float4::white);
-		DebugRenderer::SetReceiveShadows(false);
-		DebugRenderer::SetCastShadows(false);
-		DebugRenderer::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f);
+		Gizmo::SetDefaultState();
+		Gizmo::DrawBounds(localToWorld, m_settings.fluidBounds, 0.01f);
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float4x4 localToWorldMatrix = localToWorld * Float4x4::Translate(Float3(m_data.positions[i], 0.0f));

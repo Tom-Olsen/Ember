@@ -3,13 +3,16 @@
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDeferredGeometryPipeline.h"
 #include "vulkanDeferredLightingPipeline.h"
+#include "vulkanForwardOpaqueRenderPass.h"
 #include "vulkanForwardPipeline.h"
+#include "vulkanForwardTransparentRenderPass.h"
 #include "vulkanGizmoPipeline.h"
 #include "vulkanMacros.h"
 #include "vulkanMesh.h"
 #include "vulkanOutlinePipeline.h"
 #include "vulkanPipeline.h"
 #include "vulkanPresentPipeline.h"
+#include "vulkanRenderPassManager.h"
 #include "vulkanShadowPipeline.h"
 #include "vulkanVertexLayout.h"
 #include <array>
@@ -320,11 +323,18 @@ namespace vulkanRendererBackend
 			{
 				emberCommon::ForwardRenderMode pipelineRenderMode = static_cast<emberCommon::ForwardRenderMode>(i);
 				emberCommon::VertexMemoryLayout vertexMemoryLayout = static_cast<emberCommon::VertexMemoryLayout>(j);
-				PipelineKey forwardPipelineKey = PipelineKey::Create<RenderStage::forward>(pipelineRenderMode, vertexMemoryLayout);
+				PipelineKey forwardPipelineKey = PipelineKey::Create<RenderStage::forwardOpaque>(pipelineRenderMode, vertexMemoryLayout);
+				VkRenderPass vkRenderPass = RenderPassManager::GetForwardOpaqueRenderPass()->GetVkRenderPass();
+				if (pipelineRenderMode == emberCommon::ForwardRenderMode::transparent)
+				{
+					VkRenderPass vkRenderPass = RenderPassManager::GetForwardTransparentRenderPass()->GetVkRenderPass();
+					PipelineKey forwardPipelineKey = PipelineKey::Create<RenderStage::forwardTransparent>(pipelineRenderMode, vertexMemoryLayout);
+				}
 				materialShader.m_pipelines.emplace(
 					forwardPipelineKey,
 					std::make_unique<ForwardPipeline>(
 						materialShader.m_vkPipelineLayout,
+						vkRenderPass,
 						pipelineRenderMode,
 						vertexCode,
 						fragmentCode,

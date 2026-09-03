@@ -48,6 +48,7 @@ namespace emberCore
 		static void DrawRotatedBounds(const Float4x4& localToWorldMatrix, const RotatedBounds& bounds, float width = 0.1f);
 
 		// Setters:
+		static void SetDefaultState();
 		static void SetIsOpaque(bool isOpaque);
 		static void SetIsTransparent(bool isTransparent);
 		static void SetIsLit(bool isLit);

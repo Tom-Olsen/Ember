@@ -109,12 +109,12 @@ namespace vulkanRendererBackend
 		requires HasRenderPipelineAndMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh) const
 		{
-			if constexpr (stage == RenderStage::forward)
+			if constexpr (stage == RenderStage::forwardOpaque || stage == RenderStage::forwardTransparent)
 				return GetMaterialShader()->GetPipeline<stage>(pMesh, GetForwardRenderMode());
 			else if constexpr (stage == RenderStage::gizmo)
 				return GetMaterialShader()->GetPipeline<stage>(pMesh, GetGizmoRenderMode());
 			else
-				static_assert(stage == RenderStage::forward || stage == RenderStage::gizmo, "Material::GetPipeline(...) must be updated for this render stage.");
+				static_assert(stage == RenderStage::forwardOpaque || stage == RenderStage::forwardTransparent || stage == RenderStage::gizmo, "Material::GetPipeline(...) must be updated for this render stage.");
 		}
 		template<RenderStage stage>
 		requires HasMeshRenderPipelineAndNotMode<stage>

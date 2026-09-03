@@ -11,7 +11,8 @@ namespace vulkanRendererBackend
     class DeferredLightingRenderPass;
     class DepthTexture2d;
     class ShadowRenderPass;
-    class ForwardRenderPass;
+    class ForwardOpaqueRenderPass;
+    class ForwardTransparentRenderPass;
     class GizmoRenderPass;
     class OutlineRenderPass;
     class PresentRenderPass;
@@ -31,7 +32,8 @@ namespace vulkanRendererBackend
         static std::unique_ptr<ShadowRenderPass> s_pShadowRenderPass;
         static std::unique_ptr<DeferredGeometryRenderPass> s_pDeferredGeometryRenderPass;
         static std::unique_ptr<DeferredLightingRenderPass> s_pDeferredLightingRenderPass;
-        static std::unique_ptr<ForwardRenderPass> s_pForwardRenderPass;
+        static std::unique_ptr<ForwardOpaqueRenderPass> s_pForwardOpaqueRenderPass;
+        static std::unique_ptr<ForwardTransparentRenderPass> s_pForwardTransparentRenderPass;
         static std::unique_ptr<PresentRenderPass> s_pPresentRenderPass;
 
     public: // Methods
@@ -42,7 +44,6 @@ namespace vulkanRendererBackend
             uint32_t shadowMapResolution,
             uint32_t maxLightsCount,
             const std::vector<std::unique_ptr<RenderTexture2d>>& pSceneColorTextures,
-            const std::vector<std::unique_ptr<RenderTexture2d>>& pSecondarySceneColorTextures,
             const std::vector<std::unique_ptr<DepthTexture2d>>& pSceneDepthTextures);
         static void Clear();
         static void RecreateRenderPasses();
@@ -53,7 +54,8 @@ namespace vulkanRendererBackend
         static ShadowRenderPass* GetShadowRenderPass();
         static DeferredGeometryRenderPass* GetDeferredGeometryRenderPass();
         static DeferredLightingRenderPass* GetDeferredLightingRenderPass();
-        static ForwardRenderPass* GetForwardRenderPass();
+        static ForwardOpaqueRenderPass* GetForwardOpaqueRenderPass();
+        static ForwardTransparentRenderPass* GetForwardTransparentRenderPass();
         static PresentRenderPass* GetPresentRenderPass();
 
     private: // Methods

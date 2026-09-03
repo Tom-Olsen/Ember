@@ -63,6 +63,15 @@ Scene* Fluid3dScene()
 	Scene* pScene = new Scene();
 	pScene->SetIsEnabled(true);
 
+	// Materials:
+	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
+	DeferredMaterial floorMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
+	floorMaterial.SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
+	floorMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
+	floorMaterial.SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
+	floorMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
+	floorMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+
 	{// Camera:
 		Entity entity = Entity::Create("mainCamera");
 		Float3 pos = Float3(25.0f, -25.0f, 10.0f);
@@ -88,12 +97,7 @@ Scene* Fluid3dScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
-		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties().SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
-		pMeshRenderer->GetShaderProperties().SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
-		pMeshRenderer->GetShaderProperties().SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+		pMeshRenderer->SetMaterial(floorMaterial);
 	}
 	{// Directional Light:
 		Entity entity = Entity::Create("directionalLight");

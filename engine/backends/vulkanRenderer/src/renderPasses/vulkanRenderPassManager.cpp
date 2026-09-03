@@ -2,7 +2,8 @@
 #include "vulkanContext.h"
 #include "vulkanDeferredGeometryRenderPass.h"
 #include "vulkanDeferredLightingRenderPass.h"
-#include "vulkanForwardRenderPass.h"
+#include "vulkanForwardOpaqueRenderPass.h"
+#include "vulkanForwardTransparentRenderPass.h"
 #include "vulkanGizmoRenderPass.h"
 #include "vulkanOutlineRenderPass.h"
 #include "vulkanPresentRenderPass.h"
@@ -20,7 +21,8 @@ namespace vulkanRendererBackend
 	std::unique_ptr<ShadowRenderPass> RenderPassManager::s_pShadowRenderPass = nullptr;
 	std::unique_ptr<DeferredGeometryRenderPass> RenderPassManager::s_pDeferredGeometryRenderPass = nullptr;
 	std::unique_ptr<DeferredLightingRenderPass> RenderPassManager::s_pDeferredLightingRenderPass = nullptr;
-	std::unique_ptr<ForwardRenderPass> RenderPassManager::s_pForwardRenderPass = nullptr;
+	std::unique_ptr<ForwardOpaqueRenderPass> RenderPassManager::s_pForwardOpaqueRenderPass = nullptr;
+	std::unique_ptr<ForwardTransparentRenderPass> RenderPassManager::s_pForwardTransparentRenderPass = nullptr;
 	std::unique_ptr<PresentRenderPass> RenderPassManager::s_pPresentRenderPass = nullptr;
 
     
@@ -33,7 +35,6 @@ namespace vulkanRendererBackend
 		uint32_t shadowMapResolution,
 		uint32_t maxLightsCount,
 		const std::vector<std::unique_ptr<RenderTexture2d>>& pSceneColorTextures,
-		const std::vector<std::unique_ptr<RenderTexture2d>>& pSecondarySceneColorTextures,
 		const std::vector<std::unique_ptr<DepthTexture2d>>& pSceneDepthTextures)
 	{
 		if (s_isInitialized)
@@ -45,13 +46,15 @@ namespace vulkanRendererBackend
 		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>(shadowMapResolution, maxLightsCount);
 		s_pDeferredGeometryRenderPass = std::make_unique<DeferredGeometryRenderPass>(renderWidth, renderHeight, pSceneDepthTextures);
 		s_pDeferredLightingRenderPass = std::make_unique<DeferredLightingRenderPass>(pSceneColorTextures, pSceneDepthTextures, *s_pDeferredGeometryRenderPass);
-		s_pForwardRenderPass = std::make_unique<ForwardRenderPass>(pSceneColorTextures, pSecondarySceneColorTextures, pSceneDepthTextures);
+		s_pForwardOpaqueRenderPass = std::make_unique<ForwardOpaqueRenderPass>(pSceneColorTextures, pSceneDepthTextures);
+		s_pForwardTransparentRenderPass = std::make_unique<ForwardTransparentRenderPass>(pSceneColorTextures, pSceneDepthTextures);
 		s_pPresentRenderPass = std::make_unique<PresentRenderPass>();
 	}
 	void RenderPassManager::Clear()
 	{
 		s_pPresentRenderPass.reset();
-		s_pForwardRenderPass.reset();
+		s_pForwardTransparentRenderPass.reset();
+		s_pForwardOpaqueRenderPass.reset();
 		s_pDeferredLightingRenderPass.reset();
 		s_pDeferredGeometryRenderPass.reset();
 		s_pShadowRenderPass.reset();
@@ -89,9 +92,13 @@ namespace vulkanRendererBackend
 	{
 		return s_pDeferredLightingRenderPass.get();
 	}
-	ForwardRenderPass* RenderPassManager::GetForwardRenderPass()
+	ForwardOpaqueRenderPass* RenderPassManager::GetForwardOpaqueRenderPass()
 	{
-		return s_pForwardRenderPass.get();
+		return s_pForwardOpaqueRenderPass.get();
+	}
+	ForwardTransparentRenderPass* RenderPassManager::GetForwardTransparentRenderPass()
+	{
+		return s_pForwardTransparentRenderPass.get();
 	}
 	PresentRenderPass* RenderPassManager::GetPresentRenderPass()
 	{

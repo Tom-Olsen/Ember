@@ -6,10 +6,7 @@
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
-#include "vulkanForwardRenderPass.h"
 #include "vulkanPoolManager.h"
-#include "vulkanRenderPassManager.h"
-#include "vulkanRenderTexture2d.h"
 #include <assert.h>
 #include <utility>
 #include <vulkan/vulkan.h>
@@ -98,10 +95,9 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 
-		// Setup compute call:
-		uint32_t width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetWidth();
-		uint32_t height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(0)->GetHeight();
-		Uint3 threadCount{ width, height, 1 };
+		// The renderer resolves the thread count from the current scene-color extent while preparing the frame.
+		// This keeps queued calls independent of render-pass ownership and automatically follows render-resolution changes.
+		Uint3 threadCount = Uint3::zero;
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
 		DescriptorSetBinding* pDescriptorSetBinding = descriptorSetBindingHandle.Get();

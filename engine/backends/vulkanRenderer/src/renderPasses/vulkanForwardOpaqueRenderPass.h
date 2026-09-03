@@ -15,33 +15,30 @@ namespace vulkanRendererBackend
 
 
 	/// <summary>
-	/// Basic forward render pass.
+	/// Forward render pass for opaque, wireframe, and skybox materials.
 	/// </summary>
-	class ForwardRenderPass : public RenderPass
+	class ForwardOpaqueRenderPass : public RenderPass
 	{
 	private: // Members:
 		std::vector<RenderTexture2d*> m_pRenderTextures;
-		std::vector<RenderTexture2d*> m_pSecondaryRenderTextures;
 		std::vector<DepthTexture2d*> m_pDepthTextures;
 
 	public: // Methods:
-		ForwardRenderPass(
+		ForwardOpaqueRenderPass(
 			const std::vector<std::unique_ptr<RenderTexture2d>>& pRenderTextures,
-			const std::vector<std::unique_ptr<RenderTexture2d>>& pSecondaryRenderTextures,
 			const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures);
-		~ForwardRenderPass();
+		~ForwardOpaqueRenderPass();
 
 		// Non-copyable:
-		ForwardRenderPass(const ForwardRenderPass&) = delete;
-		ForwardRenderPass& operator=(const ForwardRenderPass&) = delete;
+		ForwardOpaqueRenderPass(const ForwardOpaqueRenderPass&) = delete;
+		ForwardOpaqueRenderPass& operator=(const ForwardOpaqueRenderPass&) = delete;
 
 		// Movable:
-		ForwardRenderPass(ForwardRenderPass&& other) noexcept = default;
-		ForwardRenderPass& operator=(ForwardRenderPass&& other) noexcept = default;
+		ForwardOpaqueRenderPass(ForwardOpaqueRenderPass&& other) noexcept = default;
+		ForwardOpaqueRenderPass& operator=(ForwardOpaqueRenderPass&& other) noexcept = default;
 
 		// Getters:
 		RenderTexture2d* GetRenderTexture(uint32_t frameIndex) const;
-		RenderTexture2d* GetSecondaryRenderTexture(uint32_t frameIndex) const;
 		DepthTexture2d* GetDepthTexture(uint32_t frameIndex) const;
 
 	private: // Methods:

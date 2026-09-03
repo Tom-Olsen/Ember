@@ -32,7 +32,8 @@
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanForwardDrawCall.h"
-#include "vulkanForwardRenderPass.h"
+#include "vulkanForwardOpaqueRenderPass.h"
+#include "vulkanForwardTransparentRenderPass.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanGBufferTexture2d.h"
 #include "vulkanGizmoDrawCall.h"
@@ -100,7 +101,7 @@ namespace vulkanRendererBackend
 		DefaultGpuResources::InitSamplers();
 		PoolManager::Init();
 		CreateSceneTextures(createInfo.renderWidth, createInfo.renderHeight);
-		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights, m_pSceneColorTextures, m_pSecondarySceneColorTextures, m_pSceneDepthTextures);
+		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights, m_pSceneColorTextures, m_pSceneDepthTextures);
 		GlobalDescriptorSetLayout::Init();
 		SceneDescriptorSetLayout::Init();
 		FrameDescriptorSetLayout::Init();
@@ -270,8 +271,11 @@ namespace vulkanRendererBackend
 			RecordDeferredLightingCommands();
 			SubmitDeferredLightingCommands();
 
-			RecordForwardCommands();
-			SubmitForwardCommands();
+			RecordForwardCommands<RenderStage::forwardOpaque>();
+			SubmitForwardOpaqueCommands();
+
+			RecordForwardCommands<RenderStage::forwardTransparent>();
+			SubmitForwardTransparentCommands();
 
 			//tf::Taskflow taskflow;
 			//for (int i = 0; i < emberTaskSystem::TaskSystem::GetCoreCount(); i++)
@@ -553,7 +557,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::ITexture* Renderer::GetRenderTexture()
 	{
-		RenderTexture2d* pRenderTexture = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex);
+		RenderTexture2d* pRenderTexture = m_pSceneColorTextures[m_frameIndex].get();
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
@@ -913,7 +917,8 @@ namespace vulkanRendererBackend
 		m_deferredDrawCalls.clear();
 		m_sortedDeferredDrawCallPointers.clear();
 		m_forwardDrawCalls.clear();
-		m_sortedForwardDrawCallPointers.clear();
+		m_sortedForwardOpaqueDrawCallPointers.clear();
+		m_sortedForwardTransparentDrawCallPointers.clear();
 	}
 	void Renderer::ResetCommandPools()
 	{
@@ -923,7 +928,8 @@ namespace vulkanRendererBackend
 		GetCommandPool(m_frameIndex, RenderStage::shadow).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::deferredGeometry).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::deferredLighting).ResetPools();
-		GetCommandPool(m_frameIndex, RenderStage::forward).ResetPools();
+		GetCommandPool(m_frameIndex, RenderStage::forwardOpaque).ResetPools();
+		GetCommandPool(m_frameIndex, RenderStage::forwardTransparent).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::gizmo).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::postRenderCompute).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::present).ResetPools();
@@ -1013,10 +1019,17 @@ namespace vulkanRendererBackend
 		m_sortedDeferredDrawCallPointers.reserve(m_deferredDrawCalls.size());
 		for (DeferredDrawCall& drawCall : m_deferredDrawCalls)
 			m_sortedDeferredDrawCallPointers.push_back(&drawCall);
-		m_sortedForwardDrawCallPointers.clear();
-		m_sortedForwardDrawCallPointers.reserve(m_forwardDrawCalls.size());
+		m_sortedForwardOpaqueDrawCallPointers.clear();
+		m_sortedForwardOpaqueDrawCallPointers.reserve(m_forwardDrawCalls.size());
+		m_sortedForwardTransparentDrawCallPointers.clear();
+		m_sortedForwardTransparentDrawCallPointers.reserve(m_forwardDrawCalls.size());
 		for (ForwardDrawCall& drawCall : m_forwardDrawCalls)
-			m_sortedForwardDrawCallPointers.push_back(&drawCall);
+		{
+			if (drawCall.pMaterial->GetForwardRenderMode() == emberCommon::ForwardRenderMode::transparent)
+				m_sortedForwardTransparentDrawCallPointers.push_back(&drawCall);
+			else
+				m_sortedForwardOpaqueDrawCallPointers.push_back(&drawCall);
+		}
 
 		// Ember::ToDo: frustum culling and sorting by dist to camera is missing.
 		// Sort gizmo calls by renderQueue first, then handle transparent draw order, then group by vertex layout:
@@ -1067,7 +1080,7 @@ namespace vulkanRendererBackend
 
 		// Ember::ToDo: frustum culling and sorting by dist to camera is missing (also for shadow draw calls).
 		// Sort forward calls by renderQueue first, then handle transparent draw order, then group by vertex layout and material:
-		std::sort(m_sortedForwardDrawCallPointers.begin(), m_sortedForwardDrawCallPointers.end(), [this](ForwardDrawCall* drawCallA, ForwardDrawCall* drawCallB)
+		auto compareForwardDrawCalls = [this](ForwardDrawCall* drawCallA, ForwardDrawCall* drawCallB)
 		{
 			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
 			int renderQueueB = static_cast<int>(drawCallB->pMaterial->GetRenderQueue());
@@ -1094,7 +1107,9 @@ namespace vulkanRendererBackend
 			if (drawCallA->pMaterial != drawCallB->pMaterial)
 				return std::less<Material*>()(drawCallA->pMaterial, drawCallB->pMaterial);
 			return std::less<ForwardDrawCall*>()(drawCallA, drawCallB);
-		});
+		};
+		std::sort(m_sortedForwardOpaqueDrawCallPointers.begin(), m_sortedForwardOpaqueDrawCallPointers.end(), compareForwardDrawCalls);
+		std::sort(m_sortedForwardTransparentDrawCallPointers.begin(), m_sortedForwardTransparentDrawCallPointers.end(), compareForwardDrawCalls);
 	}
 	void Renderer::UpdateShaderData()
 	{
@@ -1115,11 +1130,11 @@ namespace vulkanRendererBackend
 			}
 
 		// Gizmo calls:
-		for (GizmoDrawCall* drawCall : m_sortedGizmoDrawCallPointers)
+		for (GizmoDrawCall& drawCall : m_gizmoDrawCalls)
 		{
-			drawCall->UpdateModelData();
-			drawCall->pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall->descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.UpdateModelData();
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 		}
 
 		// Outline calls:
@@ -1140,11 +1155,11 @@ namespace vulkanRendererBackend
 		}
 
 		// Deferred calls:
-		for (DeferredDrawCall* drawCall : m_sortedDeferredDrawCallPointers)
+		for (DeferredDrawCall& drawCall : m_deferredDrawCalls)
 		{
-			drawCall->UpdateModelData();
-			drawCall->pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall->descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.UpdateModelData();
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 		}
 
 		// Deferred lighting:
@@ -1159,22 +1174,23 @@ namespace vulkanRendererBackend
 		}
 
 		// Forward calls:
-		for (ForwardDrawCall* drawCall : m_sortedForwardDrawCallPointers)
+		for (ForwardDrawCall& drawCall : m_forwardDrawCalls)
 		{
-			drawCall->UpdateModelData();
-			drawCall->pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall->descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.UpdateModelData();
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 		}
 
 		// Post render compute:
 		PostRender* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
+		RenderTexture2d* pSceneColorTexture = m_pSceneColorTextures[m_frameIndex].get();
+		Uint3 postRenderThreadCount = { pSceneColorTexture->GetWidth(), pSceneColorTexture->GetHeight(), 1 };
 		if (!m_outlineCalls.empty())
 		{
 			OutlineRenderPass* pOutlineRenderPass = RenderPassManager::GetOutlineRenderPass();
 			ComputeShader* pOutlineComputeShader = DefaultGpuResources::GetOutlineComputeShader();
 			DescriptorSetBinding* pOutlineDescriptorSetBinding = pOutlineComputeShader->GetDescriptorSetBinding();
-			ForwardRenderPass* pForwardRenderPass = RenderPassManager::GetForwardRenderPass();
-			RenderTexture2d* pRenderTexture = pPostRenderCompute->GetPostProcessingCallCount() % 2 == 0 ? pForwardRenderPass->GetRenderTexture(m_frameIndex) : pForwardRenderPass->GetSecondaryRenderTexture(m_frameIndex);
+			RenderTexture2d* pRenderTexture = pPostRenderCompute->GetPostProcessingCallCount() % 2 == 0 ? pSceneColorTexture : m_pSecondarySceneColorTextures[m_frameIndex].get();
 			pOutlineDescriptorSetBinding->SetTexture("renderImage", pRenderTexture);
 			pOutlineDescriptorSetBinding->SetTexture("mask", pOutlineRenderPass->GetRenderTexture(m_frameIndex));
 			pOutlineDescriptorSetBinding->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
@@ -1189,17 +1205,18 @@ namespace vulkanRendererBackend
 		size_t postProcessingCallIndex = 0;
 		for (ComputeCall& computeCall : pPostRenderCompute->GetComputeCalls())
 		{
+			computeCall.threadCount = postRenderThreadCount;
 			if (computeCall.isPostProcessing)
 			{
 				if (postProcessingCallIndex % 2 == 0)
 				{
-					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
-					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
+					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inputImage", pSceneColorTexture);
+					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("outputImage", m_pSecondarySceneColorTextures[m_frameIndex].get());
 				}
 				else
 				{
-					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inputImage", RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex));
-					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("outputImage", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
+					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inputImage", m_pSecondarySceneColorTextures[m_frameIndex].get());
+					computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("outputImage", pSceneColorTexture);
 				}
 				postProcessingCallIndex++;
 			}
@@ -1851,24 +1868,43 @@ namespace vulkanRendererBackend
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
+	template<RenderStage stage>
 	void Renderer::RecordForwardCommands()
 	{
+		static_assert(stage == RenderStage::forwardOpaque || stage == RenderStage::forwardTransparent);
 		PROFILE_FUNCTION();
 
+		RenderPass* pRenderPass;
+		RenderTexture2d* pRenderTexture;
+		const std::vector<ForwardDrawCall*>* pDrawCallPointers;
+		if constexpr (stage == RenderStage::forwardOpaque)
+		{
+			ForwardOpaqueRenderPass* pForwardOpaqueRenderPass = RenderPassManager::GetForwardOpaqueRenderPass();
+			pRenderPass = pForwardOpaqueRenderPass;
+			pRenderTexture = pForwardOpaqueRenderPass->GetRenderTexture(m_frameIndex);
+			pDrawCallPointers = &m_sortedForwardOpaqueDrawCallPointers;
+		}
+		else
+		{
+			ForwardTransparentRenderPass* pForwardTransparentRenderPass = RenderPassManager::GetForwardTransparentRenderPass();
+			pRenderPass = pForwardTransparentRenderPass;
+			pRenderTexture = pForwardTransparentRenderPass->GetRenderTexture(m_frameIndex);
+			pDrawCallPointers = &m_sortedForwardTransparentDrawCallPointers;
+		}
+
 		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, stage);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		ForwardRenderPass* pForwardRenderPass = RenderPassManager::GetForwardRenderPass();
 
 		// Record forward commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = pForwardRenderPass->GetRenderTexture(m_frameIndex)->GetWidth();
-			viewport.height = pForwardRenderPass->GetRenderTexture(m_frameIndex)->GetHeight();
+			viewport.width = pRenderTexture->GetWidth();
+			viewport.height = pRenderTexture->GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -1882,8 +1918,8 @@ namespace vulkanRendererBackend
 			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-			renderPassBeginInfo.renderPass = pForwardRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pForwardRenderPass->GetFramebuffer(m_frameIndex);
+			renderPassBeginInfo.renderPass = pRenderPass->GetVkRenderPass();
+			renderPassBeginInfo.framebuffer = pRenderPass->GetFramebuffer(m_frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
@@ -1892,7 +1928,7 @@ namespace vulkanRendererBackend
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-			if (!m_sortedForwardDrawCallPointers.empty())
+			if (!pDrawCallPointers->empty())
 			{
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
@@ -1901,11 +1937,11 @@ namespace vulkanRendererBackend
 				bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
-				for (ForwardDrawCall* drawCall : m_sortedForwardDrawCallPointers)
+				for (ForwardDrawCall* drawCall : *pDrawCallPointers)
 				{
 					// Pipeline swap:
 					Material* pForwardMaterial = drawCall->pMaterial;
-					VkPipeline newPipeline = pForwardMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline();
+					VkPipeline newPipeline = pForwardMaterial->GetPipeline<stage>(drawCall->pMesh)->GetVkPipeline();
 					bool pipelineLayoutChanged = false;
 					if (pipeline != newPipeline)
 					{
@@ -1959,7 +1995,8 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			// Make the forward color attachment available to post render compute shaders:
+			// Make the completed transparent color attachment available to post render compute shaders:
+			if constexpr (stage == RenderStage::forwardTransparent)
 			{
 				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -1972,94 +2009,15 @@ namespace vulkanRendererBackend
 				dependencyInfo.pMemoryBarriers = &memoryBarrier;
 
 				vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-				DEBUG_LOG_TRACE("Memory Barrier: forward color attachment to post compute");
+				DEBUG_LOG_TRACE("Memory Barrier: forward transparent color attachment to post compute");
 			}
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 
-		// Forward render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
-		pForwardRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
-	}
-	void Renderer::RecordForwardCommandsParallel()
-	{
-		//PROFILE_FUNCTION();
-		//
-		//// Logic for workload splitting across threads:
-		//int totalWorkload = (int)m_sortedForwardDrawCallPointers.size();
-		//int threadIndex = emberTaskSystem::TaskSystem::GetThreadIndex();
-		//int coreCount = emberTaskSystem::TaskSystem::GetCoreCount();
-		//int baseChunkSize = totalWorkload / coreCount;
-		//int remainder = totalWorkload % coreCount;
-		//int startIndex = threadIndex * baseChunkSize + std::min(threadIndex, remainder);
-		//int endIndex = startIndex + baseChunkSize + (threadIndex < remainder ? 1 : 0);
-		//
-		//// Prepare command recording:
-		//CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
-		//VkCommandBuffer& secondaryCommandBuffer = commandPool.GetSecondaryVkCommandBuffer(threadIndex);
-		//
-		//VkCommandBufferInheritanceInfo inheritanceInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
-		//inheritanceInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
-		//inheritanceInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(0);
-		//inheritanceInfo.subpass = 0;
-		//
-		//VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		//beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		//beginInfo.pInheritanceInfo = &inheritanceInfo;
-		//
-		//// Record forward commands:
-		//VKA(vkBeginCommandBuffer(secondaryCommandBuffer, &beginInfo));
-		//{
-		//	// Viewport and scissor:
-		//	VkViewport viewport = {};
-		//	viewport.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetWidth();
-		//	viewport.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetHeight();
-		//	viewport.minDepth = 0.0f;
-		//	viewport.maxDepth = 1.0f;
-		//	VkRect2D scissor = {};
-		//	scissor.extent.width = viewport.width;
-		//	scissor.extent.height = viewport.height;
-		//	vkCmdSetViewport(secondaryCommandBuffer, 0, 1, &viewport);
-		//	vkCmdSetScissor(secondaryCommandBuffer, 0, 1, &scissor);
-		//
-		//	// Record commands: (no begin renderpass for secondary command buffers)
-		//	{
-		//		VkPipeline pipeline = VK_NULL_HANDLE;
-		//		DefaultPushConstant pushConstant(0, m_time, m_deltaTime, m_directionalLightsCount, m_positionalLightsCount, m_activeCamera.position);
-		//
-		//		// Draw calls:
-		//		for (int i = startIndex; i < endIndex; i++)
-		//		{
-		//			ForwardDrawCall* drawCall = (m_sortedForwardDrawCallPointers)[i];
-		//
-		//			// Pipeline swap:
-		//			if (pipeline != drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline())
-		//			{
-		//				pipeline = drawCall->pMaterial->GetPipeline<RenderStage::forward>(drawCall->pMesh)->GetVkPipeline();
-		//				pushConstant.instanceCount = drawCall->instanceCount;
-		//				vkCmdBindPipeline(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-		//				vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
-		//			}
-		//
-		//			// Same pipeline but different instance Count => update push constants:
-		//			if (pushConstant.instanceCount != drawCall->instanceCount)
-		//			{
-		//				pushConstant.instanceCount = drawCall->instanceCount;
-		//				vkCmdPushConstants(secondaryCommandBuffer, drawCall->pMaterial->GetVkPipelineLayout(); , VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
-		//			}
-		//
-		//			vkCmdBindVertexBuffers(secondaryCommandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
-		//			vkCmdBindIndexBuffer(secondaryCommandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
-		//
-		//			vkCmdBindDescriptorSets(secondaryCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, drawCall->pMaterial->GetVkPipelineLayout(); , 0, 1, &drawCall->pShaderDescriptorSet->GetVkDescriptorSet(m_frameIndex), 0, nullptr);
-		//			vkCmdDrawIndexed(secondaryCommandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-		//			DEBUG_LOG_WARN("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), drawCall->pMaterial->GetDebugName());
-		//		}
-		//	}
-		//}
-		//VKA(vkEndCommandBuffer(secondaryCommandBuffer));
-		//
-		//// Forward render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
-		//RenderPassManager::GetForwardRenderPass()->GetRenderTexture()->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+		if constexpr (stage == RenderStage::forwardTransparent)
+			pRenderTexture->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+		else
+			pRenderTexture->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
 	void Renderer::RecordPostRenderComputeCommands()
 	{
@@ -2144,8 +2102,8 @@ namespace vulkanRendererBackend
 			}
 
 			// Transition final render textures layout to shaderReadOnly for compositing and do copy to main renderTexture if needed:
-			VmaImage* pRenderImage = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetVmaImage();
-			VmaImage* pSecondaryRenderImage = RenderPassManager::GetForwardRenderPass()->GetSecondaryRenderTexture(m_frameIndex)->GetVmaImage();
+			VmaImage* pRenderImage = m_pSceneColorTextures[m_frameIndex]->GetVmaImage();
+			VmaImage* pSecondaryRenderImage = m_pSecondarySceneColorTextures[m_frameIndex]->GetVmaImage();
 			if (pPostRenderCompute->GetPostProcessingCallCount() % 2 == 1)
 			{
 				pSecondaryRenderImage->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_2_TRANSFER_BIT, AccessMasks::ComputeShader::shaderWrite, AccessMasks::Transfer::transferRead);
@@ -2178,7 +2136,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
-			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex));
+			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", m_pSceneColorTextures[m_frameIndex].get());
 			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", RenderPassManager::GetGizmoRenderPass()->GetRenderTexture(m_frameIndex));
 			pPresentShaderDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 
@@ -2488,7 +2446,7 @@ namespace vulkanRendererBackend
 
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_deferredLightingToForwardSemaphores[m_frameIndex];
+		signalSemaphoreInfo.semaphore = m_deferredLightingToForwardOpaqueSemaphores[m_frameIndex];
 		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Submit info:
@@ -2503,14 +2461,14 @@ namespace vulkanRendererBackend
 		// Submit:
 		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
-	void Renderer::SubmitForwardCommands()
+	void Renderer::SubmitForwardOpaqueCommands()
 	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forwardOpaque);
 		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 		
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_deferredLightingToForwardSemaphores[m_frameIndex];
+		waitSemaphoreInfo.semaphore = m_deferredLightingToForwardOpaqueSemaphores[m_frameIndex];
 		// Deferred lighting joins shadow and deferred geometry, so this wait makes their resources and the
 		// completed scene attachments available to every graphics stage used by forward rendering.
 		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -2521,8 +2479,8 @@ namespace vulkanRendererBackend
 
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
+		signalSemaphoreInfo.semaphore = m_forwardOpaqueToForwardTransparentSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -2536,68 +2494,24 @@ namespace vulkanRendererBackend
 		// Submit:
 		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
-	void Renderer::SubmitForwardCommandsParallel()
+	void Renderer::SubmitForwardTransparentCommands()
 	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forward);
-		VkCommandBuffer& primaryCommandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-		std::vector<VkCommandBuffer>& secondaryCommandBuffers = commandPool.GetSecondaryVkCommandBuffers();
-		VkCommandBufferBeginInfo primaryBeginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		primaryBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		vkBeginCommandBuffer(primaryCommandBuffer, &primaryBeginInfo);
-		{
-			// Render pass info:
-			std::array<VkClearValue, 2> clearValues;
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-			renderPassBeginInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = RenderPassManager::GetForwardRenderPass()->GetFramebuffer(m_frameIndex);
-			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent.width = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetWidth();
-			renderPassBeginInfo.renderArea.extent.height = RenderPassManager::GetForwardRenderPass()->GetRenderTexture(m_frameIndex)->GetHeight();
-			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			renderPassBeginInfo.pClearValues = clearValues.data();
-
-			// Begin render pass:
-			vkCmdBeginRenderPass(primaryCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-			{
-				vkCmdExecuteCommands(primaryCommandBuffer, secondaryCommandBuffers.size(), secondaryCommandBuffers.data());
-			}
-			vkCmdEndRenderPass(primaryCommandBuffer);
-
-			// Release memory from vertex shaders to compute shaders:
-			{
-				VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
-				memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT;
-				memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-				memoryBarrier.srcAccessMask = AccessMasks::VertexShader::shaderRead;
-				memoryBarrier.dstAccessMask = AccessMasks::ComputeShader::shaderWrite;
-
-				VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
-				dependencyInfo.memoryBarrierCount = 1;
-				dependencyInfo.pMemoryBarriers = &memoryBarrier;
-
-				vkCmdPipelineBarrier2(primaryCommandBuffer, &dependencyInfo);
-			}
-		}
-		vkEndCommandBuffer(primaryCommandBuffer);
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forwardTransparent);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
 
 		// Wait semaphore info:
 		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_deferredLightingToForwardSemaphores[m_frameIndex];
-		// This path submits the same forward render work through a primary command buffer that executes
-		// secondary command buffers and therefore uses the same deferred-lighting dependency.
+		waitSemaphoreInfo.semaphore = m_forwardOpaqueToForwardTransparentSemaphores[m_frameIndex];
 		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Command buffer info:
 		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = primaryCommandBuffer;
+		commandBufferInfo.commandBuffer = commandBuffer;
 
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+		signalSemaphoreInfo.semaphore = m_forwardTransparentToPostRenderComputeSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Submit info:
 		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
@@ -2619,7 +2533,7 @@ namespace vulkanRendererBackend
 		// Wait semaphore info:
 		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
 		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[0].semaphore = m_forwardToPostRenderComputeSemaphores[m_frameIndex];
+		waitSemaphoreInfos[0].semaphore = m_forwardTransparentToPostRenderComputeSemaphores[m_frameIndex];
 		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
 		waitSemaphoreInfos[1].semaphore = m_outlineToPostRenderComputeSemaphores[m_frameIndex];
@@ -2735,8 +2649,9 @@ namespace vulkanRendererBackend
 		m_preRenderComputeToOutlineSemaphores.resize(Context::GetFramesInFlight());
 		m_shadowToDeferredLightingSemaphores.resize(Context::GetFramesInFlight());
 		m_deferredGeometryToDeferredLightingSemaphores.resize(Context::GetFramesInFlight());
-		m_deferredLightingToForwardSemaphores.resize(Context::GetFramesInFlight());
-		m_forwardToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
+		m_deferredLightingToForwardOpaqueSemaphores.resize(Context::GetFramesInFlight());
+		m_forwardOpaqueToForwardTransparentSemaphores.resize(Context::GetFramesInFlight());
+		m_forwardTransparentToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_outlineToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_gizmoToPresentSemaphores.resize(Context::GetFramesInFlight());
 		m_postRenderComputeToPresentSemaphores.resize(Context::GetFramesInFlight());
@@ -2751,8 +2666,9 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToOutlineSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToDeferredLightingSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredGeometryToDeferredLightingSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredLightingToForwardSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardToPostRenderComputeSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredLightingToForwardOpaqueSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardOpaqueToForwardTransparentSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardTransparentToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_outlineToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_gizmoToPresentSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderComputeToPresentSemaphores[i]));
@@ -2764,8 +2680,9 @@ namespace vulkanRendererBackend
 			NAME_VK_OBJECT(m_preRenderComputeToOutlineSemaphores[i], "Semaphore_PreRenderComputeToOutline_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_shadowToDeferredLightingSemaphores[i], "Semaphore_ShadowToDeferredLighting_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_deferredGeometryToDeferredLightingSemaphores[i], "Semaphore_DeferredGeometryToDeferredLighting_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_deferredLightingToForwardSemaphores[i], "Semaphore_DeferredLightingToForward_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_forwardToPostRenderComputeSemaphores[i], "Semaphore_ForwardToPostRenderCompute_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_deferredLightingToForwardOpaqueSemaphores[i], "Semaphore_DeferredLightingToForwardOpaque_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_forwardOpaqueToForwardTransparentSemaphores[i], "Semaphore_ForwardOpaqueToForwardTransparent_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_forwardTransparentToPostRenderComputeSemaphores[i], "Semaphore_ForwardTransparentToPostRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_outlineToPostRenderComputeSemaphores[i], "Semaphore_OutlineToPostRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_gizmoToPresentSemaphores[i], "Semaphore_GizmoToPresent_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_postRenderComputeToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
@@ -2794,8 +2711,9 @@ namespace vulkanRendererBackend
 			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToOutlineSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToDeferredLightingSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_deferredGeometryToDeferredLightingSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_deferredLightingToForwardSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_forwardToPostRenderComputeSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_deferredLightingToForwardOpaqueSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_forwardOpaqueToForwardTransparentSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_forwardTransparentToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_outlineToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_gizmoToPresentSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderComputeToPresentSemaphores[i], nullptr);
@@ -2810,8 +2728,9 @@ namespace vulkanRendererBackend
 		m_preRenderComputeToOutlineSemaphores.clear();
 		m_shadowToDeferredLightingSemaphores.clear();
 		m_deferredGeometryToDeferredLightingSemaphores.clear();
-		m_deferredLightingToForwardSemaphores.clear();
-		m_forwardToPostRenderComputeSemaphores.clear();
+		m_deferredLightingToForwardOpaqueSemaphores.clear();
+		m_forwardOpaqueToForwardTransparentSemaphores.clear();
+		m_forwardTransparentToPostRenderComputeSemaphores.clear();
 		m_outlineToPostRenderComputeSemaphores.clear();
 		m_gizmoToPresentSemaphores.clear();
 		m_postRenderComputeToPresentSemaphores.clear();

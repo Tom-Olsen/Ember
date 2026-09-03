@@ -189,10 +189,8 @@ namespace fluidDynamics
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
-		DebugRenderer::SetColor(Float4::white);
-		DebugRenderer::SetReceiveShadows(false);
-		DebugRenderer::SetCastShadows(false);
-		DebugRenderer::DrawRotatedBounds(localToWorld, m_settings.fluidBounds, 0.2f);
+		Gizmo::SetDefaultState();
+		Gizmo::DrawRotatedBounds(localToWorld, m_settings.fluidBounds, 0.2f);
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);

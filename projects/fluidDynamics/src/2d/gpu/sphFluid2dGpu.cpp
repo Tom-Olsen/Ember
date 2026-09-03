@@ -186,10 +186,8 @@ namespace fluidDynamics
 
 		// Rendering:
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-		DebugRenderer::SetColor(Float4::white);
-		DebugRenderer::SetReceiveShadows(false);
-		DebugRenderer::SetCastShadows(false);
-		DebugRenderer::DrawBounds(localToWorldMatrix, m_settings.fluidBounds, 0.01f);
+		Gizmo::SetDefaultState();
+		Gizmo::DrawBounds(localToWorldMatrix, m_settings.fluidBounds, 0.01f);
 		m_tripleBufferState.MarkRead();
 		uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
 		m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));

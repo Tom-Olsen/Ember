@@ -27,7 +27,7 @@ namespace emberEngine
 	{
 		m_pSphereMesh = MeshManager::TryGetMesh("cubeSphere");
 		m_pArrowMesh = MeshManager::TryGetMesh("arrowFlat");
-		m_material = MaterialManager::TryGetMaterial("defaultMaterial");
+		m_material = MaterialManager::TryGetMaterial("pbrDeferredGeometryMaterial");
 		MeshRenderer* pMeshRenderer = GetComponent<MeshRenderer>();
 		m_pMesh = &pMeshRenderer->GetMesh();
 	}

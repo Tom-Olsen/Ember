@@ -19,7 +19,8 @@ namespace vulkanRendererBackend
 		shadow,
 		deferredGeometry,
 		deferredLighting,
-		forward,
+		forwardOpaque,
+		forwardTransparent,
 		postRenderCompute,
 		present,
 		stageCount
@@ -33,7 +34,8 @@ namespace vulkanRendererBackend
 		"shadow",
 		"deferredGeometry",
 		"deferredLighting",
-		"forward",
+		"forwardOpaque",
+		"forwardTransparent",
 		"postRenderCompute",
 		"present"
 	};
@@ -125,7 +127,22 @@ namespace vulkanRendererBackend
 	};
 
 	template<>
-	struct RenderStageTraits<RenderStage::forward>
+	struct RenderStageTraits<RenderStage::forwardOpaque>
+	{
+		static constexpr bool hasRenderPipeline = true;
+		static constexpr bool hasRenderMode = true;
+		static constexpr bool hasFullscreenPipeline = false;
+		using RenderMode = emberCommon::ForwardRenderMode;
+		static constexpr emberCommon::MaterialPass materialPass = emberCommon::MaterialPass::forward;
+
+		static constexpr uint32_t RenderModeIndex(RenderMode renderMode)
+		{
+			return static_cast<uint32_t>(renderMode);
+		}
+	};
+
+	template<>
+	struct RenderStageTraits<RenderStage::forwardTransparent>
 	{
 		static constexpr bool hasRenderPipeline = true;
 		static constexpr bool hasRenderMode = true;

@@ -3,9 +3,7 @@
 #include "vulkanContext.h"
 #include "vulkanConvertMaterialRenderState.h"
 #include "vulkanDefaultPushConstant.h"
-#include "vulkanForwardRenderPass.h"
 #include "vulkanMacros.h"
-#include "vulkanRenderPassManager.h"
 #include <array>
 
 
@@ -16,6 +14,7 @@ namespace vulkanRendererBackend
     // Constructor/Destructor:
     ForwardPipeline::ForwardPipeline(
         VkPipelineLayout vkPipelineLayout,
+        VkRenderPass vkRenderPass,
         emberCommon::ForwardRenderMode renderMode,
         const std::vector<char>& vertexCode,
         const std::vector<char>& fragmentCode,
@@ -28,7 +27,7 @@ namespace vulkanRendererBackend
         VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode, "ShaderModule_ForwardFragment_" + debugName);
 
         // Create pipeline:
-        CreatePipeline(vkPipelineLayout, renderMode, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
+        CreatePipeline(vkPipelineLayout, vkRenderPass, renderMode, vertexShaderModule, fragmentShaderModule, vertexBindings, vertexAttributes);
 
         // Destroy shader modules (only needed for pipeline creation):
         vkDestroyShaderModule(Context::GetVkDevice(), vertexShaderModule, nullptr);
@@ -45,6 +44,7 @@ namespace vulkanRendererBackend
     // Private methods:
     void ForwardPipeline::CreatePipeline(
         VkPipelineLayout vkPipelineLayout,
+        VkRenderPass vkRenderPass,
         emberCommon::ForwardRenderMode renderMode,
         const VkShaderModule& vertexShaderModule,
         const VkShaderModule& fragmentShaderModule,
@@ -154,7 +154,7 @@ namespace vulkanRendererBackend
         pipelineInfo.pColorBlendState = &colorBlendState;
 		pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = vkPipelineLayout;
-        pipelineInfo.renderPass = RenderPassManager::GetForwardRenderPass()->GetVkRenderPass();
+        pipelineInfo.renderPass = vkRenderPass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;       // can be used to create a new pipeline based on an existing one.
         pipelineInfo.basePipelineIndex = -1;					// do not inherit from existing pipeline.

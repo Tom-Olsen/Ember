@@ -72,8 +72,9 @@ namespace vulkanRendererBackend
 		std::vector<VkSemaphore> m_preRenderComputeToOutlineSemaphores;
 		std::vector<VkSemaphore> m_shadowToDeferredLightingSemaphores;
 		std::vector<VkSemaphore> m_deferredGeometryToDeferredLightingSemaphores;
-		std::vector<VkSemaphore> m_deferredLightingToForwardSemaphores;
-		std::vector<VkSemaphore> m_forwardToPostRenderComputeSemaphores;
+		std::vector<VkSemaphore> m_deferredLightingToForwardOpaqueSemaphores;
+		std::vector<VkSemaphore> m_forwardOpaqueToForwardTransparentSemaphores;
+		std::vector<VkSemaphore> m_forwardTransparentToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_outlineToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_gizmoToPresentSemaphores;
 		std::vector<VkSemaphore> m_postRenderComputeToPresentSemaphores;
@@ -82,9 +83,9 @@ namespace vulkanRendererBackend
 		// Sync Graph:
 		// ResourceUpdate
 		// ├─> PreRenderCompute ─┬─> Shadow ───────────┐
-		// │                     ├─> DeferredGeometry ─┴─> DeferredLighting ─> Forward ─┐
-		// │                     └─> Outline ───────────────────────────────────────────┴─> PostRenderCompute ─┐
-		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────> Present
+		// │                     ├─> DeferredGeometry ─┴─> DeferredLighting ─> ForwardOpaque ─> ForwardTransparent ─┐
+		// │                     └─> Outline ───────────────────────────────────────────────────────────────────────┴─> PostRenderCompute ─┐
+		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────> Present
 
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
@@ -112,7 +113,8 @@ namespace vulkanRendererBackend
 		std::vector<DeferredDrawCall> m_deferredDrawCalls;
 		std::vector<DeferredDrawCall*> m_sortedDeferredDrawCallPointers;
 		std::vector<ForwardDrawCall> m_forwardDrawCalls;
-		std::vector<ForwardDrawCall*> m_sortedForwardDrawCallPointers;
+		std::vector<ForwardDrawCall*> m_sortedForwardOpaqueDrawCallPointers;
+		std::vector<ForwardDrawCall*> m_sortedForwardTransparentDrawCallPointers;
 
 		// Render management:
 		uint32_t m_frameIndex = 0;
@@ -249,8 +251,8 @@ namespace vulkanRendererBackend
 		void RecordShadowCommands();
 		void RecordDeferredGeometryCommands();
 		void RecordDeferredLightingCommands();
+		template<RenderStage stage>
 		void RecordForwardCommands();
-		void RecordForwardCommandsParallel();
 		void RecordPostRenderComputeCommands();
 		void RecordPresentCommands();
 		void RecordImGuiPresentCommands();
@@ -262,8 +264,8 @@ namespace vulkanRendererBackend
 		void SubmitShadowCommands();
 		void SubmitDeferredGeometryCommands();
 		void SubmitDeferredLightingCommands();
-		void SubmitForwardCommands();
-		void SubmitForwardCommandsParallel();
+		void SubmitForwardOpaqueCommands();
+		void SubmitForwardTransparentCommands();
 		void SubmitGizmoCommands();
 		void SubmitPostRenderComputeCommands();
 		void SubmitPresentCommands();
@@ -274,7 +276,7 @@ namespace vulkanRendererBackend
 		void CreateSemaphores();
 		void DestroyFences();
 		void DestroySemaphores();
-		
+
 		// Internal getters:
 		CommandPool& GetCommandPool(int frameIndex, RenderStage renderStage);
 		CommandPool& GetCommandPool(int frameIndex, int renderStage);

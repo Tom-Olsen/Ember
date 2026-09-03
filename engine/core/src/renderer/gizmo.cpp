@@ -223,6 +223,13 @@ namespace emberCore
 
 
 	// Setters:
+	void Gizmo::SetDefaultState()
+	{
+		SetIsOpaque(true);
+		SetIsLit(true);
+		SetCullMode(emberCommon::CullMode::back);
+		SetColor(Float4::white);
+	}
 	void Gizmo::SetIsOpaque(bool isOpaque)
 	{
 		if (isOpaque)
