@@ -13,16 +13,34 @@
 - TryGetX should always return a "invalid" value (nullptr/-1/etc case dependent) on failure that the user can check for success. Log warning on failure.
 
 ## Architecture
-- Interfaces are reserved for contracts across shared-library boundaries.
 - For each class/struct use a .h and .cpp file. Only exceptions are helper structs within other classes/structs which can be defined in the same file as the class/struct they are helping.
 - no free namespace helper functions in .cpp files. Such helpers should be proper private methods.
-
-
-## Review Priorities
--
 
 ## Communication
 - Do not assume anything when implementing a feature. If any design specification is unclear, ask for clarification.
 
 ## Skills/Plugins
 - when you encounter repatitive tasks that can be optimized via skills and/or plugins give me a suggestion for it.
+
+## Project structure:
+- Whenever you encounter something that doesnt fit this description let me know so i can update it.
+- `engine/common/`: Backend-independent shared enums and data structures used across interfaces, core, and backends.
+- `engine/interfaces/`: Abstract engine boundaries. Renderer contracts are in `renderer/`, with separate GUI and window interfaces in `gui/` and `window/`.
+- `engine/core/src/`: High-level engine implementation and orchestration. Look in `gpuResources/` for frontend resource wrappers, `managers/` for resource ownership/loading, `renderer/`, `window/`, and `gui/` for subsystem facades, `eventSystem/` for events, `physics/` for physics integration, `editor/` for core editor hooks, and `utility/` for reusable engine algorithms.
+- `engine/backends/`: Concrete implementations of the engine interfaces:
+  - `vulkanRenderer/src/`: Vulkan renderer. Its main areas are `context/`, `renderer/`, `renderPasses/`, `pipelines/`, `drawCalls/`, `compute/`, `descriptorSetLayouts/`, `pushConstants/`, `gpuResources/`, `gpuResourcePools/`, `managers/`, and `utility/`.
+  - `sdlWindow/src/` and `nullWindow/src/`: Interactive SDL and headless window implementations.
+  - `imGuiSdlVulkan/src/` and `nullGui/src/`: Interactive ImGui and headless GUI implementations.
+- `engine/applications/`: Preconfigured engine compositions used by projects. `emberGameApp/` wires Vulkan + SDL + ImGui, `emberGameDebugApp/` adds editor/debug facilities, `emberEditorApp/` provides the editor application, and `emberHeadlessApp/` wires Vulkan + null window/GUI. Each application exposes its setup through `src/emberEngine.h` and `src/application.*`.
+- `engine/libs/`: Reusable libraries, each with its own `CMakeLists.txt` and `src/`: `assetLoader` (image/material/mesh assets), `bufferLayout`, `dataStructures`, `editor`, `entityComponentSystem`, `logger`, `math`, `spirvReflect`, `taskSystem`, and `vulkanUtility`. Library-specific tests live in the corresponding `unitTests/` directory.
+- `engine/shaders/`: Engine HLSL and shader compilation CMake. Stage sources are under `src/{vertex,fragment,compute}/`, shared HLSL includes under `src/includes/`, C++/HLSL shared definitions under `src/includesCppHlsl/`, and material descriptions under `materialAssets/`.
+- `engine/resources/`: Runtime meshes and textures. Treat binary assets as data, not source.
+- `engine/extern/`: Vendored third-party dependencies (SDL, ImGui, EnTT, GoogleTest, SPIRV-Reflect, etc.). Do not search or modify this tree unless the task concerns a dependency.
+- `engine/cmake/`: Shared engine CMake configuration, currently Vulkan options.
+- `projects/defaultProject/`: Main example/editor executable; custom components are in `src/components/` and scenes in `src/scenes/`.
+- `projects/fluidDynamics/`: SPH fluid project. CPU/GPU 2D implementations are in `src/2d/`, 3D GPU code in `src/3d/`, spatial hash grids in `src/utility/`, project shaders in `shaders/`, research notes in `docs/`, and tests in `unitTests/`.
+- `projects/unitTests/`: Project-level GPU sort and compute shader tests using the game application stack.
+- `projects/plotting/`: Small plotting/graphics experiment; much of its CMake setup is currently disabled.
+- `unitTests/`: Top-level test aggregation CMake plus `runAllTests.sh` and `runAllTests.bat`.
+- `docs/`, root `readme.txt`, `ToDo*.txt`: Project documentation, design notes, and planned work.
+- Generated output is commonly stored in `build/` and backend `bin/` directories. Exclude these directories from source searches unless investigating build artifacts.
