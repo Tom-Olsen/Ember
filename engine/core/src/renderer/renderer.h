@@ -112,7 +112,7 @@ namespace emberCore
 		static const uint32_t GetShadowMapResolution();
 		static const Uint2 GetSurfaceExtent();
 		static const Float4x4& GetPointLightRotationMatrix(int faceIndex);
-		static Texture2d GetRenderTexture();
+		static Texture2d GetFinalRenderTexture();
 		static Texture2d GetGizmoTexture();
 		static float GetDepthBiasConstantFactor();
 		static float GetDepthBiasClamp();

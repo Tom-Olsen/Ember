@@ -59,7 +59,7 @@ namespace emberBackendInterface
         virtual bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index) const = 0;
         virtual uint32_t GetShadowMapResolution() = 0;
         virtual Uint2 GetSurfaceExtent() = 0;
-        virtual ITexture* GetRenderTexture() = 0;
+        virtual ITexture* GetFinalRenderTexture() = 0;
         virtual ITexture* GetGizmoTexture() = 0;
         virtual float GetDepthBiasConstantFactor() = 0;
         virtual float GetDepthBiasClamp() = 0;

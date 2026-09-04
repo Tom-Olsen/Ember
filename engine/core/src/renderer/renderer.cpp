@@ -317,9 +317,9 @@ namespace emberCore
 	{
 		return s_pointLightRotationMatrices[faceIndex];
 	}
-	Texture2d Renderer::GetRenderTexture()
+	Texture2d Renderer::GetFinalRenderTexture()
 	{
-		return Texture2d(s_pIRenderer->GetRenderTexture(), false);
+		return Texture2d(s_pIRenderer->GetFinalRenderTexture(), false);
 	}
 	Texture2d Renderer::GetGizmoTexture()
 	{

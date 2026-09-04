@@ -29,8 +29,8 @@ namespace emberEditor
         void Render() override
         {
             // Prepare render texture:
-            emberCore::Texture2d renderTexture = emberCore::Renderer::GetRenderTexture();
-            uintptr_t renderTextureID = Gui::GetTextureID(renderTexture);
+            emberCore::Texture2d finalRenderTexture = emberCore::Renderer::GetFinalRenderTexture();
+            uintptr_t finalRenderTextureID = Gui::GetTextureID(finalRenderTexture);
             emberCore::Texture2d gizmoTexture = emberCore::Renderer::GetGizmoTexture();
             uintptr_t gizmoTextureID = Gui::GetTextureID(gizmoTexture);
 
@@ -38,7 +38,7 @@ namespace emberEditor
             const Float2 windowSize = Gui::GetContentRegionAvail();
 
             // Texture and window aspect ratios:
-            const float textureAspect = (float)renderTexture.GetWidth() / (float)renderTexture.GetHeight();
+            const float textureAspect = (float)finalRenderTexture.GetWidth() / (float)finalRenderTexture.GetHeight();
             const float windowAspect = windowSize.x / windowSize.y;
 
             Float2 imageSize;
@@ -61,7 +61,7 @@ namespace emberEditor
             Gui::SetCursorPos(cursorPos + offset);
 
             // Composit render and gizmo textures:
-            Gui::Image(renderTextureID, imageSize); // draw render texture.
+            Gui::Image(finalRenderTextureID, imageSize); // draw final render texture.
             Gui::SetCursorPos(cursorPos + offset);   // recenter cursor.
             Gui::Image(gizmoTextureID, imageSize);  // draw gizmo texture on top (alpha blended).
         }

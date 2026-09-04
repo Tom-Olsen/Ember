@@ -168,7 +168,7 @@ namespace vulkanRendererBackend
 		bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index) const override;
 		uint32_t GetShadowMapResolution() override;
 		Uint2 GetSurfaceExtent() override;
-		emberBackendInterface::ITexture* GetRenderTexture() override;
+		emberBackendInterface::ITexture* GetFinalRenderTexture() override;
 		emberBackendInterface::ITexture* GetGizmoTexture() override;
 		float GetDepthBiasConstantFactor() override;
 		float GetDepthBiasClamp() override;

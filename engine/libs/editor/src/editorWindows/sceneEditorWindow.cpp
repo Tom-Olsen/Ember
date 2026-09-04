@@ -86,8 +86,8 @@ namespace emberEditor
     void SceneEditorWindow::Render()
     {
         // Prepare render texture:
-        emberCore::Texture2d renderTexture = emberCore::Renderer::GetRenderTexture();
-        uintptr_t renderTextureID = Gui::GetTextureID(renderTexture);
+        emberCore::Texture2d finalRenderTexture = emberCore::Renderer::GetFinalRenderTexture();
+        uintptr_t finalRenderTextureID = Gui::GetTextureID(finalRenderTexture);
         emberCore::Texture2d gizmoTexture = emberCore::Renderer::GetGizmoTexture();
         uintptr_t gizmoTextureID = Gui::GetTextureID(gizmoTexture);
 
@@ -95,7 +95,7 @@ namespace emberEditor
         const Float2 windowSize = Gui::GetContentRegionAvail();
 
         // Texture and window aspect ratios:
-        const float textureAspect = (float)renderTexture.GetWidth() / (float)renderTexture.GetHeight();
+        const float textureAspect = (float)finalRenderTexture.GetWidth() / (float)finalRenderTexture.GetHeight();
         const float windowAspect = windowSize.x / windowSize.y;
 
         if (windowAspect > textureAspect)
@@ -128,7 +128,7 @@ namespace emberEditor
             m_viewportMousePos01.y >= 0.0f && m_viewportMousePos01.y <= 1.0f;
 
         // Composit render and gizmo textures:
-        Gui::Image(renderTextureID, m_imageSize); // draw render texture.
+        Gui::Image(finalRenderTextureID, m_imageSize); // draw final render texture.
         Gui::SetCursorPos(cursorPos + offset);     // recenter cursor.
         Gui::Image(gizmoTextureID, m_imageSize);  // draw gizmo texture on top (alpha blended).
     }

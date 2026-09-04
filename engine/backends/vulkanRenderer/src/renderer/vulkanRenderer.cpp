@@ -555,9 +555,9 @@ namespace vulkanRendererBackend
 	{
 		return Context::GetSurface()->GetCurrentExtent();
 	}
-	emberBackendInterface::ITexture* Renderer::GetRenderTexture()
+	emberBackendInterface::ITexture* Renderer::GetFinalRenderTexture()
 	{
-		RenderTexture2d* pRenderTexture = m_pSceneColorTextures[m_frameIndex].get();
+		RenderTexture2d* pRenderTexture = m_pSceneColorTexturePair->GetCurrentTexture(m_lastRenderedFrameIndex);
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
