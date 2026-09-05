@@ -43,7 +43,8 @@ namespace vulkanRendererBackend
         static Material* s_pDefaultPresentMaterial;
         // Compute shaders:
         static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
-        static std::unique_ptr<ComputeShader> s_pOutlineComputeShader;
+        static std::unique_ptr<ComputeShader> s_pOutlineCompositeComputeShader;
+        static std::unique_ptr<ComputeShader> s_pOutlineMaskExpansionComputeShader;
         // Buffers:
         static std::unique_ptr<StorageBuffer> s_pDefaultStorageBuffer;
         // Textures:
@@ -79,7 +80,8 @@ namespace vulkanRendererBackend
         static Material* GetDefaultPresentMaterial();
         // Compute shaders:
         static ComputeShader* GetGammaCorrectionComputeShader();
-        static ComputeShader* GetOutlineComputeShader();
+        static ComputeShader* GetOutlineCompositeComputeShader();
+        static ComputeShader* GetOutlineMaskExpansionComputeShader();
         // Buffers:
         static StorageBuffer* GetDefaultStorageBuffer();
         static SampleTexture2d* GetDefaultSampleTexture2d();

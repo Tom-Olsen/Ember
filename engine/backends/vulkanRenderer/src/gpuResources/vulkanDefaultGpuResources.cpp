@@ -36,7 +36,8 @@ namespace vulkanRendererBackend
 	Material* DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
 	// Compute shaders:
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
-	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineComputeShader = nullptr;
+	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineCompositeComputeShader = nullptr;
+	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineMaskExpansionComputeShader = nullptr;
 	// Buffers:
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	// Textures:
@@ -93,7 +94,8 @@ namespace vulkanRendererBackend
 		s_pDefaultStorageTexture3d = std::make_unique<StorageTexture3d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, 1, (void*)&Float4::one);
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "gammaCorrection.comp.spv", "gammaCorrectionComputeShader");
-		s_pOutlineComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineComposite.comp.spv", "outlineComputeShader");
+		s_pOutlineCompositeComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineComposite.comp.spv", "outlineCompositeComputeShader");
+		s_pOutlineMaskExpansionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineMaskExpansion.comp.spv", "outlineMaskExpansionComputeShader");
 	}
 	void DefaultGpuResources::Clear()
 	{
@@ -105,7 +107,8 @@ namespace vulkanRendererBackend
 		ClearDefaultMaterials();
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader.reset();
-		s_pOutlineComputeShader.reset();
+		s_pOutlineCompositeComputeShader.reset();
+		s_pOutlineMaskExpansionComputeShader.reset();
 		// Buffers:
 		s_pDefaultStorageBuffer.reset();
 		// Textures:
@@ -201,9 +204,13 @@ namespace vulkanRendererBackend
 	{
 		return s_pGammaCorrectionComputeShader.get();
 	}
-	ComputeShader* DefaultGpuResources::GetOutlineComputeShader()
+	ComputeShader* DefaultGpuResources::GetOutlineCompositeComputeShader()
 	{
-		return s_pOutlineComputeShader.get();
+		return s_pOutlineCompositeComputeShader.get();
+	}
+	ComputeShader* DefaultGpuResources::GetOutlineMaskExpansionComputeShader()
+	{
+		return s_pOutlineMaskExpansionComputeShader.get();
 	}
 	// Buffers:
 	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()

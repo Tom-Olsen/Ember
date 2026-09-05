@@ -14,9 +14,8 @@ namespace vulkanRendererBackend
 
 
 	/// <summary>
-	/// Runs parallel to shadow/forward.
 	/// Renders a binary mask into its own framebuffer.
-    /// Post-render compute derives and composites a hollow outline directly onto the forward image before gizmos.
+	/// Render compute expands the mask before post-render compute composites it onto the forward image.
 	/// </summary>
 	class OutlineRenderPass : public RenderPass
 	{

@@ -64,7 +64,7 @@ namespace vulkanRendererBackend
 		colorAttachment.format = m_pRenderTextures[0]->GetFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;               // clear framebuffer to black before rendering.
-		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;             // stored for later post render compute pass comsumption.
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;             // stored for later render compute consumption.
 		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;    // do not use stencils.
 		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;  // do not use stencils.
 		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;          // we don't care about initial layout of the image.
@@ -93,11 +93,11 @@ namespace vulkanRendererBackend
 		dependencies[0].srcAccessMask = AccessMasks::TopOfPipe::none;								// no previous memory access must be made visible, because the attachments are cleared.
 		dependencies[0].dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;
 		dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;                              // specify special behaviors.
-        // PostRenderCompute will consume render textures of this render pass:
+		// RenderCompute will consume render textures of this render pass:
 		dependencies[1].srcSubpass = 0;																// index of source subpass, where dependency originates.
 		dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;											// index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
 		dependencies[1].srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;				// color attachment output must complete before the resolved gizmo texture is consumed.
-		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;						// compositing happens in the post render compute shader pass.
+		dependencies[1].dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;						// expansion happens in the render compute shader pass.
 		dependencies[1].srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;	// gizmo color writes must be made visible.
 		dependencies[1].dstAccessMask = AccessMasks::ComputeShader::shaderRead;						// compute shader reads must wait on mask writes.
 		dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;								// specify special behaviors.

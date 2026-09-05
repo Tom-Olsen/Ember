@@ -5,11 +5,9 @@
 cbuffer OutlineProperties : register(b300, SHADER_SET)
 {
     float4 outlineColor;
-    int outlineRadius;
 };
-[[vk::image_format("r8")]] RWTexture2D<float> mask : register(u201, SHADER_SET);
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> inputImage : register(u200, CALL_SET);
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u201, CALL_SET);
+[[vk::image_format("r8")]] RWTexture2D<float> outlineMask : register(u200, CALL_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> inOutImage : register(u201, CALL_SET);
 
 
 
@@ -19,17 +17,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
         return;
 
-    int2 maxCoordinate = int2(pc.threadCount.xy) - 1;
-    float expandedMask = 0.0f;
-    for (int y = -outlineRadius; y <= outlineRadius; y++)
-        for (int x = -outlineRadius; x <= outlineRadius; x++)
-        {
-            int2 srcPixel = clamp(int2(threadID.xy) + int2(x, y), int2(0, 0), maxCoordinate);
-            expandedMask = max(expandedMask, mask[srcPixel]);
-        }
-
-    float outlineMask = expandedMask * (1.0f - mask[threadID.xy]) * outlineColor.a;
-    float4 renderColor = inputImage[threadID.xy];
-    renderColor.rgb = lerp(renderColor.rgb, outlineColor.rgb, outlineMask);
-    outputImage[threadID.xy] = renderColor;
+    float4 renderColor = inOutImage[threadID.xy];
+    renderColor.rgb = lerp(renderColor.rgb, outlineColor.rgb, outlineMask[threadID.xy] * outlineColor.a);
+    inOutImage[threadID.xy] = renderColor;
 }

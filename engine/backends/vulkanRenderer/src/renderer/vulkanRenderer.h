@@ -48,6 +48,7 @@ namespace vulkanRendererBackend
 	class DescriptorSetBinding;
 	class SceneColorTexture2dPair;
 	class StorageBuffer;
+	class StorageTexture2d;
 
 
 
@@ -133,6 +134,7 @@ namespace vulkanRendererBackend
 		// Scene textures:
 		std::unique_ptr<SceneColorTexture2dPair> m_pSceneColorTexturePair;
 		std::vector<std::unique_ptr<DepthTexture2d>> m_pSceneDepthTextures;
+		std::vector<std::unique_ptr<StorageTexture2d>> m_pExpandedOutlineMaskTextures;
 
 	public: // Methods:
 		Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow);
