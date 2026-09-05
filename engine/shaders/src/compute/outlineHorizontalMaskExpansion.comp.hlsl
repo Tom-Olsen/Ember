@@ -17,14 +17,13 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
         return;
 
-    int2 maxCoordinate = int2(pc.threadCount.xy) - 1;
+    int maxX = int(pc.threadCount.x) - 1;
     float expandedMask = 0.0f;
-    for (int y = -outlineRadius; y <= outlineRadius; y++)
-        for (int x = -outlineRadius; x <= outlineRadius; x++)
-        {
-            int2 srcPixel = clamp(int2(threadID.xy) + int2(x, y), int2(0, 0), maxCoordinate);
-            expandedMask = max(expandedMask, inputMask[srcPixel]);
-        }
+    for (int x = -outlineRadius; x <= outlineRadius; x++)
+    {
+        int2 srcPixel = int2(clamp(int(threadID.x) + x, 0, maxX), threadID.y);
+        expandedMask = max(expandedMask, inputMask[srcPixel]);
+    }
 
-    outputMask[threadID.xy] = expandedMask * (1.0f - inputMask[threadID.xy]);
+    outputMask[threadID.xy] = expandedMask;
 }

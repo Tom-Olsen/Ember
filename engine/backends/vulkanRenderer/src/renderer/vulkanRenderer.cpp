@@ -177,6 +177,7 @@ namespace vulkanRendererBackend
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		RenderPassManager::Clear();
+		m_pHorizontalExpandedOutlineMaskTextures.clear();
 		m_pExpandedOutlineMaskTextures.clear();
 		m_pSceneDepthTextures.clear();
 		m_pSceneColorTexturePair.reset();
@@ -956,12 +957,15 @@ namespace vulkanRendererBackend
 		m_pSceneColorTexturePair = std::make_unique<SceneColorTexture2dPair>(renderWidth, renderHeight, framesInFlight);
 		m_pSceneDepthTextures.reserve(framesInFlight);
 		m_pExpandedOutlineMaskTextures.reserve(framesInFlight);
+		m_pHorizontalExpandedOutlineMaskTextures.reserve(framesInFlight);
 		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
 		{
 			m_pSceneDepthTextures.push_back(std::make_unique<DepthTexture2d>(deferredRenderingContract::depthFormat, renderWidth, renderHeight));
 			m_pSceneDepthTextures[frameIndex]->SetDebugName("SceneDepthTexture_Frame" + std::to_string(frameIndex));
 			m_pExpandedOutlineMaskTextures.push_back(std::make_unique<StorageTexture2d>(VK_FORMAT_R8_UNORM, renderWidth, renderHeight));
 			m_pExpandedOutlineMaskTextures[frameIndex]->SetDebugName("StorageTexture_ExpandedOutlineMask_Frame" + std::to_string(frameIndex));
+			m_pHorizontalExpandedOutlineMaskTextures.push_back(std::make_unique<StorageTexture2d>(VK_FORMAT_R8_UNORM, renderWidth, renderHeight));
+			m_pHorizontalExpandedOutlineMaskTextures[frameIndex]->SetDebugName("StorageTexture_HorizontalExpandedOutlineMask_Frame" + std::to_string(frameIndex));
 
 			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
 			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
@@ -1128,19 +1132,32 @@ namespace vulkanRendererBackend
 		{
 			// Masks:
 			RenderTexture2d* pInputMask = RenderPassManager::GetOutlineRenderPass()->GetRenderTexture(m_frameIndex);
+			StorageTexture2d* pHorizontalExpandedMask = m_pHorizontalExpandedOutlineMaskTextures[m_frameIndex].get();
 			StorageTexture2d* pExpandedMask = m_pExpandedOutlineMaskTextures[m_frameIndex].get();
 
-			// Expand mask which was computed in outlineRenderPass:
+			// Expand mask horizontally (renderCompute):
 			Uint3 threadCount = { pInputMask->GetWidth(), pInputMask->GetHeight(), 1 };
-			ComputeShader* pOutlineMaskExpansionComputeShader = DefaultGpuResources::GetOutlineMaskExpansionComputeShader();
-			pOutlineMaskExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
-			DescriptorSetBinding* pExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pRenderCompute->RecordComputeShader(pOutlineMaskExpansionComputeShader, threadCount));
-			if (!pExpansionCallDescriptorSetBinding)
-				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the outline mask expansion compute shader.");
-			pExpansionCallDescriptorSetBinding->SetTexture("inputMask", pInputMask);
-			pExpansionCallDescriptorSetBinding->SetTexture("outputMask", pExpandedMask);
+			ComputeShader* pHorizontalExpansionComputeShader = DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader();
+			pHorizontalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
+			DescriptorSetBinding* pHorizontalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pRenderCompute->RecordComputeShader(pHorizontalExpansionComputeShader, threadCount));
+			if (!pHorizontalExpansionCallDescriptorSetBinding)
+				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the horizontal outline mask expansion compute shader.");
+			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pInputMask);
+			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pHorizontalExpandedMask);
 
-			// Composite outline into render texture:
+			pRenderCompute->RecordBarrier(emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead);
+
+			// Expand mask vertically and remove the original mask (renderCompute):
+			ComputeShader* pVerticalExpansionComputeShader = DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader();
+			pVerticalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
+			DescriptorSetBinding* pVerticalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pRenderCompute->RecordComputeShader(pVerticalExpansionComputeShader, threadCount));
+			if (!pVerticalExpansionCallDescriptorSetBinding)
+				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the vertical outline mask expansion compute shader.");
+			pVerticalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pHorizontalExpandedMask);
+			pVerticalExpansionCallDescriptorSetBinding->SetTexture("originalMask", pInputMask);
+			pVerticalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pExpandedMask);
+
+			// Composite outline into render texture (postRenderCompute):
 			ComputeShader* pOutlineCompositeComputeShader = DefaultGpuResources::GetOutlineCompositeComputeShader();
 			pOutlineCompositeComputeShader->GetDescriptorSetBinding()->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
 			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordPostProcessingShader(pOutlineCompositeComputeShader));

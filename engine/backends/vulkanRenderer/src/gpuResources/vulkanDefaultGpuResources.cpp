@@ -37,7 +37,8 @@ namespace vulkanRendererBackend
 	// Compute shaders:
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
 	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineCompositeComputeShader = nullptr;
-	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineMaskExpansionComputeShader = nullptr;
+	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineHorizontalMaskExpansionComputeShader = nullptr;
+	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineVerticalMaskExpansionComputeShader = nullptr;
 	// Buffers:
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	// Textures:
@@ -95,7 +96,8 @@ namespace vulkanRendererBackend
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "gammaCorrection.comp.spv", "gammaCorrectionComputeShader");
 		s_pOutlineCompositeComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineComposite.comp.spv", "outlineCompositeComputeShader");
-		s_pOutlineMaskExpansionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineMaskExpansion.comp.spv", "outlineMaskExpansionComputeShader");
+		s_pOutlineHorizontalMaskExpansionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineHorizontalMaskExpansion.comp.spv", "outlineHorizontalMaskExpansionComputeShader");
+		s_pOutlineVerticalMaskExpansionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineVerticalMaskExpansion.comp.spv", "outlineVerticalMaskExpansionComputeShader");
 	}
 	void DefaultGpuResources::Clear()
 	{
@@ -108,7 +110,8 @@ namespace vulkanRendererBackend
 		// Compute shaders:
 		s_pGammaCorrectionComputeShader.reset();
 		s_pOutlineCompositeComputeShader.reset();
-		s_pOutlineMaskExpansionComputeShader.reset();
+		s_pOutlineHorizontalMaskExpansionComputeShader.reset();
+		s_pOutlineVerticalMaskExpansionComputeShader.reset();
 		// Buffers:
 		s_pDefaultStorageBuffer.reset();
 		// Textures:
@@ -208,9 +211,13 @@ namespace vulkanRendererBackend
 	{
 		return s_pOutlineCompositeComputeShader.get();
 	}
-	ComputeShader* DefaultGpuResources::GetOutlineMaskExpansionComputeShader()
+	ComputeShader* DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader()
 	{
-		return s_pOutlineMaskExpansionComputeShader.get();
+		return s_pOutlineHorizontalMaskExpansionComputeShader.get();
+	}
+	ComputeShader* DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader()
+	{
+		return s_pOutlineVerticalMaskExpansionComputeShader.get();
 	}
 	// Buffers:
 	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()
