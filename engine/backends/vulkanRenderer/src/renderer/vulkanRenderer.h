@@ -46,7 +46,7 @@ namespace vulkanRendererBackend
 	class Mesh;
 	class Material;
 	class DescriptorSetBinding;
-	class RenderTexture2d;
+	class SceneColorTexture2dPair;
 	class StorageBuffer;
 
 
@@ -130,8 +130,7 @@ namespace vulkanRendererBackend
 		std::vector<std::array<VkDescriptorSet, 3>> m_staticDescriptorSets;	// (global/scen/frame) per frame in flight.
 
 		// Scene textures:
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pSceneColorTextures;
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pSecondarySceneColorTextures;
+		std::unique_ptr<SceneColorTexture2dPair> m_pSceneColorTexturePair;
 		std::vector<std::unique_ptr<DepthTexture2d>> m_pSceneDepthTextures;
 
 	public: // Methods:
@@ -241,6 +240,7 @@ namespace vulkanRendererBackend
 		void RebuildSwapchain();
 		bool AcquireImage();
 		void SortDrawCallPointers();
+		void QueueRendererOwnedComputeShaders();
 		void UpdateShaderData();
 
 		// Record commands:

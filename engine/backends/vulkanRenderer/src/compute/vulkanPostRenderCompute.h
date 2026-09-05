@@ -1,7 +1,6 @@
 #pragma once
 #include "iCompute.h"
 #include "vulkanRendererExport.h"
-#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -29,7 +28,6 @@ namespace vulkanRendererBackend
 	private: // Members:
 		std::vector<ComputeCall> m_computeCalls;
 		std::vector<std::vector<ComputeCall>> m_submittedComputeCalls;
-		size_t m_postProcessingCallCount;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -53,7 +51,6 @@ namespace vulkanRendererBackend
 		void CompleteComputeCalls(uint32_t frameIndex);
 		void CompleteAllComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
-		size_t GetPostProcessingCallCount() const;
 		void ResetComputeCalls();
 
 	private: // Methods:

@@ -19,7 +19,6 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	PostRender::PostRender()
-		: m_postProcessingCallCount(0)
 	{
 		m_submittedComputeCalls.resize(Context::GetFramesInFlight());
 	}
@@ -57,7 +56,6 @@ namespace vulkanRendererBackend
 		assert(frameIndex < m_submittedComputeCalls.size());
 		assert(m_submittedComputeCalls[frameIndex].empty());
 		std::swap(m_submittedComputeCalls[frameIndex], m_computeCalls);
-		m_postProcessingCallCount = 0;
 	}
 	void PostRender::CompleteAllComputeCalls()
 	{
@@ -73,14 +71,9 @@ namespace vulkanRendererBackend
 	{
 		return m_computeCalls;
 	}
-	size_t PostRender::GetPostProcessingCallCount() const
-	{
-		return m_postProcessingCallCount;
-	}
 	void PostRender::ResetComputeCalls()
 	{
 		ReleaseComputeCalls(m_computeCalls);
-		m_postProcessingCallCount = 0;
 	}
 
 
@@ -113,8 +106,6 @@ namespace vulkanRendererBackend
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, isPostProcessing };
 		m_computeCalls.push_back(computeCall);
 		pComputeShader->AddPendingUse();
-		if (isPostProcessing)
-			m_postProcessingCallCount++;
 		return pDescriptorSetBinding;
 	}
 	void PostRender::ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls)

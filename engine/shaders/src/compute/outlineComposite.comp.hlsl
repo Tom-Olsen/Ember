@@ -7,8 +7,9 @@ cbuffer OutlineProperties : register(b300, SHADER_SET)
     float4 outlineColor;
     int outlineRadius;
 };
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> renderImage : register(u200, SHADER_SET);
 [[vk::image_format("r8")]] RWTexture2D<float> mask : register(u201, SHADER_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> inputImage : register(u200, CALL_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u201, CALL_SET);
 
 
 
@@ -28,7 +29,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         }
 
     float outlineMask = expandedMask * (1.0f - mask[threadID.xy]) * outlineColor.a;
-    float4 renderColor = renderImage[threadID.xy];
+    float4 renderColor = inputImage[threadID.xy];
     renderColor.rgb = lerp(renderColor.rgb, outlineColor.rgb, outlineMask);
-    renderImage[threadID.xy] = renderColor;
+    outputImage[threadID.xy] = renderColor;
 }
