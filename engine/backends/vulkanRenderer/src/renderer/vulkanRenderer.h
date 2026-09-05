@@ -75,7 +75,8 @@ namespace vulkanRendererBackend
 		std::vector<VkSemaphore> m_deferredLightingToForwardOpaqueSemaphores;
 		std::vector<VkSemaphore> m_forwardOpaqueToForwardTransparentSemaphores;
 		std::vector<VkSemaphore> m_forwardTransparentToPostRenderComputeSemaphores;
-		std::vector<VkSemaphore> m_outlineToPostRenderComputeSemaphores;
+		std::vector<VkSemaphore> m_outlineToRenderComputeSemaphores;
+		std::vector<VkSemaphore> m_renderComputeToPostRenderComputeSemaphores;
 		std::vector<VkSemaphore> m_gizmoToPresentSemaphores;
 		std::vector<VkSemaphore> m_postRenderComputeToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
@@ -84,7 +85,7 @@ namespace vulkanRendererBackend
 		// ResourceUpdate
 		// ├─> PreRenderCompute ─┬─> Shadow ───────────┐
 		// │                     ├─> DeferredGeometry ─┴─> DeferredLighting ─> ForwardOpaque ─> ForwardTransparent ─┐
-		// │                     └─> Outline ───────────────────────────────────────────────────────────────────────┴─> PostRenderCompute ─┐
+		// │                     └─> Outline ─> RenderCompute ──────────────────────────────────────────────────────┴─> PostRenderCompute ─┐
 		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────> Present
 
 		// Shadow/Light system:
@@ -248,6 +249,7 @@ namespace vulkanRendererBackend
 		void RecordGizmoCommands();
 		void RecordPreRenderComputeCommands();
 		void RecordOutlineCommands();
+		void RecordRenderComputeCommands();
 		void RecordShadowCommands();
 		void RecordDeferredGeometryCommands();
 		void RecordDeferredLightingCommands();
@@ -261,6 +263,7 @@ namespace vulkanRendererBackend
 		void SubmitResourceUpdateCommands();
 		void SubmitPreRenderComputeCommands();
 		void SubmitOutlineCommands();
+		void SubmitRenderComputeCommands();
 		void SubmitShadowCommands();
 		void SubmitDeferredGeometryCommands();
 		void SubmitDeferredLightingCommands();

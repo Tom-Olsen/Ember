@@ -1,8 +1,9 @@
 #include "vulkanCompute.h"
-#include "vulkanContext.h"
 #include "vulkanAsyncCompute.h"
+#include "vulkanContext.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
+#include "vulkanRenderCompute.h"
 
 
 
@@ -13,8 +14,9 @@ namespace vulkanRendererBackend
 	Compute::Compute()
 	{
 		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
-		m_pIPostRender = std::make_unique<PostRender>();
 		m_pIPreRender = std::make_unique<PreRender>();
+		m_pIRender = std::make_unique<Render>();
+		m_pIPostRender = std::make_unique<PostRender>();
 	}
 	Compute::~Compute()
 	{
@@ -34,24 +36,32 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<Async*>(m_pIAsync.get());
 	}
-	PostRender* Compute::GetPostRenderCompute()
-	{
-		return static_cast<PostRender*>(m_pIPostRender.get());
-	}
 	PreRender* Compute::GetPreRenderCompute()
 	{
 		return static_cast<PreRender*>(m_pIPreRender.get());
+	}
+	Render* Compute::GetRenderCompute()
+	{
+		return static_cast<Render*>(m_pIRender.get());
+	}
+	PostRender* Compute::GetPostRenderCompute()
+	{
+		return static_cast<PostRender*>(m_pIPostRender.get());
 	}
 	emberBackendInterface::ICompute::IAsync* Compute::GetAsyncComputeInterfaceHandle()
 	{
 		return static_cast<emberBackendInterface::ICompute::IAsync*>(m_pIAsync.get());
 	}
-	emberBackendInterface::ICompute::IPostRender* Compute::GetPostRenderComputeInterfaceHandle()
-	{
-		return static_cast<emberBackendInterface::ICompute::IPostRender*>(m_pIPostRender.get());
-	}
 	emberBackendInterface::ICompute::IPreRender* Compute::GetPreRenderComputeInterfaceHandle()
 	{
 		return static_cast<emberBackendInterface::ICompute::IPreRender*>(m_pIPreRender.get());
+	}
+	emberBackendInterface::ICompute::IRender* Compute::GetRenderComputeInterfaceHandle()
+	{
+		return static_cast<emberBackendInterface::ICompute::IRender*>(m_pIRender.get());
+	}
+	emberBackendInterface::ICompute::IPostRender* Compute::GetPostRenderComputeInterfaceHandle()
+	{
+		return static_cast<emberBackendInterface::ICompute::IPostRender*>(m_pIPostRender.get());
 	}
 }

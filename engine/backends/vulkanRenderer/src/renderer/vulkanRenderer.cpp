@@ -53,6 +53,7 @@
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
 #include "vulkanPresentRenderPass.h"
+#include "vulkanRenderCompute.h"
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSampler.h"
@@ -226,8 +227,9 @@ namespace vulkanRendererBackend
 			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[m_frameIndex], VK_TRUE, UINT64_MAX));
 		}
 
-		// Return pre/post compute shaders callDescriptorSetBindings and decrement their usage count of previous submission with this frame index:
+		// Return frame compute shaders callDescriptorSetBindings and decrement their usage count of previous submission with this frame index:
 		m_pCompute->GetPreRenderCompute()->CompleteComputeCalls(m_frameIndex);
+		m_pCompute->GetRenderCompute()->CompleteComputeCalls(m_frameIndex);
 		m_pCompute->GetPostRenderCompute()->CompleteComputeCalls(m_frameIndex);
 
 		// Cancel current frame on failed acquisition:
@@ -264,6 +266,9 @@ namespace vulkanRendererBackend
 			RecordOutlineCommands();
 			SubmitOutlineCommands();
 
+			RecordRenderComputeCommands();
+			SubmitRenderComputeCommands();
+
 			RecordShadowCommands();
 			SubmitShadowCommands();
 
@@ -298,6 +303,7 @@ namespace vulkanRendererBackend
 
 		// Commit the current frames compute calls, clearing the computeCall vector for the next frame:
 		m_pCompute->GetPreRenderCompute()->CommitComputeCalls(m_frameIndex);
+		m_pCompute->GetRenderCompute()->CommitComputeCalls(m_frameIndex);
 		m_pCompute->GetPostRenderCompute()->CommitComputeCalls(m_frameIndex);
 
 		// Finalize frame:
@@ -885,6 +891,7 @@ namespace vulkanRendererBackend
 	void Renderer::ResetFrameCalls()
 	{
 		m_pCompute->GetPreRenderCompute()->ResetComputeCalls();
+		m_pCompute->GetRenderCompute()->ResetComputeCalls();
 		ResetLights();
 		ResetDrawCalls();
 		m_pCompute->GetPostRenderCompute()->ResetComputeCalls();
@@ -928,6 +935,7 @@ namespace vulkanRendererBackend
 		GetCommandPool(m_frameIndex, RenderStage::resourceUpdate).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::preRenderCompute).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::outline).ResetPools();
+		GetCommandPool(m_frameIndex, RenderStage::renderCompute).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::shadow).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::deferredGeometry).ResetPools();
 		GetCommandPool(m_frameIndex, RenderStage::deferredLighting).ResetPools();
@@ -963,8 +971,9 @@ namespace vulkanRendererBackend
 		// Recreate swapchain:
 		Context::RebuildSwapchain();	// calls WaitDeviceIdle().
 
-		// Return pre/post compute shaders callDescriptorSetBindings and decrement their usage for all frames in flight:
+		// Return frame compute shaders callDescriptorSetBindings and decrement their usage for all frames in flight:
 		m_pCompute->GetPreRenderCompute()->CompleteAllComputeCalls();
+		m_pCompute->GetRenderCompute()->CompleteAllComputeCalls();
 		m_pCompute->GetPostRenderCompute()->CompleteAllComputeCalls();
 
 		// Recreate renderpasses:
@@ -1138,6 +1147,14 @@ namespace vulkanRendererBackend
 
 		// Pre render compute:
 		for (ComputeCall& computeCall : m_pCompute->GetPreRenderCompute()->GetComputeCalls())
+			if (!computeCall.IsBarrier())
+			{
+				computeCall.GetComputeShader()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
+				computeCall.callDescriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			}
+
+		// Render compute:
+		for (ComputeCall& computeCall : m_pCompute->GetRenderCompute()->GetComputeCalls())
 			if (!computeCall.IsBarrier())
 			{
 				computeCall.GetComputeShader()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
@@ -1377,7 +1394,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			std::vector<ComputeCall>& computeCalls = m_pCompute->GetPreRenderCompute()->GetComputeCalls();
-			if (computeCalls.size() > 0)
+			if (!computeCalls.empty())
 			{
 				// Pipeline:
 				VkPipeline pipeline = VK_NULL_HANDLE;
@@ -1577,6 +1594,94 @@ namespace vulkanRendererBackend
 		// Outline render pass's color attachment finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
 		pOutlineRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
     }
+	void Renderer::RecordRenderComputeCommands()
+	{
+		PROFILE_FUNCTION();
+
+		// Prepare command recording:
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::renderCompute);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		// Record render compute commands:
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		{
+			std::vector<ComputeCall>& computeCalls = m_pCompute->GetRenderCompute()->GetComputeCalls();
+			if (!computeCalls.empty())
+			{
+				// Pipeline:
+				VkPipeline pipeline = VK_NULL_HANDLE;
+				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+				bool staticDescriptorSetsBound = false;
+
+				for (size_t computeCallIndex = 0; computeCallIndex < computeCalls.size(); computeCallIndex++)
+				{
+					ComputeCall* pComputeCall = &computeCalls[computeCallIndex];
+
+					// Compute call is a barrier:
+					if (pComputeCall->IsBarrier())
+					{
+						VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
+						memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+						memoryBarrier.dstStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+						memoryBarrier.srcAccessMask = pComputeCall->srcAccessMask;
+						memoryBarrier.dstAccessMask = pComputeCall->dstAccessMask;
+
+						VkDependencyInfo dependencyInfo = { VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
+						dependencyInfo.memoryBarrierCount = 1;
+						dependencyInfo.pMemoryBarriers = &memoryBarrier;
+
+						vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+						DEBUG_LOG_TRACE("Render Compute Barrier, call = {}", computeCallIndex);
+					}
+					else
+					{
+						// Pipeline change:
+						ComputeShader* pComputeShader = pComputeCall->GetComputeShader();
+						VkPipeline newPipeline = pComputeShader->GetPipeline()->GetVkPipeline();
+						if (pipeline != newPipeline)
+						{
+							// Bind Pipeline:
+							pipeline = newPipeline;
+							pipelineLayout = pComputeShader->GetVkPipelineLayout();
+							vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+						
+							// Bind static descriptor sets:
+							if (!staticDescriptorSetsBound)
+							{
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
+								staticDescriptorSetsBound = true;
+							}
+						
+							// Bind per shader descriptor set:
+							if (VkDescriptorSet vkDescriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+						}
+					
+						// Bind per compute call descriptor set:
+						if (VkDescriptorSet vkDescriptorSet = pComputeCall->callDescriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
+					
+						// Push constant:
+						ComputePushConstant pushConstant(pComputeCall->threadCount, m_time, m_deltaTime);
+						vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
+					
+						// Group counts:
+						Uint3 blockSize = pComputeShader->GetBlockSize();
+						uint32_t groupCountX = (pComputeCall->threadCount[0] + blockSize[0] - 1) / blockSize[0];
+						uint32_t groupCountY = (pComputeCall->threadCount[1] + blockSize[1] - 1) / blockSize[1];
+						uint32_t groupCountZ = (pComputeCall->threadCount[2] + blockSize[2] - 1) / blockSize[2];
+					
+						// Dispatch:
+						vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+						DEBUG_LOG_TRACE("Render Compute Shader {}, call = {}", pComputeShader->GetDebugName(), computeCallIndex);
+					}
+				}
+			}
+		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+	}
     void Renderer::RecordShadowCommands()
 	{
 		PROFILE_FUNCTION();
@@ -2331,7 +2436,7 @@ namespace vulkanRendererBackend
 
 		// Signal semaphore info:
 		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_outlineToPostRenderComputeSemaphores[m_frameIndex];
+		signalSemaphoreInfo.semaphore = m_outlineToRenderComputeSemaphores[m_frameIndex];
 		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		// Submit info:
@@ -2345,6 +2450,37 @@ namespace vulkanRendererBackend
 
 		// Submit:
 		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
+	}
+	void Renderer::SubmitRenderComputeCommands()
+	{
+		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::renderCompute);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+
+		// Wait semaphore info:
+		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		waitSemaphoreInfo.semaphore = m_outlineToRenderComputeSemaphores[m_frameIndex];
+		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+
+		// Command buffer info:
+		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		commandBufferInfo.commandBuffer = commandBuffer;
+
+		// Signal semaphore info:
+		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
+		signalSemaphoreInfo.semaphore = m_renderComputeToPostRenderComputeSemaphores[m_frameIndex];
+		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+
+		// Submit info:
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.waitSemaphoreInfoCount = 1;
+		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		submitInfo.signalSemaphoreInfoCount = 1;
+		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
+
+		// Submit:
+		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetComputeQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
 	}
     void Renderer::SubmitShadowCommands()
 	{
@@ -2521,7 +2657,7 @@ namespace vulkanRendererBackend
 		waitSemaphoreInfos[0].semaphore = m_forwardTransparentToPostRenderComputeSemaphores[m_frameIndex];
 		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[1].semaphore = m_outlineToPostRenderComputeSemaphores[m_frameIndex];
+		waitSemaphoreInfos[1].semaphore = m_renderComputeToPostRenderComputeSemaphores[m_frameIndex];
 		waitSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 
 		// Command buffer info:
@@ -2636,7 +2772,8 @@ namespace vulkanRendererBackend
 		m_deferredLightingToForwardOpaqueSemaphores.resize(Context::GetFramesInFlight());
 		m_forwardOpaqueToForwardTransparentSemaphores.resize(Context::GetFramesInFlight());
 		m_forwardTransparentToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
-		m_outlineToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
+		m_outlineToRenderComputeSemaphores.resize(Context::GetFramesInFlight());
+		m_renderComputeToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
 		m_gizmoToPresentSemaphores.resize(Context::GetFramesInFlight());
 		m_postRenderComputeToPresentSemaphores.resize(Context::GetFramesInFlight());
 		m_releaseSemaphores.resize(Context::GetSwapchain()->GetImageCount());
@@ -2653,7 +2790,8 @@ namespace vulkanRendererBackend
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredLightingToForwardOpaqueSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardOpaqueToForwardTransparentSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardTransparentToPostRenderComputeSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_outlineToPostRenderComputeSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_outlineToRenderComputeSemaphores[i]));
+			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_renderComputeToPostRenderComputeSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_gizmoToPresentSemaphores[i]));
 			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderComputeToPresentSemaphores[i]));
 			NAME_VK_OBJECT(m_acquireSemaphores[i], "Semaphore_Acquire_Frame" + std::to_string(i));
@@ -2667,7 +2805,8 @@ namespace vulkanRendererBackend
 			NAME_VK_OBJECT(m_deferredLightingToForwardOpaqueSemaphores[i], "Semaphore_DeferredLightingToForwardOpaque_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_forwardOpaqueToForwardTransparentSemaphores[i], "Semaphore_ForwardOpaqueToForwardTransparent_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_forwardTransparentToPostRenderComputeSemaphores[i], "Semaphore_ForwardTransparentToPostRenderCompute_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_outlineToPostRenderComputeSemaphores[i], "Semaphore_OutlineToPostRenderCompute_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_outlineToRenderComputeSemaphores[i], "Semaphore_OutlineToRenderCompute_Frame" + std::to_string(i));
+			NAME_VK_OBJECT(m_renderComputeToPostRenderComputeSemaphores[i], "Semaphore_RenderComputeToPostRenderCompute_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_gizmoToPresentSemaphores[i], "Semaphore_GizmoToPresent_Frame" + std::to_string(i));
 			NAME_VK_OBJECT(m_postRenderComputeToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
 		}
@@ -2698,7 +2837,8 @@ namespace vulkanRendererBackend
 			vkDestroySemaphore(Context::GetVkDevice(), m_deferredLightingToForwardOpaqueSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardOpaqueToForwardTransparentSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_forwardTransparentToPostRenderComputeSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_outlineToPostRenderComputeSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_outlineToRenderComputeSemaphores[i], nullptr);
+			vkDestroySemaphore(Context::GetVkDevice(), m_renderComputeToPostRenderComputeSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_gizmoToPresentSemaphores[i], nullptr);
 			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderComputeToPresentSemaphores[i], nullptr);
 		}
@@ -2715,7 +2855,8 @@ namespace vulkanRendererBackend
 		m_deferredLightingToForwardOpaqueSemaphores.clear();
 		m_forwardOpaqueToForwardTransparentSemaphores.clear();
 		m_forwardTransparentToPostRenderComputeSemaphores.clear();
-		m_outlineToPostRenderComputeSemaphores.clear();
+		m_outlineToRenderComputeSemaphores.clear();
+		m_renderComputeToPostRenderComputeSemaphores.clear();
 		m_gizmoToPresentSemaphores.clear();
 		m_postRenderComputeToPresentSemaphores.clear();
 		m_releaseSemaphores.clear();

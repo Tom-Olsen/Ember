@@ -22,8 +22,9 @@ namespace emberCore
 	enum class ComputeType
 	{
 		async,
-		postRender,
 		preRender,
+		render,
+		postRender,
 		physics
 	};
 
@@ -68,31 +69,6 @@ namespace emberCore
 			~Async() = delete;
 		};
 
-		class EMBER_CORE_API PostRender
-		{
-		private: // Members:
-			static emberBackendInterface::ICompute::IPostRender* s_pIPostRender;
-
-		public: // Methods:
-			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IPostRender* pIPostRender);
-			static void Clear();
-
-			// Workload recording:
-			// Post render compute is render-target sized by design; threadCount is derived by the backend.
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader);
-			static ShaderProperties RecordPostProcessingShader(ComputeShader& computeShader);
-
-		private: // Methods
-			// Delete all constructors:
-			PostRender() = delete;
-			PostRender(const PostRender&) = delete;
-			PostRender& operator=(const PostRender&) = delete;
-			PostRender(PostRender&&) = delete;
-			PostRender& operator=(PostRender&&) = delete;
-			~PostRender() = delete;
-		};
-
 
 
 		class EMBER_CORE_API PreRender
@@ -122,6 +98,64 @@ namespace emberCore
 			PreRender(PreRender&&) = delete;
 			PreRender& operator=(PreRender&&) = delete;
 			~PreRender() = delete;
+		};
+
+
+
+		class EMBER_CORE_API Render
+		{
+		private: // Members:
+			static emberBackendInterface::ICompute::IRender* s_pIRender;
+
+		public: // Methods:
+			// Constructor/Destructor:
+			static void Init(emberBackendInterface::ICompute::IRender* pIRender);
+			static void Clear();
+
+			// Workload recording:
+			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeWrite();
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+
+		private: // Methods
+			// Delete all constructors:
+			Render() = delete;
+			Render(const Render&) = delete;
+			Render& operator=(const Render&) = delete;
+			Render(Render&&) = delete;
+			Render& operator=(Render&&) = delete;
+			~Render() = delete;
+		};
+
+
+		
+		class EMBER_CORE_API PostRender
+		{
+		private: // Members:
+			static emberBackendInterface::ICompute::IPostRender* s_pIPostRender;
+
+		public: // Methods:
+			// Constructor/Destructor:
+			static void Init(emberBackendInterface::ICompute::IPostRender* pIPostRender);
+			static void Clear();
+
+			// Workload recording:
+			// Post render compute is render-target sized by design; threadCount is derived by the backend.
+			static ShaderProperties RecordComputeShader(ComputeShader& computeShader);
+			static ShaderProperties RecordPostProcessingShader(ComputeShader& computeShader);
+
+		private: // Methods
+			// Delete all constructors:
+			PostRender() = delete;
+			PostRender(const PostRender&) = delete;
+			PostRender& operator=(const PostRender&) = delete;
+			PostRender(PostRender&&) = delete;
+			PostRender& operator=(PostRender&&) = delete;
+			~PostRender() = delete;
 		};
 
 

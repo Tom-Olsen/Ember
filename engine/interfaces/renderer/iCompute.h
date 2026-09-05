@@ -108,6 +108,28 @@ namespace emberBackendInterface
             virtual void RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
 
+        class IPreRender
+        {
+        public: // Methods:
+            // Virtual destructor for v-table:
+            virtual ~IPreRender() = default;
+
+            // Workload recording:
+            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
+        };
+
+        class IRender
+        {
+        public: // Methods:
+            // Virtual destructor for v-table:
+            virtual ~IRender() = default;
+
+            // Workload recording:
+            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
+        };
+
         class IPostRender
         {
         public: // Methods:
@@ -121,21 +143,9 @@ namespace emberBackendInterface
 
 
 
-        class IPreRender
-        {
-        public: // Methods:
-            // Virtual destructor for v-table:
-            virtual ~IPreRender() = default;
-
-            // Workload recording:
-            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
-        };
-
-
-
         virtual IAsync* GetAsyncComputeInterfaceHandle() = 0;
-        virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
         virtual IPreRender* GetPreRenderComputeInterfaceHandle() = 0;
+        virtual IRender* GetRenderComputeInterfaceHandle() = 0;
+        virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
     };
 }

@@ -1,6 +1,6 @@
 #pragma once
-#include "emberMath.h"
 #include "iComputeShader.h"
+#include "emberMath.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
 #include <cstdint>
@@ -16,8 +16,9 @@ namespace vulkanRendererBackend
 	class Async;
 	class DescriptorSetBinding;
 	class Pipeline;
-	class PostRender;
 	class PreRender;
+	class Render;
+	class PostRender;
 	class Renderer;
 
 
@@ -26,8 +27,9 @@ namespace vulkanRendererBackend
 	{
 		// Friends:
 		friend class Async;
-		friend class PostRender;
 		friend class PreRender;
+		friend class Render;
+		friend class PostRender;
 		friend class Renderer;
 
 	private: // Members:

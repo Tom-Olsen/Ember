@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 
 
 
-	class VULKAN_RENDERER_API PreRender : public emberBackendInterface::ICompute::IPreRender
+	class VULKAN_RENDERER_API Render : public emberBackendInterface::ICompute::IRender
 	{
 	private: // Members:
 		std::vector<ComputeCall> m_computeCalls;
@@ -31,16 +31,16 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		PreRender();
-		~PreRender();
+		Render();
+		~Render();
 
 		// Non-copyable:
-		PreRender(const PreRender&) = delete;
-		PreRender& operator=(const PreRender&) = delete;
+		Render(const Render&) = delete;
+		Render& operator=(const Render&) = delete;
 
 		// Movable:
-		PreRender(PreRender&& other) noexcept;
-		PreRender& operator=(PreRender&& other) noexcept;
+		Render(Render&& other) noexcept;
+		Render& operator=(Render&& other) noexcept;
 
 		// Workload recording:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
