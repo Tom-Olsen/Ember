@@ -1,4 +1,5 @@
 #pragma once
+#include "spirvImageFormatToVulkan.h"
 #include "vulkanFormatToString.h"
 #include <spirv_reflect.h>
 #include <sstream>
@@ -1133,7 +1134,7 @@ namespace emberSpirvReflect
         ss << indentStr << "image.arrayed: " << image.arrayed << "\n";
         ss << indentStr << "image.ms: " << image.ms << "\n";
         ss << indentStr << "image.sampled: " << image.sampled << "\n";
-        ss << indentStr << "image.image_format: " << emberVulkanUtility::ToString((VkFormat)image.image_format) << "\n";
+        ss << indentStr << "image.image_format: " << emberVulkanUtility::ToString(ImageFormatSpirvToVulkan(image.image_format)) << "\n";
         return ss.str();
     }
     inline std::string ToString(const SpvReflectArrayTraits& array, int indent = 0)

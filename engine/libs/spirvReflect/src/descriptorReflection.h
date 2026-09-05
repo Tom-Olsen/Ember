@@ -3,6 +3,7 @@
 #include <spirv_reflect.h>
 #include <string>
 #include <variant>
+#include <vulkan/vulkan.h>
 
 
 
@@ -11,7 +12,10 @@ namespace emberSpirvReflect
     // DescriptorResource variant:
     struct ImageDescriptor
     {
-        uint32_t imageViewType;
+        VkImageViewType imageViewType;
+        VkFormat imageFormat;
+        bool isReadable;
+        bool isWritable;
     };
     struct UniformBufferDescriptor
     {

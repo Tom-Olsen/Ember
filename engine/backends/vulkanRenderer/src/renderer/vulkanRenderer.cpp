@@ -1204,11 +1204,18 @@ namespace vulkanRendererBackend
 		for (ComputeCall& computeCall : pPostRenderCompute->GetComputeCalls())
 		{
 			computeCall.threadCount = postRenderThreadCount;
-			if (computeCall.isPostProcessing)
+			switch (computeCall.postProcessingMode)
 			{
+			case PostProcessingMode::none:
+				break;
+			case PostProcessingMode::inPlace:
+				computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inOutImage", m_pSceneColorTexturePair->GetCurrentTexture(m_frameIndex));
+				break;
+			case PostProcessingMode::outOfPlace:
 				computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inputImage", m_pSceneColorTexturePair->GetCurrentTexture(m_frameIndex));
 				computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("outputImage", m_pSceneColorTexturePair->GetNextTexture(m_frameIndex));
 				m_pSceneColorTexturePair->Swap(m_frameIndex);
+				break;
 			}
 			computeCall.GetComputeShader()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 			computeCall.callDescriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);

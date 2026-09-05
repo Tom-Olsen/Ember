@@ -12,14 +12,19 @@ namespace emberBackendInterface
 	class IComputeShader;
 	class IDescriptorSetBinding;
 }
+namespace emberSpirvReflect
+{
+	class DescriptorReflection;
+}
 
 
 
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class ComputeShader;
 	struct ComputeCall;
+	class ComputeShader;
+	enum class PostProcessingMode : uint8_t;
 
 
 
@@ -54,7 +59,9 @@ namespace vulkanRendererBackend
 		void ResetComputeCalls();
 
 	private: // Methods:
-		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, bool isPostProcessing);
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, PostProcessingMode postProcessingMode);
 		void ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls);
+		PostProcessingMode DeterminePostProcessingMode(const ComputeShader& computeShader) const;
+		void ValidatePostProcessingImage(const ComputeShader& computeShader, const emberSpirvReflect::DescriptorReflection& descriptorReflection, bool allowSampledImage, bool requireReadable, bool requireWritable) const;
 	};
 }

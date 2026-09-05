@@ -1,4 +1,5 @@
 #include "descriptorReflection.h"
+#include "spirvImageFormatToVulkan.h"
 #include "spirvReflectToString.h"
 #include "vulkanDescriptorTypeToString.h"
 #include "vulkanImageViewTypeToString.h"
@@ -100,7 +101,7 @@ namespace emberSpirvReflect
 
         // Image descriptor:
         if (m_descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE || m_descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
-            if (GetImageDescriptor()->imageViewType != other.GetImageDescriptor()->imageViewType)
+            if (GetImageDescriptor()->imageViewType != other.GetImageDescriptor()->imageViewType || GetImageDescriptor()->imageFormat != other.GetImageDescriptor()->imageFormat)
                 return false;
 
         // Uniform buffer descriptor:
@@ -132,10 +133,16 @@ namespace emberSpirvReflect
                 ss << GetUniformBufferDescriptor()->bufferLayout.ToString(indent + 2);
                 break;
             case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-                ss << "vkImageViewType(sampled): " << emberVulkanUtility::ToString((VkImageViewType)GetImageDescriptor()->imageViewType);
+                ss << "vkImageViewType(sampled): " << emberVulkanUtility::ToString(GetImageDescriptor()->imageViewType);
+                ss << ", vkFormat: " << emberVulkanUtility::ToString(GetImageDescriptor()->imageFormat);
+                ss << ", readable: " << GetImageDescriptor()->isReadable;
+                ss << ", writable: " << GetImageDescriptor()->isWritable;
                 break;
             case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-                ss << "vkImageViewType(storage): " << emberVulkanUtility::ToString((VkImageViewType)GetImageDescriptor()->imageViewType);
+                ss << "vkImageViewType(storage): " << emberVulkanUtility::ToString(GetImageDescriptor()->imageViewType);
+                ss << ", vkFormat: " << emberVulkanUtility::ToString(GetImageDescriptor()->imageFormat);
+                ss << ", readable: " << GetImageDescriptor()->isReadable;
+                ss << ", writable: " << GetImageDescriptor()->isWritable;
                 break;
         }
         return ss.str();
@@ -146,7 +153,7 @@ namespace emberSpirvReflect
     // Private methods:
     ImageDescriptor DescriptorReflection::ExtractImageDescriptor(const SpvReflectDescriptorBinding* const pBinding)
     {
-        uint32_t imageViewType;
+        VkImageViewType imageViewType;
         switch (pBinding->image.dim)
         {
             case SpvDim1D:
@@ -165,7 +172,11 @@ namespace emberSpirvReflect
                 assert(false && "DescriptorReflection::ExtractImageDescriptor: Unsupported image dimension.");
                 break;
         }
-        return ImageDescriptor{ imageViewType };
+        VkFormat imageFormat = ImageFormatSpirvToVulkan(pBinding->image.image_format);
+        bool isReadable = (pBinding->decoration_flags & SPV_REFLECT_DECORATION_NON_READABLE) == 0;
+        bool isWritable = pBinding->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_IMAGE
+            && (pBinding->decoration_flags & SPV_REFLECT_DECORATION_NON_WRITABLE) == 0;
+        return ImageDescriptor{ imageViewType, imageFormat, isReadable, isWritable };
     }
     UniformBufferDescriptor DescriptorReflection::ExtractUniformBufferDescriptor(const SpvReflectDescriptorBinding* const pBinding)
     {
