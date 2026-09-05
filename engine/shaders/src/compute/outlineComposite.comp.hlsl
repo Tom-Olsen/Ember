@@ -24,7 +24,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     for (int y = -outlineRadius; y <= outlineRadius; y++)
         for (int x = -outlineRadius; x <= outlineRadius; x++)
         {
-            int2 srcPixel = clamp(threadID.xy + int2(x, y), int2(0, 0), maxCoordinate);
+            int2 srcPixel = clamp(int2(threadID.xy) + int2(x, y), int2(0, 0), maxCoordinate);
             expandedMask = max(expandedMask, mask[srcPixel]);
         }
 

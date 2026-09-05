@@ -82,7 +82,7 @@ namespace vulkanRendererBackend
 		VKA(vkCreateDevice(pPhysicalDevice->GetVkPhysicalDevice(), &deviceCreateInfo, nullptr, &m_device));
 
 		// Aquire queues:
-		if (queueCount >= 3)
+		if (queueCount >= 4)
 		{
 			vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
 			vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 1, &m_presentQueue.queue);
