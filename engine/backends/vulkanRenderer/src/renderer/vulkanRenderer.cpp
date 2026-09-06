@@ -50,7 +50,9 @@
 #include "vulkanPreRenderCompute.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderCompute.h"
+#include "vulkanRenderGraph.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderStage.h"
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
@@ -107,7 +109,8 @@ namespace vulkanRendererBackend
 		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
 
-		// Frame resources (one per frameInFlight):
+		// Render resources:
+		m_pRenderGraph = std::make_unique<RenderGraph>();
 		m_frameRenderData.resize(Context::GetFramesInFlight());
 		m_frameResources.reserve(Context::GetFramesInFlight());
 		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
@@ -128,25 +131,6 @@ namespace vulkanRendererBackend
 		m_previousDirectionalLights.resize(m_maxDirectionalLights);
 		m_previousPositionalLights.resize(m_maxPositionalLights);
 
-		// Debug naming:
-		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
-			for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-			{
-				std::string name = renderStageNames[renderStage];
-				name += "_Frame" + std::to_string(frameIndex);
-				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandPool(), "CommandPool_Primary_" + name);
-				NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetPrimaryVkCommandBuffer(), "CommandBuffer_Primary_" + name);
-				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
-				{
-					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPool_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
-					NAME_VK_OBJECT(GetCommandPool(frameIndex, renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBuffer_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
-				}
-			}
-
-		// Synchronization objects:
-		CreateFences();
-		CreateSemaphores();
-
 		// Static descriptor sets:
 		m_staticDescriptorSets.reserve(Context::GetFramesInFlight());
 		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
@@ -160,13 +144,27 @@ namespace vulkanRendererBackend
 			m_staticDescriptorSets.push_back(staticDescriptorSets);
 			m_frameResources[frameIndex].staticDescriptorSets = staticDescriptorSets;
 		}
+
+		// Debug naming:
+		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
+			for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+			{
+				std::string name = renderStageNames[renderStage];
+				name += "_Frame" + std::to_string(frameIndex);
+				NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetPrimaryVkCommandPool(), "CommandPool_Primary_" + name);
+				NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetPrimaryVkCommandBuffer(), "CommandBuffer_Primary_" + name);
+				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
+				{
+					NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPool_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
+					NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBuffer_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
+				}
+			}
 	}
 	Renderer::~Renderer()
 	{
 		Context::WaitDeviceIdle();
-		DestroySemaphores();
-		DestroyFences();
 		m_frameResources.clear();
+		m_pRenderGraph.reset();
 		FrameDescriptorSetLayout::Clear();
 		SceneDescriptorSetLayout::Clear();
 		GlobalDescriptorSetLayout::Clear();
@@ -222,7 +220,7 @@ namespace vulkanRendererBackend
 		// Wait for previous frame fence:
 		{
 			PROFILE_SCOPE("Renderer::WaitForFrameFence");
-			VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[m_frameIndex], VK_TRUE, UINT64_MAX));
+			m_pRenderGraph->WaitForFrame(m_frameIndex);
 		}
 
 		// Return frame compute shaders callDescriptorSetBindings and decrement their usage count of previous submission with this frame index:
@@ -236,7 +234,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Begin next frame:
-		VKA(vkResetFences(Context::GetVkDevice(), 1, &m_frameFences[m_frameIndex]));
+		m_pRenderGraph->ResetFrameFence(m_frameIndex);
 		m_frameResources[m_frameIndex].ResetCommandPools();
 		Context::MarkDeviceBusy();
 		m_pSceneColorTexturePair->BeginFrame(m_frameIndex);
@@ -246,50 +244,9 @@ namespace vulkanRendererBackend
 		UpdateShaderData();
 
 		// Record and submit current frame commands:
-		{
-			PROFILE_SCOPE("vulkanRendererBackend::Renderer::Record");
-			DEBUG_LOG_TRACE("Recording frame {}", m_frameIndex);
-
-			uint32_t shadowMapCount = m_directionalLightsCount + m_positionalLightsCount;
-			FrameContext frameContext(m_frameIndex, m_imageIndex, m_time, m_deltaTime, m_shadowMapResolution, shadowMapCount, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor, m_frameResources[m_frameIndex], m_frameRenderData[m_frameIndex], *m_pSceneColorTexturePair, m_pIGui);
-			m_resourceUpdateStage.Record(frameContext);
-			SubmitResourceUpdateCommands();
-
-			m_gizmoStage.Record(frameContext);
-			SubmitGizmoCommands();
-
-			m_preRenderComputeStage.Record(frameContext, m_pCompute->GetPreRenderCompute()->GetComputeCalls());
-			SubmitPreRenderComputeCommands();
-
-			m_outlineStage.Record(frameContext);
-			SubmitOutlineCommands();
-
-			m_renderComputeStage.Record(frameContext, m_pCompute->GetRenderCompute()->GetComputeCalls());
-			SubmitRenderComputeCommands();
-
-			m_shadowStage.Record(frameContext);
-			SubmitShadowCommands();
-
-			m_deferredGeometryStage.Record(frameContext);
-			SubmitDeferredGeometryCommands();
-
-			m_deferredLightingStage.Record(frameContext);
-			SubmitDeferredLightingCommands();
-
-			m_forwardOpaqueStage.Record(frameContext);
-			SubmitForwardOpaqueCommands();
-
-			m_forwardTransparentStage.Record(frameContext);
-			SubmitForwardTransparentCommands();
-
-			m_postRenderComputeStage.Record(frameContext, m_pCompute->GetPostRenderCompute()->GetComputeCalls());
-			SubmitPostRenderComputeCommands();
-
-			m_presentStage.Record(frameContext);
-			SubmitPresentCommands();
-		}
-
-		// Commit the current frames compute calls, clearing the computeCall vector for the next frame:
+		uint32_t shadowMapCount = m_directionalLightsCount + m_positionalLightsCount;
+		FrameContext frameContext(m_frameIndex, m_imageIndex, m_time, m_deltaTime, m_shadowMapResolution, shadowMapCount, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor, m_frameResources[m_frameIndex], m_frameRenderData[m_frameIndex], *m_pSceneColorTexturePair, m_pIGui);
+		m_pRenderGraph->RecordAndSubmit(frameContext, m_pCompute->GetPreRenderCompute()->GetComputeCalls(), m_pCompute->GetRenderCompute()->GetComputeCalls(), m_pCompute->GetPostRenderCompute()->GetComputeCalls());
 		m_pCompute->CommitFrame(m_frameIndex);
 
 		// Finalize frame:
@@ -588,19 +545,7 @@ namespace vulkanRendererBackend
 	}
 	bool Renderer::IsFrameFinished(uint32_t frameIndex) const
 	{
-		if (frameIndex >= m_frameFences.size())
-		{
-			LOG_ERROR("Renderer::IsFrameFinished(...) failed. frameIndex '{}' out of range.", frameIndex);
-			return true;
-		}
-
-		VkResult result = vkGetFenceStatus(Context::GetVkDevice(), m_frameFences[frameIndex]);
-		if (result == VK_SUCCESS)
-			return true;
-		if (result == VK_NOT_READY)
-			return false;
-		VKA(result);
-		return false;
+		return m_pRenderGraph->IsFrameFinished(frameIndex);
 	}
 
 
@@ -656,12 +601,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::WaitForFrameFinished(uint32_t frameIndex)
 	{
-		if (frameIndex >= m_frameFences.size())
-		{
-			LOG_ERROR("Renderer::WaitForFrameFinished(...) failed. frameIndex '{}' out of range.", frameIndex);
-			return;
-		}
-		VKA(vkWaitForFences(Context::GetVkDevice(), 1, &m_frameFences[frameIndex], VK_TRUE, UINT64_MAX));
+		m_pRenderGraph->WaitForFrame(frameIndex);
 	}
 
 
@@ -820,10 +760,7 @@ namespace vulkanRendererBackend
 		RenderPassManager::RecreateRenderPasses();
 
 		// Recreate synchronization objects:
-		DestroyFences();
-		DestroySemaphores();
-		CreateFences();
-		CreateSemaphores();
+		m_pRenderGraph->RecreateSyncObjects();
 	}
 	bool Renderer::AcquireImage()
 	{
@@ -834,8 +771,7 @@ namespace vulkanRendererBackend
 			return false;
 		}
 
-		// Signal acquireSemaphore when done:
-		VkResult result = vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, m_acquireSemaphores[m_frameIndex], VK_NULL_HANDLE, &m_imageIndex);
+		VkResult result = m_pRenderGraph->AcquireImage(m_frameIndex, m_imageIndex);
 
 		switch (result)
 		{
@@ -968,421 +904,9 @@ namespace vulkanRendererBackend
 		// Compute calls:
 		m_pCompute->UpdateShaderData(m_frameIndex, *m_pSceneColorTexturePair);
 	}
-
-
-
-	// Submit commands:
-	void Renderer::SubmitResourceUpdateCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::resourceUpdate);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_acquireSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		std::array<VkSemaphoreSubmitInfo, 2> signalSemaphoreInfos{};
-		signalSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		signalSemaphoreInfos[0].semaphore = m_resourceUpdateToPreRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-		signalSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		signalSemaphoreInfos[1].semaphore = m_resourceUpdateToGizmoSemaphores[m_frameIndex];
-		signalSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = static_cast<uint32_t>(signalSemaphoreInfos.size());
-		submitInfo.pSignalSemaphoreInfos = signalSemaphoreInfos.data();
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitGizmoCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_resourceUpdateToGizmoSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_gizmoToPresentSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-    void Renderer::SubmitPreRenderComputeCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::preRenderCompute);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_resourceUpdateToPreRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		std::array<VkSemaphoreSubmitInfo, 3> signalSemaphoreInfos{};
-		signalSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		signalSemaphoreInfos[0].semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
-		signalSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-		signalSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		signalSemaphoreInfos[1].semaphore = m_preRenderComputeToDeferredGeometrySemaphores[m_frameIndex];
-		signalSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-		signalSemaphoreInfos[2].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		signalSemaphoreInfos[2].semaphore = m_preRenderComputeToOutlineSemaphores[m_frameIndex];
-		signalSemaphoreInfos[2].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = static_cast<uint32_t>(signalSemaphoreInfos.size());
-		submitInfo.pSignalSemaphoreInfos = signalSemaphoreInfos.data();
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitOutlineCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::outline);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_preRenderComputeToOutlineSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_outlineToRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitRenderComputeCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::renderCompute);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_outlineToRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_renderComputeToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetComputeQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-    void Renderer::SubmitShadowCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::shadow);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_preRenderComputeToShadowSemaphores[m_frameIndex];
-		// Shadow draws can immediately consume mesh buffers uploaded in the resourceUpdate submission.
-		// The wait therefore has to block the front of the graphics pipeline, including index/vertex fetch,
-		// before the shadow pass starts reading those buffers.
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_shadowToDeferredLightingSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitDeferredGeometryCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::deferredGeometry);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_preRenderComputeToDeferredGeometrySemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_deferredGeometryToDeferredLightingSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitDeferredLightingCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::deferredLighting);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
-		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[0].semaphore = m_shadowToDeferredLightingSemaphores[m_frameIndex];
-		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[1].semaphore = m_deferredGeometryToDeferredLightingSemaphores[m_frameIndex];
-		waitSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_deferredLightingToForwardOpaqueSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = static_cast<uint32_t>(waitSemaphoreInfos.size());
-		submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfos.data();
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitForwardOpaqueCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forwardOpaque);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_deferredLightingToForwardOpaqueSemaphores[m_frameIndex];
-		// Deferred lighting joins shadow and deferred geometry, so this wait makes their resources and the
-		// completed scene attachments available to every graphics stage used by forward rendering.
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_forwardOpaqueToForwardTransparentSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitForwardTransparentCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::forwardTransparent);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		VkSemaphoreSubmitInfo waitSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		waitSemaphoreInfo.semaphore = m_forwardOpaqueToForwardTransparentSemaphores[m_frameIndex];
-		waitSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_forwardTransparentToPostRenderComputeSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = &waitSemaphoreInfo;
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitPostRenderComputeCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::postRenderCompute);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
-		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[0].semaphore = m_forwardTransparentToPostRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[1].semaphore = m_renderComputeToPostRenderComputeSemaphores[m_frameIndex];
-		waitSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_postRenderComputeToPresentSemaphores[m_frameIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = static_cast<uint32_t>(waitSemaphoreInfos.size());
-		submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfos.data();
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, VK_NULL_HANDLE));
-	}
-	void Renderer::SubmitPresentCommands()
-	{
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::present);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-
-		// Wait semaphore info:
-		std::array<VkSemaphoreSubmitInfo, 2> waitSemaphoreInfos{};
-		waitSemaphoreInfos[0].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[0].semaphore = m_postRenderComputeToPresentSemaphores[m_frameIndex];
-		waitSemaphoreInfos[0].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-		waitSemaphoreInfos[1].sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
-		waitSemaphoreInfos[1].semaphore = m_gizmoToPresentSemaphores[m_frameIndex];
-		waitSemaphoreInfos[1].stageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-
-		// Command buffer info:
-		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
-		commandBufferInfo.commandBuffer = commandBuffer;
-
-		// Signal semaphore info:
-		VkSemaphoreSubmitInfo signalSemaphoreInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO };
-		signalSemaphoreInfo.semaphore = m_releaseSemaphores[m_imageIndex];
-		signalSemaphoreInfo.stageMask = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
-
-		// Submit info:
-		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
-		submitInfo.waitSemaphoreInfoCount = static_cast<uint32_t>(waitSemaphoreInfos.size());
-		submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfos.data();
-		submitInfo.commandBufferInfoCount = 1;
-		submitInfo.pCommandBufferInfos = &commandBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = &signalSemaphoreInfo;
-
-		// Submit:
-		VKA(vkQueueSubmit2(Context::GetLogicalDevice()->GetGraphicsQueue().queue, 1, &submitInfo, m_frameFences[m_frameIndex]));
-	}
 	bool Renderer::PresentImage()
 	{
-		PROFILE_FUNCTION();
-		VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_releaseSemaphores[m_imageIndex];
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &Context::GetVkSwapchainKHR();
-		presentInfo.pImageIndices = &m_imageIndex;
-
-		VkResult result = vkQueuePresentKHR(Context::GetLogicalDevice()->GetPresentQueue().queue, &presentInfo);
+		VkResult result = m_pRenderGraph->Present(m_imageIndex);
 		switch (result)
 		{
 		case VK_SUCCESS:
@@ -1395,138 +919,5 @@ namespace vulkanRendererBackend
 			LOG_CRITICAL("Renderer::PresentImage() failed. Vulkan error: {}", std::to_string(result));
 			std::abort();
 		}
-	}
-
-
-
-	// Sync objects management:
-	void Renderer::CreateFences()
-	{
-		VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
-		createInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;	// Fence is created in the signaled state to prevent the first wait from blocking.
-
-		m_frameFences.resize(Context::GetFramesInFlight());
-		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
-		{
-			VKA(vkCreateFence(Context::GetVkDevice(), &createInfo, nullptr, &m_frameFences[i]));
-			NAME_VK_OBJECT(m_frameFences[i], "Fence_Frame" + std::to_string(i));
-		}
-	}
-	void Renderer::CreateSemaphores()
-	{
-		VkSemaphoreCreateInfo createInfo = { VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-
-		// One per frame in flight:
-		m_acquireSemaphores.resize(Context::GetFramesInFlight());
-		m_resourceUpdateToPreRenderComputeSemaphores.resize(Context::GetFramesInFlight());
-		m_resourceUpdateToGizmoSemaphores.resize(Context::GetFramesInFlight());
-		m_preRenderComputeToShadowSemaphores.resize(Context::GetFramesInFlight());
-		m_preRenderComputeToDeferredGeometrySemaphores.resize(Context::GetFramesInFlight());
-		m_preRenderComputeToOutlineSemaphores.resize(Context::GetFramesInFlight());
-		m_shadowToDeferredLightingSemaphores.resize(Context::GetFramesInFlight());
-		m_deferredGeometryToDeferredLightingSemaphores.resize(Context::GetFramesInFlight());
-		m_deferredLightingToForwardOpaqueSemaphores.resize(Context::GetFramesInFlight());
-		m_forwardOpaqueToForwardTransparentSemaphores.resize(Context::GetFramesInFlight());
-		m_forwardTransparentToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
-		m_outlineToRenderComputeSemaphores.resize(Context::GetFramesInFlight());
-		m_renderComputeToPostRenderComputeSemaphores.resize(Context::GetFramesInFlight());
-		m_gizmoToPresentSemaphores.resize(Context::GetFramesInFlight());
-		m_postRenderComputeToPresentSemaphores.resize(Context::GetFramesInFlight());
-		m_releaseSemaphores.resize(Context::GetSwapchain()->GetImageCount());
-		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
-		{
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_acquireSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToPreRenderComputeSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_resourceUpdateToGizmoSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToShadowSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToDeferredGeometrySemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_preRenderComputeToOutlineSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_shadowToDeferredLightingSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredGeometryToDeferredLightingSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_deferredLightingToForwardOpaqueSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardOpaqueToForwardTransparentSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_forwardTransparentToPostRenderComputeSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_outlineToRenderComputeSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_renderComputeToPostRenderComputeSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_gizmoToPresentSemaphores[i]));
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_postRenderComputeToPresentSemaphores[i]));
-			NAME_VK_OBJECT(m_acquireSemaphores[i], "Semaphore_Acquire_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_resourceUpdateToPreRenderComputeSemaphores[i], "Semaphore_ResourceUpdateToPreRenderCompute_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_resourceUpdateToGizmoSemaphores[i], "Semaphore_ResourceUpdateToGizmo_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_preRenderComputeToShadowSemaphores[i], "Semaphore_PreRenderComputeToShadow_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_preRenderComputeToDeferredGeometrySemaphores[i], "Semaphore_PreRenderComputeToDeferredGeometry_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_preRenderComputeToOutlineSemaphores[i], "Semaphore_PreRenderComputeToOutline_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_shadowToDeferredLightingSemaphores[i], "Semaphore_ShadowToDeferredLighting_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_deferredGeometryToDeferredLightingSemaphores[i], "Semaphore_DeferredGeometryToDeferredLighting_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_deferredLightingToForwardOpaqueSemaphores[i], "Semaphore_DeferredLightingToForwardOpaque_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_forwardOpaqueToForwardTransparentSemaphores[i], "Semaphore_ForwardOpaqueToForwardTransparent_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_forwardTransparentToPostRenderComputeSemaphores[i], "Semaphore_ForwardTransparentToPostRenderCompute_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_outlineToRenderComputeSemaphores[i], "Semaphore_OutlineToRenderCompute_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_renderComputeToPostRenderComputeSemaphores[i], "Semaphore_RenderComputeToPostRenderCompute_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_gizmoToPresentSemaphores[i], "Semaphore_GizmoToPresent_Frame" + std::to_string(i));
-			NAME_VK_OBJECT(m_postRenderComputeToPresentSemaphores[i], "Semaphore_PostRenderToPresent_Frame" + std::to_string(i));
-		}
-		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
-		{
-			VKA(vkCreateSemaphore(Context::GetVkDevice(), &createInfo, nullptr, &m_releaseSemaphores[i]));
-			NAME_VK_OBJECT(m_releaseSemaphores[i], "Semaphore_Release_SwapchainImage" + std::to_string(i));
-		}
-	}
-	void Renderer::DestroyFences()
-	{
-		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
-			vkDestroyFence(Context::GetVkDevice(), m_frameFences[i], nullptr);
-		m_frameFences.clear();
-	}
-	void Renderer::DestroySemaphores()
-	{
-		for (uint32_t i = 0; i < Context::GetFramesInFlight(); i++)
-		{
-			vkDestroySemaphore(Context::GetVkDevice(), m_acquireSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToPreRenderComputeSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_resourceUpdateToGizmoSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToShadowSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToDeferredGeometrySemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_preRenderComputeToOutlineSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_shadowToDeferredLightingSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_deferredGeometryToDeferredLightingSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_deferredLightingToForwardOpaqueSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_forwardOpaqueToForwardTransparentSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_forwardTransparentToPostRenderComputeSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_outlineToRenderComputeSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_renderComputeToPostRenderComputeSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_gizmoToPresentSemaphores[i], nullptr);
-			vkDestroySemaphore(Context::GetVkDevice(), m_postRenderComputeToPresentSemaphores[i], nullptr);
-		}
-		for (uint32_t i = 0; i < m_releaseSemaphores.size(); i++)
-			vkDestroySemaphore(Context::GetVkDevice(), m_releaseSemaphores[i], nullptr);
-		m_acquireSemaphores.clear();
-		m_resourceUpdateToPreRenderComputeSemaphores.clear();
-		m_resourceUpdateToGizmoSemaphores.clear();
-		m_preRenderComputeToShadowSemaphores.clear();
-		m_preRenderComputeToDeferredGeometrySemaphores.clear();
-		m_preRenderComputeToOutlineSemaphores.clear();
-		m_shadowToDeferredLightingSemaphores.clear();
-		m_deferredGeometryToDeferredLightingSemaphores.clear();
-		m_deferredLightingToForwardOpaqueSemaphores.clear();
-		m_forwardOpaqueToForwardTransparentSemaphores.clear();
-		m_forwardTransparentToPostRenderComputeSemaphores.clear();
-		m_outlineToRenderComputeSemaphores.clear();
-		m_renderComputeToPostRenderComputeSemaphores.clear();
-		m_gizmoToPresentSemaphores.clear();
-		m_postRenderComputeToPresentSemaphores.clear();
-		m_releaseSemaphores.clear();
-	}
-
-
-
-	// Internal getters:
-	CommandPool& Renderer::GetCommandPool(int frameIndex, RenderStage renderStage)
-	{
-		return GetCommandPool(frameIndex, (int)renderStage);
-	}
-	CommandPool& Renderer::GetCommandPool(int frameIndex, int renderStage)
-	{
-		return m_frameResources[frameIndex].GetCommandPool(renderStage);
 	}
 }

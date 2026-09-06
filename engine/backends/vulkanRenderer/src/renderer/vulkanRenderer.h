@@ -5,17 +5,7 @@
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
-#include "vulkanComputeStage.h"
-#include "vulkanDeferredGeometryStage.h"
-#include "vulkanDeferredLightingStage.h"
-#include "vulkanForwardStage.h"
-#include "vulkanGizmoStage.h"
-#include "vulkanOutlineStage.h"
-#include "vulkanPresentStage.h"
-#include "vulkanRenderStage.h"
 #include "vulkanRendererExport.h"
-#include "vulkanResourceUpdateStage.h"
-#include "vulkanShadowStage.h"
 #include <array>
 #include <memory>
 #include <vector>
@@ -43,13 +33,13 @@ namespace emberBackendInterface
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class CommandPool;
 	class Compute;
 	class ComputeShader;
 	class DepthTexture2d;
+	class DescriptorSetBinding;
 	class Mesh;
 	class Material;
-	class DescriptorSetBinding;
+	class RenderGraph;
 	struct FrameRenderData;
 	struct FrameResources;
 	class SceneColorTexture2dPair;
@@ -67,47 +57,8 @@ namespace vulkanRendererBackend
 		Compute* m_pCompute = nullptr;
 
 		// Render resources:
+		std::unique_ptr<RenderGraph> m_pRenderGraph;
 		std::vector<FrameResources> m_frameResources;
-
-		// Render stages:
-		ResourceUpdateStage m_resourceUpdateStage;
-		GizmoStage m_gizmoStage;
-		ComputeStage<RenderStage::preRenderCompute> m_preRenderComputeStage;
-		OutlineStage m_outlineStage;
-		ComputeStage<RenderStage::renderCompute> m_renderComputeStage;
-		ShadowStage m_shadowStage;
-		DeferredGeometryStage m_deferredGeometryStage;
-		DeferredLightingStage m_deferredLightingStage;
-		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;
-		ForwardStage<RenderStage::forwardTransparent> m_forwardTransparentStage;
-		ComputeStage<RenderStage::postRenderCompute> m_postRenderComputeStage;
-		PresentStage m_presentStage;
-
-		// Sync objects:
-		std::vector<VkFence> m_frameFences;
-		std::vector<VkSemaphore> m_acquireSemaphores;
-		std::vector<VkSemaphore> m_resourceUpdateToPreRenderComputeSemaphores;
-		std::vector<VkSemaphore> m_resourceUpdateToGizmoSemaphores;
-		std::vector<VkSemaphore> m_preRenderComputeToShadowSemaphores;
-		std::vector<VkSemaphore> m_preRenderComputeToDeferredGeometrySemaphores;
-		std::vector<VkSemaphore> m_preRenderComputeToOutlineSemaphores;
-		std::vector<VkSemaphore> m_shadowToDeferredLightingSemaphores;
-		std::vector<VkSemaphore> m_deferredGeometryToDeferredLightingSemaphores;
-		std::vector<VkSemaphore> m_deferredLightingToForwardOpaqueSemaphores;
-		std::vector<VkSemaphore> m_forwardOpaqueToForwardTransparentSemaphores;
-		std::vector<VkSemaphore> m_forwardTransparentToPostRenderComputeSemaphores;
-		std::vector<VkSemaphore> m_outlineToRenderComputeSemaphores;
-		std::vector<VkSemaphore> m_renderComputeToPostRenderComputeSemaphores;
-		std::vector<VkSemaphore> m_gizmoToPresentSemaphores;
-		std::vector<VkSemaphore> m_postRenderComputeToPresentSemaphores;
-		std::vector<VkSemaphore> m_releaseSemaphores;
-
-		// Render Graph:
-		// ResourceUpdate
-		// ├─> PreRenderCompute ─┬─> Shadow ───────────┐
-		// │                     ├─> DeferredGeometry ─┴─> DeferredLighting ─> ForwardOpaque ─> ForwardTransparent ─┐
-		// │                     └─> Outline ─> RenderCompute ──────────────────────────────────────────────────────┴─> PostRenderCompute ─┐
-		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────> Present
 
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
@@ -241,30 +192,6 @@ namespace vulkanRendererBackend
 		void SortDrawCallPointers();
 		void QueueRendererOwnedComputeShaders();
 		void UpdateShaderData();
-
-		// Submit commands:
-		void SubmitResourceUpdateCommands();
-		void SubmitPreRenderComputeCommands();
-		void SubmitOutlineCommands();
-		void SubmitRenderComputeCommands();
-		void SubmitShadowCommands();
-		void SubmitDeferredGeometryCommands();
-		void SubmitDeferredLightingCommands();
-		void SubmitForwardOpaqueCommands();
-		void SubmitForwardTransparentCommands();
-		void SubmitGizmoCommands();
-		void SubmitPostRenderComputeCommands();
-		void SubmitPresentCommands();
 		bool PresentImage();
-
-		// Sync objects management:
-		void CreateFences();
-		void CreateSemaphores();
-		void DestroyFences();
-		void DestroySemaphores();
-
-		// Internal getters:
-		CommandPool& GetCommandPool(int frameIndex, RenderStage renderStage);
-		CommandPool& GetCommandPool(int frameIndex, int renderStage);
 	};
 }
