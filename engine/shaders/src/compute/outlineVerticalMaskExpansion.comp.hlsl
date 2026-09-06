@@ -18,6 +18,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
         return;
 
+    int maxX = int(pc.threadCount.x) - 1;
     int maxY = int(pc.threadCount.y) - 1;
     float expandedMask = 0.0f;
     for (int y = -outlineRadius; y <= outlineRadius; y++)
@@ -26,5 +27,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
         expandedMask = max(expandedMask, inputMask[srcPixel]);
     }
 
-    outputMask[threadID.xy] = expandedMask * (1.0f - originalMask[threadID.xy]);
+	// This creates an outline along the screen edge if the selected object crosses it.
+    bool isInScreenEdgeBuffer =
+        int(threadID.x) < outlineRadius || int(threadID.x) > maxX - outlineRadius ||
+        int(threadID.y) < outlineRadius || int(threadID.y) > maxY - outlineRadius;
+    float originalMaskValue = isInScreenEdgeBuffer ? 0.0f : originalMask[threadID.xy];
+    outputMask[threadID.xy] = expandedMask * (1.0f - originalMaskValue);
 }
