@@ -30,10 +30,13 @@
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanDescriptorPoolManager.h"
 #include "vulkanDescriptorSetBinding.h"
-#include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanForwardDrawCall.h"
 #include "vulkanForwardOpaqueRenderPass.h"
 #include "vulkanForwardTransparentRenderPass.h"
+#include "vulkanFrameContext.h"
+#include "vulkanFrameDescriptorSetLayout.h"
+#include "vulkanFrameRenderData.h"
+#include "vulkanFrameResources.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanGBufferTexture2d.h"
 #include "vulkanGizmoDrawCall.h"
@@ -90,7 +93,6 @@ namespace vulkanRendererBackend
 	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
 		m_pIWindow = pIWindow;
-		m_pendingMeshUpdates.resize(createInfo.framesInFlight); // Prepare one pending mesh update vector per frame in flight.
 		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
 		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
 		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
@@ -113,9 +115,15 @@ namespace vulkanRendererBackend
 		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
 
-		// Command pools (one per frameInFlight * renderStage):
-		m_commandPools.reserve(Context::GetFramesInFlight() * (int)RenderStage::stageCount);
-		for (int i = 0; i < Context::GetFramesInFlight() * (int)RenderStage::stageCount; i++)
+		// Frame resources (one per frameInFlight):
+		m_frameRenderData.resize(Context::GetFramesInFlight());
+		m_frameResources.reserve(Context::GetFramesInFlight());
+		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+			m_frameResources.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount());
+
+		// Command pools for stages that have not been moved yet (one per frameInFlight * remaining renderStage):
+		m_commandPools.reserve(Context::GetFramesInFlight() * (static_cast<int>(RenderStage::stageCount) - 1));
+		for (int i = 0; i < Context::GetFramesInFlight() * (static_cast<int>(RenderStage::stageCount) - 1); i++)
 			m_commandPools.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
 
 		// Shadow/Light system:
@@ -171,6 +179,7 @@ namespace vulkanRendererBackend
 		DestroySemaphores();
 		DestroyFences();
 		m_commandPools.clear();
+		m_frameResources.clear();
 		FrameDescriptorSetLayout::Clear();
 		SceneDescriptorSetLayout::Clear();
 		GlobalDescriptorSetLayout::Clear();
@@ -256,7 +265,8 @@ namespace vulkanRendererBackend
 			PROFILE_SCOPE("vulkanRendererBackend::Renderer::Record");
 			DEBUG_LOG_TRACE("Recording frame {}", m_frameIndex);
 
-			RecordResourceUpdateCommands();
+			FrameContext frameContext(m_frameIndex, m_frameResources[m_frameIndex], m_frameRenderData[m_frameIndex]);
+			m_resourceUpdateStage.Record(frameContext);
 			SubmitResourceUpdateCommands();
 
 			RecordGizmoCommands();
@@ -755,21 +765,22 @@ namespace vulkanRendererBackend
 	void Renderer::QueueMeshForUpdate(vulkanRendererBackend::Mesh* pMesh)
 	{
 		// Prevent double-adding:
-		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
+		for (FrameRenderData& frameRenderData : m_frameRenderData)
 		{
+			std::vector<Mesh*>& meshUpdates = frameRenderData.meshUpdates;
 			if (std::find(meshUpdates.begin(), meshUpdates.end(), pMesh) == meshUpdates.end())
 				meshUpdates.push_back(pMesh);
 		}
 	}
 	void Renderer::RemoveQueuedMeshUpdate(vulkanRendererBackend::Mesh* pMesh)
 	{
-		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
-			meshUpdates.erase(std::remove(meshUpdates.begin(), meshUpdates.end(), pMesh), meshUpdates.end());
+		for (FrameRenderData& frameRenderData : m_frameRenderData)
+			frameRenderData.meshUpdates.erase(std::remove(frameRenderData.meshUpdates.begin(), frameRenderData.meshUpdates.end(), pMesh), frameRenderData.meshUpdates.end());
 	}
 	void Renderer::ReplaceQueuedMeshUpdate(vulkanRendererBackend::Mesh* pOldMesh, vulkanRendererBackend::Mesh* pNewMesh)
 	{
-		for (std::vector<Mesh*>& meshUpdates : m_pendingMeshUpdates)
-			for (Mesh*& pMesh : meshUpdates)
+		for (FrameRenderData& frameRenderData : m_frameRenderData)
+			for (Mesh*& pMesh : frameRenderData.meshUpdates)
 				if (pMesh == pOldMesh)
 					pMesh = pNewMesh;
 	}
@@ -1170,30 +1181,6 @@ namespace vulkanRendererBackend
 
 
 	// Record commands:
-	void Renderer::RecordResourceUpdateCommands()
-	{
-		PROFILE_FUNCTION();
-
-		// Prepare meshes to update:
-		std::vector<Mesh*>& meshUpdates = m_pendingMeshUpdates[m_frameIndex];
-
-		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::resourceUpdate);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		// Record resource update commands:
-		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		{
-			for (Mesh* mesh : meshUpdates)
-				mesh->RecordUpdateCommand(commandBuffer, m_frameIndex);
-		}
-		VKA(vkEndCommandBuffer(commandBuffer));
-
-		// Clear only mesh updates of current frame:
-		meshUpdates.clear();
-	}
 	void Renderer::RecordGizmoCommands()
 	{
 		PROFILE_FUNCTION();
@@ -2800,13 +2787,10 @@ namespace vulkanRendererBackend
 	{
 		// Fast index: frameIndex
 		// Slow index: renderStage
-		// preRenderComputeCommandBufferFrame0
-		// preRenderComputeCommandBufferFrame1
-		// shadowCommandBufferFrame0
-		// shadowCommandBufferFrame1
-		// ...
 		assert(renderStage < (int)RenderStage::stageCount);
 		assert(frameIndex < Context::GetFramesInFlight());
-		return m_commandPools[frameIndex + (int)renderStage * Context::GetFramesInFlight()];
+		if (renderStage == static_cast<int>(RenderStage::resourceUpdate))
+			return m_frameResources[frameIndex].GetCommandPool(renderStage);
+		return m_commandPools[frameIndex + (renderStage - 1) * Context::GetFramesInFlight()];
 	}
 }

@@ -21,13 +21,13 @@ namespace vulkanRendererBackend
 	class CommandPool
 	{
 	private: // Members:
-		static uint32_t s_index;
 		VkCommandPool m_primaryPool;
 		std::vector<VkCommandPool> m_secondaryPools;
 		VkCommandBuffer m_primaryBuffer;
 		std::vector<VkCommandBuffer> m_secondaryBuffers;
 
 	public: // Methods:
+		// Constructor/Destructor:
 		CommandPool(int secondaryBufferCount, DeviceQueue queue);
 		~CommandPool();
 
@@ -39,7 +39,10 @@ namespace vulkanRendererBackend
 		CommandPool(CommandPool&& other) noexcept;
 		CommandPool& operator=(CommandPool&& other) noexcept;
 
+		// Reset:
 		void ResetPools() const;
+
+		// Getters:
 		VkCommandPool& GetPrimaryVkCommandPool();
 		VkCommandPool& GetSecondaryVkCommandPool(int index);
 		VkCommandBuffer& GetPrimaryVkCommandBuffer();

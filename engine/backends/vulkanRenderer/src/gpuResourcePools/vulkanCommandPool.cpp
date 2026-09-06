@@ -10,14 +10,11 @@
 
 namespace vulkanRendererBackend
 {
-	// Static private members:
-	uint32_t CommandPool::s_index = 0;
-
-
-
+	// Public methods:
 	// Constructor/Destructor:
 	CommandPool::CommandPool(int secondaryBufferCount, DeviceQueue queue)
 	{
+		uint32_t nameIndex = 0;
 		// Assertions:
 		assert(queue.queue != VK_NULL_HANDLE);
 
@@ -44,7 +41,7 @@ namespace vulkanRendererBackend
 			VkCommandPoolCreateInfo secondaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
 			secondaryCreateInfo.queueFamilyIndex = queue.familyIndex;
 			VKA(vkCreateCommandPool(Context::GetVkDevice(), &secondaryCreateInfo, nullptr, &m_secondaryPools[i]));
-			NAME_VK_OBJECT(m_secondaryPools[i], "CommandPool" + std::to_string(s_index) + "_Secondary" + std::to_string(i));
+			NAME_VK_OBJECT(m_secondaryPools[i], "CommandPool" + std::to_string(nameIndex) + "_Secondary" + std::to_string(i));
 
 			// Allocate secondary command buffers:
 			VkCommandBufferAllocateInfo secondaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -52,9 +49,9 @@ namespace vulkanRendererBackend
 			secondaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 			secondaryAllocateInfo.commandBufferCount = 1;
 			VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &secondaryAllocateInfo, &m_secondaryBuffers[i]));
-			NAME_VK_OBJECT(m_secondaryBuffers[i], "CommandBuffer" + std::to_string(s_index) + "_Secondary" + std::to_string(i));
+			NAME_VK_OBJECT(m_secondaryBuffers[i], "CommandBuffer" + std::to_string(nameIndex) + "_Secondary" + std::to_string(i));
 		}
-		s_index++;
+		nameIndex++;
 	}
 	CommandPool::~CommandPool()
 	{
@@ -80,13 +77,17 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methods:
+	// Reset:
 	void CommandPool::ResetPools() const
 	{
 		vkResetCommandPool(Context::GetVkDevice(), m_primaryPool, 0);
 		for (int i = 0; i < m_secondaryBuffers.size(); i++)
 			vkResetCommandPool(Context::GetVkDevice(), m_secondaryPools[i], 0);
 	}
+
+
+
+	// Getters:
 	VkCommandPool& CommandPool::GetPrimaryVkCommandPool()
 	{
 		return m_primaryPool;

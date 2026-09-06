@@ -11,6 +11,7 @@
 #include "vulkanOutlineDrawCall.h"
 #include "vulkanRenderStage.h"
 #include "vulkanRendererExport.h"
+#include "vulkanResourceUpdateStage.h"
 #include "vulkanShadowDrawCall.h"
 #include <array>
 #include <memory>
@@ -46,6 +47,8 @@ namespace vulkanRendererBackend
 	class Mesh;
 	class Material;
 	class DescriptorSetBinding;
+	struct FrameRenderData;
+	struct FrameResources;
 	class SceneColorTexture2dPair;
 	class StorageBuffer;
 	class StorageTexture2d;
@@ -61,7 +64,9 @@ namespace vulkanRendererBackend
 		Compute* m_pCompute = nullptr;
 		
 		// Render resources:
-		std::vector<CommandPool> m_commandPools;
+		std::vector<FrameResources> m_frameResources;
+		std::vector<CommandPool> m_commandPools; // Command pools for stages that have not been moved yet.
+		ResourceUpdateStage m_resourceUpdateStage;
 
 		// Sync objects:
 		std::vector<VkFence> m_frameFences;
@@ -130,7 +135,7 @@ namespace vulkanRendererBackend
 
 		// Other:
 		emberCommon::Camera m_activeCamera;
-		std::vector<std::vector<Mesh*>> m_pendingMeshUpdates;				// one vector per frame in flight. 
+		std::vector<FrameRenderData> m_frameRenderData;
 		std::vector<std::array<VkDescriptorSet, 3>> m_staticDescriptorSets;	// (global/scen/frame) per frame in flight.
 
 		// Scene textures:
@@ -239,7 +244,6 @@ namespace vulkanRendererBackend
 		void UpdateShaderData();
 
 		// Record commands:
-		void RecordResourceUpdateCommands();
 		void RecordGizmoCommands();
 		void RecordPreRenderComputeCommands();
 		void RecordOutlineCommands();
