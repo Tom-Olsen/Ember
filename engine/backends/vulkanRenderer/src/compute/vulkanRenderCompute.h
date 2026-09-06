@@ -1,9 +1,9 @@
 #pragma once
 #include "iCompute.h"
 #include "emberMath.h"
+#include "vulkanComputeCallQueue.h"
 #include "vulkanRendererExport.h"
 #include <cstdint>
-#include <vector>
 
 
 
@@ -18,16 +18,10 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	struct ComputeCall;
-
-
-
 	class VULKAN_RENDERER_API Render : public emberBackendInterface::ICompute::IRender
 	{
 	private: // Members:
-		std::vector<ComputeCall> m_computeCalls;
-		std::vector<std::vector<ComputeCall>> m_submittedComputeCalls;
+		ComputeCallQueue m_computeCallQueue;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -48,12 +42,10 @@ namespace vulkanRendererBackend
 
 		// Management:
 		void CommitComputeCalls(uint32_t frameIndex);
-		void CompleteComputeCalls(uint32_t frameIndex);
-		void CompleteAllComputeCalls();
+		void RetireComputeCalls(uint32_t frameIndex);
+		void RetireAllComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
-
-	private: // Methods:
-		void ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls);
+		void UpdateShaderData(uint32_t frameIndex);
 	};
 }

@@ -3,6 +3,7 @@
 #include "commonRendererCreateInfo.h"
 #include "emberMath.h"
 #include "vulkanRendererExport.h"
+#include <cstdint>
 #include <memory>
 
 
@@ -14,6 +15,7 @@ namespace vulkanRendererBackend
 	class PreRender;
 	class Render;
 	class PostRender;
+	class SceneColorTexture2dPair;
 
 
 
@@ -47,5 +49,12 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ICompute::IPreRender* GetPreRenderComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IRender* GetRenderComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPostRender* GetPostRenderComputeInterfaceHandle() override;
+
+		// Frame lifecycle:
+		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair);
+		void CommitFrame(uint32_t frameIndex);
+		void RetireFrame(uint32_t frameIndex);
+		void RetireAllFrames();
+		void DiscardPendingCalls();
 	};
 }

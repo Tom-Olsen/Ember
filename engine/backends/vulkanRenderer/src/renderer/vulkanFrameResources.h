@@ -29,5 +29,8 @@ namespace vulkanRendererBackend
 		// Getters:
 		CommandPool& GetCommandPool(RenderStage renderStage);
 		CommandPool& GetCommandPool(int renderStage);
+
+		// Resets:
+		void ResetCommandPools();
 	};
 }

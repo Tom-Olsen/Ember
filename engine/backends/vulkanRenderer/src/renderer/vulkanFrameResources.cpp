@@ -28,4 +28,16 @@ namespace vulkanRendererBackend
 			throw std::out_of_range("FrameResources::GetCommandPool(...) failed. renderStage is out of range.");
 		return commandPools[static_cast<size_t>(renderStage)];
 	}
+
+
+
+	// Resets:
+	void FrameResources::ResetCommandPools()
+	{
+		for (int i = 0; i < static_cast<int>(RenderStage::stageCount); i++)
+		{
+			RenderStage stage = static_cast<RenderStage>(i);
+			GetCommandPool(stage).ResetPools();
+		}
+	}
 }

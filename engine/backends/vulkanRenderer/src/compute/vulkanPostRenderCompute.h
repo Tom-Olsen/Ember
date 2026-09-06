@@ -1,8 +1,8 @@
 #pragma once
 #include "iCompute.h"
+#include "vulkanComputeCallQueue.h"
 #include "vulkanRendererExport.h"
 #include <cstdint>
-#include <vector>
 
 
 
@@ -24,6 +24,7 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	struct ComputeCall;
 	class ComputeShader;
+	class SceneColorTexture2dPair;
 	enum class PostProcessingMode : uint8_t;
 
 
@@ -31,8 +32,7 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API PostRender : public emberBackendInterface::ICompute::IPostRender
 	{
 	private: // Members:
-		std::vector<ComputeCall> m_computeCalls;
-		std::vector<std::vector<ComputeCall>> m_submittedComputeCalls;
+		ComputeCallQueue m_computeCallQueue;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -53,14 +53,14 @@ namespace vulkanRendererBackend
 
 		// Management:
 		void CommitComputeCalls(uint32_t frameIndex);
-		void CompleteComputeCalls(uint32_t frameIndex);
-		void CompleteAllComputeCalls();
+		void RetireComputeCalls(uint32_t frameIndex);
+		void RetireAllComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
+		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair);
 
 	private: // Methods:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, PostProcessingMode postProcessingMode);
-		void ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls);
 		PostProcessingMode DeterminePostProcessingMode(const ComputeShader& computeShader) const;
 		void ValidatePostProcessingImage(const ComputeShader& computeShader, const emberSpirvReflect::DescriptorReflection& descriptorReflection, bool allowSampledImage, bool requireReadable, bool requireWritable) const;
 	};

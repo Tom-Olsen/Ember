@@ -13,9 +13,9 @@
 #include "vulkanFormatToString.h"
 #include "vulkanImageViewTypeToString.h"
 #include "vulkanPoolManager.h"
-#include <assert.h>
+#include "vulkanRenderTexture2d.h"
+#include "vulkanSceneColorTexture2dPair.h"
 #include <stdexcept>
-#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -26,15 +26,16 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	PostRender::PostRender()
+		: m_computeCallQueue(Context::GetFramesInFlight())
 	{
-		m_submittedComputeCalls.resize(Context::GetFramesInFlight());
+		
 	}
 	PostRender::~PostRender()
 	{
 		if (!Context::IsDeviceIdle())
 			Context::WaitDeviceIdle();
 		ResetComputeCalls();
-		CompleteAllComputeCalls();
+		RetireAllComputeCalls();
 	}
 
 
@@ -68,27 +69,45 @@ namespace vulkanRendererBackend
 	// Management:
 	void PostRender::CommitComputeCalls(uint32_t frameIndex)
 	{
-		assert(frameIndex < m_submittedComputeCalls.size());
-		assert(m_submittedComputeCalls[frameIndex].empty());
-		std::swap(m_submittedComputeCalls[frameIndex], m_computeCalls);
+		m_computeCallQueue.Commit(frameIndex);
 	}
-	void PostRender::CompleteAllComputeCalls()
+	void PostRender::RetireAllComputeCalls()
 	{
-		for (std::vector<ComputeCall>& computeCalls : m_submittedComputeCalls)
-			ReleaseComputeCalls(computeCalls);
+		m_computeCallQueue.RetireAll();
 	}
-	void PostRender::CompleteComputeCalls(uint32_t frameIndex)
+	void PostRender::RetireComputeCalls(uint32_t frameIndex)
 	{
-		assert(frameIndex < m_submittedComputeCalls.size());
-		ReleaseComputeCalls(m_submittedComputeCalls[frameIndex]);
+		m_computeCallQueue.Retire(frameIndex);
 	}
 	std::vector<ComputeCall>& PostRender::GetComputeCalls()
 	{
-		return m_computeCalls;
+		return m_computeCallQueue.GetPendingCalls();
 	}
 	void PostRender::ResetComputeCalls()
 	{
-		ReleaseComputeCalls(m_computeCalls);
+		m_computeCallQueue.DiscardPending();
+	}
+	void PostRender::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
+	{
+		Uint3 threadCount = { sceneColorTexturePair.GetWidth(), sceneColorTexturePair.GetHeight(), 1 };
+		for (ComputeCall& computeCall : m_computeCallQueue.GetPendingCalls())
+		{
+			computeCall.threadCount = threadCount;
+			switch (computeCall.postProcessingMode)
+			{
+			case PostProcessingMode::none:
+				break;
+			case PostProcessingMode::inPlace:
+				computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inOutImage", sceneColorTexturePair.GetCurrentTexture(frameIndex));
+				break;
+			case PostProcessingMode::outOfPlace:
+				computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("inputImage", sceneColorTexturePair.GetCurrentTexture(frameIndex));
+				computeCall.callDescriptorSetBindingHandle.Get()->SetTexture("outputImage", sceneColorTexturePair.GetNextTexture(frameIndex));
+				sceneColorTexturePair.Swap(frameIndex);
+				break;
+			}
+		}
+		m_computeCallQueue.UpdateShaderData(frameIndex);
 	}
 
 
@@ -113,19 +132,9 @@ namespace vulkanRendererBackend
 			return nullptr;
 
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, postProcessingMode };
-		m_computeCalls.push_back(computeCall);
+		m_computeCallQueue.Add(computeCall);
 		pComputeShader->AddPendingUse();
 		return pDescriptorSetBinding;
-	}
-	void PostRender::ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls)
-	{
-		for (ComputeCall& computeCall : computeCalls)
-		{
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
-			if (!computeCall.IsBarrier())
-				computeCall.GetComputeShader()->RemovePendingUse();
-		}
-		computeCalls.clear();
 	}
 	PostProcessingMode PostRender::DeterminePostProcessingMode(const ComputeShader& computeShader) const
 	{

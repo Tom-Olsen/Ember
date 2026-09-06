@@ -4,6 +4,7 @@
 #include "vulkanMesh.h"
 #include "vulkanPoolManager.h"
 #include <algorithm>
+#include <functional>
 
 
 
@@ -44,13 +45,91 @@ namespace vulkanRendererBackend
 				return layoutA < layoutB;
 			return drawCallA < drawCallB;
 		});
+
+		sortedDeferredDrawCallPointers.clear();
+		sortedDeferredDrawCallPointers.reserve(deferredDrawCalls.size());
+		for (DeferredDrawCall& drawCall : deferredDrawCalls)
+			sortedDeferredDrawCallPointers.push_back(&drawCall);
+		std::sort(sortedDeferredDrawCallPointers.begin(), sortedDeferredDrawCallPointers.end(), [](DeferredDrawCall* drawCallA, DeferredDrawCall* drawCallB)
+		{
+			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
+			int renderQueueB = static_cast<int>(drawCallB->pMaterial->GetRenderQueue());
+			if (renderQueueA != renderQueueB)
+				return renderQueueA < renderQueueB;
+
+			auto layoutA = drawCallA->pMesh->GetVertexMemoryLayout();
+			auto layoutB = drawCallB->pMesh->GetVertexMemoryLayout();
+			if (layoutA != layoutB)
+				return layoutA < layoutB;
+
+			if (drawCallA->pMaterial != drawCallB->pMaterial)
+				return std::less<Material*>()(drawCallA->pMaterial, drawCallB->pMaterial);
+			return std::less<DeferredDrawCall*>()(drawCallA, drawCallB);
+		});
+
+		sortedForwardOpaqueDrawCallPointers.clear();
+		sortedForwardOpaqueDrawCallPointers.reserve(forwardDrawCalls.size());
+		sortedForwardTransparentDrawCallPointers.clear();
+		sortedForwardTransparentDrawCallPointers.reserve(forwardDrawCalls.size());
+		for (ForwardDrawCall& drawCall : forwardDrawCalls)
+		{
+			if (drawCall.pMaterial->GetForwardRenderMode() == emberCommon::ForwardRenderMode::transparent)
+				sortedForwardTransparentDrawCallPointers.push_back(&drawCall);
+			else
+				sortedForwardOpaqueDrawCallPointers.push_back(&drawCall);
+		}
+		auto compareForwardDrawCalls = [&camera](ForwardDrawCall* drawCallA, ForwardDrawCall* drawCallB)
+		{
+			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
+			int renderQueueB = static_cast<int>(drawCallB->pMaterial->GetRenderQueue());
+			if (renderQueueA != renderQueueB)
+				return renderQueueA < renderQueueB;
+
+			const bool transparentA = drawCallA->pMaterial->IsTransparent();
+			const bool transparentB = drawCallB->pMaterial->IsTransparent();
+			if (transparentA && transparentB)
+			{
+				const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
+				const Float3 drawPositionB = Float3(drawCallB->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
+				const float distanceA = Float3::DistanceSq(drawPositionA, camera.position);
+				const float distanceB = Float3::DistanceSq(drawPositionB, camera.position);
+				if (distanceA != distanceB)
+					return distanceA > distanceB;
+			}
+
+			auto layoutA = drawCallA->pMesh->GetVertexMemoryLayout();
+			auto layoutB = drawCallB->pMesh->GetVertexMemoryLayout();
+			if (layoutA != layoutB)
+				return layoutA < layoutB;
+
+			if (drawCallA->pMaterial != drawCallB->pMaterial)
+				return std::less<Material*>()(drawCallA->pMaterial, drawCallB->pMaterial);
+			return std::less<ForwardDrawCall*>()(drawCallA, drawCallB);
+		};
+		std::sort(sortedForwardOpaqueDrawCallPointers.begin(), sortedForwardOpaqueDrawCallPointers.end(), compareForwardDrawCalls);
+		std::sort(sortedForwardTransparentDrawCallPointers.begin(), sortedForwardTransparentDrawCallPointers.end(), compareForwardDrawCalls);
 	}
 	void FrameRenderData::Reset()
 	{
 		for (GizmoDrawCall& drawCall : gizmoDrawCalls)
 			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
+		for (OutlineDrawCall& drawCall : outlineDrawCalls)
+			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
+		for (ShadowDrawCall& drawCall : shadowDrawCalls)
+			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
+		for (DeferredDrawCall& drawCall : deferredDrawCalls)
+			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
+		for (ForwardDrawCall& drawCall : forwardDrawCalls)
+			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
 
 		gizmoDrawCalls.clear();
 		sortedGizmoDrawCallPointers.clear();
+		outlineDrawCalls.clear();
+		shadowDrawCalls.clear();
+		deferredDrawCalls.clear();
+		sortedDeferredDrawCallPointers.clear();
+		forwardDrawCalls.clear();
+		sortedForwardOpaqueDrawCallPointers.clear();
+		sortedForwardTransparentDrawCallPointers.clear();
 	}
 }

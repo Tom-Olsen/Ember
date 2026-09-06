@@ -3,13 +3,10 @@
 #include "vulkanAccessMask.h"
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
-#include "vulkanConvertComputeAccessMask.h"
 #include "vulkanContext.h"
 #include "vulkanConvertComputeAccessMask.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanPoolManager.h"
-#include <assert.h>
-#include <utility>
 
 
 
@@ -18,15 +15,16 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	Render::Render()
+		: m_computeCallQueue(Context::GetFramesInFlight())
 	{
-		m_submittedComputeCalls.resize(Context::GetFramesInFlight());
+		
 	}
 	Render::~Render()
 	{
 		if (!Context::IsDeviceIdle())
 			Context::WaitDeviceIdle();
 		ResetComputeCalls();
-		CompleteAllComputeCalls();
+		RetireAllComputeCalls();
 	}
 
 
@@ -55,14 +53,14 @@ namespace vulkanRendererBackend
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
-		m_computeCalls.push_back(computeCall);
+		m_computeCallQueue.Add(computeCall);
 		pComputeShader->AddPendingUse();
 		return descriptorSetBindingHandle.Get();
 	}
 	void Render::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
 		ComputeCall computeCall = { Uint3::zero, ShaderHandle(), DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
-		m_computeCalls.push_back(computeCall);
+		m_computeCallQueue.Add(computeCall);
 	}
 
 
@@ -70,40 +68,26 @@ namespace vulkanRendererBackend
 	// Management:
 	void Render::CommitComputeCalls(uint32_t frameIndex)
 	{
-		assert(frameIndex < m_submittedComputeCalls.size());
-		assert(m_submittedComputeCalls[frameIndex].empty());
-		std::swap(m_submittedComputeCalls[frameIndex], m_computeCalls);
+		m_computeCallQueue.Commit(frameIndex);
 	}
-	void Render::CompleteComputeCalls(uint32_t frameIndex)
+	void Render::RetireComputeCalls(uint32_t frameIndex)
 	{
-		assert(frameIndex < m_submittedComputeCalls.size());
-		ReleaseComputeCalls(m_submittedComputeCalls[frameIndex]);
+		m_computeCallQueue.Retire(frameIndex);
 	}
-	void Render::CompleteAllComputeCalls()
+	void Render::RetireAllComputeCalls()
 	{
-		for (std::vector<ComputeCall>& computeCalls : m_submittedComputeCalls)
-			ReleaseComputeCalls(computeCalls);
+		m_computeCallQueue.RetireAll();
 	}
 	std::vector<ComputeCall>& Render::GetComputeCalls()
 	{
-		return m_computeCalls;
+		return m_computeCallQueue.GetPendingCalls();
 	}
 	void Render::ResetComputeCalls()
 	{
-		ReleaseComputeCalls(m_computeCalls);
+		m_computeCallQueue.DiscardPending();
 	}
-
-
-
-	// Private methods:
-	void Render::ReleaseComputeCalls(std::vector<ComputeCall>& computeCalls)
+	void Render::UpdateShaderData(uint32_t frameIndex)
 	{
-		for (ComputeCall& computeCall : computeCalls)
-		{
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
-			if (!computeCall.IsBarrier())
-				computeCall.GetComputeShader()->RemovePendingUse();
-		}
-		computeCalls.clear();
+		m_computeCallQueue.UpdateShaderData(frameIndex);
 	}
 }

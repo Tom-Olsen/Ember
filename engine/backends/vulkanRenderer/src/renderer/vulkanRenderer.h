@@ -5,15 +5,17 @@
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
-#include "vulkanDeferredDrawCall.h"
-#include "vulkanForwardDrawCall.h"
-#include "vulkanGizmoDrawCall.h"
+#include "vulkanComputeStage.h"
+#include "vulkanDeferredGeometryStage.h"
+#include "vulkanDeferredLightingStage.h"
+#include "vulkanForwardStage.h"
 #include "vulkanGizmoStage.h"
-#include "vulkanOutlineDrawCall.h"
+#include "vulkanOutlineStage.h"
+#include "vulkanPresentStage.h"
 #include "vulkanRenderStage.h"
 #include "vulkanRendererExport.h"
 #include "vulkanResourceUpdateStage.h"
-#include "vulkanShadowDrawCall.h"
+#include "vulkanShadowStage.h"
 #include <array>
 #include <memory>
 #include <vector>
@@ -63,12 +65,23 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IGui* m_pIGui = nullptr;
 		emberBackendInterface::IWindow* m_pIWindow = nullptr;
 		Compute* m_pCompute = nullptr;
-		
+
 		// Render resources:
 		std::vector<FrameResources> m_frameResources;
-		std::vector<CommandPool> m_commandPools; // Command pools for stages that have not been moved yet.
+
+		// Render stages:
 		ResourceUpdateStage m_resourceUpdateStage;
 		GizmoStage m_gizmoStage;
+		ComputeStage<RenderStage::preRenderCompute> m_preRenderComputeStage;
+		OutlineStage m_outlineStage;
+		ComputeStage<RenderStage::renderCompute> m_renderComputeStage;
+		ShadowStage m_shadowStage;
+		DeferredGeometryStage m_deferredGeometryStage;
+		DeferredLightingStage m_deferredLightingStage;
+		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;
+		ForwardStage<RenderStage::forwardTransparent> m_forwardTransparentStage;
+		ComputeStage<RenderStage::postRenderCompute> m_postRenderComputeStage;
+		PresentStage m_presentStage;
 
 		// Sync objects:
 		std::vector<VkFence> m_frameFences;
@@ -96,8 +109,6 @@ namespace vulkanRendererBackend
 		// │                     └─> Outline ─> RenderCompute ──────────────────────────────────────────────────────┴─> PostRenderCompute ─┐
 		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────> Present
 
-		// Proposed Render Graph:
-
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
 		float m_depthBiasClamp;
@@ -115,15 +126,6 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_positionalLights;
 		std::vector<emberCommon::DirectionalLight> m_previousDirectionalLights;
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
-
-		// Draw calls:
-		std::vector<OutlineDrawCall> m_outlineCalls;
-		std::vector<ShadowDrawCall> m_shadowDrawCalls;
-		std::vector<DeferredDrawCall> m_deferredDrawCalls;
-		std::vector<DeferredDrawCall*> m_sortedDeferredDrawCallPointers;
-		std::vector<ForwardDrawCall> m_forwardDrawCalls;
-		std::vector<ForwardDrawCall*> m_sortedForwardOpaqueDrawCallPointers;
-		std::vector<ForwardDrawCall*> m_sortedForwardTransparentDrawCallPointers;
 
 		// Render management:
 		uint32_t m_frameIndex = 0;
@@ -206,7 +208,7 @@ namespace vulkanRendererBackend
 
 		// Gpu resource destruction:
 		void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) override;
-		
+
 		// Vulkan handle passthrough for API coupling:
 		void* GetVkInstance() const override;
 		void* GetVkPhysicalDevice() const override;
@@ -231,9 +233,6 @@ namespace vulkanRendererBackend
 	private: // Methods:
 		// Resets:
 		void ResetFrameCalls();
-		void ResetLights();
-		void ResetDrawCalls();
-		void ResetCommandPools();
 
 		// Other:
 		void CreateSceneTextures(uint32_t renderWidth, uint32_t renderHeight);
@@ -242,19 +241,6 @@ namespace vulkanRendererBackend
 		void SortDrawCallPointers();
 		void QueueRendererOwnedComputeShaders();
 		void UpdateShaderData();
-
-		// Record commands:
-		void RecordPreRenderComputeCommands();
-		void RecordOutlineCommands();
-		void RecordRenderComputeCommands();
-		void RecordShadowCommands();
-		void RecordDeferredGeometryCommands();
-		void RecordDeferredLightingCommands();
-		template<RenderStage stage>
-		void RecordForwardCommands();
-		void RecordPostRenderComputeCommands();
-		void RecordPresentCommands();
-		void RecordImGuiPresentCommands();
 
 		// Submit commands:
 		void SubmitResourceUpdateCommands();

@@ -4,9 +4,17 @@
 
 
 
+namespace emberBackendInterface
+{
+	class IGui;
+}
+
+
+
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	class SceneColorTexture2dPair;
 	struct FrameResources;
 	struct FrameRenderData;
 
@@ -19,15 +27,20 @@ namespace vulkanRendererBackend
 	{
 	public: // Members:
 		uint32_t frameIndex;
+		uint32_t imageIndex;
 		float time;
 		float deltaTime;
+		uint32_t shadowMapResolution;
+		uint32_t shadowMapCount;
+		float depthBiasConstantFactor;
+		float depthBiasClamp;
+		float depthBiasSlopeFactor;
 		FrameResources& resources;
 		FrameRenderData& frameRenderData;
-
-		// uint32_t imageIndex;
-		// const emberCommon::Camera& camera;
+		SceneColorTexture2dPair& sceneColorTexturePair;
+		emberBackendInterface::IGui* pGui;
 
 	public: // Methods:
-		FrameContext(uint32_t frameIndex, float time, float deltaTime, FrameResources& resources, FrameRenderData& frameRenderData);
+		FrameContext(uint32_t frameIndex, uint32_t imageIndex, float time, float deltaTime, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, SceneColorTexture2dPair& sceneColorTexturePair, emberBackendInterface::IGui* pGui);
 	};
 }

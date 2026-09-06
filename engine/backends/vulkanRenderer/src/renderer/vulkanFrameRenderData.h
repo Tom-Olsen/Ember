@@ -1,10 +1,9 @@
 #pragma once
-// #include "commonLighting.h"
-// #include "vulkanDeferredDrawCall.h"
-// #include "vulkanForwardDrawCall.h"
+#include "vulkanDeferredDrawCall.h"
+#include "vulkanForwardDrawCall.h"
 #include "vulkanGizmoDrawCall.h"
-// #include "vulkanOutlineDrawCall.h"
-// #include "vulkanShadowDrawCall.h"
+#include "vulkanOutlineDrawCall.h"
+#include "vulkanShadowDrawCall.h"
 #include <vector>
 
 
@@ -33,30 +32,24 @@ namespace vulkanRendererBackend
 		// Resource update stage:
 		std::vector<Mesh*> meshUpdates;
 
-		// emberCommon::Camera camera;
-
-		// Lighting:
-		// std::vector<emberCommon::DirectionalLight> directionalLights;
-		// std::vector<emberCommon::PositionalLight> positionalLights;
-
 		// Gizmo stage:
 		std::vector<GizmoDrawCall> gizmoDrawCalls;
 		std::vector<GizmoDrawCall*> sortedGizmoDrawCallPointers;
 
 		// Outline stage:
-		// std::vector<OutlineDrawCall> outlineDrawCalls;
+		std::vector<OutlineDrawCall> outlineDrawCalls;
 
 		// Shadow stage:
-		// std::vector<ShadowDrawCall> shadowDrawCalls;
+		std::vector<ShadowDrawCall> shadowDrawCalls;
 
 		// Deferred stage:
-		// std::vector<DeferredDrawCall> deferredDrawCalls;
-		// std::vector<DeferredDrawCall*> sortedDeferredDrawCallPointers;
+		std::vector<DeferredDrawCall> deferredDrawCalls;
+		std::vector<DeferredDrawCall*> sortedDeferredDrawCallPointers;
 
 		// Forward stage:
-		// std::vector<ForwardDrawCall> forwardDrawCalls;
-		// std::vector<ForwardDrawCall*> sortedForwardOpaqueDrawCallPointers;
-		// std::vector<ForwardDrawCall*> sortedForwardTransparentDrawCallPointers;
+		std::vector<ForwardDrawCall> forwardDrawCalls;
+		std::vector<ForwardDrawCall*> sortedForwardOpaqueDrawCallPointers;
+		std::vector<ForwardDrawCall*> sortedForwardTransparentDrawCallPointers;
 
 	public: // Methods:
 		void SortDrawCalls(const emberCommon::Camera& camera);

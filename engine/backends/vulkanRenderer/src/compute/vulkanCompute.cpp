@@ -4,6 +4,7 @@
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
 #include "vulkanRenderCompute.h"
+#include "vulkanSceneColorTexture2dPair.h"
 
 
 
@@ -63,5 +64,39 @@ namespace vulkanRendererBackend
 	emberBackendInterface::ICompute::IPostRender* Compute::GetPostRenderComputeInterfaceHandle()
 	{
 		return static_cast<emberBackendInterface::ICompute::IPostRender*>(m_pIPostRender.get());
+	}
+
+
+
+	// Frame lifecycle:
+	void Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
+	{
+		GetPreRenderCompute()->UpdateShaderData(frameIndex);
+		GetRenderCompute()->UpdateShaderData(frameIndex);
+		GetPostRenderCompute()->UpdateShaderData(frameIndex, sceneColorTexturePair);
+	}
+	void Compute::CommitFrame(uint32_t frameIndex)
+	{
+		GetPreRenderCompute()->CommitComputeCalls(frameIndex);
+		GetRenderCompute()->CommitComputeCalls(frameIndex);
+		GetPostRenderCompute()->CommitComputeCalls(frameIndex);
+	}
+	void Compute::RetireFrame(uint32_t frameIndex)
+	{
+		GetPreRenderCompute()->RetireComputeCalls(frameIndex);
+		GetRenderCompute()->RetireComputeCalls(frameIndex);
+		GetPostRenderCompute()->RetireComputeCalls(frameIndex);
+	}
+	void Compute::RetireAllFrames()
+	{
+		GetPreRenderCompute()->RetireAllComputeCalls();
+		GetRenderCompute()->RetireAllComputeCalls();
+		GetPostRenderCompute()->RetireAllComputeCalls();
+	}
+	void Compute::DiscardPendingCalls()
+	{
+		GetPreRenderCompute()->ResetComputeCalls();
+		GetRenderCompute()->ResetComputeCalls();
+		GetPostRenderCompute()->ResetComputeCalls();
 	}
 }

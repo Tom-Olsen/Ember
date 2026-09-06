@@ -14,7 +14,7 @@ get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)       
 get_filename_component(ENGINE_CMAKE_DIR "${ENGINE_DIR}/cmake" ABSOLUTE)                     # cmake
 get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
 get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)           # interfaces
-get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs 
+get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs
 get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             # resources
 get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)                 # shaders
 
@@ -78,6 +78,9 @@ source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
 file(GLOB RENDERER_FILES "src/renderer/*.*")
 source_group("Renderer" FILES ${RENDERER_FILES})
 
+file(GLOB RENDER_STAGE_FILES "src/renderer/stages/*.*")
+source_group("Render Stages" FILES ${RENDER_STAGE_FILES})
+
 file(GLOB RENDER_PASSES_FILES "src/renderPasses/*.*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
 
@@ -122,6 +125,7 @@ add_library(${TARGET_NAME} ${LIB_TYPE}
     ${PIPELINES_FILES}
     ${PUSH_CONSTANTS_FILES}
     ${RENDERER_FILES}
+    ${RENDER_STAGE_FILES}
     ${RENDER_PASSES_FILES}
     ${UTILITY_FILES}
     ${COMMON_FILES}
@@ -149,6 +153,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipelines
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer/stages
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderPasses
     ${CMAKE_CURRENT_SOURCE_DIR}/src/utility
     ${ENGINE_COMMON_DIR}
@@ -220,7 +225,7 @@ find_package(Vulkan REQUIRED)           # required to be installed
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(${TARGET_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan) can this replace above 2 lines?
-    
+
 # Vulkan Memory Allocator: (header only)
 target_include_directories(${TARGET_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
 # ---------------------------------------------------
