@@ -24,7 +24,7 @@ struct FragmentOutput
 {
     float4 albedo : SV_TARGET0;          // R8G8B8A8_SRGB
     float4 normal : SV_TARGET1;          // A2B10G10R10_UNORM_PACK32, encoded world-space normal
-    float4 material : SV_TARGET2;        // R8G8B8A8_UNORM: metallicity, roughness, ambient occlusion, flags
+    float4 surfaceProperties : SV_TARGET2; // R8G8B8A8_UNORM: metallicity, roughness, ambient occlusion, flags
 };
 
 
@@ -46,14 +46,14 @@ FragmentOutput main(FragmentInput input)
     float metallicity = saturate(surface_metallicity * metallicityMap.Sample(colorSampler, uv));
     float ambientOcclusion = saturate(surface_ambientOcclusion * ambientOcclusionMap.Sample(colorSampler, uv));
 
-    // Per-pixel material flags:
-    uint flagBitMask = pc.receiveShadows != 0 ? DEFERRED_MATERIAL_FLAG_RECEIVE_SHADOWS : 0u;
-	flagBitMask |= surface_isLit != 0 ? DEFERRED_MATERIAL_FLAG_LIT : 0u;
-    float encodedFlagBitMask = float(flagBitMask) / float(DEFERRED_MATERIAL_FLAG_BIT_MASK_MAX);
+    // Per-pixel surface flags:
+    uint flagBitMask = pc.receiveShadows != 0 ? DEFERRED_SURFACE_FLAG_RECEIVE_SHADOWS : 0u;
+	flagBitMask |= surface_isLit != 0 ? DEFERRED_SURFACE_FLAG_LIT : 0u;
+    float encodedFlagBitMask = float(flagBitMask) / float(DEFERRED_SURFACE_FLAG_BIT_MASK_MAX);
 
     FragmentOutput output;
     output.albedo = albedo;
     output.normal = float4(0.5f * worldNormal + 0.5f, 0.0f);
-    output.material = float4(metallicity, roughness, ambientOcclusion, encodedFlagBitMask);
+    output.surfaceProperties = float4(metallicity, roughness, ambientOcclusion, encodedFlagBitMask);
     return output;
 }

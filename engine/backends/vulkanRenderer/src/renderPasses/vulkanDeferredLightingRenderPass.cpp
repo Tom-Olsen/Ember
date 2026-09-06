@@ -26,14 +26,14 @@ namespace vulkanRendererBackend
 		m_pSceneColorTextures.reserve(pSceneColorTextures.size());
 		m_pAlbedoTextures.reserve(pSceneColorTextures.size());
 		m_pNormalTextures.reserve(pSceneColorTextures.size());
-		m_pMaterialTextures.reserve(pSceneColorTextures.size());
+		m_pSurfacePropertiesTextures.reserve(pSceneColorTextures.size());
 		m_pDepthTextures.reserve(pSceneColorTextures.size());
 		for (uint32_t frameIndex = 0; frameIndex < pSceneColorTextures.size(); frameIndex++)
 		{
 			m_pSceneColorTextures.push_back(pSceneColorTextures[frameIndex].get());
 			m_pAlbedoTextures.push_back(deferredGeometryRenderPass.GetAlbedoTexture(frameIndex));
 			m_pNormalTextures.push_back(deferredGeometryRenderPass.GetNormalTexture(frameIndex));
-			m_pMaterialTextures.push_back(deferredGeometryRenderPass.GetMaterialTexture(frameIndex));
+			m_pSurfacePropertiesTextures.push_back(deferredGeometryRenderPass.GetSurfacePropertiesTexture(frameIndex));
 			m_pDepthTextures.push_back(pDepthTextures[frameIndex].get());
 		}
 
@@ -67,11 +67,11 @@ namespace vulkanRendererBackend
 			throw std::out_of_range("DeferredLightingRenderPass::GetNormalTexture(...) failed. Frame index out of range.");
 		return m_pNormalTextures[frameIndex];
 	}
-	GBufferTexture2d* DeferredLightingRenderPass::GetMaterialTexture(uint32_t frameIndex) const
+	GBufferTexture2d* DeferredLightingRenderPass::GetSurfacePropertiesTexture(uint32_t frameIndex) const
 	{
-		if (frameIndex >= m_pMaterialTextures.size())
-			throw std::out_of_range("DeferredLightingRenderPass::GetMaterialTexture(...) failed. Frame index out of range.");
-		return m_pMaterialTextures[frameIndex];
+		if (frameIndex >= m_pSurfacePropertiesTextures.size())
+			throw std::out_of_range("DeferredLightingRenderPass::GetSurfacePropertiesTexture(...) failed. Frame index out of range.");
+		return m_pSurfacePropertiesTextures[frameIndex];
 	}
 	DepthTexture2d* DeferredLightingRenderPass::GetDepthTexture(uint32_t frameIndex) const
 	{

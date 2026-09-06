@@ -5,7 +5,7 @@
 
 Texture2D<float4> gbufferAlbedo : register(t100, SHADER_SET);
 Texture2D<float4> gbufferNormal : register(t101, SHADER_SET);
-Texture2D<float4> gbufferMaterial : register(t102, SHADER_SET);
+Texture2D<float4> gbufferSurfaceProperties : register(t102, SHADER_SET);
 Texture2D<float> gbufferDepth : register(t103, SHADER_SET);
 
 
@@ -42,16 +42,16 @@ float4 main(FragmentInput input) : SV_TARGET
         return float4(0.0f, 0.0f, 0.0f, 1.0f);
     float4 albedoData = gbufferAlbedo.Load(int3(pixelPosition, 0));
     float4 normalData = gbufferNormal.Load(int3(pixelPosition, 0));
-    float4 materialData = gbufferMaterial.Load(int3(pixelPosition, 0));
+    float4 surfacePropertiesData = gbufferSurfaceProperties.Load(int3(pixelPosition, 0));
 
 	// Surface properties:
     float3 albedo = albedoData.rgb;
     float3 worldNormal = normalize(normalData.rgb * 2.0f - 1.0f);
-    float metallicity = materialData[DEFERRED_MATERIAL_METALLICITY_CHANNEL];
-    float roughness = materialData[DEFERRED_MATERIAL_ROUGHNESS_CHANNEL];
-    uint flagBitMask = uint(round(materialData[DEFERRED_MATERIAL_FLAG_BIT_MASK_CHANNEL] * DEFERRED_MATERIAL_FLAG_BIT_MASK_MAX));
-    bool receiveShadows = (flagBitMask & DEFERRED_MATERIAL_FLAG_RECEIVE_SHADOWS) != 0;
-	bool lit = (flagBitMask & DEFERRED_MATERIAL_FLAG_LIT) != 0;
+    float metallicity = surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_METALLICITY_CHANNEL];
+    float roughness = surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
+    uint flagBitMask = uint(round(surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_FLAG_BIT_MASK_CHANNEL] * DEFERRED_SURFACE_FLAG_BIT_MASK_MAX));
+    bool receiveShadows = (flagBitMask & DEFERRED_SURFACE_FLAG_RECEIVE_SHADOWS) != 0;
+	bool lit = (flagBitMask & DEFERRED_SURFACE_FLAG_LIT) != 0;
 	if (lit)
 	{
 		// Lighting:

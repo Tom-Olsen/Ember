@@ -50,11 +50,11 @@ namespace vulkanRendererBackend
 			throw std::out_of_range("DeferredGeometryRenderPass::GetNormalTexture(...) failed. Frame index out of range.");
 		return m_pNormalTextures[frameIndex].get();
 	}
-	GBufferTexture2d* DeferredGeometryRenderPass::GetMaterialTexture(uint32_t frameIndex) const
+	GBufferTexture2d* DeferredGeometryRenderPass::GetSurfacePropertiesTexture(uint32_t frameIndex) const
 	{
-		if (frameIndex >= m_pMaterialTextures.size())
-			throw std::out_of_range("DeferredGeometryRenderPass::GetMaterialTexture(...) failed. Frame index out of range.");
-		return m_pMaterialTextures[frameIndex].get();
+		if (frameIndex >= m_pSurfacePropertiesTextures.size())
+			throw std::out_of_range("DeferredGeometryRenderPass::GetSurfacePropertiesTexture(...) failed. Frame index out of range.");
+		return m_pSurfacePropertiesTextures[frameIndex].get();
 	}
 	DepthTexture2d* DeferredGeometryRenderPass::GetDepthTexture(uint32_t frameIndex) const
 	{
@@ -70,16 +70,16 @@ namespace vulkanRendererBackend
 	{
 		m_pAlbedoTextures.reserve(m_pDepthTextures.size());
 		m_pNormalTextures.reserve(m_pDepthTextures.size());
-		m_pMaterialTextures.reserve(m_pDepthTextures.size());
+		m_pSurfacePropertiesTextures.reserve(m_pDepthTextures.size());
 		for (size_t frameIndex = 0; frameIndex < m_pDepthTextures.size(); frameIndex++)
 		{
 			m_pAlbedoTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::albedoFormat, renderWidth, renderHeight));
 			m_pNormalTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::normalFormat, renderWidth, renderHeight));
-			m_pMaterialTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::materialFormat, renderWidth, renderHeight));
+			m_pSurfacePropertiesTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::surfacePropertiesFormat, renderWidth, renderHeight));
 
 			m_pAlbedoTextures[frameIndex]->SetDebugName("GBufferAlbedoTexture_Frame" + std::to_string(frameIndex));
 			m_pNormalTextures[frameIndex]->SetDebugName("GBufferNormalTexture_Frame" + std::to_string(frameIndex));
-			m_pMaterialTextures[frameIndex]->SetDebugName("GBufferMaterialTexture_Frame" + std::to_string(frameIndex));
+			m_pSurfacePropertiesTextures[frameIndex]->SetDebugName("GBufferSurfacePropertiesTexture_Frame" + std::to_string(frameIndex));
 
 			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
@@ -88,7 +88,7 @@ namespace vulkanRendererBackend
 			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
 			m_pAlbedoTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			m_pNormalTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-			m_pMaterialTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			m_pSurfacePropertiesTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
 	void DeferredGeometryRenderPass::CreateRenderPass()
@@ -100,7 +100,7 @@ namespace vulkanRendererBackend
 			{
 				m_pAlbedoTextures[0]->GetFormat(),
 				m_pNormalTextures[0]->GetFormat(),
-				m_pMaterialTextures[0]->GetFormat(),
+				m_pSurfacePropertiesTextures[0]->GetFormat(),
 				m_pDepthTextures[0]->GetFormat()
 			};
 
@@ -112,7 +112,7 @@ namespace vulkanRendererBackend
 				attachments[attachmentIndex].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 				attachments[attachmentIndex].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachments[attachmentIndex].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-				// Albedo/Normal/Material:
+				// Albedo/Normal/Surface properties:
 				if (attachmentIndex < deferredRenderingContract::colorAttachmentCount)
 				{
 					attachments[attachmentIndex].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -174,7 +174,7 @@ namespace vulkanRendererBackend
 			{
 				m_pAlbedoTextures[frameIndex]->GetVkImageView(),
 				m_pNormalTextures[frameIndex]->GetVkImageView(),
-				m_pMaterialTextures[frameIndex]->GetVkImageView(),
+				m_pSurfacePropertiesTextures[frameIndex]->GetVkImageView(),
 				m_pDepthTextures[frameIndex]->GetVkImageView()
 			};
 

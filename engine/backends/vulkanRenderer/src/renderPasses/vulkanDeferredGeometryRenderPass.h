@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 		// G-buffer attachments:
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pAlbedoTextures;
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pNormalTextures;
-		std::vector<std::unique_ptr<GBufferTexture2d>> m_pMaterialTextures;
+		std::vector<std::unique_ptr<GBufferTexture2d>> m_pSurfacePropertiesTextures;
 		std::vector<DepthTexture2d*> m_pDepthTextures;
 
 	public: // Methods:
@@ -42,7 +42,7 @@ namespace vulkanRendererBackend
 		// Getters:
 		GBufferTexture2d* GetAlbedoTexture(uint32_t frameIndex) const;
 		GBufferTexture2d* GetNormalTexture(uint32_t frameIndex) const;
-		GBufferTexture2d* GetMaterialTexture(uint32_t frameIndex) const;
+		GBufferTexture2d* GetSurfacePropertiesTexture(uint32_t frameIndex) const;
 		DepthTexture2d* GetDepthTexture(uint32_t frameIndex) const;
 
 	private: // Methods:

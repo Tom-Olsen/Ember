@@ -888,7 +888,7 @@ namespace vulkanRendererBackend
 			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
 			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", pDeferredLightingRenderPass->GetAlbedoTexture(m_frameIndex));
 			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", pDeferredLightingRenderPass->GetNormalTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferMaterial", pDeferredLightingRenderPass->GetMaterialTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", pDeferredLightingRenderPass->GetSurfacePropertiesTexture(m_frameIndex));
 			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", pDeferredLightingRenderPass->GetDepthTexture(m_frameIndex));
 			pDeferredLightingDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}

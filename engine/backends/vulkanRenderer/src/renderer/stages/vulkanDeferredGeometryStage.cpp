@@ -143,7 +143,7 @@ namespace vulkanRendererBackend
 
 			pDeferredGeometryRenderPass->GetAlbedoTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			pDeferredGeometryRenderPass->GetNormalTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			pDeferredGeometryRenderPass->GetMaterialTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredGeometryRenderPass->GetSurfacePropertiesTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			pDeferredGeometryRenderPass->GetDepthTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
