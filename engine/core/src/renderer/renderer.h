@@ -27,6 +27,7 @@ namespace emberBackendInterface
 	class IBuffer;
 	class IComputeShader;
 	class IDescriptorSetBinding;
+	class IGpuResourceFactory;
 	class IMaterial;
 	class IMesh;
 	class IRenderer;
@@ -62,13 +63,14 @@ namespace emberCore
 
 	private: // Members:
 		static bool s_isInitialized;
+		static std::unique_ptr<emberBackendInterface::IGpuResourceFactory> s_pIGpuResourceFactory;
 		static std::unique_ptr<emberBackendInterface::IRenderer> s_pIRenderer;
 		static std::array<Float4x4, 6> s_pointLightRotationMatrices;
 		static emberBackendInterface::IRenderer* GetInterfaceHandle();
 
 	public: // Methods:
 		// Initialization/Clear:
-		static void Init(emberBackendInterface::IRenderer* pIRenderer);
+		static void Init(emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory);
 		static void Clear();
 
 		// Main render loop:

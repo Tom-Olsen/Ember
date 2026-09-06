@@ -1,18 +1,7 @@
 #pragma once
-#include "commonBufferUsage.h"
+#include "commonCullMode.h"
 #include "commonLighting.h"
-#include "commonTextureFormat.h"
-#include "commonTextureUsage.h"
 #include "emberMath.h"
-#include <filesystem>
-
-
-
-// Forward declarations:
-namespace emberCommon
-{
-	enum class CullMode;
-}
 
 
 
@@ -25,8 +14,6 @@ namespace emberBackendInterface
 	class IDescriptorSetBinding;
 	class IGui;
 	class IMaterial;
-	class IMaterialManager;
-	class IMaterialShaderManager;
 	class IMesh;
 	class ITexture;
 
@@ -83,18 +70,6 @@ namespace emberBackendInterface
         virtual void CollectGarbage() = 0;
         virtual void WaitDeviceIdle() = 0;
         virtual void WaitForFrameFinished(uint32_t frameIndex) = 0;
-
-        // Gpu resource factories:
-		virtual IMaterialShaderManager* CreateMaterialShaderManager() = 0;
-		virtual IMaterialManager* CreateMaterialManager(IMaterialShaderManager* pIMaterialShaderManager) = 0;
-        virtual IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) = 0;
-        virtual IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) = 0;
-        //virtual ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
-        virtual ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
-        virtual ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
-        virtual ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) = 0;
-        virtual IMesh* CreateMesh() = 0;
-        virtual IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(IMaterial* pIMaterial) = 0;
 
 		// Gpu resource destruction:
 		virtual void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) = 0;

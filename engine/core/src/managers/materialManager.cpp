@@ -1,7 +1,7 @@
 #include "materialManager.h"
+#include "iGpuResourceFactory.h"
 #include "iMaterial.h"
 #include "iMaterialManager.h"
-#include "iRenderer.h"
 #include "logger.h"
 #include "materialAssetLoader.h"
 #include "materialShader.h"
@@ -265,12 +265,12 @@ namespace emberCore
 	{
 		if (s_pIMaterialManager != nullptr)
 			return;
-		if (Renderer::s_pIRenderer == nullptr)
-			throw std::runtime_error("MaterialManager::Init() failed. Renderer is not initialized.");
+		if (Renderer::s_pIGpuResourceFactory == nullptr)
+			throw std::runtime_error("MaterialManager::Init() failed. Gpu resource factory is not initialized.");
 
-		s_pIMaterialManager.reset(Renderer::s_pIRenderer->CreateMaterialManager(MaterialShaderManager::GetInterfaceHandle()));
+		s_pIMaterialManager.reset(Renderer::s_pIGpuResourceFactory->CreateMaterialManager(MaterialShaderManager::GetInterfaceHandle()));
 		if (s_pIMaterialManager == nullptr)
-			throw std::runtime_error("MaterialManager::Init() failed. Renderer returned a nullptr material manager.");
+			throw std::runtime_error("MaterialManager::Init() failed. Gpu resource factory returned a nullptr material manager.");
 
 		const std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "materialAssets").make_preferred();
     	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directoryPath))

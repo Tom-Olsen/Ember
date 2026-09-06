@@ -27,7 +27,7 @@ namespace emberCore
 		emberLogger::Logger::Init();
 		math::Random::Init();
 	}
-	void Core::InitBackends(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::ICompute* pICompute, emberBackendInterface::IGui* pIGui)
+	void Core::InitBackends(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory, emberBackendInterface::ICompute* pICompute, emberBackendInterface::IGui* pIGui)
 	{
 		// Link backends together:
 		pIRenderer->LinkIGuiHandle(pIGui);			// needed so renderer can inject gui draw calls in present renderpass.
@@ -37,7 +37,7 @@ namespace emberCore
 
 		// Backend wrappers:
 		Window::Init(pIWindow);
-		Renderer::Init(pIRenderer);
+		Renderer::Init(pIRenderer, pIGpuResourceFactory);
 		Compute::Init(pICompute);
 		Gui::Init(pIGui);
 	}

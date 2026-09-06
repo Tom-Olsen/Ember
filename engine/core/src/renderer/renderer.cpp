@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "buffer.h"
 #include "emberTime.h"
+#include "iGpuResourceFactory.h"
 #include "iMaterial.h"
 #include "iRenderer.h"
 #include "logger.h"
@@ -21,6 +22,7 @@ namespace emberCore
 {
 	// Static members:
 	bool Renderer::s_isInitialized = false;
+	std::unique_ptr<emberBackendInterface::IGpuResourceFactory> Renderer::s_pIGpuResourceFactory;
 	std::unique_ptr<emberBackendInterface::IRenderer> Renderer::s_pIRenderer;
 	std::array<Float4x4, 6> Renderer::s_pointLightRotationMatrices;
 	emberBackendInterface::IRenderer* Renderer::GetInterfaceHandle()
@@ -32,12 +34,14 @@ namespace emberCore
 
 	// Public Methods:
 	// Initialization/Cleanup:
-	void Renderer::Init(emberBackendInterface::IRenderer* pIRenderer)
+	void Renderer::Init(emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory)
 	{
 		if (s_isInitialized)
 			return;
 		if (pIRenderer == nullptr)
 			throw std::runtime_error("Renderer::Init(...) failed. pIRenderer is nullptr.");
+		if (pIGpuResourceFactory == nullptr)
+			throw std::runtime_error("Renderer::Init(...) failed. pIGpuResourceFactory is nullptr.");
 
 		s_pointLightRotationMatrices[0] = Float4x4::identity;
 		s_pointLightRotationMatrices[1] = Float4x4::RotateY( math::pi2);
@@ -47,6 +51,7 @@ namespace emberCore
 		s_pointLightRotationMatrices[5] = Float4x4::RotateX(-math::pi2);
 
 		s_pIRenderer = std::unique_ptr<emberBackendInterface::IRenderer>(pIRenderer);
+		s_pIGpuResourceFactory = std::unique_ptr<emberBackendInterface::IGpuResourceFactory>(pIGpuResourceFactory);
 		MaterialShaderManager::Init();
 		MaterialManager::Init();
 		s_isInitialized = true;
@@ -55,6 +60,7 @@ namespace emberCore
 	{
 		MaterialManager::Clear();
 		MaterialShaderManager::Clear();
+		s_pIGpuResourceFactory.reset();
 		s_pIRenderer.reset();
 		s_isInitialized = false;
 	}
@@ -415,11 +421,11 @@ namespace emberCore
 	// Gpu resource factories:
 	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& name)
 	{
-		return s_pIRenderer->CreateComputeShader(computeSpv, name);
+		return s_pIGpuResourceFactory->CreateComputeShader(computeSpv, name);
 	}
 	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
-		return s_pIRenderer->CreateBuffer(count, elementSize, usage);
+		return s_pIGpuResourceFactory->CreateBuffer(count, elementSize, usage);
 	}
 	//static emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	//{
@@ -427,23 +433,23 @@ namespace emberCore
 	//}
 	emberBackendInterface::ITexture* Renderer::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		return s_pIRenderer->CreateTexture2d(width, height, format, usage, data);
+		return s_pIGpuResourceFactory->CreateTexture2d(width, height, format, usage, data);
 	}
 	emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		return s_pIRenderer->CreateTexture3d(width, height, depth, format, usage, data);
+		return s_pIGpuResourceFactory->CreateTexture3d(width, height, depth, format, usage, data);
 	}
 	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
 	{
-		return s_pIRenderer->CreateTextureCube(width, height, format, usage, data);
+		return s_pIGpuResourceFactory->CreateTextureCube(width, height, format, usage, data);
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
 	{
-		return s_pIRenderer->CreateMesh();
+		return s_pIGpuResourceFactory->CreateMesh();
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial)
 	{
-		return s_pIRenderer->CreateDrawCallDescriptorSetBinding(pIMaterial);
+		return s_pIGpuResourceFactory->CreateDrawCallDescriptorSetBinding(pIMaterial);
 	}
 	
 

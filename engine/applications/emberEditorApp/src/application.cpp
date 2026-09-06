@@ -17,11 +17,12 @@
 #include "window.h"
 // Backends:
 #include "sdlWindow.h"
-#include "vulkanRenderer.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanCompute.h"
+#include "vulkanGpuResourceFactory.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
+#include "vulkanRenderer.h"
 #include "imGuiSdlVulkan.h"
 // Editor Windows:
 #include "backendDebugWindow.h"
@@ -93,6 +94,7 @@ namespace emberApplication
 			rendererCreateInfo.maxPositionalLights = applicationCreateInfo.maxPositionalLights;     // clamped to 1-MAX_POS_LIGHTS in renderer.
 			rendererCreateInfo.shadowMapResolution = applicationCreateInfo.shadowMapResolution;     // clamped to 1-SHADOW_MAP_RESOLUTION in renderer.
 			emberBackendInterface::IRenderer* pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
+			emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory = new vulkanRendererBackend::GpuResourceFactory(applicationCreateInfo.shadowMapResolution);
 
 			// Compute backend:
 			emberBackendInterface::ICompute* pICompute = new vulkanRendererBackend::Compute();
@@ -101,7 +103,7 @@ namespace emberApplication
 			emberBackendInterface::IGui* pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
 
 			// Init backends:
-			Core::InitBackends(pIWindow, pIRenderer, pICompute, pIGui);
+			Core::InitBackends(pIWindow, pIRenderer, pIGpuResourceFactory, pICompute, pIGui);
 
 			// Gpu Resource Managers:
 			Core::InitManagers();

@@ -82,12 +82,14 @@ namespace vulkanRendererBackend
 		std::vector<VkSemaphore> m_postRenderComputeToPresentSemaphores;
 		std::vector<VkSemaphore> m_releaseSemaphores;
 
-		// Sync Graph:
+		// Render Graph:
 		// ResourceUpdate
 		// ├─> PreRenderCompute ─┬─> Shadow ───────────┐
 		// │                     ├─> DeferredGeometry ─┴─> DeferredLighting ─> ForwardOpaque ─> ForwardTransparent ─┐
 		// │                     └─> Outline ─> RenderCompute ──────────────────────────────────────────────────────┴─> PostRenderCompute ─┐
 		// └─> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────> Present
+
+		// Proposed Render Graph:
 
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
@@ -138,6 +140,7 @@ namespace vulkanRendererBackend
 		std::vector<std::unique_ptr<StorageTexture2d>> m_pHorizontalExpandedOutlineMaskTextures;
 
 	public: // Methods:
+		// Constructor/Destructor:
 		Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow);
 		~Renderer();
 
@@ -196,18 +199,6 @@ namespace vulkanRendererBackend
 		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
 		void WaitForFrameFinished(uint32_t frameIndex) override;
 
-		// Gpu resource factories:
-		emberBackendInterface::IMaterialShaderManager* CreateMaterialShaderManager() override;
-		emberBackendInterface::IMaterialManager* CreateMaterialManager(emberBackendInterface::IMaterialShaderManager* pIMaterialShaderManager) override;
-		emberBackendInterface::IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) override;
-		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) override;
-		//emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
-		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
-		emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
-		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
-		emberBackendInterface::IMesh* CreateMesh() override;
-		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
-		
 		// Gpu resource destruction:
 		void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) override;
 		

@@ -1,6 +1,6 @@
 #include "materialShaderManager.h"
+#include "iGpuResourceFactory.h"
 #include "iMaterialShaderManager.h"
-#include "iRenderer.h"
 #include "logger.h"
 #include "renderer.h"
 #include <stdexcept>
@@ -71,12 +71,12 @@ namespace emberCore
 	{
 		if (s_pIMaterialShaderManager != nullptr)
 			return;
-		if (Renderer::s_pIRenderer == nullptr)
-			throw std::runtime_error("MaterialShaderManager::Init() failed. Renderer is not initialized.");
+		if (Renderer::s_pIGpuResourceFactory == nullptr)
+			throw std::runtime_error("MaterialShaderManager::Init() failed. Gpu resource factory is not initialized.");
 
-		s_pIMaterialShaderManager.reset(Renderer::s_pIRenderer->CreateMaterialShaderManager());
+		s_pIMaterialShaderManager.reset(Renderer::s_pIGpuResourceFactory->CreateMaterialShaderManager());
 		if (s_pIMaterialShaderManager == nullptr)
-			throw std::runtime_error("MaterialShaderManager::Init() failed. Renderer returned a nullptr material shader manager.");
+			throw std::runtime_error("MaterialShaderManager::Init() failed. Gpu resource factory returned a nullptr material shader manager.");
 	}
 	void MaterialShaderManager::Clear()
 	{
