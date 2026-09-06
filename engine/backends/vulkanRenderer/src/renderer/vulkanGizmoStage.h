@@ -9,7 +9,7 @@ namespace vulkanRendererBackend
 
 
 
-	class ResourceUpdateStage
+	class GizmoStage
 	{
 	public: // Methods:
 		void Record(const FrameContext& frameContext);

@@ -8,6 +8,7 @@
 #include "vulkanDeferredDrawCall.h"
 #include "vulkanForwardDrawCall.h"
 #include "vulkanGizmoDrawCall.h"
+#include "vulkanGizmoStage.h"
 #include "vulkanOutlineDrawCall.h"
 #include "vulkanRenderStage.h"
 #include "vulkanRendererExport.h"
@@ -67,6 +68,7 @@ namespace vulkanRendererBackend
 		std::vector<FrameResources> m_frameResources;
 		std::vector<CommandPool> m_commandPools; // Command pools for stages that have not been moved yet.
 		ResourceUpdateStage m_resourceUpdateStage;
+		GizmoStage m_gizmoStage;
 
 		// Sync objects:
 		std::vector<VkFence> m_frameFences;
@@ -115,8 +117,6 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
 		// Draw calls:
-		std::vector<GizmoDrawCall> m_gizmoDrawCalls;
-		std::vector<GizmoDrawCall*> m_sortedGizmoDrawCallPointers;
 		std::vector<OutlineDrawCall> m_outlineCalls;
 		std::vector<ShadowDrawCall> m_shadowDrawCalls;
 		std::vector<DeferredDrawCall> m_deferredDrawCalls;
@@ -244,7 +244,6 @@ namespace vulkanRendererBackend
 		void UpdateShaderData();
 
 		// Record commands:
-		void RecordGizmoCommands();
 		void RecordPreRenderComputeCommands();
 		void RecordOutlineCommands();
 		void RecordRenderComputeCommands();

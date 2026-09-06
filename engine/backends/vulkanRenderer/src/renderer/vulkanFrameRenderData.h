@@ -1,12 +1,19 @@
 #pragma once
-// #include "commonCamera.h"
 // #include "commonLighting.h"
 // #include "vulkanDeferredDrawCall.h"
 // #include "vulkanForwardDrawCall.h"
-// #include "vulkanGizmoDrawCall.h"
+#include "vulkanGizmoDrawCall.h"
 // #include "vulkanOutlineDrawCall.h"
 // #include "vulkanShadowDrawCall.h"
 #include <vector>
+
+
+
+// Forward declarations:
+namespace emberCommon
+{
+	struct Camera;
+}
 
 
 
@@ -33,8 +40,8 @@ namespace vulkanRendererBackend
 		// std::vector<emberCommon::PositionalLight> positionalLights;
 
 		// Gizmo stage:
-		// std::vector<GizmoDrawCall> gizmoDrawCalls;
-		// std::vector<GizmoDrawCall*> sortedGizmoDrawCallPointers;
+		std::vector<GizmoDrawCall> gizmoDrawCalls;
+		std::vector<GizmoDrawCall*> sortedGizmoDrawCallPointers;
 
 		// Outline stage:
 		// std::vector<OutlineDrawCall> outlineDrawCalls;
@@ -51,8 +58,8 @@ namespace vulkanRendererBackend
 		// std::vector<ForwardDrawCall*> sortedForwardOpaqueDrawCallPointers;
 		// std::vector<ForwardDrawCall*> sortedForwardTransparentDrawCallPointers;
 
-	// public: // Methods:
-		// void SortDrawCalls();
-		// void Reset();
+	public: // Methods:
+		void SortDrawCalls(const emberCommon::Camera& camera);
+		void Reset();
 	};
 }

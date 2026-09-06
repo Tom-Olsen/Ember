@@ -19,15 +19,15 @@ namespace vulkanRendererBackend
 	{
 	public: // Members:
 		uint32_t frameIndex;
+		float time;
+		float deltaTime;
 		FrameResources& resources;
 		FrameRenderData& frameRenderData;
 
 		// uint32_t imageIndex;
-		// float time;
-		// float deltaTime;
 		// const emberCommon::Camera& camera;
 
 	public: // Methods:
-		FrameContext(uint32_t frameIndex, FrameResources& resources, FrameRenderData& frameRenderData);
+		FrameContext(uint32_t frameIndex, float time, float deltaTime, FrameResources& resources, FrameRenderData& frameRenderData);
 	};
 }

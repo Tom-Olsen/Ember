@@ -1,9 +1,10 @@
 #pragma once
 #include "vulkanCommandPool.h"
 #include "vulkanRenderStage.h"
+#include <array>
 #include <cstddef>
 #include <vector>
-// #include <vulkan/vulkan.h>
+#include <vulkan/vulkan.h>
 
 
 
@@ -16,10 +17,10 @@ namespace vulkanRendererBackend
 	{
 	public: // Members:
 		std::vector<CommandPool> commandPools;
+		std::array<VkDescriptorSet, 3> staticDescriptorSets;
 
 		// VkFence frameFence;
 		// VkSemaphore acquireSemaphore;
-		// std::array<VkDescriptorSet, 3> staticDescriptorSets;
 	
 	public: // Methods:
 		// Constructor/Destructor:

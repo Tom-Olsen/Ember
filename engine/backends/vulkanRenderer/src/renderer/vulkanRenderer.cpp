@@ -122,8 +122,8 @@ namespace vulkanRendererBackend
 			m_frameResources.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount());
 
 		// Command pools for stages that have not been moved yet (one per frameInFlight * remaining renderStage):
-		m_commandPools.reserve(Context::GetFramesInFlight() * (static_cast<int>(RenderStage::stageCount) - 1));
-		for (int i = 0; i < Context::GetFramesInFlight() * (static_cast<int>(RenderStage::stageCount) - 1); i++)
+		m_commandPools.reserve(Context::GetFramesInFlight() * (static_cast<int>(RenderStage::stageCount) - 2));
+		for (int i = 0; i < Context::GetFramesInFlight() * (static_cast<int>(RenderStage::stageCount) - 2); i++)
 			m_commandPools.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount(), Context::GetLogicalDevice()->GetGraphicsQueue());
 
 		// Shadow/Light system:
@@ -171,6 +171,7 @@ namespace vulkanRendererBackend
 				FrameDescriptorSetLayout::GetVkDescriptorSet(frameIndex)
 			};
 			m_staticDescriptorSets.push_back(staticDescriptorSets);
+			m_frameResources[frameIndex].staticDescriptorSets = staticDescriptorSets;
 		}
 	}
 	Renderer::~Renderer()
@@ -265,11 +266,11 @@ namespace vulkanRendererBackend
 			PROFILE_SCOPE("vulkanRendererBackend::Renderer::Record");
 			DEBUG_LOG_TRACE("Recording frame {}", m_frameIndex);
 
-			FrameContext frameContext(m_frameIndex, m_frameResources[m_frameIndex], m_frameRenderData[m_frameIndex]);
+			FrameContext frameContext(m_frameIndex, m_time, m_deltaTime, m_frameResources[m_frameIndex], m_frameRenderData[m_frameIndex]);
 			m_resourceUpdateStage.Record(frameContext);
 			SubmitResourceUpdateCommands();
 
-			RecordGizmoCommands();
+			m_gizmoStage.Record(frameContext);
 			SubmitGizmoCommands();
 
 			RecordPreRenderComputeCommands();
@@ -513,7 +514,7 @@ namespace vulkanRendererBackend
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		DescriptorSetBindingHandle descriptorSetBindingHandle(static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding));
-		m_gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
+		m_frameRenderData[Context::GetFrameIndex()].gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
@@ -531,7 +532,7 @@ namespace vulkanRendererBackend
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
-		m_gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
+		m_frameRenderData[Context::GetFrameIndex()].gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
 		return descriptorSetBindingHandle.Get();
 	}
 
@@ -812,9 +813,9 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::ResetDrawCalls()
 	{
+		m_frameRenderData[m_frameIndex].Reset();
+
 		// Return all borrowed descriptor set bindings to the corresponding pool:
-		for (GizmoDrawCall& drawCall : m_gizmoDrawCalls)
-			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
 		for (OutlineDrawCall& drawCall : m_outlineCalls)
 			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
 		for (ShadowDrawCall& drawCall : m_shadowDrawCalls)
@@ -825,8 +826,6 @@ namespace vulkanRendererBackend
 			PoolManager::ReturnCallDescriptorSetBinding(drawCall.descriptorSetBindingHandle);
 
 		// Clear all draw calls for next frame:
-		m_gizmoDrawCalls.clear();
-		m_sortedGizmoDrawCallPointers.clear();
 		m_outlineCalls.clear();
 		m_shadowDrawCalls.clear();
 		m_deferredDrawCalls.clear();
@@ -925,11 +924,9 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SortDrawCallPointers()
 	{
+		m_frameRenderData[m_frameIndex].SortDrawCalls(m_activeCamera);
+
 		// Populate sorted draw call pointers vector:
-		m_sortedGizmoDrawCallPointers.clear();
-		m_sortedGizmoDrawCallPointers.reserve(m_gizmoDrawCalls.size());
-		for (GizmoDrawCall& drawCall : m_gizmoDrawCalls)
-			m_sortedGizmoDrawCallPointers.push_back(&drawCall);
 		m_sortedDeferredDrawCallPointers.clear();
 		m_sortedDeferredDrawCallPointers.reserve(m_deferredDrawCalls.size());
 		for (DeferredDrawCall& drawCall : m_deferredDrawCalls)
@@ -945,34 +942,6 @@ namespace vulkanRendererBackend
 			else
 				m_sortedForwardOpaqueDrawCallPointers.push_back(&drawCall);
 		}
-
-		// Ember::ToDo: frustum culling and sorting by dist to camera is missing.
-		// Sort gizmo calls by renderQueue first, then handle transparent draw order, then group by vertex layout:
-		std::sort(m_sortedGizmoDrawCallPointers.begin(), m_sortedGizmoDrawCallPointers.end(), [this](GizmoDrawCall* drawCallA, GizmoDrawCall* drawCallB)
-		{
-			int renderQueueA = static_cast<int>(drawCallA->pMaterial->GetRenderQueue());
-			int renderQueueB = static_cast<int>(drawCallB->pMaterial->GetRenderQueue());
-			if (renderQueueA != renderQueueB)
-				return renderQueueA < renderQueueB;
-
-			const bool transparentA = drawCallA->pMaterial->IsTransparent();
-			const bool transparentB = drawCallB->pMaterial->IsTransparent();
-			if (transparentA && transparentB)
-			{
-				const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-				const Float3 drawPositionB = Float3(drawCallB->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-				const float distanceA = Float3::DistanceSq(drawPositionA, m_activeCamera.position);
-				const float distanceB = Float3::DistanceSq(drawPositionB, m_activeCamera.position);
-				if (distanceA != distanceB)
-					return distanceA > distanceB;
-			}
-
-			auto layoutA = drawCallA->pMesh->GetVertexMemoryLayout();
-			auto layoutB = drawCallB->pMesh->GetVertexMemoryLayout();
-			if (layoutA != layoutB)
-				return layoutA < layoutB;
-			return drawCallA < drawCallB;
-		});
 
 		// Ember::ToDo: frustum culling is missing (also for shadow draw calls).
 		// Sort deferred calls by render queue first, then group by vertex layout and material:
@@ -1100,7 +1069,7 @@ namespace vulkanRendererBackend
 			}
 
 		// Gizmo calls:
-		for (GizmoDrawCall& drawCall : m_gizmoDrawCalls)
+		for (GizmoDrawCall& drawCall : m_frameRenderData[m_frameIndex].gizmoDrawCalls)
 		{
 			drawCall.UpdateModelData();
 			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
@@ -1181,119 +1150,6 @@ namespace vulkanRendererBackend
 
 
 	// Record commands:
-	void Renderer::RecordGizmoCommands()
-	{
-		PROFILE_FUNCTION();
-
-		// Prepare command recording:
-		CommandPool& commandPool = GetCommandPool(m_frameIndex, RenderStage::gizmo);
-		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
-		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		GizmoRenderPass* pGizmoRenderPass = RenderPassManager::GetGizmoRenderPass();
-
-		// Record gizmo commands:
-		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-		{
-			// Viewport and scissor:
-			VkViewport viewport = {};
-			viewport.width = pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetWidth();
-			viewport.height = pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetHeight();
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			VkRect2D scissor = {};
-			scissor.extent.width = viewport.width;
-			scissor.extent.height = viewport.height;
-			vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-			// Render pass info:
-			std::array<VkClearValue, 2> clearValues;
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
-			renderPassBeginInfo.renderPass = pGizmoRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pGizmoRenderPass->GetFramebuffer(m_frameIndex);
-			renderPassBeginInfo.renderArea.offset = { 0, 0 };
-			renderPassBeginInfo.renderArea.extent.width = viewport.width;
-			renderPassBeginInfo.renderArea.extent.height = viewport.height;
-			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			renderPassBeginInfo.pClearValues = clearValues.data();
-
-			// Begin render pass:
-			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-			if (m_sortedGizmoDrawCallPointers.size() > 0)
-			{
-				// Pipeline:
-				VkPipeline pipeline = VK_NULL_HANDLE;
-				VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-				VkDescriptorSet shaderDescriptorSet = VK_NULL_HANDLE;
-				bool staticDescriptorSetsBound = false;
-
-				// Draw calls:
-				for (GizmoDrawCall* drawCall : m_sortedGizmoDrawCallPointers)
-				{
-					// Pipeline swap:
-					Material* pGizmoMaterial = drawCall->pMaterial;
-					VkPipeline newPipeline = pGizmoMaterial->GetPipeline<RenderStage::gizmo>(drawCall->pMesh)->GetVkPipeline();
-					bool pipelineLayoutChanged = false;
-					if (pipeline != newPipeline)
-					{
-						// Bind Pipeline:
-						pipeline = newPipeline;
-						vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-						// Pipeline layout swap:
-						VkPipelineLayout newPipelineLayout = pGizmoMaterial->GetVkPipelineLayout();
-						pipelineLayoutChanged = pipelineLayout != newPipelineLayout;
-						if (pipelineLayoutChanged)
-						{
-							pipelineLayout = newPipelineLayout;
-
-							// Bind static descriptor sets:
-							if (!staticDescriptorSetsBound)
-							{
-								vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 3, m_staticDescriptorSets[m_frameIndex].data(), 0, nullptr);
-								staticDescriptorSetsBound = true;
-							}
-						}
-					}
-
-					// Bind per shader descriptor set:
-					VkDescriptorSet newShaderDescriptorSet = pGizmoMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(m_frameIndex);
-					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
-					{
-						shaderDescriptorSet = newShaderDescriptorSet;
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, SHADER_SET_INDEX, 1, &shaderDescriptorSet, 0, nullptr);
-					}
-
-					// Push constant:
-					DefaultPushConstant pushConstant(0, drawCall->instanceCount, false, m_time, m_deltaTime);
-					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
-
-					// Cull mode:
-					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->cullMode));
-
-					// Bind per draw call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(m_frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
-						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
-
-					// Bind mesh data:
-					vkCmdBindVertexBuffers(commandBuffer, 0, drawCall->pMesh->GetVertexBindingCount(), drawCall->pMesh->GetVkBuffers(), drawCall->pMesh->GetOffsets());
-					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
-
-					// Dispatch:
-					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
-					DEBUG_LOG_TRACE("Gizmo draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pGizmoMaterial->GetDebugName());
-				}
-			}
-			vkCmdEndRenderPass(commandBuffer);
-		}
-		VKA(vkEndCommandBuffer(commandBuffer));
-
-		// Gizmo render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL. Reflect this in the image layout:
-		pGizmoRenderPass->GetRenderTexture(m_frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	}
     void Renderer::RecordPreRenderComputeCommands()
 	{
 		PROFILE_FUNCTION();
@@ -2789,8 +2645,8 @@ namespace vulkanRendererBackend
 		// Slow index: renderStage
 		assert(renderStage < (int)RenderStage::stageCount);
 		assert(frameIndex < Context::GetFramesInFlight());
-		if (renderStage == static_cast<int>(RenderStage::resourceUpdate))
+		if (renderStage <= static_cast<int>(RenderStage::gizmo))
 			return m_frameResources[frameIndex].GetCommandPool(renderStage);
-		return m_commandPools[frameIndex + (renderStage - 1) * Context::GetFramesInFlight()];
+		return m_commandPools[frameIndex + (renderStage - 2) * Context::GetFramesInFlight()];
 	}
 }
