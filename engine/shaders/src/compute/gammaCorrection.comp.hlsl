@@ -2,8 +2,7 @@
 
 
 
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> inputImage : register(u200, CALL_SET);
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u201, CALL_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> inOutImage : register(u200, CALL_SET);
 
 
 
@@ -27,8 +26,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
 {
     if (threadID.x < pc.threadCount.x && threadID.y < pc.threadCount.y)
     {
-        float4 color = inputImage[threadID.xy];
+        float4 color = inOutImage[threadID.xy];
         float3 correctedRGB = LinearToSRGB(clamp(color.rgb, 0, 1));
-        outputImage[threadID.xy] = float4(correctedRGB, color.a);
+        inOutImage[threadID.xy] = float4(correctedRGB, color.a);
     }
 }
