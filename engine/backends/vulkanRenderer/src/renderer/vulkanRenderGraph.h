@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 	/// Aquire
 	/// └>ResourceUpdate
 	///   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
-	///   └> PreRenderCompute ┬> Outline ──────────> RenderCompute  ───────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
+	///   └> PreRenderCompute ┬> Outline ──────────> MidRenderCompute  ────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
 	///                       ├> Shadow ──────────┬> DeferredLighting ─> ForwardOpaque ─> ScreenSpaceCompute ─> ForwardTransparent ┘
 	///                       └> DeferredGeometry ┘
 	/// </summary>
@@ -46,8 +46,8 @@ namespace vulkanRendererBackend
 			preRenderComputeToOutline,
 			preRenderComputeToShadow,
 			preRenderComputeToDeferredGeometry,
-			outlineToRenderCompute,
-			renderComputeToPostRenderCompute,
+			outlineToMidRenderCompute,
+			midRenderComputeToPostRenderCompute,
 			shadowToDeferredLighting,
 			deferredGeometryToDeferredLighting,
 			deferredLightingToForwardOpaque,
@@ -69,7 +69,7 @@ namespace vulkanRendererBackend
 		GizmoStage m_gizmoStage;
 		ComputeStage<RenderStage::preRenderCompute> m_preRenderComputeStage;
 		OutlineStage m_outlineStage;
-		ComputeStage<RenderStage::renderCompute> m_renderComputeStage;
+		ComputeStage<RenderStage::midRenderCompute> m_midRenderComputeStage;
 		ShadowStage m_shadowStage;
 		DeferredGeometryStage m_deferredGeometryStage;
 		DeferredLightingStage m_deferredLightingStage;
@@ -98,7 +98,7 @@ namespace vulkanRendererBackend
 
 		// Frame lifecycle:
 		VkResult AcquireImage(uint32_t frameIndex, uint32_t& imageIndex) const;
-		void RecordAndSubmit(const FrameContext& frameContext, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> renderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
+		void RecordAndSubmit(const FrameContext& frameContext, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
 		VkResult Present(uint32_t imageIndex) const;
 		void RecreateSyncObjects();
 		void ResetFrameFence(uint32_t frameIndex) const;

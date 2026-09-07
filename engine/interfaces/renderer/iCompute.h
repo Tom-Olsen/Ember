@@ -119,11 +119,11 @@ namespace emberBackendInterface
             virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
 
-        class IRender
+        class IMidRender
         {
         public: // Methods:
             // Virtual destructor for v-table:
-            virtual ~IRender() = default;
+            virtual ~IMidRender() = default;
 
             // Workload recording:
             virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
@@ -156,7 +156,7 @@ namespace emberBackendInterface
 
         virtual IAsync* GetAsyncComputeInterfaceHandle() = 0;
         virtual IPreRender* GetPreRenderComputeInterfaceHandle() = 0;
-        virtual IRender* GetRenderComputeInterfaceHandle() = 0;
+        virtual IMidRender* GetMidRenderComputeInterfaceHandle() = 0;
         virtual IScreenSpace* GetScreenSpaceComputeInterfaceHandle() = 0;
         virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
     };

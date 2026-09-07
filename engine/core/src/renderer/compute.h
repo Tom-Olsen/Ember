@@ -23,7 +23,7 @@ namespace emberCore
 	{
 		async,
 		preRender,
-		render,	// rename this!
+		midRender,
 		screenSpace,
 		postRender,
 		physics
@@ -103,14 +103,14 @@ namespace emberCore
 
 
 
-		class EMBER_CORE_API Render
+		class EMBER_CORE_API MidRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IRender* s_pIRender;
+			static emberBackendInterface::ICompute::IMidRender* s_pIMidRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IRender* pIRender);
+			static void Init(emberBackendInterface::ICompute::IMidRender* pIMidRender);
 			static void Clear();
 
 			// Workload recording:
@@ -124,12 +124,12 @@ namespace emberCore
 
 		private: // Methods
 			// Delete all constructors:
-			Render() = delete;
-			Render(const Render&) = delete;
-			Render& operator=(const Render&) = delete;
-			Render(Render&&) = delete;
-			Render& operator=(Render&&) = delete;
-			~Render() = delete;
+			MidRender() = delete;
+			MidRender(const MidRender&) = delete;
+			MidRender& operator=(const MidRender&) = delete;
+			MidRender(MidRender&&) = delete;
+			MidRender& operator=(MidRender&&) = delete;
+			~MidRender() = delete;
 		};
 
 

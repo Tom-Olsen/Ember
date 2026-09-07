@@ -1,9 +1,9 @@
 #include "vulkanCompute.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanContext.h"
+#include "vulkanMidRenderCompute.h"
 #include "vulkanPostRenderCompute.h"
 #include "vulkanPreRenderCompute.h"
-#include "vulkanRenderCompute.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include "vulkanScreenSpaceCompute.h"
 
@@ -17,7 +17,7 @@ namespace vulkanRendererBackend
 	{
 		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
 		m_pIPreRender = std::make_unique<PreRender>();
-		m_pIRender = std::make_unique<Render>();
+		m_pIMidRender = std::make_unique<MidRender>();
 		m_pIScreenSpace = std::make_unique<ScreenSpace>();
 		m_pIPostRender = std::make_unique<PostRender>();
 	}
@@ -43,9 +43,9 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<PreRender*>(m_pIPreRender.get());
 	}
-	Render* Compute::GetRenderCompute()
+	MidRender* Compute::GetMidRenderCompute()
 	{
-		return static_cast<Render*>(m_pIRender.get());
+		return static_cast<MidRender*>(m_pIMidRender.get());
 	}
 	ScreenSpace* Compute::GetScreenSpaceCompute()
 	{
@@ -63,9 +63,9 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<emberBackendInterface::ICompute::IPreRender*>(m_pIPreRender.get());
 	}
-	emberBackendInterface::ICompute::IRender* Compute::GetRenderComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IMidRender* Compute::GetMidRenderComputeInterfaceHandle()
 	{
-		return static_cast<emberBackendInterface::ICompute::IRender*>(m_pIRender.get());
+		return static_cast<emberBackendInterface::ICompute::IMidRender*>(m_pIMidRender.get());
 	}
 	emberBackendInterface::ICompute::IScreenSpace* Compute::GetScreenSpaceComputeInterfaceHandle()
 	{
@@ -82,35 +82,35 @@ namespace vulkanRendererBackend
 	void Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
 	{
 		GetPreRenderCompute()->UpdateShaderData(frameIndex);
-		GetRenderCompute()->UpdateShaderData(frameIndex);
+		GetMidRenderCompute()->UpdateShaderData(frameIndex);
 		GetScreenSpaceCompute()->UpdateShaderData(frameIndex);
 		GetPostRenderCompute()->UpdateShaderData(frameIndex, sceneColorTexturePair);
 	}
 	void Compute::CommitFrame(uint32_t frameIndex)
 	{
 		GetPreRenderCompute()->CommitComputeCalls(frameIndex);
-		GetRenderCompute()->CommitComputeCalls(frameIndex);
+		GetMidRenderCompute()->CommitComputeCalls(frameIndex);
 		GetScreenSpaceCompute()->CommitComputeCalls(frameIndex);
 		GetPostRenderCompute()->CommitComputeCalls(frameIndex);
 	}
 	void Compute::RetireFrame(uint32_t frameIndex)
 	{
 		GetPreRenderCompute()->RetireComputeCalls(frameIndex);
-		GetRenderCompute()->RetireComputeCalls(frameIndex);
+		GetMidRenderCompute()->RetireComputeCalls(frameIndex);
 		GetScreenSpaceCompute()->RetireComputeCalls(frameIndex);
 		GetPostRenderCompute()->RetireComputeCalls(frameIndex);
 	}
 	void Compute::RetireAllFrames()
 	{
 		GetPreRenderCompute()->RetireAllComputeCalls();
-		GetRenderCompute()->RetireAllComputeCalls();
+		GetMidRenderCompute()->RetireAllComputeCalls();
 		GetScreenSpaceCompute()->RetireAllComputeCalls();
 		GetPostRenderCompute()->RetireAllComputeCalls();
 	}
 	void Compute::DiscardPendingCalls()
 	{
 		GetPreRenderCompute()->ResetComputeCalls();
-		GetRenderCompute()->ResetComputeCalls();
+		GetMidRenderCompute()->ResetComputeCalls();
 		GetScreenSpaceCompute()->ResetComputeCalls();
 		GetPostRenderCompute()->ResetComputeCalls();
 	}

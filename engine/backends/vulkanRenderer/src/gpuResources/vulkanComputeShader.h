@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	class DescriptorSetBinding;
 	class Pipeline;
 	class PreRender;
-	class Render;
+	class MidRender;
 	class PostRender;
 	class Renderer;
 	class ScreenSpace;
@@ -31,7 +31,7 @@ namespace vulkanRendererBackend
 		friend class Async;
 		friend class ComputeCallQueue;
 		friend class PreRender;
-		friend class Render;
+		friend class MidRender;
 		friend class PostRender;
 		friend class Renderer;
 		friend class ScreenSpace;

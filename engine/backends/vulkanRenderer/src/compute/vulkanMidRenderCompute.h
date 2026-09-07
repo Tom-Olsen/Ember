@@ -18,23 +18,23 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
-	class VULKAN_RENDERER_API Render : public emberBackendInterface::ICompute::IRender
+	class VULKAN_RENDERER_API MidRender : public emberBackendInterface::ICompute::IMidRender
 	{
 	private: // Members:
 		ComputeCallQueue m_computeCallQueue;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Render();
-		~Render();
+		MidRender();
+		~MidRender();
 
 		// Non-copyable:
-		Render(const Render&) = delete;
-		Render& operator=(const Render&) = delete;
+		MidRender(const MidRender&) = delete;
+		MidRender& operator=(const MidRender&) = delete;
 
 		// Movable:
-		Render(Render&& other) noexcept;
-		Render& operator=(Render&& other) noexcept;
+		MidRender(MidRender&& other) noexcept;
+		MidRender& operator=(MidRender&& other) noexcept;
 
 		// Workload recording:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;

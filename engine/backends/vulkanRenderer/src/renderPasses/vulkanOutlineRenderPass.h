@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Renders a binary mask into its own framebuffer.
-	/// Render compute expands the mask before post-render compute composites it onto the forward image.
+	/// Mid-render compute expands the mask before post-render compute composites it onto the forward image.
 	/// </summary>
 	class OutlineRenderPass : public RenderPass
 	{

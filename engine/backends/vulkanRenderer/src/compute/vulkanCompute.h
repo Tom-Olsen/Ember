@@ -13,7 +13,7 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class Async;
 	class PreRender;
-	class Render;
+	class MidRender;
 	class PostRender;
 	class SceneColorTexture2dPair;
 	class ScreenSpace;
@@ -25,7 +25,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
 		std::unique_ptr<emberBackendInterface::ICompute::IPreRender> m_pIPreRender;
-		std::unique_ptr<emberBackendInterface::ICompute::IRender> m_pIRender;
+		std::unique_ptr<emberBackendInterface::ICompute::IMidRender> m_pIMidRender;
 		std::unique_ptr<emberBackendInterface::ICompute::IScreenSpace> m_pIScreenSpace;
 		std::unique_ptr<emberBackendInterface::ICompute::IPostRender> m_pIPostRender;
 
@@ -45,12 +45,12 @@ namespace vulkanRendererBackend
 		// Getters:
 		Async* GetAsyncCompute();
 		PreRender* GetPreRenderCompute();
-		Render* GetRenderCompute();
+		MidRender* GetMidRenderCompute();
 		ScreenSpace* GetScreenSpaceCompute();
 		PostRender* GetPostRenderCompute();
 		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPreRender* GetPreRenderComputeInterfaceHandle() override;
-		emberBackendInterface::ICompute::IRender* GetRenderComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IMidRender* GetMidRenderComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IScreenSpace* GetScreenSpaceComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPostRender* GetPostRenderComputeInterfaceHandle() override;
 
