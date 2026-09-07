@@ -175,10 +175,15 @@ namespace emberCore
 			static void Init(emberBackendInterface::ICompute::IPostRender* pIPostRender);
 			static void Clear();
 
-			// Workload recording:
-			// Post render compute is render-target sized by design; threadCount is derived by the backend.
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader);
-			static ShaderProperties RecordPostProcessingShader(ComputeShader& computeShader);
+			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
+			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);	// for postRender compute calls that do not use renderTextures.
+			static ShaderProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero); // auto binds renderTextures to either inputImage/outputImage or inOutImage.
+			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeWrite();
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 
 		private: // Methods
 			// Delete all constructors:
@@ -254,7 +259,7 @@ namespace emberCore
 		static void Clear();
 
 		// Workload recording (delegates to given computeType):
-		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount = Uint3::zero, uint32_t sessionID = -1);
+		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID = -1);
 		static void RecordBarrier(ComputeType computeType, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID = -1);
 		static void RecordBarrierWaitShaderWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);

@@ -7,6 +7,7 @@
 #include "vulkanComputeCall.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
+#include "vulkanConvertComputeAccessMask.h"
 #include "vulkanDeferredRenderingContract.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanDescriptorTypeToString.h"
@@ -47,11 +48,11 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
+	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		return RecordComputeShader(pIComputeShader, PostProcessingMode::none);
+		return RecordComputeShader(pIComputeShader, threadCount, PostProcessingMode::none);
 	}
-	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordPostProcessingShader(emberBackendInterface::IComputeShader* pIComputeShader)
+	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordPostProcessingShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
 		if (!pIComputeShader)
 		{
@@ -61,7 +62,13 @@ namespace vulkanRendererBackend
 
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		PostProcessingMode postProcessingMode = DeterminePostProcessingMode(*pComputeShader);
-		return RecordComputeShader(pIComputeShader, postProcessingMode);
+		return RecordComputeShader(pIComputeShader, threadCount, postProcessingMode);
+	}
+
+	void PostRender::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
+	{
+		ComputeCall computeCall = { Uint3::zero, ShaderHandle(), DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
+		m_computeCallQueue.Add(computeCall);
 	}
 
 
@@ -89,10 +96,12 @@ namespace vulkanRendererBackend
 	}
 	void PostRender::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
 	{
-		Uint3 threadCount = { sceneColorTexturePair.GetWidth(), sceneColorTexturePair.GetHeight(), 1 };
 		for (ComputeCall& computeCall : m_computeCallQueue.GetPendingCalls())
 		{
-			computeCall.threadCount = threadCount;
+			if (computeCall.IsBarrier())
+				continue;
+			if (computeCall.useRenderTextureSize)
+				computeCall.threadCount = { sceneColorTexturePair.GetWidth(), sceneColorTexturePair.GetHeight(), 1 };
 			switch (computeCall.postProcessingMode)
 			{
 			case PostProcessingMode::none:
@@ -113,7 +122,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, PostProcessingMode postProcessingMode)
+	emberBackendInterface::IDescriptorSetBinding* PostRender::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount, PostProcessingMode postProcessingMode)
 	{
 		// Record dynamic compute call.
 		if (!pIComputeShader)
@@ -122,16 +131,21 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 
-		// The renderer resolves the thread count from the current scene-color extent while preparing the frame.
-		// This keeps queued calls independent of render-pass ownership and automatically follows render-resolution changes.
-		Uint3 threadCount = Uint3::zero;
+		bool useRenderTextureSize = postProcessingMode != PostProcessingMode::none && threadCount[0] == 0 && threadCount[1] == 0 && threadCount[2] == 0;
+		if (!useRenderTextureSize && (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0))
+		{
+			LOG_ERROR("compute::PostRender::RecordComputeShader(...) failed. threadCount has 0 entry.");
+			return nullptr;
+		}
+
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
 		DescriptorSetBinding* pDescriptorSetBinding = descriptorSetBindingHandle.Get();
 		if (!pDescriptorSetBinding)
 			return nullptr;
 
-		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, postProcessingMode };
+		// We do not update threadCount=sceneColorTexture.size() here as the size might have changed until the compute call gets dispatched. So its updated in PostRender::UpdateShaderData(...).
+		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none, postProcessingMode, useRenderTextureSize };
 		m_computeCallQueue.Add(computeCall);
 		pComputeShader->AddPendingUse();
 		return pDescriptorSetBinding;

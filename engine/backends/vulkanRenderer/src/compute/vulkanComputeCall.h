@@ -31,7 +31,8 @@ namespace vulkanRendererBackend
 		DescriptorSetBindingHandle callDescriptorSetBindingHandle;			// Borrowed from pool for dispatch calls, empty for barriers.
 		AccessMask srcAccessMask;											// Only applies to barriers.
 		AccessMask dstAccessMask;											// Only applies to barriers.
-		PostProcessingMode postProcessingMode = PostProcessingMode::none;	// Determines how the call accesses sceneColor textures.
+		PostProcessingMode postProcessingMode = PostProcessingMode::none;	// Determines how postRenderCompute call accesses sceneColor textures.
+		bool useRenderTextureSize = false; 									// Determines whether postRenderCompute call provides own threadCount or uses renderTexture.size.
 
 		ComputeShader* GetComputeShader() const;
 		bool IsBarrier() const;

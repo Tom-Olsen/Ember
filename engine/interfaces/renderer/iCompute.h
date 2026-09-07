@@ -148,8 +148,9 @@ namespace emberBackendInterface
             virtual ~IPostRender() = default;
 
             // Workload recording:
-            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader) = 0;
-            virtual IDescriptorSetBinding* RecordPostProcessingShader(IComputeShader* pIComputeShader) = 0;
+            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual IDescriptorSetBinding* RecordPostProcessingShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
 
 

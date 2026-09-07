@@ -48,8 +48,9 @@ namespace vulkanRendererBackend
 		PostRender& operator=(PostRender&& other) noexcept;
 
 		// Workload recording:
-		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
-		emberBackendInterface::IDescriptorSetBinding* RecordPostProcessingShader(emberBackendInterface::IComputeShader* pComputeShader) override;
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
+		emberBackendInterface::IDescriptorSetBinding* RecordPostProcessingShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
+		void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
 
 		// Management:
 		void CommitComputeCalls(uint32_t frameIndex);
@@ -60,7 +61,7 @@ namespace vulkanRendererBackend
 		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair);
 
 	private: // Methods:
-		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, PostProcessingMode postProcessingMode);
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount, PostProcessingMode postProcessingMode);
 		PostProcessingMode DeterminePostProcessingMode(const ComputeShader& computeShader) const;
 		void ValidatePostProcessingImage(const ComputeShader& computeShader, const emberSpirvReflect::DescriptorReflection& descriptorReflection, bool allowSampledImage, bool requireReadable, bool requireWritable) const;
 	};
