@@ -20,7 +20,6 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	struct ComputeCall;
 	struct FrameContext;
 
 
@@ -98,7 +97,7 @@ namespace vulkanRendererBackend
 
 		// Frame lifecycle:
 		VkResult AcquireImage(uint32_t frameIndex, uint32_t& imageIndex) const;
-		void RecordAndSubmit(const FrameContext& frameContext, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
+		void RecordAndSubmit(const FrameContext& frameContext);
 		VkResult Present(uint32_t imageIndex) const;
 		void RecreateSyncObjects();
 		void ResetFrameFence(uint32_t frameIndex) const;

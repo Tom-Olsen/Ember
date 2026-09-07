@@ -246,9 +246,18 @@ namespace vulkanRendererBackend
 
 		// Record and submit current frame commands:
 		uint32_t shadowMapCount = m_directionalLightsCount + m_positionalLightsCount;
-		FrameContext frameContext(m_frameIndex, m_imageIndex, m_time, m_deltaTime, m_shadowMapResolution, shadowMapCount, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor, m_frameResources[m_frameIndex], m_frameRenderData[m_frameIndex], *m_pSceneColorTexturePair, m_pIGui);
-		// ToDo: add computeCalls to frameContext?
-		m_pRenderGraph->RecordAndSubmit(frameContext, m_pCompute->GetPreRenderCompute()->GetComputeCalls(), m_pCompute->GetMidRenderCompute()->GetComputeCalls(), m_pCompute->GetScreenSpaceCompute()->GetComputeCalls(), m_pCompute->GetPostRenderCompute()->GetComputeCalls());
+		FrameContext frameContext(
+			m_frameIndex, m_imageIndex, m_time, m_deltaTime,
+			m_shadowMapResolution, shadowMapCount, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor,
+			m_frameResources[m_frameIndex],
+			m_frameRenderData[m_frameIndex],
+			*m_pSceneColorTexturePair,
+			m_pIGui,
+			m_pCompute->GetPreRenderCompute()->GetComputeCalls(),
+			m_pCompute->GetMidRenderCompute()->GetComputeCalls(),
+			m_pCompute->GetScreenSpaceCompute()->GetComputeCalls(),
+			m_pCompute->GetPostRenderCompute()->GetComputeCalls());
+		m_pRenderGraph->RecordAndSubmit(frameContext);
 		m_pCompute->CommitFrame(m_frameIndex);
 
 		// Finalize frame:

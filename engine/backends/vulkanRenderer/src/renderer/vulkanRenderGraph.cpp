@@ -35,7 +35,7 @@ namespace vulkanRendererBackend
 			throw std::out_of_range("RenderGraph::AcquireImage(...) failed. frameIndex is out of range.");
 		return vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, GetDependencySemaphore(frameIndex, Dependency::aquireToResourceUpdate), VK_NULL_HANDLE, &imageIndex);
 	}
-	void RenderGraph::RecordAndSubmit(const FrameContext& frameContext, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls)
+	void RenderGraph::RecordAndSubmit(const FrameContext& frameContext)
 	{
 		PROFILE_FUNCTION();
 		DEBUG_LOG_TRACE("Recording frame {}", frameContext.frameIndex);
@@ -67,7 +67,7 @@ namespace vulkanRendererBackend
 		SubmitStage(frameContext, RenderStage::gizmo, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&gizmoWait, 1), std::span<const VkSemaphoreSubmitInfo>(&gizmoSignal, 1));
 
 		// ResourceUpdate -> PreRenderCompute -> Outline + Shadow + DeferredGeometry:
-		m_preRenderComputeStage.Record(frameContext, preRenderComputeCalls);
+		m_preRenderComputeStage.Record(frameContext, frameContext.preRenderComputeCalls);
 		VkSemaphoreSubmitInfo preRenderComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToPreRenderCompute), VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
 		std::array<VkSemaphoreSubmitInfo, 3> preRenderComputeSignals =
 		{
@@ -84,7 +84,7 @@ namespace vulkanRendererBackend
 		SubmitStage(frameContext, RenderStage::outline, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&outlineWait, 1), std::span<const VkSemaphoreSubmitInfo>(&outlineSignal, 1));
 
 		// Outline -> MidRenderCompute -> PostRenderCompute:
-		m_midRenderComputeStage.Record(frameContext, midRenderComputeCalls);
+		m_midRenderComputeStage.Record(frameContext, frameContext.midRenderComputeCalls);
 		VkSemaphoreSubmitInfo midRenderComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::outlineToMidRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 		VkSemaphoreSubmitInfo midRenderComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::midRenderComputeToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 		SubmitStage(frameContext, RenderStage::midRenderCompute, computeQueue, std::span<const VkSemaphoreSubmitInfo>(&midRenderComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&midRenderComputeSignal, 1));
@@ -118,7 +118,7 @@ namespace vulkanRendererBackend
 		SubmitStage(frameContext, RenderStage::forwardOpaque, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueSignal, 1));
 
 		// ForwardOpaque -> ScreenSpaceCompute -> ForwardTransparent:
-		m_screenSpaceComputeStage.Record(frameContext, screenSpaceComputeCalls);
+		m_screenSpaceComputeStage.Record(frameContext, frameContext.screenSpaceComputeCalls);
 		VkSemaphoreSubmitInfo screenSpaceComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToScreenSpaceCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 		VkSemaphoreSubmitInfo screenSpaceComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::screenSpaceComputeToForwardTransparent), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 		SubmitStage(frameContext, RenderStage::screenSpaceCompute, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&screenSpaceComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&screenSpaceComputeSignal, 1));
@@ -130,7 +130,7 @@ namespace vulkanRendererBackend
 		SubmitStage(frameContext, RenderStage::forwardTransparent, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardTransparentWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardTransparentSignal, 1));
 
 		// MidRenderCompute + ForwardTransparent -> PostRenderCompute  -> Present:
-		m_postRenderComputeStage.Record(frameContext, postRenderComputeCalls);
+		m_postRenderComputeStage.Record(frameContext, frameContext.postRenderComputeCalls);
 		std::array<VkSemaphoreSubmitInfo, 2> postRenderComputeWaits =
 		{
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::midRenderComputeToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT),
