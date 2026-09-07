@@ -25,7 +25,7 @@ namespace emberCore
 		// Friends:
 		friend class Gui;
 		friend class Shader;
-		friend class ShaderProperties;
+		friend class CallProperties;
 
     private: // Members:
 		static uint32_t s_unnamedTextureCounter;

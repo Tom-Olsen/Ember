@@ -11,7 +11,7 @@ namespace emberCore
 	class Core;
 	class Mesh;
 	class GizmoMaterial;
-	class ShaderProperties;
+	class CallProperties;
 
 
 

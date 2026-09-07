@@ -3,7 +3,6 @@
 #include "entity.h"
 #include "material.h"
 #include "scene.h"
-#include "shaderProperties.h"
 #include "gizmo.h"
 #include "logger.h"
 #include "materialManager.h"

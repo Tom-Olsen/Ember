@@ -20,7 +20,7 @@ namespace emberCore
 {
 	// Forward decleration:
 	class Compute;
-	class ShaderProperties;
+	class CallProperties;
 
 
 
@@ -28,7 +28,7 @@ namespace emberCore
 	{
 		// Friends:
 		friend class Compute;
-		friend class ShaderProperties;
+		friend class CallProperties;
 
 	private: // Members:
 		std::string m_name;

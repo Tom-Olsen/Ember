@@ -14,7 +14,7 @@ namespace emberCore
 	// Forward decleration:
 	class ComputeShader;
 	class Renderer;
-	class ShaderProperties;
+	class CallProperties;
 
 
 
@@ -52,7 +52,7 @@ namespace emberCore
 			static void WaitForFinish(uint32_t sessionID);
 
 			// Workload recording:
-			static ShaderProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
+			static CallProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID);
 			static void RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID);
@@ -83,7 +83,7 @@ namespace emberCore
 			static void Clear();
 
 			// Workload recording:
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
@@ -114,7 +114,7 @@ namespace emberCore
 			static void Clear();
 
 			// Workload recording:
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
@@ -145,7 +145,7 @@ namespace emberCore
 			static void Clear();
 
 			// Workload recording:
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
@@ -176,8 +176,8 @@ namespace emberCore
 			static void Clear();
 
 			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);	// for postRender compute calls that do not use renderTextures.
-			static ShaderProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero); // auto binds renderTextures to either inputImage/outputImage or inOutImage.
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);	// for postRender compute calls that do not use renderTextures.
+			static CallProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero); // auto binds renderTextures to either inputImage/outputImage or inOutImage.
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
@@ -229,7 +229,7 @@ namespace emberCore
 			static void BeginRecording();
 			static void EndRecording();
 			static uint64_t GetRecordingSessionID();
-			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
@@ -259,7 +259,7 @@ namespace emberCore
 		static void Clear();
 
 		// Workload recording (delegates to given computeType):
-		static ShaderProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID = -1);
+		static CallProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID = -1);
 		static void RecordBarrier(ComputeType computeType, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID = -1);
 		static void RecordBarrierWaitShaderWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);

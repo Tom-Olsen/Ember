@@ -6,11 +6,6 @@
 
 
 
-// Forward declarations:
-namespace emberCore
-{
-	class ShaderProperties;
-}
 namespace emberEditor
 {
 	class RotateHandle

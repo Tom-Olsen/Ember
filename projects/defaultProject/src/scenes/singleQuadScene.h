@@ -80,7 +80,7 @@ inline Scene* SingleQuadScene()
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(quatMaterial);
-		pMeshRenderer->GetShaderProperties().SetValue("SurfaceProperties", "surface_scaleOffset", Float4(1, 1, 0, 0));
+		pMeshRenderer->GetCallProperties().SetValue("SurfaceProperties", "surface_scaleOffset", Float4(1, 1, 0, 0));
 
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
 

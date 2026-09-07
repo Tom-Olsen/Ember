@@ -1,7 +1,6 @@
 #include "bitonicSortGraph.h"
 #include "emberMath.h"
 #include "gizmo.h"
-#include "shaderProperties.h"
 #include "transform.h"
 using namespace emberCore;
 

@@ -1,10 +1,10 @@
 #include "gizmo.h"
+#include "callProperties.h"
 #include "material.h"
 #include "materialManager.h"
 #include "mesh.h"
 #include "meshManager.h"
 #include "renderer.h"
-#include "shaderProperties.h"
 
 
 
@@ -41,9 +41,9 @@ namespace emberCore
 	{
 		if (s_cullMode == emberCommon::CullMode::count)
 			s_cullMode = s_material.GetCullMode();
-		ShaderProperties shaderProperties = Renderer::DrawGizmo(localToWorldMatrix, mesh, s_material, s_cullMode);
-		shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", s_color);
-		shaderProperties.SetValue("SurfaceProperties", "surface_isLit", s_isLit);
+		CallProperties callProperties = Renderer::DrawGizmo(localToWorldMatrix, mesh, s_material, s_cullMode);
+		callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", s_color);
+		callProperties.SetValue("SurfaceProperties", "surface_isLit", s_isLit);
 	}
 	void Gizmo::DrawQuad(const Float4x4& localToWorldMatrix)
 	{

@@ -25,7 +25,7 @@ namespace emberCore
 
 
 
-	class EMBER_CORE_API ShaderProperties
+	class EMBER_CORE_API CallProperties
 	{
 		// Friends:
 		friend class Renderer;
@@ -42,21 +42,21 @@ namespace emberCore
 	private: // Methods:
 		// Pooling constructor:
 		// Wraps non-owned call descriptor set bindings supplied by Renderer/Compute call pools.
-		ShaderProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding);
+		CallProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding);
 
 	public: // Methods:
 		// Constructors/Destructor:
-		ShaderProperties();
-		ShaderProperties(const Material& material);
-		~ShaderProperties();
+		CallProperties();
+		CallProperties(const Material& material);
+		~CallProperties();
 
 		// Non-copyable:
-		ShaderProperties(const ShaderProperties&) = delete;
-		ShaderProperties& operator=(const ShaderProperties&) = delete;
+		CallProperties(const CallProperties&) = delete;
+		CallProperties& operator=(const CallProperties&) = delete;
 
 		// Movable:
-		ShaderProperties(ShaderProperties&& other) noexcept;
-		ShaderProperties& operator=(ShaderProperties&& other) noexcept;
+		CallProperties(CallProperties&& other) noexcept;
+		CallProperties& operator=(CallProperties&& other) noexcept;
 
 		// Setters:
 		void SetTexture(const std::string& name, Texture& texture);

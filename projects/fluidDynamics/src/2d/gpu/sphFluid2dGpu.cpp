@@ -12,7 +12,7 @@ namespace fluidDynamics
 	{
 		// Material setup:
 		m_particleMaterial = MaterialManager::TryGetMaterial("particleMaterial2d");
-		m_shaderProperties = ShaderProperties(m_particleMaterial);
+		m_callProperties = CallProperties(m_particleMaterial);
 
         m_forceSetters = true;
         //// Settings for old pressure:
@@ -171,8 +171,8 @@ namespace fluidDynamics
 			{
 				SetAttractorPoint(Float2(hit.GetPoint()));
 				Float4x4 localToWorldMatrix = Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::TryGetMaterial("simpleUnlitMaterial"), false, false);
-				shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::red);
+				CallProperties callProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::TryGetMaterial("simpleUnlitMaterial"), false, false);
+				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					SetAttractorState(1);
 				if (EventSystem::MouseHeld(Input::MouseButton::Right))
@@ -195,7 +195,7 @@ namespace fluidDynamics
 		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
 		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
 		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
-		Renderer::DrawMeshInstanced(localToWorldMatrix, m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, false, false);
+		Renderer::DrawMeshInstanced(localToWorldMatrix, m_particleCount, m_particleMesh, m_particleMaterial, m_callProperties, false, false);
 	}
 
 

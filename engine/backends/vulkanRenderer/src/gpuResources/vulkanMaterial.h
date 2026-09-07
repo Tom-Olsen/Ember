@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 	/// Material creation is expensive.
 	/// It is recommended to create all Materials at the start of the application.
 	/// Material instances are owned by the backend MaterialManager and exposed through generational ids.
-	/// Each Material must be used with a ShaderProperties which is customized for the Material.
+	/// Each Material must be used with a CallProperties which is customized for the Material.
 	/// </summary>
 	class VULKAN_RENDERER_API Material : public emberBackendInterface::IMaterial
 	{

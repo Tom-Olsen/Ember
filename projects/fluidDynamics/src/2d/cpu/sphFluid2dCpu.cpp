@@ -354,8 +354,8 @@ namespace fluidDynamics
 			{
 				m_attractor.point = Float2(hit.GetPoint());
 				Float4x4 localToWorldMatrix = Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
-				ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::TryGetMaterial("simpleUnlitMaterial"), false, false);
-				shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::red);
+				CallProperties callProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::TryGetMaterial("simpleUnlitMaterial"), false, false);
+				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					m_attractor.state = 1;
 				if (EventSystem::MouseHeld(Input::MouseButton::Right))
@@ -375,7 +375,7 @@ namespace fluidDynamics
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			Float4x4 localToWorldMatrix = localToWorld * Float4x4::Translate(Float3(m_data.positions[i], 0.0f));
-			ShaderProperties shaderProperties = Renderer::DrawMesh(localToWorldMatrix, m_particleMesh, m_particleMaterial, false, false);
+			CallProperties callProperties = Renderer::DrawMesh(localToWorldMatrix, m_particleMesh, m_particleMaterial, false, false);
 		
 			// Color by density:
 			if (m_colorMode == 0)
@@ -386,7 +386,7 @@ namespace fluidDynamics
 				Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
 				Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
 				Float4 color = (t < 1.0f) ? colorA : colorB;
-				shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
+				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
 			}
     		// Color by velocity:
 			else if (m_colorMode == 1)
@@ -397,19 +397,19 @@ namespace fluidDynamics
 				Float4 colorA = t0 * Float4::white + (1.0f - t0) * Float4::blue;
 				Float4 colorB = t1 * Float4::red + (1.0f - t1) * Float4::white;
 				Float4 color = (t < 0.5f) ? colorA : colorB;
-				shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
+				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
 			}
 			// Color by normal:
 			else if (m_colorMode == 2)
 			{
 				Float4 color = Float4(m_data.normals[i].x, m_data.normals[i].y, 0, 1);
-				shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
+				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
 			}
 			// Color by curvature:
 			else if (m_colorMode == 3)
 			{
         		Float4 color = (0.5f + m_data.curvatures[i]) * Float4(0, 0, 1, 1);
-				shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
+				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", color);
 			}
 		}
 	}

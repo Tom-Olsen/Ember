@@ -37,8 +37,8 @@ Scene* InitScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("skyboxMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skybox0"));
+		pMeshRenderer->GetCallProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+		pMeshRenderer->GetCallProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("skybox0"));
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
@@ -68,12 +68,12 @@ Scene* InitScene()
 		MeshRenderer* pMeshRenderer = pGameObject->AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(MaterialManager::TryGetMaterial("defaultMaterial"));
-		pMeshRenderer->GetShaderProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
-		pMeshRenderer->GetShaderProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal"));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
-		pMeshRenderer->GetShaderProperties()->SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+		pMeshRenderer->GetCallProperties()->SetSampler("colorSampler", SamplerManager::GetSampler("colorSampler"));
+		pMeshRenderer->GetCallProperties()->SetTexture2d("colorMap", TextureManager::GetTexture2d("ground0_color"));
+		pMeshRenderer->GetCallProperties()->SetTexture2d("roughnessMap", TextureManager::GetTexture2d("ground0_roughness"));
+		pMeshRenderer->GetCallProperties()->SetTexture2d("normalMap", TextureManager::GetTexture2d("ground0_normal"));
+		pMeshRenderer->GetCallProperties()->SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
+		pMeshRenderer->GetCallProperties()->SetValue("SurfaceProperties", "surface_roughness", 1.0f);
 
 		pScene->AddGameObject(pGameObject);
 	}

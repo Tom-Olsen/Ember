@@ -6,7 +6,6 @@
 #include "material.h"
 #include "materialManager.h"
 #include "meshGenerator.h"
-#include "shaderProperties.h"
 #include "transform.h"
 #include "transformHandle.h"
 

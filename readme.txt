@@ -80,7 +80,7 @@ Implemented features:
 -Pipeline Modes:
     -interleaved (vertex input memory layout)
     -separate (vertex input memory layout)
--Fully automated descriptorSet system for shaderProperties (Ember/engine/libs/spirvReflect/shaderReflection.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
+-Fully automated descriptorSet system for callProperties (Ember/engine/libs/spirvReflect/shaderReflection.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
 -ECS: static library (Embere/engine/libs/entityComponentSystem) which gets linked to the applications. The core has no access to the ECS.
 -EventSystem that catches SDL events and makes them visible to Gui+Editor+Entities/Components.
 -CameraController that is identical to unities editor.
@@ -104,7 +104,7 @@ Ember::ToDo now!
 Ember::ToDo:
 - use transfer queue in mesh class instead of graphics queue for index and vertex data transfer.
   use framesInFlight many vertex and index buffers, with two staging buffers (one for vertex and one for index data).
-  adjust staging buffer -> mesh buffers copy to account fro frame index (same as shaderProperties) and sync with render pipeline.
+  adjust staging buffer -> mesh buffers copy to account fro frame index (same as callProperties) and sync with render pipeline.
 - when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
   my spirv reflection => other bindings are wrong, and textures are not displayed at all.
 - optimize eventsystem::AnyKey etc.

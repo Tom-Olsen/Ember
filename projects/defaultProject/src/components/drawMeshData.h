@@ -12,7 +12,7 @@ namespace emberEngine
 		emberCore::Mesh* m_pArrowMesh;
 		emberCore::Material m_material;
 		emberCore::Mesh* m_pMesh;
-		emberCore::ShaderProperties m_shaderProperties[3];
+		emberCore::CallProperties m_callProperties[3];
 
 	public: // Methods:
 		DrawMeshData();

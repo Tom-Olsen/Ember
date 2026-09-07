@@ -313,134 +313,134 @@ namespace fluidDynamics
 	{
 		int hashGridSize = math::NextPrimeAbove(2 * tripleData.ParticleCount());
 		Uint3 threadCount(tripleData.ParticleCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetDataComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetValue("CallValues", "hashGridSize", hashGridSize);
-		shaderProperties.SetValue("CallValues", "initialDistributionRadius", initialDistributionRadius);
-		shaderProperties.SetBuffer("cellKeyBuffer", scratchData.cellKeyBuffer.GetBuffer());
-		shaderProperties.SetBuffer("startIndexBuffer", scratchData.startIndexBuffer.GetBuffer());
-		shaderProperties.SetBuffer("sortPermutationBuffer", scratchData.sortPermutationBuffer.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", tripleData.positionBuffer.GetBuffer(dataIndex));
-		shaderProperties.SetBuffer("velocityBuffer", tripleData.velocityBuffer.GetBuffer(dataIndex));
-		shaderProperties.SetBuffer("densityBuffer", tripleData.densityBuffer.GetBuffer(dataIndex));
-		shaderProperties.SetBuffer("normalBuffer", tripleData.normalBuffer.GetBuffer(dataIndex));
-		shaderProperties.SetBuffer("curvatureBuffer", tripleData.curvatureBuffer.GetBuffer(dataIndex));
-		shaderProperties.SetBuffer("forceDensityBuffer", scratchData.forceDensityBuffer.GetBuffer());
-		shaderProperties.SetBuffer("nearDensityBuffer", scratchData.nearDensityBuffer.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer0", scratchData.tempBuffer0.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer1", scratchData.tempBuffer1.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer2", scratchData.tempBuffer2.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer3", scratchData.tempBuffer3.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer4", scratchData.tempBuffer4.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer5", scratchData.tempBuffer5.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer6", scratchData.tempBuffer6.GetBuffer());
-		shaderProperties.SetBuffer("tempBuffer7", scratchData.tempBuffer7.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetDataComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetValue("CallValues", "hashGridSize", hashGridSize);
+		callProperties.SetValue("CallValues", "initialDistributionRadius", initialDistributionRadius);
+		callProperties.SetBuffer("cellKeyBuffer", scratchData.cellKeyBuffer.GetBuffer());
+		callProperties.SetBuffer("startIndexBuffer", scratchData.startIndexBuffer.GetBuffer());
+		callProperties.SetBuffer("sortPermutationBuffer", scratchData.sortPermutationBuffer.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", tripleData.positionBuffer.GetBuffer(dataIndex));
+		callProperties.SetBuffer("velocityBuffer", tripleData.velocityBuffer.GetBuffer(dataIndex));
+		callProperties.SetBuffer("densityBuffer", tripleData.densityBuffer.GetBuffer(dataIndex));
+		callProperties.SetBuffer("normalBuffer", tripleData.normalBuffer.GetBuffer(dataIndex));
+		callProperties.SetBuffer("curvatureBuffer", tripleData.curvatureBuffer.GetBuffer(dataIndex));
+		callProperties.SetBuffer("forceDensityBuffer", scratchData.forceDensityBuffer.GetBuffer());
+		callProperties.SetBuffer("nearDensityBuffer", scratchData.nearDensityBuffer.GetBuffer());
+		callProperties.SetBuffer("tempBuffer0", scratchData.tempBuffer0.GetBuffer());
+		callProperties.SetBuffer("tempBuffer1", scratchData.tempBuffer1.GetBuffer());
+		callProperties.SetBuffer("tempBuffer2", scratchData.tempBuffer2.GetBuffer());
+		callProperties.SetBuffer("tempBuffer3", scratchData.tempBuffer3.GetBuffer());
+		callProperties.SetBuffer("tempBuffer4", scratchData.tempBuffer4.GetBuffer());
+		callProperties.SetBuffer("tempBuffer5", scratchData.tempBuffer5.GetBuffer());
+		callProperties.SetBuffer("tempBuffer6", scratchData.tempBuffer6.GetBuffer());
+		callProperties.SetBuffer("tempBuffer7", scratchData.tempBuffer7.GetBuffer());
 
-		ShaderProperties rungeKuttaShaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetRungeKuttaComputeShader, threadCount, computeShaders.sessionID);
-		rungeKuttaShaderProperties.SetBuffer("kp1Buffer", scratchData.kp1Buffer.GetBuffer());
-		rungeKuttaShaderProperties.SetBuffer("kv1Buffer", scratchData.kv1Buffer.GetBuffer());
-		rungeKuttaShaderProperties.SetBuffer("tempPositionBuffer", scratchData.tempPositionBuffer.GetBuffer());
-		rungeKuttaShaderProperties.SetBuffer("tempVelocityBuffer", scratchData.tempVelocityBuffer.GetBuffer());
+		CallProperties rungeKuttaCallProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetRungeKuttaComputeShader, threadCount, computeShaders.sessionID);
+		rungeKuttaCallProperties.SetBuffer("kp1Buffer", scratchData.kp1Buffer.GetBuffer());
+		rungeKuttaCallProperties.SetBuffer("kv1Buffer", scratchData.kv1Buffer.GetBuffer());
+		rungeKuttaCallProperties.SetBuffer("tempPositionBuffer", scratchData.tempPositionBuffer.GetBuffer());
+		rungeKuttaCallProperties.SetBuffer("tempVelocityBuffer", scratchData.tempVelocityBuffer.GetBuffer());
 	}
 	// Field computations:
 	void SphFluid3dGpuSolver::ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<uint32_t>& cellKeyBufferView, const BufferView<Float3>& positionBufferView)
 	{
 		Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.cellKeysComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.cellKeysComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 	}
 	void SphFluid3dGpuSolver::ComputeStartIndices(ComputeShaders& computeShaders, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		// Reset start index buffer:
 		{
 			Uint3 threadCount(startIndexBufferView.GetCount(), 1, 1);	// reset all possible start indices.
-			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesResetComputeShader, threadCount, computeShaders.sessionID);
-			shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+			CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesResetComputeShader, threadCount, computeShaders.sessionID);
+			callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
 		}
 		// Compute start indices:
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		{
 			Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);	// start indices only needed for each particle.
-			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, threadCount, computeShaders.sessionID);
-			shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
-			shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+			CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, threadCount, computeShaders.sessionID);
+			callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+			callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		}
 	}
 	void SphFluid3dGpuSolver::ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(densityBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("nearDensityBuffer", nearDensityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
-		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
+		callProperties.SetBuffer("nearDensityBuffer", nearDensityBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 	}
 	void SphFluid3dGpuSolver::ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(normalBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.normalAndCurvatureComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
-		shaderProperties.SetBuffer("curvatureBuffer", curvatureBufferView.GetBuffer());
-		shaderProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
-		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.normalAndCurvatureComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
+		callProperties.SetBuffer("curvatureBuffer", curvatureBufferView.GetBuffer());
+		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 	}
 	void SphFluid3dGpuSolver::ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(forceDensityBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.forceDensityComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
-		shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("nearDensityBuffer", nearDensityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
-		shaderProperties.SetBuffer("curvatureBuffer", curvatureBufferView.GetBuffer());
-		shaderProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.forceDensityComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+		callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		callProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
+		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
+		callProperties.SetBuffer("nearDensityBuffer", nearDensityBufferView.GetBuffer());
+		callProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
+		callProperties.SetBuffer("curvatureBuffer", curvatureBufferView.GetBuffer());
+		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 	}
 	void SphFluid3dGpuSolver::ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step1ComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetValue("CallValues", "dt", dt);
-		shaderProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("kp1Buffer", kp1BufferView.GetBuffer());
-		shaderProperties.SetBuffer("kv1Buffer", kv1BufferView.GetBuffer());
-		shaderProperties.SetBuffer("tempPositionBuffer", tempPositionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("tempVelocityBuffer", tempVelocityBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step1ComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetValue("CallValues", "dt", dt);
+		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
+		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		callProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
+		callProperties.SetBuffer("kp1Buffer", kp1BufferView.GetBuffer());
+		callProperties.SetBuffer("kv1Buffer", kv1BufferView.GetBuffer());
+		callProperties.SetBuffer("tempPositionBuffer", tempPositionBufferView.GetBuffer());
+		callProperties.SetBuffer("tempVelocityBuffer", tempVelocityBufferView.GetBuffer());
 	}
 	void SphFluid3dGpuSolver::ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step2ComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetValue("CallValues", "dt", dt);
-		shaderProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("kp1Buffer", kp1BufferView.GetBuffer());
-		shaderProperties.SetBuffer("kv1Buffer", kv1BufferView.GetBuffer());
-		shaderProperties.SetBuffer("tempVelocityBuffer", tempVelocityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("sourcePositionBuffer", sourcePositionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("sourceVelocityBuffer", sourceVelocityBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step2ComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetValue("CallValues", "dt", dt);
+		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
+		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
+		callProperties.SetBuffer("kp1Buffer", kp1BufferView.GetBuffer());
+		callProperties.SetBuffer("kv1Buffer", kv1BufferView.GetBuffer());
+		callProperties.SetBuffer("tempVelocityBuffer", tempVelocityBufferView.GetBuffer());
+		callProperties.SetBuffer("sourcePositionBuffer", sourcePositionBufferView.GetBuffer());
+		callProperties.SetBuffer("sourceVelocityBuffer", sourceVelocityBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		callProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
 	}
 	void SphFluid3dGpuSolver::ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const RotatedBounds& fluidBounds, float collisionDampening)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.boundaryCollisionsComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
-		shaderProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
-		shaderProperties.SetValue("CallValues", "collisionDampening", collisionDampening);
-		shaderProperties.SetValue("CallValues", "rotation", fluidBounds.GetRotation4x4());
-		shaderProperties.SetValue("CallValues", "inverseRotation", fluidBounds.GetRotation4x4().Inverse());
-		shaderProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
-		shaderProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.boundaryCollisionsComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
+		callProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
+		callProperties.SetValue("CallValues", "collisionDampening", collisionDampening);
+		callProperties.SetValue("CallValues", "rotation", fluidBounds.GetRotation4x4());
+		callProperties.SetValue("CallValues", "inverseRotation", fluidBounds.GetRotation4x4().Inverse());
+		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
+		callProperties.SetBuffer("velocityBuffer", velocityBufferView.GetBuffer());
 	}
 
 	void SphFluid3dGpuSolver::ComputeDensityTexture3d(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex)
@@ -465,15 +465,15 @@ namespace fluidDynamics
 
         // Compute density texture3d:
 		Uint3 threadCount(densityTexture.GetWidth(), densityTexture.GetHeight(), densityTexture.GetDepth());
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityTexture3dComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetValue("CallValues", "particleCount", (int)positionBufferView.GetCount());
-		shaderProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
-		shaderProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
-		shaderProperties.SetValue("CallValues", "boundsRotation", fluidBounds.GetRotation4x4());
-		shaderProperties.SetTexture("densityTexture", densityTexture);
-		shaderProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
-		shaderProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
-		shaderProperties.SetBuffer("positionBuffer", sortedPositionBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityTexture3dComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetValue("CallValues", "particleCount", (int)positionBufferView.GetCount());
+		callProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
+		callProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
+		callProperties.SetValue("CallValues", "boundsRotation", fluidBounds.GetRotation4x4());
+		callProperties.SetTexture("densityTexture", densityTexture);
+		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
+		callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
+		callProperties.SetBuffer("positionBuffer", sortedPositionBufferView.GetBuffer());
 	}
 
 	void SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(ComputeShaders& computeShaders, TripleData& tripleData, uint32_t dataIndex)
@@ -484,16 +484,16 @@ namespace fluidDynamics
 		const RotatedBounds& lightBounds = tripleData.opticalDepthBounds[dataIndex];
 
 		Uint3 threadCount(opticalDepthTexture.GetWidth(), opticalDepthTexture.GetHeight(), 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.opticalDepthTexture3dComputeShader, threadCount, computeShaders.sessionID);
-		shaderProperties.SetValue("CallValues", "lightBoundsMin", lightBounds.localBounds.GetMin());
-		shaderProperties.SetValue("CallValues", "lightBoundsMax", lightBounds.localBounds.GetMax());
-		shaderProperties.SetValue("CallValues", "lightToSimulationRotation", lightBounds.GetRotation4x4());
-		shaderProperties.SetValue("CallValues", "fluidBoundsMin", fluidBounds.localBounds.GetMin());
-		shaderProperties.SetValue("CallValues", "fluidBoundsMax", fluidBounds.localBounds.GetMax());
-		shaderProperties.SetValue("CallValues", "simulationToFluidRotation", fluidBounds.GetRotation4x4().Inverse());
-		shaderProperties.SetValue("CallValues", "extinction", tripleData.extinctionCoefficients[dataIndex]);
-		shaderProperties.SetValue("CallValues", "opticalDepthTextureDepth", static_cast<int>(opticalDepthTexture.GetDepth()));
-		shaderProperties.SetTexture("densityTexture", densityTexture);
-		shaderProperties.SetTexture("opticalDepthTexture", opticalDepthTexture);
+		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.opticalDepthTexture3dComputeShader, threadCount, computeShaders.sessionID);
+		callProperties.SetValue("CallValues", "lightBoundsMin", lightBounds.localBounds.GetMin());
+		callProperties.SetValue("CallValues", "lightBoundsMax", lightBounds.localBounds.GetMax());
+		callProperties.SetValue("CallValues", "lightToSimulationRotation", lightBounds.GetRotation4x4());
+		callProperties.SetValue("CallValues", "fluidBoundsMin", fluidBounds.localBounds.GetMin());
+		callProperties.SetValue("CallValues", "fluidBoundsMax", fluidBounds.localBounds.GetMax());
+		callProperties.SetValue("CallValues", "simulationToFluidRotation", fluidBounds.GetRotation4x4().Inverse());
+		callProperties.SetValue("CallValues", "extinction", tripleData.extinctionCoefficients[dataIndex]);
+		callProperties.SetValue("CallValues", "opticalDepthTextureDepth", static_cast<int>(opticalDepthTexture.GetDepth()));
+		callProperties.SetTexture("densityTexture", densityTexture);
+		callProperties.SetTexture("opticalDepthTexture", opticalDepthTexture);
 	}
 }

@@ -20,7 +20,7 @@ namespace emberCore
 	{
 		friend class Renderer;
 		friend class Shader;
-		friend class ShaderProperties;
+		friend class CallProperties;
 
 	private: // Members:
         std::string m_name;

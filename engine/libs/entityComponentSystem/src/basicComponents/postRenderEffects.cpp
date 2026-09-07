@@ -1,7 +1,7 @@
 #include "postRenderEffects.h"
+#include "callProperties.h"
 #include "compute.h"
 #include "computeShaderManager.h"
-#include "shaderProperties.h"
 using namespace emberCore;
 
 
@@ -24,6 +24,6 @@ namespace emberEcs
 	void PostRenderEffects::LateUpdate()
 	{
 		for (ComputeShader* pComputeShader : effects)
-			ShaderProperties shaderProperties = Compute::PostRender::RecordPostProcessingShader(*pComputeShader);
+			CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(*pComputeShader);
 	}
 }

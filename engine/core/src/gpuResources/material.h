@@ -39,7 +39,7 @@ namespace emberCore
 		friend class ForwardMaterial;
 		friend class MaterialManager;
 		friend class Renderer;
-		friend class ShaderProperties;
+		friend class CallProperties;
 
 	private: // Members:
 		emberCommon::MaterialId m_materialId;

@@ -1,10 +1,10 @@
 #include "compute.h"
+#include "callProperties.h"
 #include "computeShader.h"
 #include "emberTime.h"
 #include "iCompute.h"
 #include "iComputeShader.h"
 #include "logger.h"
-#include "shaderProperties.h"
 #include <stdexcept>
 
 
@@ -52,12 +52,12 @@ namespace emberCore
 	}
 
 	// Workload recording:
-	ShaderProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = s_pIAsync->RecordComputeShader(sessionID, pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(pIDescriptorSetBinding);
-		return shaderProperties;
+		CallProperties callProperties = CallProperties(pIDescriptorSetBinding);
+		return callProperties;
 	}
 	void Compute::Async::RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -100,12 +100,12 @@ namespace emberCore
 	}
 
 	// Workload recording:
-	ShaderProperties Compute::PreRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::PreRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPreRender->RecordComputeShader(pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
-		return shaderProperties;
+		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
+		return callProperties;
 	}
 	void Compute::PreRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -148,12 +148,12 @@ namespace emberCore
 	}
 
 	// Workload recording:
-	ShaderProperties Compute::MidRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::MidRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIMidRender->RecordComputeShader(pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
-		return shaderProperties;
+		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
+		return callProperties;
 	}
 	void Compute::MidRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -196,12 +196,12 @@ namespace emberCore
 	}
 
 	// Workload recording:
-	ShaderProperties Compute::ScreenSpace::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::ScreenSpace::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIScreenSpace->RecordComputeShader(pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
-		return shaderProperties;
+		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
+		return callProperties;
 	}
 	void Compute::ScreenSpace::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -244,19 +244,19 @@ namespace emberCore
 	}
 
 	// Workload recording:
-	ShaderProperties Compute::PostRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::PostRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordComputeShader(pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
-		return shaderProperties;
+		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
+		return callProperties;
 	}
-	ShaderProperties Compute::PostRender::RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::PostRender::RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordPostProcessingShader(pIComputeShader, threadCount);
-		ShaderProperties shaderProperties = ShaderProperties(pIComputeCallDescriptorSetBinding);
-		return shaderProperties;
+		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
+		return callProperties;
 	}
 	void Compute::PostRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -407,12 +407,12 @@ namespace emberCore
 	{
 		return s_isRecording ? s_recordingPhysicsSessionID : invalidPhysicsSessionID;
 	}
-	ShaderProperties Compute::Physics::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::Physics::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		if (!s_isRecording)
 		{
 			LOG_ERROR("Compute::Physics::RecordComputeShader called outside BeginRecording/EndRecording.");
-			return ShaderProperties();
+			return CallProperties();
 		}
 		return Async::RecordComputeShader(s_recordingAsyncSessionID, computeShader, threadCount);
 	}
@@ -485,7 +485,7 @@ namespace emberCore
 
 
 	// Workload recording:
-	ShaderProperties Compute::RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID)
+	CallProperties Compute::RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID)
 	{
 		switch (computeType)
 		{

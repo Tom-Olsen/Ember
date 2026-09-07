@@ -20,7 +20,7 @@ namespace emberEcs
 
 		m_pMesh = nullptr;
 		m_material = MaterialManager::TryGetMaterial("errorMaterial");
-		m_shaderProperties = ShaderProperties(m_material);
+		m_callProperties = CallProperties(m_material);
 
 		m_raycastEnabled = true;
 	}
@@ -50,7 +50,7 @@ namespace emberEcs
 		if (m_material.GetName() != material.GetName())
 		{
 			m_material = material;
-			m_shaderProperties = ShaderProperties{ material };
+			m_callProperties = CallProperties{ material };
 		}
 	}
 	void MeshRenderer::SetRaycastEnabled(bool raycastEnabled)
@@ -97,9 +97,9 @@ namespace emberEcs
 	{
 		return m_material;
 	}
-	ShaderProperties& MeshRenderer::GetShaderProperties()
+	CallProperties& MeshRenderer::GetCallProperties()
 	{
-		return m_shaderProperties;
+		return m_callProperties;
 	}
 	bool MeshRenderer::GetRaycastEnabled() const
 	{
@@ -114,7 +114,7 @@ namespace emberEcs
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
 		if (m_pMesh != nullptr)
         {
-            Renderer::DrawMesh(localToWorldMatrix, *m_pMesh, m_material, m_shaderProperties, m_receiveShadows, m_castShadows);
+            Renderer::DrawMesh(localToWorldMatrix, *m_pMesh, m_material, m_callProperties, m_receiveShadows, m_castShadows);
             if (m_drawLocalBounds)
                 Gizmo::DrawBounds(localToWorldMatrix, GetLocalBounds());
             if (m_drawWorldBounds)

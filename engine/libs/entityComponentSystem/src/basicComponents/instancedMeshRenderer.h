@@ -1,9 +1,9 @@
 #pragma once
 #include "buffer.h"
+#include "callProperties.h"
 #include "component.h"
 #include "mesh.h"
 #include "material.h"
-#include "shaderProperties.h"
 #include <cstdint>
 
 
@@ -19,7 +19,7 @@ namespace emberEcs
 		emberCore::Mesh* m_pMesh;
 		emberCore::Material m_material;
 		emberCore::Buffer* m_pInstanceBuffer;
-		emberCore::ShaderProperties m_shaderProperties;
+		emberCore::CallProperties m_callProperties;
 
 	public: // Methods:
 		InstancedMeshRenderer();
@@ -40,7 +40,7 @@ namespace emberEcs
 		emberCore::Mesh& GetMesh();
 		emberCore::Material& GetMaterial();
 		emberCore::Buffer& GetInstanceBuffer();
-		emberCore::ShaderProperties& GetShaderProperties();
+		emberCore::CallProperties& GetCallProperties();
 
 		// Overrides:
 		void Update() override;

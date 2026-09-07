@@ -4,7 +4,6 @@
 #include "gizmo.h"
 #include "handleContext.h"
 #include "meshGenerator.h"
-#include "shaderProperties.h"
 #include "transform.h"
 #include "transformHandle.h"
 

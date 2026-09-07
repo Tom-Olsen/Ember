@@ -29,6 +29,7 @@
 #include "buffer.h"
 #include "bufferView.h"
 #include "bufferTyped.h"
+#include "callProperties.h"
 #include "tripleBuffer.h"
 #include "physicsTripleBufferState.h"
 #include "texture1d.h"
@@ -41,7 +42,6 @@
 #include "gizmoMaterial.h"
 #include "shadowMaterial.h"
 #include "computeShader.h"
-#include "shaderProperties.h"
 
 // Managers:
 #include "bufferManager.h"

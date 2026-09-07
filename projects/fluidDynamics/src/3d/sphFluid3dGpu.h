@@ -61,7 +61,7 @@ namespace fluidDynamics
 		Mesh m_volumetricDensityCube;
 		ForwardMaterial m_particleMaterial;
 		ForwardMaterial m_volumeRaycastMaterial;
-		ShaderProperties m_shaderProperties;
+		CallProperties m_callProperties;
 
 		// Editor Window:
 		std::unique_ptr<emberEditor::SphFluid3dGpuEditorWindow> editorWindow;

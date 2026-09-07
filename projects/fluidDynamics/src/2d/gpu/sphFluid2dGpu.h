@@ -45,7 +45,7 @@ namespace fluidDynamics
 		Mesh m_particleMesh;
 		Mesh m_ringMesh;
 		Material m_particleMaterial;
-		ShaderProperties m_shaderProperties;
+		CallProperties m_callProperties;
 
 		// Editor Window:
 		std::unique_ptr<emberEditor::SphFluid2dGpuEditorWindow> editorWindow;

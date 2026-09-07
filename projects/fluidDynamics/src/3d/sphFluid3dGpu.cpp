@@ -15,7 +15,7 @@ namespace fluidDynamics
 		m_volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
-		m_shaderProperties = ShaderProperties(m_particleMaterial);
+		m_callProperties = CallProperties(m_particleMaterial);
 
 		m_forceSetters = true;
 		{
@@ -194,8 +194,8 @@ namespace fluidDynamics
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
-			ShaderProperties shaderProperties = Renderer::DrawMesh(attractorLocalToWorld, m_attractorSphereMesh, MaterialManager::TryGetMaterial("transparentMaterial"), false, false);
-			shaderProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
+			CallProperties callProperties = Renderer::DrawMesh(attractorLocalToWorld, m_attractorSphereMesh, MaterialManager::TryGetMaterial("transparentMaterial"), false, false);
+			callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
 		if (m_renderParticles || m_renderVolumetricDensity)
 		{
@@ -213,7 +213,7 @@ namespace fluidDynamics
 				ShadowMaterial shadowMaterial = m_particleMaterial.GetShadowMaterial();
 				if (shadowMaterial.IsValid())
 					shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
-				Renderer::DrawMeshInstanced(localToWorld, m_particleCount, m_particleMesh, m_particleMaterial, m_shaderProperties, true, true);
+				Renderer::DrawMeshInstanced(localToWorld, m_particleCount, m_particleMesh, m_particleMaterial, m_callProperties, true, true);
 			}
 
 			// Volumetric density rendering:

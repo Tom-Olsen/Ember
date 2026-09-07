@@ -43,7 +43,7 @@ namespace emberCore
 	class Material;
 	class MaterialShaderManager;
 	class Mesh;
-	class ShaderProperties;
+	class CallProperties;
 	class ShadowMaterial;
 
 	
@@ -56,7 +56,7 @@ namespace emberCore
 		friend class MaterialManager;
 		friend class MaterialShaderManager;
 		friend class Mesh;
-		friend class ShaderProperties;
+		friend class CallProperties;
 		friend class Texture2d;
 		friend class Texture3d;
 		friend class TextureCube;
@@ -82,31 +82,31 @@ namespace emberCore
 
 		// Draw mesh:
 		static void DrawOutline(const Float4x4& localToWorldMatrix, const Mesh& mesh);
-		static void DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows = true, bool castShadows = true);
-		static void DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
-		static void DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties);
-		static ShaderProperties DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material);
-		static void DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties);
-		static void DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode);
-		static ShaderProperties DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material);
-		static ShaderProperties DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode);
+		static void DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, CallProperties& callProperties, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, CallProperties& callProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
+		static CallProperties DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
+		static CallProperties DrawMesh(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material, CallProperties& callProperties);
+		static CallProperties DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material);
+		static void DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, CallProperties& callProperties);
+		static void DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, CallProperties& callProperties, emberCommon::CullMode cullMode);
+		static CallProperties DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material);
+		static CallProperties DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode);
 
 		// Draw instanced:
 		static void DrawOutlineInstanced(const Float4x4& localToWorldMatrix, const Mesh& mesh, uint32_t instanceCount);
-		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows = true, bool castShadows = true);
-		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
-		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, bool receiveShadows = true, bool castShadows = true);
-		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, ShaderProperties& shaderProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
-		static ShaderProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
-		static void DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties);
-		static ShaderProperties DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material);
-		static void DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material, ShaderProperties& shaderProperties);
-		static ShaderProperties DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material);
+		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, CallProperties& callProperties, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, CallProperties& callProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
+		static CallProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
+		static CallProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, CallProperties& callProperties, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, CallProperties& callProperties, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
+		static CallProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, bool receiveShadows = true, bool castShadows = true);
+		static CallProperties DrawMeshInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode, bool receiveShadows = true, bool castShadows = true);
+		static void DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material, CallProperties& callProperties);
+		static CallProperties DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, Buffer& instanceBuffer, const Mesh& mesh, const ShadowMaterial& material);
+		static void DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material, CallProperties& callProperties);
+		static CallProperties DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material);
 
 		// Getters:
 		static bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index);

@@ -1,9 +1,9 @@
 #pragma once
+#include "callProperties.h"
 #include "component.h"
 #include "emberMath.h"
 #include "material.h"
 #include "mesh.h"
-#include "shaderProperties.h"
 
 
 
@@ -19,7 +19,7 @@ namespace emberEcs
 
 		emberCore::Mesh* m_pMesh;
 		emberCore::Material m_material;
-		emberCore::ShaderProperties m_shaderProperties;
+		emberCore::CallProperties m_callProperties;
         
 		bool m_raycastEnabled;
 
@@ -42,7 +42,7 @@ namespace emberEcs
 		bool GetReceiveShadows() const;
 		emberCore::Mesh& GetMesh();
 		emberCore::Material& GetMaterial();
-		emberCore::ShaderProperties& GetShaderProperties();
+		emberCore::CallProperties& GetCallProperties();
 		bool GetRaycastEnabled() const;
 
 		// Overrides:

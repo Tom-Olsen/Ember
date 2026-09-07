@@ -5,8 +5,8 @@
 
 // Notes:
 // - higher set index = higher update frequency
-// - (dynamic): these descriptor sets are generate dynamically based on the shader code via reflection. See ShaderProperties.
-// -  (static): these descriptor sets are always the same and get extracted from the default material once on startup.
+// - (dynamic): these descriptor sets are generate dynamically based on the shader code via reflection. Set via  CallProperties (CALL_SET) or Shader(Material/ComputeShader) (SHADER_SET).
+// -  (static): these descriptor sets are always the same and get managed by the graphics backend.
 // - CALL_SET (4) will be removed in the future and replaced by storage buffer + indexing (push Constant) -> way fever descriptorSet rebinds.
 
 

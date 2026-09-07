@@ -1,5 +1,5 @@
 #include "gpuSort.h"
-#include "shaderProperties.h"
+#include "callProperties.h"
 #include <assert.h>
 
 
@@ -238,34 +238,34 @@ namespace emberCore
 		// Record compute shaders:
 		{
 			// Local bitonic sort for each block:
-			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortComputeShader, threadCountLocal, sessionID);
-			shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+			CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortComputeShader, threadCountLocal, sessionID);
+			callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+			callProperties.SetValue("Values", "bufferSize", bufferSize);
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
-				shaderProperties = Compute::RecordComputeShader(computeType, *s_pBigFlipComputeShader, threadCountBig, sessionID);
-				shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-				shaderProperties.SetValue("Values", "flipHeight", flipHeight);
-				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+				callProperties = Compute::RecordComputeShader(computeType, *s_pBigFlipComputeShader, threadCountBig, sessionID);
+				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+				callProperties.SetValue("Values", "flipHeight", flipHeight);
+				callProperties.SetValue("Values", "bufferSize", bufferSize);
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
-					shaderProperties = Compute::RecordComputeShader(computeType, *s_pBigDisperseComputeShader, threadCountBig, sessionID);
-					shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-					shaderProperties.SetValue("Values", "disperseHeight", disperseHeight);
-					shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+					callProperties = Compute::RecordComputeShader(computeType, *s_pBigDisperseComputeShader, threadCountBig, sessionID);
+					callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+					callProperties.SetValue("Values", "disperseHeight", disperseHeight);
+					callProperties.SetValue("Values", "bufferSize", bufferSize);
 					Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 				}
 
 				// Local disperse:
-				shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalDisperseComputeShader, threadCountLocal, sessionID);
-				shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+				callProperties = Compute::RecordComputeShader(computeType, *s_pLocalDisperseComputeShader, threadCountLocal, sessionID);
+				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+				callProperties.SetValue("Values", "bufferSize", bufferSize);
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 			}
 		}
@@ -293,43 +293,43 @@ namespace emberCore
 		{
 			// Initialize index(permutation) buffer:
 			Uint3 threadCountInit = Uint3(permutationBufferView.GetCount(), 1, 1);
-			ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pInitIndexBufferComputeShader, threadCountInit, sessionID);
-			shaderProperties.SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
+			CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pInitIndexBufferComputeShader, threadCountInit, sessionID);
+			callProperties.SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			// Local bitonic sort for each block:
-			shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
-			shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-			shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-			shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+			callProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
+			callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+			callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+			callProperties.SetValue("Values", "bufferSize", bufferSize);
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
-				shaderProperties = Compute::RecordComputeShader(computeType, *s_pBigFlipPermutationComputeShader, threadCountBig, sessionID);
-				shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-				shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-				shaderProperties.SetValue("Values", "flipHeight", flipHeight);
-				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+				callProperties = Compute::RecordComputeShader(computeType, *s_pBigFlipPermutationComputeShader, threadCountBig, sessionID);
+				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+				callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+				callProperties.SetValue("Values", "flipHeight", flipHeight);
+				callProperties.SetValue("Values", "bufferSize", bufferSize);
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
-					shaderProperties = Compute::RecordComputeShader(computeType, *s_pBigDispersePermutationComputeShader, threadCountBig, sessionID);
-					shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-					shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-					shaderProperties.SetValue("Values", "disperseHeight", disperseHeight);
-					shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+					callProperties = Compute::RecordComputeShader(computeType, *s_pBigDispersePermutationComputeShader, threadCountBig, sessionID);
+					callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+					callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+					callProperties.SetValue("Values", "disperseHeight", disperseHeight);
+					callProperties.SetValue("Values", "bufferSize", bufferSize);
 					Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 				}
 
 				// Local disperse:
-				shaderProperties = Compute::RecordComputeShader(computeType, *s_pLocalDispersePermutationComputeShader, threadCountLocal, sessionID);
-				shaderProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
-				shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-				shaderProperties.SetValue("Values", "bufferSize", bufferSize);
+				callProperties = Compute::RecordComputeShader(computeType, *s_pLocalDispersePermutationComputeShader, threadCountLocal, sessionID);
+				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
+				callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+				callProperties.SetValue("Values", "bufferSize", bufferSize);
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 			}
 		}
@@ -342,10 +342,10 @@ namespace emberCore
 	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pApplyPermutationComputeShader, threadCount, sessionID);
-		shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-		shaderProperties.SetBuffer("inBuffer", inBufferView.GetBuffer());
-		shaderProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pApplyPermutationComputeShader, threadCount, sessionID);
+		callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+		callProperties.SetBuffer("inBuffer", inBufferView.GetBuffer());
+		callProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
 	}
 
 
@@ -354,9 +354,9 @@ namespace emberCore
 	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		ShaderProperties shaderProperties = Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, threadCount, sessionID);
-		shaderProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
-		shaderProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
+		CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, threadCount, sessionID);
+		callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
+		callProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
 	}
 
 
