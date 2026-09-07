@@ -157,7 +157,7 @@ int main()
 		ShadowMaterial particleShadowMaterial3d = Material::CreateShadow(directoryPath / "particle3dShadow.vert.spv", "particleShadowMaterial3d");
 		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
 		ForwardMaterial volumeRaycastMaterial = Material::CreateForward(emberCommon::ForwardRenderMode::transparent, directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv", "volumeRaycastMaterial");
-		volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// ToDo: why cull front and not back?
+		volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// drawing back facing trianles enables us to move the camera inside the fluid volume and still render it.
 
 		// Create scene:
 		//Scene* pScene = Fluid2dCpuScene();

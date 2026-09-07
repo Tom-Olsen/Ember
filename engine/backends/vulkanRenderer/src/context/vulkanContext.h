@@ -11,11 +11,6 @@
 
 
 
-// vulkanRendererBackend::ToDo:
-// -allow renderWidth/renderHeight to change during runtime.
-
-
-
 // Forward declaration:
 namespace emberBackendInterface
 {
