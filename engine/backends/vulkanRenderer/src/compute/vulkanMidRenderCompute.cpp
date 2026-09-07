@@ -52,6 +52,8 @@ namespace vulkanRendererBackend
 
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
+		if (!descriptorSetBindingHandle.Get())
+			return nullptr;
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
 		m_computeCallQueue.Add(computeCall);
 		pComputeShader->AddPendingUse();
