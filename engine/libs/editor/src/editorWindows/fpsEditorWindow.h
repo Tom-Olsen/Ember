@@ -50,7 +50,7 @@ namespace emberEditor
 			}
 
 			Gui::Text("FPS: %.1f", m_fps);
-			Gui::Text("Frame Time: %.0fms", 1000 * m_frameTime);
+			Gui::Text("Frame Time: %.2fms", 1000 * m_frameTime);
 		}
 	};
 }
