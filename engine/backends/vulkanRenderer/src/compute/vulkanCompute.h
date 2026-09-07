@@ -16,6 +16,7 @@ namespace vulkanRendererBackend
 	class Render;
 	class PostRender;
 	class SceneColorTexture2dPair;
+	class ScreenSpace;
 
 
 
@@ -25,6 +26,7 @@ namespace vulkanRendererBackend
 		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
 		std::unique_ptr<emberBackendInterface::ICompute::IPreRender> m_pIPreRender;
 		std::unique_ptr<emberBackendInterface::ICompute::IRender> m_pIRender;
+		std::unique_ptr<emberBackendInterface::ICompute::IScreenSpace> m_pIScreenSpace;
 		std::unique_ptr<emberBackendInterface::ICompute::IPostRender> m_pIPostRender;
 
 	public: // Methods:
@@ -44,10 +46,12 @@ namespace vulkanRendererBackend
 		Async* GetAsyncCompute();
 		PreRender* GetPreRenderCompute();
 		Render* GetRenderCompute();
+		ScreenSpace* GetScreenSpaceCompute();
 		PostRender* GetPostRenderCompute();
 		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPreRender* GetPreRenderComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IRender* GetRenderComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IScreenSpace* GetScreenSpaceComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IPostRender* GetPostRenderComputeInterfaceHandle() override;
 
 		// Frame lifecycle:

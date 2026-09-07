@@ -140,7 +140,7 @@ namespace vulkanRendererBackend
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 
-		// Gizmo render pass's color resolve finalLayout is VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL. Reflect this in the image layout:
+		// Align renderTexture layout with final renderPass layout:
 		pGizmoRenderPass->GetRenderTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 }

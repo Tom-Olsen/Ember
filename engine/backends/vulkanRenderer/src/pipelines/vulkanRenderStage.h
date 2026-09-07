@@ -21,6 +21,7 @@ namespace vulkanRendererBackend
 		deferredGeometry,
 		deferredLighting,
 		forwardOpaque,
+		screenSpaceCompute,
 		forwardTransparent,
 		postRenderCompute,
 		present,
@@ -37,6 +38,7 @@ namespace vulkanRendererBackend
 		"deferredGeometry",
 		"deferredLighting",
 		"forwardOpaque",
+		"screenSpaceCompute",
 		"forwardTransparent",
 		"postRenderCompute",
 		"present"

@@ -23,7 +23,8 @@ namespace emberCore
 	{
 		async,
 		preRender,
-		render,
+		render,	// rename this!
+		screenSpace,
 		postRender,
 		physics
 	};
@@ -133,6 +134,37 @@ namespace emberCore
 
 
 		
+		class EMBER_CORE_API ScreenSpace
+		{
+		private: // Members:
+			static emberBackendInterface::ICompute::IScreenSpace* s_pIScreenSpace;
+
+		public: // Methods:
+			// Constructor/Destructor:
+			static void Init(emberBackendInterface::ICompute::IScreenSpace* pIScreenSpace);
+			static void Clear();
+
+			// Workload recording:
+			static ShaderProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeWrite();
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+
+		private: // Methods
+			// Delete all constructors:
+			ScreenSpace() = delete;
+			ScreenSpace(const ScreenSpace&) = delete;
+			ScreenSpace& operator=(const ScreenSpace&) = delete;
+			ScreenSpace(ScreenSpace&&) = delete;
+			ScreenSpace& operator=(ScreenSpace&&) = delete;
+			~ScreenSpace() = delete;
+		};
+
+
+
 		class EMBER_CORE_API PostRender
 		{
 		private: // Members:

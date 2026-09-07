@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	template<RenderStage stage>
 	void ComputeStage<stage>::Record(const FrameContext& frameContext, std::span<const ComputeCall> computeCalls)
 	{
-		static_assert(stage == RenderStage::preRenderCompute || stage == RenderStage::renderCompute || stage == RenderStage::postRenderCompute);
+		static_assert(stage == RenderStage::preRenderCompute || stage == RenderStage::renderCompute || stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute);
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
@@ -158,5 +158,6 @@ namespace vulkanRendererBackend
     // Explicit template instantiation:
 	template class ComputeStage<RenderStage::preRenderCompute>;
 	template class ComputeStage<RenderStage::renderCompute>;
+	template class ComputeStage<RenderStage::screenSpaceCompute>;
 	template class ComputeStage<RenderStage::postRenderCompute>;
 }

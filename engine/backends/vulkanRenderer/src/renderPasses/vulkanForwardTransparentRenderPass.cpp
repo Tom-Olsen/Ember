@@ -65,12 +65,12 @@ namespace vulkanRendererBackend
 			// Color attachment description:
 			attachments[0].format = m_pRenderTextures[0]->GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;							// load results from forward opaque rendering.
-			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// store final image for post processing + presenting.
-			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;				// we do not use stencils.
-			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// we do not use stencils.
-			attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;	// final layout of forward opaque render pass.
-			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;						// layout for post processing compute shaders.
+			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;						// load results after screen space compute.
+			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store final image for post processing + presenting.
+			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// we do not use stencils.
+			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;		// we do not use stencils.
+			attachments[0].initialLayout = VK_IMAGE_LAYOUT_GENERAL;					// layout used by screen space compute shaders.
+			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;					// layout for post processing compute shaders.
 
 			// Depth attachment description (transparent materials only read scene depth):
 			attachments[1].format = m_pDepthTextures[0]->GetFormat();
@@ -100,15 +100,15 @@ namespace vulkanRendererBackend
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
 
 		// Synchronization dependencies of individual subpasses:
-		// Forward opaque pass -> forward transparent pass:
+		// Screen space compute pass -> forward transparent pass:
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
 		dependency.dstSubpass = 0;                   // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward opaque color and depth producer stages.
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // screen space compute and forward opaque producer stages.
 		dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward transparent shader, color, and depth consumer stages.
-		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // forward opaque attachment writes that forward transparent consumes.
+		dependency.srcAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // complete compute reads/writes and preserve opaque attachment writes.
 		dependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead; // forward transparent shader reads, color loads/writes, and depth tests.
-		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT; // specify special behaviors.
+		dependency.dependencyFlags = 0; 			// screen space compute may access arbitrary pixels.
 		// Forward transparent pass -> post processing is handled by a barrier + semaphore.
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };

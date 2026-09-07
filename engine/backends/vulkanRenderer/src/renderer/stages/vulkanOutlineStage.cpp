@@ -135,7 +135,7 @@ namespace vulkanRendererBackend
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 
-		// Outline render pass's color attachment finalLayout is VK_IMAGE_LAYOUT_GENERAL. Reflect this in the image layout:
+		// Align renderTexture layout with final renderPass layout: 
 		pOutlineRenderPass->GetRenderTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 }

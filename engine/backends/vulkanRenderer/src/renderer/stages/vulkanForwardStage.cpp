@@ -180,10 +180,8 @@ namespace vulkanRendererBackend
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 
-		if constexpr (stage == RenderStage::forwardTransparent)
-			pRenderTexture->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
-		else
-			pRenderTexture->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		// Align renderTexture layout with final renderPass layout:
+		pRenderTexture->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 
 

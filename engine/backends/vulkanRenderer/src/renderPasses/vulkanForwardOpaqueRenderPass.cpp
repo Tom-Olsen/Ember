@@ -70,7 +70,7 @@ namespace vulkanRendererBackend
 			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;				// we do not use stencils.
 			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// we do not use stencils.
 			attachments[0].initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;	// final layout of deferred lighting render pass.
-			attachments[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;		// layout required by forward transparent color attachment.
+			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;						// layout for screen space compute shaders.
 
 			// Depth attachment description:
 			attachments[1].format = m_pDepthTextures[0]->GetFormat();

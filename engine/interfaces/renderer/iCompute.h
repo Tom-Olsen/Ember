@@ -130,6 +130,17 @@ namespace emberBackendInterface
             virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
 
+        class IScreenSpace
+        {
+        public: // Methods:
+            // Virtual destructor for v-table:
+            virtual ~IScreenSpace() = default;
+
+            // Workload recording:
+            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
+            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
+        };
+
         class IPostRender
         {
         public: // Methods:
@@ -146,6 +157,7 @@ namespace emberBackendInterface
         virtual IAsync* GetAsyncComputeInterfaceHandle() = 0;
         virtual IPreRender* GetPreRenderComputeInterfaceHandle() = 0;
         virtual IRender* GetRenderComputeInterfaceHandle() = 0;
+        virtual IScreenSpace* GetScreenSpaceComputeInterfaceHandle() = 0;
         virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
     };
 }

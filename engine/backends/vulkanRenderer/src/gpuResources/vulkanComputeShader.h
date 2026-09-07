@@ -21,6 +21,7 @@ namespace vulkanRendererBackend
 	class Render;
 	class PostRender;
 	class Renderer;
+	class ScreenSpace;
 
 
 
@@ -33,6 +34,7 @@ namespace vulkanRendererBackend
 		friend class Render;
 		friend class PostRender;
 		friend class Renderer;
+		friend class ScreenSpace;
 
 	private: // Members:
 		Uint3 m_blockSize;
