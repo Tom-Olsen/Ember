@@ -1,11 +1,7 @@
 #include "vulkanCompute.h"
 #include "vulkanAsyncCompute.h"
-#include "vulkanContext.h"
-#include "vulkanMidRenderCompute.h"
-#include "vulkanPostRenderCompute.h"
-#include "vulkanPreRenderCompute.h"
-#include "vulkanSceneColorTexture2dPair.h"
-#include "vulkanScreenSpaceCompute.h"
+#include "vulkanComputeQueue.h"
+#include "vulkanPostRenderComputeQueue.h"
 
 
 
@@ -16,10 +12,10 @@ namespace vulkanRendererBackend
 	Compute::Compute()
 	{
 		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
-		m_pIPreRender = std::make_unique<PreRender>();
-		m_pIMidRender = std::make_unique<MidRender>();
-		m_pIScreenSpace = std::make_unique<ScreenSpace>();
-		m_pIPostRender = std::make_unique<PostRender>();
+		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
+		m_pMidRenderComputeQueue = std::make_unique<ComputeQueue>();
+		m_pScreenSpaceComputeQueue = std::make_unique<ComputeQueue>();
+		m_pPostRenderComputeQueue = std::make_unique<PostRenderComputeQueue>();
 	}
 	Compute::~Compute()
 	{
@@ -39,41 +35,41 @@ namespace vulkanRendererBackend
 	{
 		return static_cast<Async*>(m_pIAsync.get());
 	}
-	PreRender* Compute::GetPreRenderCompute()
+	ComputeQueue* Compute::GetPreRenderCompute()
 	{
-		return static_cast<PreRender*>(m_pIPreRender.get());
+		return m_pPreRenderComputeQueue.get();
 	}
-	MidRender* Compute::GetMidRenderCompute()
+	ComputeQueue* Compute::GetMidRenderCompute()
 	{
-		return static_cast<MidRender*>(m_pIMidRender.get());
+		return m_pMidRenderComputeQueue.get();
 	}
-	ScreenSpace* Compute::GetScreenSpaceCompute()
+	ComputeQueue* Compute::GetScreenSpaceCompute()
 	{
-		return static_cast<ScreenSpace*>(m_pIScreenSpace.get());
+		return m_pScreenSpaceComputeQueue.get();
 	}
-	PostRender* Compute::GetPostRenderCompute()
+	PostRenderComputeQueue* Compute::GetPostRenderCompute()
 	{
-		return static_cast<PostRender*>(m_pIPostRender.get());
+		return m_pPostRenderComputeQueue.get();
 	}
 	emberBackendInterface::ICompute::IAsync* Compute::GetAsyncComputeInterfaceHandle()
 	{
 		return static_cast<emberBackendInterface::ICompute::IAsync*>(m_pIAsync.get());
 	}
-	emberBackendInterface::ICompute::IPreRender* Compute::GetPreRenderComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IQueue* Compute::GetPreRenderComputeInterfaceHandle()
 	{
-		return static_cast<emberBackendInterface::ICompute::IPreRender*>(m_pIPreRender.get());
+		return m_pPreRenderComputeQueue.get();
 	}
-	emberBackendInterface::ICompute::IMidRender* Compute::GetMidRenderComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IQueue* Compute::GetMidRenderComputeInterfaceHandle()
 	{
-		return static_cast<emberBackendInterface::ICompute::IMidRender*>(m_pIMidRender.get());
+		return m_pMidRenderComputeQueue.get();
 	}
-	emberBackendInterface::ICompute::IScreenSpace* Compute::GetScreenSpaceComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IQueue* Compute::GetScreenSpaceComputeInterfaceHandle()
 	{
-		return static_cast<emberBackendInterface::ICompute::IScreenSpace*>(m_pIScreenSpace.get());
+		return m_pScreenSpaceComputeQueue.get();
 	}
-	emberBackendInterface::ICompute::IPostRender* Compute::GetPostRenderComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IPostRenderQueue* Compute::GetPostRenderComputeInterfaceHandle()
 	{
-		return static_cast<emberBackendInterface::ICompute::IPostRender*>(m_pIPostRender.get());
+		return m_pPostRenderComputeQueue.get();
 	}
 
 

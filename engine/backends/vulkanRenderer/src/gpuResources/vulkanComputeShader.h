@@ -15,13 +15,10 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class Async;
 	class ComputeCallQueue;
+	class ComputeQueue;
 	class DescriptorSetBinding;
 	class Pipeline;
-	class PreRender;
-	class MidRender;
-	class PostRender;
 	class Renderer;
-	class ScreenSpace;
 
 
 
@@ -30,11 +27,8 @@ namespace vulkanRendererBackend
 		// Friends:
 		friend class Async;
 		friend class ComputeCallQueue;
-		friend class PreRender;
-		friend class MidRender;
-		friend class PostRender;
+		friend class ComputeQueue;
 		friend class Renderer;
-		friend class ScreenSpace;
 
 	private: // Members:
 		Uint3 m_blockSize;

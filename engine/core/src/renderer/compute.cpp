@@ -87,10 +87,10 @@ namespace emberCore
 
 
 	// Compute::PreRender subclass:
-	emberBackendInterface::ICompute::IPreRender* Compute::PreRender::s_pIPreRender;
+	emberBackendInterface::ICompute::IQueue* Compute::PreRender::s_pIPreRender;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::PreRender::Init(emberBackendInterface::ICompute::IPreRender* pIPreRender)
+	void Compute::PreRender::Init(emberBackendInterface::ICompute::IQueue* pIPreRender)
 	{
 		s_pIPreRender = pIPreRender;
 	}
@@ -135,10 +135,10 @@ namespace emberCore
 
 
 	// Compute::MidRender subclass:
-	emberBackendInterface::ICompute::IMidRender* Compute::MidRender::s_pIMidRender;
+	emberBackendInterface::ICompute::IQueue* Compute::MidRender::s_pIMidRender;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::MidRender::Init(emberBackendInterface::ICompute::IMidRender* pIMidRender)
+	void Compute::MidRender::Init(emberBackendInterface::ICompute::IQueue* pIMidRender)
 	{
 		s_pIMidRender = pIMidRender;
 	}
@@ -183,10 +183,10 @@ namespace emberCore
 
 	
 	// Compute::ScreenSpace subclass:
-	emberBackendInterface::ICompute::IScreenSpace* Compute::ScreenSpace::s_pIScreenSpace;
+	emberBackendInterface::ICompute::IQueue* Compute::ScreenSpace::s_pIScreenSpace;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::ScreenSpace::Init(emberBackendInterface::ICompute::IScreenSpace* pIScreenSpace)
+	void Compute::ScreenSpace::Init(emberBackendInterface::ICompute::IQueue* pIScreenSpace)
 	{
 		s_pIScreenSpace = pIScreenSpace;
 	}
@@ -231,10 +231,10 @@ namespace emberCore
 
 
 	// Compute::PostRender subclass:
-	emberBackendInterface::ICompute::IPostRender* Compute::PostRender::s_pIPostRender;
+	emberBackendInterface::ICompute::IPostRenderQueue* Compute::PostRender::s_pIPostRender;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::PostRender::Init(emberBackendInterface::ICompute::IPostRender* pIPostRender)
+	void Compute::PostRender::Init(emberBackendInterface::ICompute::IPostRenderQueue* pIPostRender)
 	{
 		s_pIPostRender = pIPostRender;
 	}

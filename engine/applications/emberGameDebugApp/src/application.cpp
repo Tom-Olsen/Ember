@@ -1,6 +1,5 @@
 #include "application.h"
 #include "commonRendererCreateInfo.h"
-#include "component.h"
 #include "compute.h"
 #include "core.h"
 #include "editor.h"
@@ -13,21 +12,20 @@
 #include "profiler.h"
 #include "renderer.h"
 #include "scene.h"
-#include "shadowConstants.h"
 #include "window.h"
 // Backends:
 #include "sdlWindow.h"
-#include "vulkanAsyncCompute.h"
 #include "vulkanCompute.h"
 #include "vulkanGpuResourceFactory.h"
-#include "vulkanPostRenderCompute.h"
-#include "vulkanPreRenderCompute.h"
 #include "vulkanRenderer.h"
 #include "imGuiSdlVulkan.h"
 // Editor Windows:
 #include "backendDebugWindow.h"
 #include "depthBiasEditorWindow.h"
 #include "fpsEditorWindow.h"
+// System:
+#include <exception>
+#include <memory>
 
 
 

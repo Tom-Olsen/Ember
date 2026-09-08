@@ -4,6 +4,7 @@
 #include "vulkanComputeCallQueue.h"
 #include "vulkanRendererExport.h"
 #include <cstdint>
+#include <vector>
 
 
 
@@ -18,23 +19,26 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
-	class VULKAN_RENDERER_API PreRender : public emberBackendInterface::ICompute::IPreRender
+	/// <summary>
+	/// Base class for different compute queues: preRender, midRender, screenSpace, postRender.
+	/// </summary>
+	class VULKAN_RENDERER_API ComputeQueue : public virtual emberBackendInterface::ICompute::IQueue
 	{
 	private: // Members:
 		ComputeCallQueue m_computeCallQueue;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		PreRender();
-		~PreRender();
+		ComputeQueue();
+		~ComputeQueue() override;
 
 		// Non-copyable:
-		PreRender(const PreRender&) = delete;
-		PreRender& operator=(const PreRender&) = delete;
+		ComputeQueue(const ComputeQueue&) = delete;
+		ComputeQueue& operator=(const ComputeQueue&) = delete;
 
 		// Movable:
-		PreRender(PreRender&& other) noexcept;
-		PreRender& operator=(PreRender&& other) noexcept;
+		ComputeQueue(ComputeQueue&& other) noexcept;
+		ComputeQueue& operator=(ComputeQueue&& other) noexcept;
 
 		// Workload recording:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
@@ -47,5 +51,8 @@ namespace vulkanRendererBackend
 		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
 		void UpdateShaderData(uint32_t frameIndex);
+
+	protected: // Methods:
+		emberBackendInterface::IDescriptorSetBinding* RecordComputeCall(ComputeCall computeCall);
 	};
 }

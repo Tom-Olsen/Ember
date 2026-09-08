@@ -13,6 +13,7 @@
 #include "vulkanAsyncCompute.h"
 #include "vulkanCommandPool.h"
 #include "vulkanCompute.h"
+#include "vulkanComputeQueue.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
 #include "vulkanConvertTextureFormat.h"
@@ -43,12 +44,10 @@
 #include "vulkanMaterialManager.h"
 #include "vulkanMaterialShaderManager.h"
 #include "vulkanMesh.h"
-#include "vulkanMidRenderCompute.h"
 #include "vulkanOutlineDrawCall.h"
 #include "vulkanOutlineRenderPass.h"
 #include "vulkanPoolManager.h"
-#include "vulkanPostRenderCompute.h"
-#include "vulkanPreRenderCompute.h"
+#include "vulkanPostRenderComputeQueue.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderGraph.h"
 #include "vulkanRenderPassManager.h"
@@ -60,7 +59,6 @@
 #include "vulkanSampler.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include "vulkanSceneDescriptorSetLayout.h"
-#include "vulkanScreenSpaceCompute.h"
 #include "vulkanShadowDrawCall.h"
 #include "vulkanShadowRenderPass.h"
 #include "vulkanSingleTimeCommand.h"
@@ -806,8 +804,8 @@ namespace vulkanRendererBackend
 	void Renderer::QueueRendererOwnedComputeShaders()
 	{
 		// Outline mask:
-		MidRender* pMidRenderCompute = m_pCompute->GetMidRenderCompute();
-		PostRender* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
+		ComputeQueue* pMidRenderCompute = m_pCompute->GetMidRenderCompute();
+		PostRenderComputeQueue* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
 		if (!m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls.empty())
 		{
 			// Masks:

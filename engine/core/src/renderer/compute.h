@@ -75,11 +75,11 @@ namespace emberCore
 		class EMBER_CORE_API PreRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IPreRender* s_pIPreRender;
+			static emberBackendInterface::ICompute::IQueue* s_pIPreRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IPreRender* pIPreRender);
+			static void Init(emberBackendInterface::ICompute::IQueue* pIPreRender);
 			static void Clear();
 
 			// Workload recording:
@@ -106,11 +106,11 @@ namespace emberCore
 		class EMBER_CORE_API MidRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IMidRender* s_pIMidRender;
+			static emberBackendInterface::ICompute::IQueue* s_pIMidRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IMidRender* pIMidRender);
+			static void Init(emberBackendInterface::ICompute::IQueue* pIMidRender);
 			static void Clear();
 
 			// Workload recording:
@@ -137,11 +137,11 @@ namespace emberCore
 		class EMBER_CORE_API ScreenSpace
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IScreenSpace* s_pIScreenSpace;
+			static emberBackendInterface::ICompute::IQueue* s_pIScreenSpace;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IScreenSpace* pIScreenSpace);
+			static void Init(emberBackendInterface::ICompute::IQueue* pIScreenSpace);
 			static void Clear();
 
 			// Workload recording:
@@ -168,11 +168,11 @@ namespace emberCore
 		class EMBER_CORE_API PostRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IPostRender* s_pIPostRender;
+			static emberBackendInterface::ICompute::IPostRenderQueue* s_pIPostRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IPostRender* pIPostRender);
+			static void Init(emberBackendInterface::ICompute::IPostRenderQueue* pIPostRender);
 			static void Clear();
 
 			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):

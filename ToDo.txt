@@ -4,6 +4,7 @@ ToDo:
 - add msaa filtering
 - allow renderWidth/renderHeight to change during runtime.
 - add a GetShadowShaderProperties to MeshRenderer and allow in vulkanBackend for shadow call descriptorSets to be supplied externally, so we can cash shadow call descriptors the same way draw descriptors are cashed.
+- there seems to be a memory leak or similar. Occasionally the defaultProject crashes with a SegFault.
 
 - vulkanPoolManager shouldnt rly exist? split it into vulkanCallDescriptorPoolManager + vulkanStagingBufferPoolManager?
 - rotations are sometimes given in degrees sometimes in radians. decide for one and make it consistent

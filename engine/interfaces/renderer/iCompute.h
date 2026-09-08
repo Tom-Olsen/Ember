@@ -108,57 +108,30 @@ namespace emberBackendInterface
             virtual void RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
         };
 
-        class IPreRender
-        {
+		class IQueue
+		{
         public: // Methods:
             // Virtual destructor for v-table:
-            virtual ~IPreRender() = default;
+		    virtual ~IQueue() = default;
 
             // Workload recording:
-            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
-        };
+		    virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pComputeShader, Uint3 threadCount) = 0;
+		    virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
+		};
 
-        class IMidRender
-        {
-        public: // Methods:
-            // Virtual destructor for v-table:
-            virtual ~IMidRender() = default;
-
-            // Workload recording:
-            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
-        };
-
-        class IScreenSpace
-        {
-        public: // Methods:
-            // Virtual destructor for v-table:
-            virtual ~IScreenSpace() = default;
-
-            // Workload recording:
-            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
-        };
-
-        class IPostRender
-        {
-        public: // Methods:
-            // Virtual destructor for v-table:
-            virtual ~IPostRender() = default;
-
-            // Workload recording:
-            virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual IDescriptorSetBinding* RecordPostProcessingShader(IComputeShader* pIComputeShader, Uint3 threadCount) = 0;
-            virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
-        };
+		class IPostRenderQueue : public virtual IQueue
+		{
+		public: // Methods:
+		    virtual IDescriptorSetBinding* RecordPostProcessingShader(IComputeShader* pComputeShader, Uint3 threadCount) = 0;
+		};
 
 
 
-        virtual IAsync* GetAsyncComputeInterfaceHandle() = 0;
-        virtual IPreRender* GetPreRenderComputeInterfaceHandle() = 0;
-        virtual IMidRender* GetMidRenderComputeInterfaceHandle() = 0;
-        virtual IScreenSpace* GetScreenSpaceComputeInterfaceHandle() = 0;
-        virtual IPostRender* GetPostRenderComputeInterfaceHandle() = 0;
+		// Getters:
+		virtual ICompute::IAsync* GetAsyncComputeInterfaceHandle() = 0;
+		virtual ICompute::IQueue* GetPreRenderComputeInterfaceHandle() = 0;
+		virtual ICompute::IQueue* GetMidRenderComputeInterfaceHandle() = 0;
+		virtual ICompute::IQueue* GetScreenSpaceComputeInterfaceHandle() = 0;
+		virtual ICompute::IPostRenderQueue* GetPostRenderComputeInterfaceHandle() = 0;
     };
 }

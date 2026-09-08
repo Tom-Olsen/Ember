@@ -1,9 +1,7 @@
 #include "application.h"
 #include "commonRendererCreateInfo.h"
-#include "component.h"
 #include "compute.h"
 #include "core.h"
-#include "editor.h"
 #include "emberMath.h"
 #include "emberTime.h"
 #include "eventSystem.h"
@@ -12,17 +10,15 @@
 #include "profiler.h"
 #include "renderer.h"
 #include "scene.h"
-#include "shadowConstants.h"
 #include "window.h"
 // Backends:
 #include "nullWindow.h"
-#include "vulkanAsyncCompute.h"
 #include "vulkanCompute.h"
 #include "vulkanGpuResourceFactory.h"
-#include "vulkanPostRenderCompute.h"
-#include "vulkanPreRenderCompute.h"
 #include "vulkanRenderer.h"
 #include "nullGui.h"
+// System:
+#include <exception>
 
 
 
