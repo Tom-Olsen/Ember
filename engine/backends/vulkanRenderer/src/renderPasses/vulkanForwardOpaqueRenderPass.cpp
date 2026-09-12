@@ -3,9 +3,10 @@
 #include "vulkanContext.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
+#include "vulkanSceneColorTexture2dPair.h"
 #include <array>
-#include <stdexcept>
 #include <string>
 
 
@@ -14,23 +15,10 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	ForwardOpaqueRenderPass::ForwardOpaqueRenderPass(
-		const std::vector<std::unique_ptr<RenderTexture2d>>& pRenderTextures,
-		const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures)
+	ForwardOpaqueRenderPass::ForwardOpaqueRenderPass(const RenderTargetResources& renderTargets)
 	{
-		if (pRenderTextures.empty() || pRenderTextures.size() != pDepthTextures.size())
-			throw std::invalid_argument("ForwardOpaqueRenderPass::ForwardOpaqueRenderPass(...) failed. Scene texture counts must match and must not be zero.");
-
-		m_pRenderTextures.reserve(pRenderTextures.size());
-		m_pDepthTextures.reserve(pDepthTextures.size());
-		for (size_t frameIndex = 0; frameIndex < pRenderTextures.size(); frameIndex++)
-		{
-			m_pRenderTextures.push_back(pRenderTextures[frameIndex].get());
-			m_pDepthTextures.push_back(pDepthTextures[frameIndex].get());
-		}
-
-		CreateRenderPass();
-		CreateFrameBuffers();
+		CreateRenderPass(renderTargets);
+		CreateFrameBuffers(renderTargets);
 		NAME_VK_OBJECT(m_renderPass, "RenderPass_ForwardOpaque");
 	}
 	ForwardOpaqueRenderPass::~ForwardOpaqueRenderPass()
@@ -40,30 +28,14 @@ namespace vulkanRendererBackend
 
 
 
-	// Getters:
-	RenderTexture2d* ForwardOpaqueRenderPass::GetRenderTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pRenderTextures.size())
-			throw std::out_of_range("ForwardOpaqueRenderPass::GetRenderTexture(...) failed. Frame index out of range.");
-		return m_pRenderTextures[frameIndex];
-	}
-	DepthTexture2d* ForwardOpaqueRenderPass::GetDepthTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pDepthTextures.size())
-			throw std::out_of_range("ForwardOpaqueRenderPass::GetDepthTexture(...) failed. Frame index out of range.");
-		return m_pDepthTextures[frameIndex];
-	}
-
-
-
 	// Private methods:
-	void ForwardOpaqueRenderPass::CreateRenderPass()
+	void ForwardOpaqueRenderPass::CreateRenderPass(const RenderTargetResources& renderTargets)
 	{
 		// Attachments:
 		std::array<VkAttachmentDescription, 2> attachments{};
 		{
 			// Color attachment description:
-			attachments[0].format = m_pRenderTextures[0]->GetFormat();
+			attachments[0].format = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(0, 0).GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;							// load results from deferred rendering.
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// store opaque scene color for forward transparent rendering.
@@ -73,7 +45,7 @@ namespace vulkanRendererBackend
 			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;						// layout for screen space compute shaders.
 
 			// Depth attachment description:
-			attachments[1].format = m_pDepthTextures[0]->GetFormat();
+			attachments[1].format = renderTargets.GetSceneDepthTexture(0).GetFormat();
 			attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;									// due to deferred + forward rendering we handle msaa manually.
 			attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;								// load depth of previous deferred geometry render pass.
 			attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;							// store depth for forward transparent rendering and post processing.
@@ -100,44 +72,51 @@ namespace vulkanRendererBackend
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
 
 		// Synchronization dependencies of individual subpasses:
-		// Deferred lighting pass -> forward opaque pass:
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
-		dependency.dstSubpass = 0;                   // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // deferred color and depth producer stages.
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward opaque color and depth consumer stages.
-		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // deferred attachment writes that forward opaque consumes.
-		dependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead | AccessMasks::EarlyFragmentTest::depthStencilAttachmentWrite; // forward opaque loads, tests, and attachment writes.
-		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT; // specify special behaviors.
-		// Forward opaque pass -> forward transparent pass is handled by the transparent pass dependency + semaphore.
+		VkSubpassDependency deferredLightingToForwardOpaqueDependency = {};
+		deferredLightingToForwardOpaqueDependency.srcSubpass = VK_SUBPASS_EXTERNAL; // before this render pass.
+		deferredLightingToForwardOpaqueDependency.dstSubpass = 0;                   // this render pass only has 1 sub pass.
+		deferredLightingToForwardOpaqueDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // deferred color and depth producer stages.
+		deferredLightingToForwardOpaqueDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward opaque color and depth consumer stages.
+		deferredLightingToForwardOpaqueDependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // deferred attachment writes that forward opaque consumes.
+		deferredLightingToForwardOpaqueDependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead | AccessMasks::EarlyFragmentTest::depthStencilAttachmentWrite; // these must wait.
+		deferredLightingToForwardOpaqueDependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT; // specify special behaviors.
+		VkSubpassDependency forwardOpaqueToScreenSpaceComputeDependency = {};
+		forwardOpaqueToScreenSpaceComputeDependency.srcSubpass = 0;						// this render pass only has 1 sub pass.
+		forwardOpaqueToScreenSpaceComputeDependency.dstSubpass = VK_SUBPASS_EXTERNAL;	// after this render pass.
+		forwardOpaqueToScreenSpaceComputeDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		forwardOpaqueToScreenSpaceComputeDependency.dstStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		forwardOpaqueToScreenSpaceComputeDependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;
+		forwardOpaqueToScreenSpaceComputeDependency.dstAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead;
+		std::array<VkSubpassDependency, 2> dependencies = { deferredLightingToForwardOpaqueDependency, forwardOpaqueToScreenSpaceComputeDependency };
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
+		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		renderPassInfo.pDependencies = dependencies.data();
 
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}
-	void ForwardOpaqueRenderPass::CreateFrameBuffers()
+	void ForwardOpaqueRenderPass::CreateFrameBuffers(const RenderTargetResources& renderTargets)
 	{
-		m_framebuffers.resize(m_pRenderTextures.size());
+		m_framebuffers.resize(renderTargets.GetFrameCount());
 		for (size_t frameIndex = 0; frameIndex < m_framebuffers.size(); frameIndex++)
 		{
+			const RenderTexture2d& renderTexture = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, 0);
 			std::array<VkImageView, 2> attachments =
 			{
-				m_pRenderTextures[frameIndex]->GetVkImageView(),
-				m_pDepthTextures[frameIndex]->GetVkImageView()
+				renderTexture.GetVkImageView(),
+				renderTargets.GetSceneDepthTexture(frameIndex).GetVkImageView()
 			};
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = m_pRenderTextures[frameIndex]->GetWidth();
-			framebufferInfo.height = m_pRenderTextures[frameIndex]->GetHeight();
+			framebufferInfo.width = renderTexture.GetWidth();
+			framebufferInfo.height = renderTexture.GetHeight();
 			framebufferInfo.layers = 1;
 			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[frameIndex]));
 			NAME_VK_OBJECT(m_framebuffers[frameIndex], "Framebuffer_ForwardOpaque_Frame" + std::to_string(frameIndex));

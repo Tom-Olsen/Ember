@@ -1,7 +1,5 @@
 #pragma once
 #include "vulkanRenderPass.h"
-#include <memory>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -9,8 +7,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class DepthTexture2d;
-	class GBufferTexture2d;
+	class RenderTargetResources;
 
 
 
@@ -20,15 +17,8 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class DeferredGeometryRenderPass : public RenderPass
 	{
-	private: // Members:
-		// G-buffer attachments:
-		std::vector<std::unique_ptr<GBufferTexture2d>> m_pAlbedoTextures;
-		std::vector<std::unique_ptr<GBufferTexture2d>> m_pNormalTextures;
-		std::vector<std::unique_ptr<GBufferTexture2d>> m_pSurfacePropertiesTextures;
-		std::vector<DepthTexture2d*> m_pDepthTextures;
-
 	public: // Methods:
-		DeferredGeometryRenderPass(uint32_t renderWidth, uint32_t renderHeight, const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures);
+		DeferredGeometryRenderPass(const RenderTargetResources& renderTargets);
 		~DeferredGeometryRenderPass();
 
 		// Non-copyable:
@@ -39,15 +29,8 @@ namespace vulkanRendererBackend
 		DeferredGeometryRenderPass(DeferredGeometryRenderPass&& other) noexcept = default;
 		DeferredGeometryRenderPass& operator=(DeferredGeometryRenderPass&& other) noexcept = default;
 
-		// Getters:
-		GBufferTexture2d* GetAlbedoTexture(uint32_t frameIndex) const;
-		GBufferTexture2d* GetNormalTexture(uint32_t frameIndex) const;
-		GBufferTexture2d* GetSurfacePropertiesTexture(uint32_t frameIndex) const;
-		DepthTexture2d* GetDepthTexture(uint32_t frameIndex) const;
-
 	private: // Methods:
-		void CreateRenderPass();
-		void CreateGBufferTextures(uint32_t renderWidth, uint32_t renderHeight);
-		void CreateFrameBuffers();
+		void CreateRenderPass(const RenderTargetResources& renderTargets);
+		void CreateFrameBuffers(const RenderTargetResources& renderTargets);
 	};
 }

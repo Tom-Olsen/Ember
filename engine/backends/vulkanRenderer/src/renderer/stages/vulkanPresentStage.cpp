@@ -9,12 +9,12 @@
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameContext.h"
 #include "vulkanFrameResources.h"
-#include "vulkanGizmoRenderPass.h"
 #include "vulkanMacros.h"
 #include "vulkanMaterial.h"
 #include "vulkanPipeline.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include "vulkanSwapchain.h"
@@ -49,11 +49,12 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Publish the final scene color for editor sampling:
-			frameContext.sceneColorTexturePair.PrepareCurrentForSampling(commandBuffer, frameContext.frameIndex);
+			SceneColorTexture2dPair& sceneColorTexturePair = frameContext.renderTargets.GetSceneColorTexturePair();
+			sceneColorTexturePair.TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameIndex);
 
 			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
-			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", frameContext.sceneColorTexturePair.GetCurrentTexture(frameContext.frameIndex));
-			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", RenderPassManager::GetGizmoRenderPass()->GetRenderTexture(frameContext.frameIndex));
+			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", sceneColorTexturePair.GetCurrentTexture(frameContext.frameIndex));
+			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", &frameContext.renderTargets.GetGizmoTexture(frameContext.frameIndex));
 			pPresentShaderDescriptorSetBinding->UpdateShaderData(frameContext.frameIndex);
 
 			// Viewport and scissor:
@@ -119,7 +120,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Publish the final scene color for editor sampling:
-			frameContext.sceneColorTexturePair.PrepareCurrentForSampling(commandBuffer, frameContext.frameIndex);
+			frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameIndex);
 
 			// Render pass info:
 			Uint2 swapchainExtent = Context::GetSwapchain()->GetExtent();

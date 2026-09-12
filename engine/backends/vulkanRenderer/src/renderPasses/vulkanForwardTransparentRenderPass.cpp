@@ -3,7 +3,9 @@
 #include "vulkanContext.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
+#include "vulkanSceneColorTexture2dPair.h"
 #include <array>
 #include <stdexcept>
 #include <string>
@@ -14,23 +16,11 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	ForwardTransparentRenderPass::ForwardTransparentRenderPass(
-		const std::vector<std::unique_ptr<RenderTexture2d>>& pRenderTextures,
-		const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures)
+	ForwardTransparentRenderPass::ForwardTransparentRenderPass(const RenderTargetResources& renderTargets)
 	{
-		if (pRenderTextures.empty() || pRenderTextures.size() != pDepthTextures.size())
-			throw std::invalid_argument("ForwardTransparentRenderPass::ForwardTransparentRenderPass(...) failed. Scene texture counts must match and must not be zero.");
-
-		m_pRenderTextures.reserve(pRenderTextures.size());
-		m_pDepthTextures.reserve(pDepthTextures.size());
-		for (size_t frameIndex = 0; frameIndex < pRenderTextures.size(); frameIndex++)
-		{
-			m_pRenderTextures.push_back(pRenderTextures[frameIndex].get());
-			m_pDepthTextures.push_back(pDepthTextures[frameIndex].get());
-		}
-
-		CreateRenderPass();
-		CreateFrameBuffers();
+		m_frameCount = renderTargets.GetFrameCount();
+		CreateRenderPass(renderTargets);
+		CreateFrameBuffers(renderTargets);
 		NAME_VK_OBJECT(m_renderPass, "RenderPass_ForwardTransparent");
 	}
 	ForwardTransparentRenderPass::~ForwardTransparentRenderPass()
@@ -41,29 +31,24 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	RenderTexture2d* ForwardTransparentRenderPass::GetRenderTexture(uint32_t frameIndex) const
+	const VkFramebuffer& ForwardTransparentRenderPass::GetFramebuffer(uint32_t frameIndex, uint32_t sceneColorIndex) const
 	{
-		if (frameIndex >= m_pRenderTextures.size())
-			throw std::out_of_range("ForwardTransparentRenderPass::GetRenderTexture(...) failed. Frame index out of range.");
-		return m_pRenderTextures[frameIndex];
-	}
-	DepthTexture2d* ForwardTransparentRenderPass::GetDepthTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pDepthTextures.size())
-			throw std::out_of_range("ForwardTransparentRenderPass::GetDepthTexture(...) failed. Frame index out of range.");
-		return m_pDepthTextures[frameIndex];
+		if (frameIndex >= m_frameCount || sceneColorIndex >= 2)
+			throw std::out_of_range("ForwardTransparentRenderPass: frame or scene color texture index out of range.");
+		uint32_t framebufferIndex = 2 * frameIndex + sceneColorIndex;
+		return m_framebuffers[framebufferIndex];
 	}
 
 
 
 	// Private methods:
-	void ForwardTransparentRenderPass::CreateRenderPass()
+	void ForwardTransparentRenderPass::CreateRenderPass(const RenderTargetResources& renderTargets)
 	{
 		// Attachments:
 		std::array<VkAttachmentDescription, 2> attachments{};
 		{
 			// Color attachment description:
-			attachments[0].format = m_pRenderTextures[0]->GetFormat();
+			attachments[0].format = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(0, 0).GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;						// load results after screen space compute.
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store final image for post processing + presenting.
@@ -73,7 +58,7 @@ namespace vulkanRendererBackend
 			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;					// layout for post processing compute shaders.
 
 			// Depth attachment description (transparent materials only read scene depth):
-			attachments[1].format = m_pDepthTextures[0]->GetFormat();
+			attachments[1].format = renderTargets.GetSceneDepthTexture(0).GetFormat();
 			attachments[1].samples = VK_SAMPLE_COUNT_1_BIT;									// due to deferred + forward rendering we handle msaa manually.
 			attachments[1].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;								// load depth produced by deferred geometry and forward opaque rendering.
 			attachments[1].storeOp = VK_ATTACHMENT_STORE_OP_STORE;							// store depth for further post processing if desired.
@@ -100,16 +85,14 @@ namespace vulkanRendererBackend
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
 
 		// Synchronization dependencies of individual subpasses:
-		// Screen space compute pass -> forward transparent pass:
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
-		dependency.dstSubpass = 0;                   // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // screen space compute and forward opaque producer stages.
-		dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward transparent shader, color, and depth consumer stages.
-		dependency.srcAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // complete compute reads/writes and preserve opaque attachment writes.
-		dependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead; // forward transparent shader reads, color loads/writes, and depth tests.
-		dependency.dependencyFlags = 0; 			// screen space compute may access arbitrary pixels.
-		// Forward transparent pass -> post processing is handled by a barrier + semaphore.
+		VkSubpassDependency screenSpaceComputeToForwardTransparentDependency = {};
+		screenSpaceComputeToForwardTransparentDependency.srcSubpass = VK_SUBPASS_EXTERNAL; // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
+		screenSpaceComputeToForwardTransparentDependency.dstSubpass = 0;                   // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
+		screenSpaceComputeToForwardTransparentDependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // screen space compute and forward opaque producer stages.
+		screenSpaceComputeToForwardTransparentDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward transparent shader, color, and depth consumer stages.
+		screenSpaceComputeToForwardTransparentDependency.srcAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // complete compute reads/writes and preserve opaque attachment writes.
+		screenSpaceComputeToForwardTransparentDependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead; // forward transparent shader reads, color loads/writes, and depth tests.
+		screenSpaceComputeToForwardTransparentDependency.dependencyFlags = 0; 			// screen space compute may access arbitrary pixels.
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -117,30 +100,34 @@ namespace vulkanRendererBackend
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
 		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
+		renderPassInfo.pDependencies = &screenSpaceComputeToForwardTransparentDependency;
 
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}
-	void ForwardTransparentRenderPass::CreateFrameBuffers()
+	void ForwardTransparentRenderPass::CreateFrameBuffers(const RenderTargetResources& renderTargets)
 	{
-		m_framebuffers.resize(m_pRenderTextures.size());
-		for (size_t frameIndex = 0; frameIndex < m_framebuffers.size(); frameIndex++)
+		const SceneColorTexture2dPair& sceneColorTexturePair = renderTargets.GetSceneColorTexturePair();
+		m_framebuffers.resize(2 * m_frameCount);
+		for (size_t framebufferIndex = 0; framebufferIndex < m_framebuffers.size(); framebufferIndex++)
 		{
+			const uint32_t frameIndex = static_cast<uint32_t>(framebufferIndex / 2);
+			const uint32_t sceneColorIndex = static_cast<uint32_t>(framebufferIndex % 2);
+			const RenderTexture2d& renderTexture = sceneColorTexturePair.GetRenderTargetTexture(frameIndex, sceneColorIndex);
 			std::array<VkImageView, 2> attachments =
 			{
-				m_pRenderTextures[frameIndex]->GetVkImageView(),
-				m_pDepthTextures[frameIndex]->GetVkImageView()
+				renderTexture.GetVkImageView(),
+				renderTargets.GetSceneDepthTexture(frameIndex).GetVkImageView()
 			};
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = m_pRenderTextures[frameIndex]->GetWidth();
-			framebufferInfo.height = m_pRenderTextures[frameIndex]->GetHeight();
+			framebufferInfo.width = renderTexture.GetWidth();
+			framebufferInfo.height = renderTexture.GetHeight();
 			framebufferInfo.layers = 1;
-			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[frameIndex]));
-			NAME_VK_OBJECT(m_framebuffers[frameIndex], "Framebuffer_ForwardTransparent_Frame" + std::to_string(frameIndex));
+			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[framebufferIndex]));
+			NAME_VK_OBJECT(m_framebuffers[framebufferIndex], "Framebuffer_ForwardTransparent_Frame" + std::to_string(frameIndex) + "_Color" + std::to_string(sceneColorIndex));
 		}
 	}
 }

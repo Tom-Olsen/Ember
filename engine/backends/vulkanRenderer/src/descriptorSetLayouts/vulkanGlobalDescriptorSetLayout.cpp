@@ -6,9 +6,8 @@
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
-#include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanSampler.h"
-#include "vulkanShadowRenderPass.h"
 #include "vulkanTexture.h"
 
 
@@ -24,7 +23,7 @@ namespace vulkanRendererBackend
 
     // Public Methods:
     // Init/Clear:
-    void GlobalDescriptorSetLayout::Init()
+    void GlobalDescriptorSetLayout::Init(const RenderTargetResources& renderTargets)
     {
         // Create descriptor set layout:
         {
@@ -79,13 +78,12 @@ namespace vulkanRendererBackend
         }
 
         // Bind shadow maps to descriptor sets:
-        ShadowRenderPass* pShadowRenderPass = RenderPassManager::GetShadowRenderPass();
-        Texture* pShadowMaps = static_cast<Texture*>(pShadowRenderPass->GetShadowMaps());
+        const Texture& shadowMaps = renderTargets.GetShadowMaps();
         for (int i = 0; i < Context::GetFramesInFlight(); i++)
         {
             VkDescriptorImageInfo imageInfo = {};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = pShadowMaps->GetVmaImage()->GetVkImageView();
+            imageInfo.imageView = shadowMaps.GetVmaImage()->GetVkImageView();
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];

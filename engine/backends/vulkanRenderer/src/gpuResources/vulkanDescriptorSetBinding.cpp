@@ -5,11 +5,11 @@
 #include "shaderReflection.h"
 #include "vmaBuffer.h"
 #include "vmaImage.h"
-#include "vulkanDescriptorTypeToString.h"
 #include "vulkanBuffer.h"
 #include "vulkanContext.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDepthTexture2dArray.h"
+#include "vulkanDescriptorTypeToString.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -19,11 +19,11 @@
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTexture3d.h"
 #include "vulkanSampleTextureCube.h"
+#include "vulkanShader.h"
+#include "vulkanShadowRenderPass.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
 #include "vulkanStorageTexture3d.h"
-#include "vulkanShader.h"
-#include "vulkanShadowRenderPass.h"
 #include "vulkanTexture.h"
 #include "vulkanTexture2d.h"
 #include "vulkanTexture3d.h"
@@ -118,9 +118,9 @@ namespace vulkanRendererBackend
 	{
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.m_hostData = source.m_uniformBufferMap.at(binding).uniformBuffer.m_hostData;
-		for (const auto& [binding, textureHandle] : source.m_textureStagingMap)
-			if (Texture* pTexture = textureHandle.TryGet())
-				SetTexture(m_bindingNames.at(binding), pTexture);
+		for (const auto& [binding, textureBinding] : source.m_textureStagingMap)
+			if (Texture* pTexture = textureBinding.textureHandle.TryGet())
+				StageTexture(m_bindingNames.at(binding), pTexture, textureBinding.descriptorLayout);
 		for (const auto& [binding, bufferHandle] : source.m_bufferStagingMap)
 			if (Buffer* pBuffer = bufferHandle.TryGet())
 				SetBuffer(m_bindingNames.at(binding), pBuffer);
@@ -147,19 +147,21 @@ namespace vulkanRendererBackend
 			LOG_WARN("DescriptorSetBinding::SetTexture(...) failed. pTexture is nullptr.");
 			return;
 		}
-
-		// If texture with 'name' doesn't exist, skip:
-		const uint32_t* pBinding = FindBindingIndex(name);
-		if (!pBinding)
+		StageTexture(name, pTexture, std::nullopt);
+	}
+	void DescriptorSetBinding::SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture, VkImageLayout descriptorLayout)
+	{
+		if (pTexture == nullptr)
+		{
+			LOG_WARN("DescriptorSetBinding::SetTexture(...) failed. pTexture is nullptr.");
 			return;
-		auto it = m_textureStagingMap.find(*pBinding);
-		if (it == m_textureStagingMap.end())
+		}
+		if (descriptorLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+		{
+			LOG_WARN("DescriptorSetBinding::SetTexture(...) failed. Descriptor layout must not be UNDEFINED.");
 			return;
-		
-		// Stage texture handle:
-		it->second = TextureHandle(*static_cast<Texture*>(pTexture));
-		for (std::unordered_set<uint32_t>& dirtyTextureBindings : m_dirtyTextureBindings)
-			dirtyTextureBindings.insert(*pBinding);
+		}
+		StageTexture(name, pTexture, descriptorLayout);
 	}
 	void DescriptorSetBinding::SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer)
 	{
@@ -457,7 +459,7 @@ namespace vulkanRendererBackend
 		{
 			if (Texture* pTexture = it->second.textureHandle.TryGet())
 				return pTexture;
-			return m_defaultTextureStagingMap.at(*pBinding).Get();
+			return m_defaultTextureStagingMap.at(*pBinding).textureHandle.Get();
 		}
 		return nullptr;
 	}
@@ -469,8 +471,8 @@ namespace vulkanRendererBackend
 	{
 		for (auto& [binding, uniformBufferBinding] : m_uniformBufferMap)
 			uniformBufferBinding.uniformBuffer.m_hostData = m_defaultUniformBufferData.at(binding);
-		for (const auto& [binding, textureHandle] : m_defaultTextureStagingMap)
-			SetTexture(m_bindingNames.at(binding), textureHandle.Get());
+		for (const auto& [binding, textureBinding] : m_defaultTextureStagingMap)
+			StageTexture(m_bindingNames.at(binding), textureBinding.textureHandle.Get(), textureBinding.descriptorLayout);
 		for (const auto& [binding, bufferHandle] : m_defaultBufferStagingMap)
 			SetBuffer(m_bindingNames.at(binding), bufferHandle.Get());
 	}
@@ -488,10 +490,11 @@ namespace vulkanRendererBackend
 		for (auto& [binding, textureBinding] : m_textureMaps[frameIndex])
 		{
 			ResolveTextureBinding(binding);
-			const TextureHandle& stagedTextureHandle = m_textureStagingMap.at(binding);
-			if (textureBinding.textureHandle != stagedTextureHandle || m_dirtyTextureBindings[frameIndex].contains(binding))
+			const TextureBinding& stagedTextureBinding = m_textureStagingMap.at(binding);
+			if (textureBinding.textureHandle != stagedTextureBinding.textureHandle || textureBinding.descriptorLayout != stagedTextureBinding.descriptorLayout || m_dirtyTextureBindings[frameIndex].contains(binding))
 			{
-				textureBinding.textureHandle = stagedTextureHandle;
+				textureBinding.textureHandle = stagedTextureBinding.textureHandle;
+				textureBinding.descriptorLayout = stagedTextureBinding.descriptorLayout;
 				UpdateDescriptorSet(frameIndex, textureBinding);
 				m_dirtyTextureBindings[frameIndex].erase(binding);
 			}
@@ -561,6 +564,22 @@ namespace vulkanRendererBackend
 		LOG_WARN("Shader '{}' does not have a binding named {}", m_debugName, name);
 		return nullptr;
 	}
+	void DescriptorSetBinding::StageTexture(const std::string& name, emberBackendInterface::ITexture* pTexture, std::optional<VkImageLayout> descriptorLayout)
+	{
+		// If texture with 'name' doesn't exist, skip:
+		const uint32_t* pBinding = FindBindingIndex(name);
+		if (!pBinding)
+			return;
+		auto it = m_textureStagingMap.find(*pBinding);
+		if (it == m_textureStagingMap.end())
+			return;
+
+		// Stage texture with the layout expected at shader execution:
+		it->second.textureHandle = TextureHandle(*static_cast<Texture*>(pTexture));
+		it->second.descriptorLayout = descriptorLayout;
+		for (std::unordered_set<uint32_t>& dirtyTextureBindings : m_dirtyTextureBindings)
+			dirtyTextureBindings.insert(*pBinding);
+	}
 
 
     
@@ -595,7 +614,7 @@ namespace vulkanRendererBackend
 	void DescriptorSetBinding::InitStagingMaps()
 	{
 		for (auto& [binding, textureBinding] : m_textureMaps[0])
-			m_textureStagingMap.emplace(binding, textureBinding.textureHandle);
+			m_textureStagingMap.emplace(binding, textureBinding);
 		for (auto& [binding, bufferBinding] : m_bufferMaps[0])
 			m_bufferStagingMap.emplace(binding, bufferBinding.bufferHandle);
 	}
@@ -621,12 +640,13 @@ namespace vulkanRendererBackend
 	}
 	Texture* DescriptorSetBinding::ResolveTextureBinding(uint32_t binding)
 	{
-		TextureHandle& textureHandle = m_textureStagingMap.at(binding);
-		if (Texture* pTexture = textureHandle.TryGet())
+		TextureBinding& textureBinding = m_textureStagingMap.at(binding);
+		if (Texture* pTexture = textureBinding.textureHandle.TryGet())
 			return pTexture;
 
-		Texture* pDefaultTexture = m_defaultTextureStagingMap.at(binding).Get();
-		SetTexture(m_bindingNames.at(binding), pDefaultTexture);
+		const TextureBinding& defaultTextureBinding = m_defaultTextureStagingMap.at(binding);
+		Texture* pDefaultTexture = defaultTextureBinding.textureHandle.Get();
+		StageTexture(m_bindingNames.at(binding), pDefaultTexture, defaultTextureBinding.descriptorLayout);
 		return pDefaultTexture;
 	}
 	Buffer* DescriptorSetBinding::ResolveBufferBinding(uint32_t binding)
@@ -677,7 +697,9 @@ namespace vulkanRendererBackend
 	{
 		Texture* pTexture = textureBinding.textureHandle.Get();
 		VkDescriptorImageInfo imageInfo = {};
-		if (textureBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
+		if (textureBinding.descriptorLayout)
+			imageInfo.imageLayout = *textureBinding.descriptorLayout;
+		else if (textureBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		else
 			imageInfo.imageLayout = pTexture->GetVmaImage()->GetImageLayout();

@@ -327,8 +327,8 @@ namespace vulkanRendererBackend
 				VkRenderPass vkRenderPass = RenderPassManager::GetForwardOpaqueRenderPass()->GetVkRenderPass();
 				if (pipelineRenderMode == emberCommon::ForwardRenderMode::transparent)
 				{
-					VkRenderPass vkRenderPass = RenderPassManager::GetForwardTransparentRenderPass()->GetVkRenderPass();
-					PipelineKey forwardPipelineKey = PipelineKey::Create<RenderStage::forwardTransparent>(pipelineRenderMode, vertexMemoryLayout);
+					vkRenderPass = RenderPassManager::GetForwardTransparentRenderPass()->GetVkRenderPass();
+					forwardPipelineKey = PipelineKey::Create<RenderStage::forwardTransparent>(pipelineRenderMode, vertexMemoryLayout);
 				}
 				materialShader.m_pipelines.emplace(
 					forwardPipelineKey,

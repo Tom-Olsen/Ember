@@ -11,8 +11,10 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class Async;
 	class ComputeQueue;
+	class DepthTexture2d;
 	class PostRenderComputeQueue;
 	class SceneColorTexture2dPair;
+	class ScreenSpaceComputeQueue;
 
 
 
@@ -22,7 +24,7 @@ namespace vulkanRendererBackend
 		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
 		std::unique_ptr<ComputeQueue> m_pPreRenderComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pMidRenderComputeQueue;
-		std::unique_ptr<ComputeQueue> m_pScreenSpaceComputeQueue;
+		std::unique_ptr<ScreenSpaceComputeQueue> m_pScreenSpaceComputeQueue;
 		std::unique_ptr<PostRenderComputeQueue> m_pPostRenderComputeQueue;
 
 	public: // Methods:
@@ -42,7 +44,7 @@ namespace vulkanRendererBackend
 		Async* GetAsyncCompute();
 		ComputeQueue* GetPreRenderCompute();
 		ComputeQueue* GetMidRenderCompute();
-		ComputeQueue* GetScreenSpaceCompute();
+		ScreenSpaceComputeQueue* GetScreenSpaceCompute();
 		PostRenderComputeQueue* GetPostRenderCompute();
 		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPreRenderComputeInterfaceHandle() override;
@@ -51,7 +53,7 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ICompute::IPostRenderQueue* GetPostRenderComputeInterfaceHandle() override;
 
 		// Frame lifecycle:
-		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair);
+		uint32_t UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair, DepthTexture2d& sceneDepth);
 		void CommitFrame(uint32_t frameIndex);
 		void RetireFrame(uint32_t frameIndex);
 		void RetireAllFrames();

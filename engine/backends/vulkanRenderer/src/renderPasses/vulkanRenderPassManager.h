@@ -1,7 +1,5 @@
 #pragma once
-#include <cstdint>
 #include <memory>
-#include <vector>
 
 
 
@@ -9,14 +7,13 @@ namespace vulkanRendererBackend
 {
     class DeferredGeometryRenderPass;
     class DeferredLightingRenderPass;
-    class DepthTexture2d;
     class ShadowRenderPass;
     class ForwardOpaqueRenderPass;
     class ForwardTransparentRenderPass;
     class GizmoRenderPass;
     class OutlineRenderPass;
     class PresentRenderPass;
-    class RenderTexture2d;
+    class RenderTargetResources;
 
 
 
@@ -38,13 +35,7 @@ namespace vulkanRendererBackend
 
     public: // Methods
 	    // Initialization/Cleanup:
-        static void Init(
-            uint32_t renderWidth,
-            uint32_t renderHeight,
-            uint32_t shadowMapResolution,
-            uint32_t maxLightsCount,
-            const std::vector<std::unique_ptr<RenderTexture2d>>& pSceneColorTextures,
-            const std::vector<std::unique_ptr<DepthTexture2d>>& pSceneDepthTextures);
+        static void Init(const RenderTargetResources& renderTargets);
         static void Clear();
         static void RecreateRenderPasses();
 

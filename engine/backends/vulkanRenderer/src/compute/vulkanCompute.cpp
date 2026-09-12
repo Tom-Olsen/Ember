@@ -1,7 +1,10 @@
 #include "vulkanCompute.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanComputeQueue.h"
+#include "vulkanDepthTexture2d.h"
 #include "vulkanPostRenderComputeQueue.h"
+#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanScreenSpaceComputeQueue.h"
 
 
 
@@ -14,7 +17,7 @@ namespace vulkanRendererBackend
 		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
 		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
 		m_pMidRenderComputeQueue = std::make_unique<ComputeQueue>();
-		m_pScreenSpaceComputeQueue = std::make_unique<ComputeQueue>();
+		m_pScreenSpaceComputeQueue = std::make_unique<ScreenSpaceComputeQueue>();
 		m_pPostRenderComputeQueue = std::make_unique<PostRenderComputeQueue>();
 	}
 	Compute::~Compute()
@@ -43,7 +46,7 @@ namespace vulkanRendererBackend
 	{
 		return m_pMidRenderComputeQueue.get();
 	}
-	ComputeQueue* Compute::GetScreenSpaceCompute()
+	ScreenSpaceComputeQueue* Compute::GetScreenSpaceCompute()
 	{
 		return m_pScreenSpaceComputeQueue.get();
 	}
@@ -75,12 +78,14 @@ namespace vulkanRendererBackend
 
 
 	// Frame lifecycle:
-	void Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
+	uint32_t Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair, DepthTexture2d& sceneDepth)
 	{
 		GetPreRenderCompute()->UpdateShaderData(frameIndex);
 		GetMidRenderCompute()->UpdateShaderData(frameIndex);
-		GetScreenSpaceCompute()->UpdateShaderData(frameIndex);
+		GetScreenSpaceCompute()->UpdateShaderData(frameIndex, sceneColorTexturePair, sceneDepth);
+		uint32_t sceneColorTextureIndex = sceneColorTexturePair.GetCurrentTextureIndex(frameIndex);
 		GetPostRenderCompute()->UpdateShaderData(frameIndex, sceneColorTexturePair);
+		return sceneColorTextureIndex;
 	}
 	void Compute::CommitFrame(uint32_t frameIndex)
 	{

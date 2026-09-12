@@ -19,6 +19,7 @@
 #include "vulkanOutlineRenderPass.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
 #include <algorithm>
 #include <cstdint>
@@ -45,8 +46,8 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = pOutlineRenderPass->GetRenderTexture(frameContext.frameIndex)->GetWidth();
-			viewport.height = pOutlineRenderPass->GetRenderTexture(frameContext.frameIndex)->GetHeight();
+			viewport.width = frameContext.renderTargets.GetOutlineTexture(frameContext.frameIndex).GetWidth();
+			viewport.height = frameContext.renderTargets.GetOutlineTexture(frameContext.frameIndex).GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -136,6 +137,6 @@ namespace vulkanRendererBackend
 		VKA(vkEndCommandBuffer(commandBuffer));
 
 		// Align renderTexture layout with final renderPass layout: 
-		pOutlineRenderPass->GetRenderTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+		frameContext.renderTargets.GetOutlineTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 }

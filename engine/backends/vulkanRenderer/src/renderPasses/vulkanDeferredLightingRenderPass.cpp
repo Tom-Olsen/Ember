@@ -1,12 +1,10 @@
 #include "vulkanDeferredLightingRenderPass.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
-#include "vulkanDeferredGeometryRenderPass.h"
-#include "vulkanDepthTexture2d.h"
-#include "vulkanGBufferTexture2d.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include <stdexcept>
+#include "vulkanSceneColorTexture2dPair.h"
 #include <string>
 
 
@@ -15,30 +13,10 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	DeferredLightingRenderPass::DeferredLightingRenderPass(
-		const std::vector<std::unique_ptr<RenderTexture2d>>& pSceneColorTextures,
-		const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures,
-		const DeferredGeometryRenderPass& deferredGeometryRenderPass)
+	DeferredLightingRenderPass::DeferredLightingRenderPass(const RenderTargetResources& renderTargets)
 	{
-		if (pSceneColorTextures.empty() || pSceneColorTextures.size() != pDepthTextures.size())
-			throw std::invalid_argument("DeferredLightingRenderPass::DeferredLightingRenderPass(...) failed. Scene texture counts must match and must not be zero.");
-
-		m_pSceneColorTextures.reserve(pSceneColorTextures.size());
-		m_pAlbedoTextures.reserve(pSceneColorTextures.size());
-		m_pNormalTextures.reserve(pSceneColorTextures.size());
-		m_pSurfacePropertiesTextures.reserve(pSceneColorTextures.size());
-		m_pDepthTextures.reserve(pSceneColorTextures.size());
-		for (uint32_t frameIndex = 0; frameIndex < pSceneColorTextures.size(); frameIndex++)
-		{
-			m_pSceneColorTextures.push_back(pSceneColorTextures[frameIndex].get());
-			m_pAlbedoTextures.push_back(deferredGeometryRenderPass.GetAlbedoTexture(frameIndex));
-			m_pNormalTextures.push_back(deferredGeometryRenderPass.GetNormalTexture(frameIndex));
-			m_pSurfacePropertiesTextures.push_back(deferredGeometryRenderPass.GetSurfacePropertiesTexture(frameIndex));
-			m_pDepthTextures.push_back(pDepthTextures[frameIndex].get());
-		}
-
-		CreateRenderPass();
-		CreateFrameBuffers();
+		CreateRenderPass(renderTargets);
+		CreateFrameBuffers(renderTargets);
 		NAME_VK_OBJECT(m_renderPass, "RenderPass_DeferredLighting");
 	}
 	DeferredLightingRenderPass::~DeferredLightingRenderPass()
@@ -48,52 +26,18 @@ namespace vulkanRendererBackend
 
 
 
-	// Getters:
-	RenderTexture2d* DeferredLightingRenderPass::GetSceneColorTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pSceneColorTextures.size())
-			throw std::out_of_range("DeferredLightingRenderPass::GetSceneColorTexture(...) failed. Frame index out of range.");
-		return m_pSceneColorTextures[frameIndex];
-	}
-	GBufferTexture2d* DeferredLightingRenderPass::GetAlbedoTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pAlbedoTextures.size())
-			throw std::out_of_range("DeferredLightingRenderPass::GetAlbedoTexture(...) failed. Frame index out of range.");
-		return m_pAlbedoTextures[frameIndex];
-	}
-	GBufferTexture2d* DeferredLightingRenderPass::GetNormalTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pNormalTextures.size())
-			throw std::out_of_range("DeferredLightingRenderPass::GetNormalTexture(...) failed. Frame index out of range.");
-		return m_pNormalTextures[frameIndex];
-	}
-	GBufferTexture2d* DeferredLightingRenderPass::GetSurfacePropertiesTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pSurfacePropertiesTextures.size())
-			throw std::out_of_range("DeferredLightingRenderPass::GetSurfacePropertiesTexture(...) failed. Frame index out of range.");
-		return m_pSurfacePropertiesTextures[frameIndex];
-	}
-	DepthTexture2d* DeferredLightingRenderPass::GetDepthTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pDepthTextures.size())
-			throw std::out_of_range("DeferredLightingRenderPass::GetDepthTexture(...) failed. Frame index out of range.");
-		return m_pDepthTextures[frameIndex];
-	}
-
-
-
 	// Private methods:
-	void DeferredLightingRenderPass::CreateRenderPass()
+	void DeferredLightingRenderPass::CreateRenderPass(const RenderTargetResources& renderTargets)
 	{
 		// Attachments:
 		VkAttachmentDescription colorAttachment = {};
-		colorAttachment.format = m_pSceneColorTextures[0]->GetFormat();
+		colorAttachment.format = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(0, 0).GetFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_GENERAL;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		// Attachment references:
@@ -127,19 +71,20 @@ namespace vulkanRendererBackend
 
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}
-	void DeferredLightingRenderPass::CreateFrameBuffers()
+	void DeferredLightingRenderPass::CreateFrameBuffers(const RenderTargetResources& renderTargets)
 	{
-		m_framebuffers.resize(m_pSceneColorTextures.size());
+		m_framebuffers.resize(renderTargets.GetFrameCount());
 		for (size_t frameIndex = 0; frameIndex < m_framebuffers.size(); frameIndex++)
 		{
-			VkImageView attachment = m_pSceneColorTextures[frameIndex]->GetVkImageView();
+			const RenderTexture2d& sceneColorTexture = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, 0);
+			VkImageView attachment = sceneColorTexture.GetVkImageView();
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &attachment;
-			framebufferInfo.width = m_pSceneColorTextures[frameIndex]->GetWidth();
-			framebufferInfo.height = m_pSceneColorTextures[frameIndex]->GetHeight();
+			framebufferInfo.width = sceneColorTexture.GetWidth();
+			framebufferInfo.height = sceneColorTexture.GetHeight();
 			framebufferInfo.layers = 1;
 			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[frameIndex]));
 			NAME_VK_OBJECT(m_framebuffers[frameIndex], "Framebuffer_DeferredLighting_Frame" + std::to_string(frameIndex));

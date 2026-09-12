@@ -22,7 +22,9 @@
 #include "vulkanPipeline.h"
 #include "vulkanRenderPass.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
+#include "vulkanSceneColorTexture2dPair.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -42,19 +44,24 @@ namespace vulkanRendererBackend
 
 		RenderPass* pRenderPass;
 		RenderTexture2d* pRenderTexture;
+		VkFramebuffer framebuffer;
 		const std::vector<ForwardDrawCall*>* pDrawCallPointers;
 		if constexpr (stage == RenderStage::forwardOpaque)
 		{
 			ForwardOpaqueRenderPass* pForwardOpaqueRenderPass = RenderPassManager::GetForwardOpaqueRenderPass();
 			pRenderPass = pForwardOpaqueRenderPass;
-			pRenderTexture = pForwardOpaqueRenderPass->GetRenderTexture(frameContext.frameIndex);
+			// Forward opaque rendering always renders to 0th sceneColor texture:
+			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, 0);
+			framebuffer = pForwardOpaqueRenderPass->GetFramebuffer(frameContext.frameIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardOpaqueDrawCallPointers;
 		}
 		else
 		{
 			ForwardTransparentRenderPass* pForwardTransparentRenderPass = RenderPassManager::GetForwardTransparentRenderPass();
 			pRenderPass = pForwardTransparentRenderPass;
-			pRenderTexture = pForwardTransparentRenderPass->GetRenderTexture(frameContext.frameIndex);
+			// Forward transparent rendering renders to renderTexture 0 or 1, depending on how many screenSpace compute shaders ise inOutImage and swap the two:
+			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, frameContext.transparentSceneColorIndex);
+			framebuffer = pForwardTransparentRenderPass->GetFramebuffer(frameContext.frameIndex, frameContext.transparentSceneColorIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardTransparentDrawCallPointers;
 		}
 
@@ -85,7 +92,7 @@ namespace vulkanRendererBackend
 			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pRenderPass->GetFramebuffer(frameContext.frameIndex);
+			renderPassBeginInfo.framebuffer = framebuffer;
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;

@@ -3,6 +3,7 @@
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
 #include <array>
 
@@ -12,11 +13,10 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
     // Constructor/Destructor:
-	OutlineRenderPass::OutlineRenderPass(uint32_t renderWidth, uint32_t renderHeight)
+	OutlineRenderPass::OutlineRenderPass(const RenderTargetResources& renderTargets)
 	{
-		CreateRenderTextures(renderWidth, renderHeight);
-		CreateRenderPass();
-		CreateFrameBuffers();
+		CreateRenderPass(renderTargets);
+		CreateFrameBuffers(renderTargets);
 		NAME_VK_OBJECT(m_renderPass, "RenderPass_Outline");
 	}
 	OutlineRenderPass::~OutlineRenderPass()
@@ -26,42 +26,12 @@ namespace vulkanRendererBackend
 
 
 
-	// Getters:
-	RenderTexture2d* OutlineRenderPass::GetRenderTexture(uint32_t frameIndex) const
-	{
-		if (frameIndex >= m_pRenderTextures.size())
-			return nullptr;
-		return m_pRenderTextures[frameIndex].get();
-	}
-
-
-
 	// Private methods:
-	void OutlineRenderPass::CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight)
-	{
-		const uint32_t framesInFlight = Context::GetFramesInFlight();
-		VkFormat renderTextureFormat = VK_FORMAT_R8_UNORM;
-
-		m_pRenderTextures.reserve(framesInFlight);
-		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
-		{
-			m_pRenderTextures.push_back(std::make_unique<RenderTexture2d>(renderTextureFormat, renderWidth, renderHeight));
-			m_pRenderTextures[frameIndex]->SetDebugName("RenderTexture_Outline_Frame" + std::to_string(frameIndex));
-
-			// Initialize the layout tracked by VmaImage before the first render pass use:
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
-			m_pRenderTextures[frameIndex]->GetVmaImage()->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-	}
-	void OutlineRenderPass::CreateRenderPass()
+	void OutlineRenderPass::CreateRenderPass(const RenderTargetResources& renderTargets)
 	{
         // Color attachment description:
 		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = m_pRenderTextures[0]->GetFormat();
+		colorAttachment.format = renderTargets.GetOutlineTexture(0).GetFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;               // clear framebuffer to black before rendering.
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;             // stored for later mid-render compute consumption.
@@ -112,22 +82,23 @@ namespace vulkanRendererBackend
 
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}
-	void OutlineRenderPass::CreateFrameBuffers()
+	void OutlineRenderPass::CreateFrameBuffers(const RenderTargetResources& renderTargets)
 	{
-		size_t imageCount = Context::GetFramesInFlight();
+		size_t imageCount = renderTargets.GetFrameCount();
 		m_framebuffers.resize(imageCount);
 
 		for (size_t i = 0; i < imageCount; i++)
 		{
 			// order of attachments is important!
-			VkImageView attachment = m_pRenderTextures[i]->GetVmaImage()->GetVkImageView();
+			const RenderTexture2d& outlineTexture = renderTargets.GetOutlineTexture(i);
+			VkImageView attachment = outlineTexture.GetVmaImage()->GetVkImageView();
 
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
 			framebufferInfo.pAttachments = &attachment;
-			framebufferInfo.width = m_pRenderTextures[i]->GetWidth();
-			framebufferInfo.height = m_pRenderTextures[i]->GetHeight();
+			framebufferInfo.width = outlineTexture.GetWidth();
+			framebufferInfo.height = outlineTexture.GetHeight();
 			framebufferInfo.layers = 1;
 			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]));
 			NAME_VK_OBJECT(m_framebuffers[i], "Framebuffer_Outline_Frame" + std::to_string(i));

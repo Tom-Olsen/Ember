@@ -8,7 +8,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declaration:
-	class Texture;
+	class RenderTargetResources;
 
 
 
@@ -21,7 +21,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Init/Clear:
-		static void Init();
+		static void Init(const RenderTargetResources& renderTargets);
 		static void Clear();
 
 		// Getters:

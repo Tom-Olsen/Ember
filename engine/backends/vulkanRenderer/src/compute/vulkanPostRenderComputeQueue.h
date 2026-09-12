@@ -23,7 +23,7 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class ComputeShader;
 	class SceneColorTexture2dPair;
-	enum class PostProcessingMode : uint8_t;
+	enum class SceneColorBindingMode : uint8_t;
 
 
 
@@ -49,7 +49,7 @@ namespace vulkanRendererBackend
 		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair);
 
 	private: // Methods:
-		PostProcessingMode DeterminePostProcessingMode(const ComputeShader& computeShader) const;
-		void ValidatePostProcessingImage(const ComputeShader& computeShader, const emberSpirvReflect::DescriptorReflection& descriptorReflection, bool allowSampledImage, bool requireReadable, bool requireWritable) const;
+		SceneColorBindingMode DetermineSceneColorBindingMode(const ComputeShader& computeShader) const;
+		void ValidateSceneColorImage(const ComputeShader& computeShader, const emberSpirvReflect::DescriptorReflection& descriptorReflection, bool allowSampledImage, bool requireReadable, bool requireWritable) const;
 	};
 }

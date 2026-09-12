@@ -144,8 +144,8 @@ namespace emberCore
 			static void Init(emberBackendInterface::ICompute::IQueue* pIScreenSpace);
 			static void Clear();
 
-			// Workload recording:
-			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();

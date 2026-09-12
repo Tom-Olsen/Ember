@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 
 
 
-	enum class PostProcessingMode : uint8_t
+	enum class SceneColorBindingMode : uint8_t
 	{
 		none,
 		inPlace,
@@ -31,8 +31,8 @@ namespace vulkanRendererBackend
 		DescriptorSetBindingHandle callDescriptorSetBindingHandle;			// Borrowed from pool for dispatch calls, empty for barriers.
 		AccessMask srcAccessMask;											// Only applies to barriers.
 		AccessMask dstAccessMask;											// Only applies to barriers.
-		PostProcessingMode postProcessingMode = PostProcessingMode::none;	// Determines how postRenderCompute call accesses sceneColor textures.
-		bool useRenderTextureSize = false; 									// Determines whether postRenderCompute call provides own threadCount or uses renderTexture.size.
+		SceneColorBindingMode sceneColorBindingMode = SceneColorBindingMode::none;	// Determines how this call automatically binds scene color textures.
+		bool useRenderTextureSize = false; 											// Determines whether this call provides its own threadCount or uses the render texture size.
 
 		ComputeShader* GetComputeShader() const;
 		bool IsBarrier() const;

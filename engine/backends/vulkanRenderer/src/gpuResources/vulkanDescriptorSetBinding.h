@@ -7,6 +7,7 @@
 #include "vulkanTextureHandle.h"
 #include "vulkanUniformBuffer.h"
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -49,6 +50,7 @@ namespace vulkanRendererBackend
 		uint32_t binding;
 		TextureHandle textureHandle;
 		VkDescriptorType descriptorType;
+		std::optional<VkImageLayout> descriptorLayout; // Layout expected at shader execution; empty uses the descriptor-type default.
 	};
 	struct BufferBinding
 	{
@@ -88,12 +90,12 @@ namespace vulkanRendererBackend
 		std::vector<std::unordered_set<uint32_t>> m_dirtyBufferBindings;
 
 		// UniformBuffer does not need a staging map, as it contains a host and device buffer, where the host buffer acts as a staging buffer:
-		std::unordered_map<uint32_t, TextureHandle> m_textureStagingMap;
+		std::unordered_map<uint32_t, TextureBinding> m_textureStagingMap;
 		std::unordered_map<uint32_t, BufferHandle> m_bufferStagingMap;
 
 		// Defaults for reset when a pooled descriptorSetBinding is returned:
 		std::unordered_map<uint32_t, std::vector<char>> m_defaultUniformBufferData;
-		std::unordered_map<uint32_t, TextureHandle> m_defaultTextureStagingMap;
+		std::unordered_map<uint32_t, TextureBinding> m_defaultTextureStagingMap;
 		std::unordered_map<uint32_t, BufferHandle> m_defaultBufferStagingMap;
 
 	public: // Methods:
@@ -113,6 +115,8 @@ namespace vulkanRendererBackend
 
 		// Setters:
 		void SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture) override;
+		// Descriptor layout at shader execution time; does not transition the image.
+		void SetTexture(const std::string& name, emberBackendInterface::ITexture* pTexture, VkImageLayout descriptorLayout);
 		void SetBuffer(const std::string& name, emberBackendInterface::IBuffer* pBuffer) override;
 		
 		// Uniform Buffer Setters:
@@ -204,6 +208,7 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		const uint32_t* FindBindingIndex(const std::string& name) const;
+		void StageTexture(const std::string& name, emberBackendInterface::ITexture* pTexture, std::optional<VkImageLayout> descriptorLayout);
 
 		// Initializers:
 		void InitUniformBufferBinding(uint32_t binding, const emberBufferLayout::BufferLayout& bufferLayout);

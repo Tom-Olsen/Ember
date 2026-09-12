@@ -20,7 +20,7 @@ namespace vulkanRendererBackend
 
 	/// <summary>
 	/// Owns the two stable scene-color textures for every frame in flight and tracks
-	/// which one currently contains the latest result of the post-processing chain.
+	/// which one currently contains the latest result of the screen-space and post-processing chain.
 	/// </summary>
 	class SceneColorTexture2dPair
 	{
@@ -48,16 +48,18 @@ namespace vulkanRendererBackend
 		void Swap(uint32_t frameIndex);
 
 		// Getters:
+		uint32_t GetCurrentTextureIndex(uint32_t frameIndex) const;
 		uint32_t GetWidth() const;
 		uint32_t GetHeight() const;
 		RenderTexture2d* GetCurrentTexture(uint32_t frameIndex) const;
 		RenderTexture2d* GetNextTexture(uint32_t frameIndex) const;
 		RenderTexture2d* GetFinalTexture() const;
-		const std::vector<std::unique_ptr<RenderTexture2d>>& GetRenderTargetTextures() const;
+		RenderTexture2d& GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex);
+		const RenderTexture2d& GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex) const;
 
 		// Layout transitions:
-		void PrepareForPostProcessing(VkCommandBuffer commandBuffer, uint32_t frameIndex);
-		void PrepareCurrentForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex);
+		void TransitionLayoutForCompute(VkCommandBuffer commandBuffer, uint32_t frameIndex);
+		void TransitionLayoutOfCurrenForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex);
 
 	private: // Methods:
 		RenderTexture2d* GetTexture(uint32_t frameIndex, uint32_t textureIndex) const;

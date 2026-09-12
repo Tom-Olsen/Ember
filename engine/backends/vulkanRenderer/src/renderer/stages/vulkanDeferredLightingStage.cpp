@@ -11,7 +11,9 @@
 #include "vulkanMaterial.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
+#include "vulkanSceneColorTexture2dPair.h"
 #include <vulkan/vulkan.h>
 
 
@@ -35,8 +37,9 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = pDeferredLightingRenderPass->GetSceneColorTexture(frameContext.frameIndex)->GetWidth();
-			viewport.height = pDeferredLightingRenderPass->GetSceneColorTexture(frameContext.frameIndex)->GetHeight();
+			RenderTexture2d& sceneColorTexture = frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, 0);
+			viewport.width = sceneColorTexture.GetWidth();
+			viewport.height = sceneColorTexture.GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -79,7 +82,7 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			pDeferredLightingRenderPass->GetSceneColorTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+			sceneColorTexture.GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}

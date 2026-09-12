@@ -5,6 +5,7 @@ ToDo:
 - allow renderWidth/renderHeight to change during runtime.
 - add a GetShadowShaderProperties to MeshRenderer and allow in vulkanBackend for shadow call descriptorSets to be supplied externally, so we can cash shadow call descriptors the same way draw descriptors are cashed.
 - there seems to be a memory leak or similar. Occasionally the defaultProject crashes with a SegFault.
+- remove vulkanPostRenderComputeQueue.h/cpp and vulkanScrenSpaceCompute.h/cpp. Move their special RecordComputeShader methods into the basic ComputeQueue class via additional flags in the RecordComputeSahder method. Then delete the special interfaces from iCompute.h and pipe the queue calls in the core appropriatly.
 
 - vulkanPoolManager shouldnt rly exist? split it into vulkanCallDescriptorPoolManager + vulkanStagingBufferPoolManager?
 - rotations are sometimes given in degrees sometimes in radians. decide for one and make it consistent

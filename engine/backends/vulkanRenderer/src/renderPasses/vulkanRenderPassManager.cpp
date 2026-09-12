@@ -8,6 +8,7 @@
 #include "vulkanOutlineRenderPass.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderPass.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanShadowRenderPass.h"
 
 
@@ -29,25 +30,19 @@ namespace vulkanRendererBackend
 
     // Public methods:
 	// Initialization/Cleanup:
-	void RenderPassManager::Init(
-		uint32_t renderWidth,
-		uint32_t renderHeight,
-		uint32_t shadowMapResolution,
-		uint32_t maxLightsCount,
-		const std::vector<std::unique_ptr<RenderTexture2d>>& pSceneColorTextures,
-		const std::vector<std::unique_ptr<DepthTexture2d>>& pSceneDepthTextures)
+	void RenderPassManager::Init(const RenderTargetResources& renderTargets)
 	{
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
 
-		s_pGizmoRenderPass = std::make_unique<GizmoRenderPass>(renderWidth, renderHeight);
-		s_pOutlineRenderPass = std::make_unique<OutlineRenderPass>(renderWidth, renderHeight);
-		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>(shadowMapResolution, maxLightsCount);
-		s_pDeferredGeometryRenderPass = std::make_unique<DeferredGeometryRenderPass>(renderWidth, renderHeight, pSceneDepthTextures);
-		s_pDeferredLightingRenderPass = std::make_unique<DeferredLightingRenderPass>(pSceneColorTextures, pSceneDepthTextures, *s_pDeferredGeometryRenderPass);
-		s_pForwardOpaqueRenderPass = std::make_unique<ForwardOpaqueRenderPass>(pSceneColorTextures, pSceneDepthTextures);
-		s_pForwardTransparentRenderPass = std::make_unique<ForwardTransparentRenderPass>(pSceneColorTextures, pSceneDepthTextures);
+		s_pGizmoRenderPass = std::make_unique<GizmoRenderPass>(renderTargets);
+		s_pOutlineRenderPass = std::make_unique<OutlineRenderPass>(renderTargets);
+		s_pShadowRenderPass = std::make_unique<ShadowRenderPass>(renderTargets);
+		s_pDeferredGeometryRenderPass = std::make_unique<DeferredGeometryRenderPass>(renderTargets);
+		s_pDeferredLightingRenderPass = std::make_unique<DeferredLightingRenderPass>(renderTargets);
+		s_pForwardOpaqueRenderPass = std::make_unique<ForwardOpaqueRenderPass>(renderTargets);
+		s_pForwardTransparentRenderPass = std::make_unique<ForwardTransparentRenderPass>(renderTargets);
 		s_pPresentRenderPass = std::make_unique<PresentRenderPass>();
 	}
 	void RenderPassManager::Clear()

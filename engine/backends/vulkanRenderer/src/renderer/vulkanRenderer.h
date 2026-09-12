@@ -35,16 +35,14 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class Compute;
 	class ComputeShader;
-	class DepthTexture2d;
 	class DescriptorSetBinding;
 	class Mesh;
 	class Material;
 	class RenderGraph;
+	class RenderTargetResources;
 	struct FrameRenderData;
 	struct FrameResources;
-	class SceneColorTexture2dPair;
 	class StorageBuffer;
-	class StorageTexture2d;
 
 
 
@@ -59,6 +57,7 @@ namespace vulkanRendererBackend
 		// Render resources:
 		std::unique_ptr<RenderGraph> m_pRenderGraph;
 		std::vector<FrameResources> m_frameResources;
+		std::unique_ptr<RenderTargetResources> m_pRenderTargets;
 
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
@@ -90,12 +89,6 @@ namespace vulkanRendererBackend
 		emberCommon::Camera m_activeCamera;
 		std::vector<FrameRenderData> m_frameRenderData;
 		std::vector<std::array<VkDescriptorSet, 3>> m_staticDescriptorSets;	// (global/scen/frame) per frame in flight.
-
-		// Scene textures:
-		std::unique_ptr<SceneColorTexture2dPair> m_pSceneColorTexturePair;
-		std::vector<std::unique_ptr<DepthTexture2d>> m_pSceneDepthTextures;
-		std::vector<std::unique_ptr<StorageTexture2d>> m_pExpandedOutlineMaskTextures;
-		std::vector<std::unique_ptr<StorageTexture2d>> m_pHorizontalExpandedOutlineMaskTextures;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -186,7 +179,6 @@ namespace vulkanRendererBackend
 		void ResetFrameCalls();
 
 		// Other:
-		void CreateSceneTextures(uint32_t renderWidth, uint32_t renderHeight);
 		void RebuildSwapchain();
 		bool AcquireImage();
 		void SortDrawCallPointers();

@@ -1,7 +1,5 @@
 #pragma once
 #include "vulkanRenderPass.h"
-#include <memory>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -9,8 +7,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class DepthTexture2d;
-	class RenderTexture2d;
+	class RenderTargetResources;
 
 
 
@@ -20,13 +17,10 @@ namespace vulkanRendererBackend
 	class ForwardTransparentRenderPass : public RenderPass
 	{
 	private: // Members:
-		std::vector<RenderTexture2d*> m_pRenderTextures;
-		std::vector<DepthTexture2d*> m_pDepthTextures;
+		uint32_t m_frameCount;
 
 	public: // Methods:
-		ForwardTransparentRenderPass(
-			const std::vector<std::unique_ptr<RenderTexture2d>>& pRenderTextures,
-			const std::vector<std::unique_ptr<DepthTexture2d>>& pDepthTextures);
+		ForwardTransparentRenderPass(const RenderTargetResources& renderTargets);
 		~ForwardTransparentRenderPass();
 
 		// Non-copyable:
@@ -38,11 +32,10 @@ namespace vulkanRendererBackend
 		ForwardTransparentRenderPass& operator=(ForwardTransparentRenderPass&& other) noexcept = default;
 
 		// Getters:
-		RenderTexture2d* GetRenderTexture(uint32_t frameIndex) const;
-		DepthTexture2d* GetDepthTexture(uint32_t frameIndex) const;
+		const VkFramebuffer& GetFramebuffer(uint32_t frameIndex, uint32_t sceneColorIndex) const;
 
 	private: // Methods:
-		void CreateRenderPass();
-		void CreateFrameBuffers();
+		void CreateRenderPass(const RenderTargetResources& renderTargets);
+		void CreateFrameBuffers(const RenderTargetResources& renderTargets);
 	};
 }

@@ -66,6 +66,10 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
+	uint32_t SceneColorTexture2dPair::GetCurrentTextureIndex(uint32_t frameIndex) const
+	{
+		return m_currentTextureIndices.at(frameIndex);
+	}
 	uint32_t SceneColorTexture2dPair::GetWidth() const
 	{
 		return m_pTextures[0][0]->GetWidth();
@@ -86,15 +90,19 @@ namespace vulkanRendererBackend
 	{
 		return m_pFinalTexture;
 	}
-	const std::vector<std::unique_ptr<RenderTexture2d>>& SceneColorTexture2dPair::GetRenderTargetTextures() const
+	RenderTexture2d& SceneColorTexture2dPair::GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex)
 	{
-		return m_pTextures[0];
+		return *GetTexture(frameIndex, textureIndex);
+	}
+	const RenderTexture2d& SceneColorTexture2dPair::GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex) const
+	{
+		return *GetTexture(frameIndex, textureIndex);
 	}
 
 
 
 	// Layout transitions:
-	void SceneColorTexture2dPair::PrepareForPostProcessing(VkCommandBuffer commandBuffer, uint32_t frameIndex)
+	void SceneColorTexture2dPair::TransitionLayoutForCompute(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 	{
 		for (const std::vector<std::unique_ptr<RenderTexture2d>>& pTextures : m_pTextures)
 		{
@@ -110,7 +118,7 @@ namespace vulkanRendererBackend
 				AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite);
 		}
 	}
-	void SceneColorTexture2dPair::PrepareCurrentForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex)
+	void SceneColorTexture2dPair::TransitionLayoutOfCurrenForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 	{
 		VmaImage* pImage = GetCurrentTexture(frameIndex)->GetVmaImage();
 		pImage->TransitionLayout(
@@ -129,6 +137,8 @@ namespace vulkanRendererBackend
 	{
 		if (textureIndex >= m_pTextures.size())
 			throw std::out_of_range("SceneColorTexture2dPair::GetTexture(...) failed. Texture index out of range.");
+		if (frameIndex >= m_pTextures[textureIndex].size())
+			throw std::out_of_range("SceneColorTexture2dPair::GetTexture(...) failed. Frame index out of range.");
 		return m_pTextures[textureIndex][frameIndex].get();
 	}
 }

@@ -11,6 +11,7 @@
 #include "vulkanFrameResources.h"
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include <stdexcept>
 #include <string>
@@ -36,8 +37,9 @@ namespace vulkanRendererBackend
 		// Record compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-			if constexpr(stage == RenderStage::postRenderCompute)
-				frameContext.sceneColorTexturePair.PrepareForPostProcessing(commandBuffer, frameContext.frameIndex);
+			// These stages consume sceneColor texture and must transition it to general layout first:
+			if constexpr(stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute)
+				frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutForCompute(commandBuffer, frameContext.frameIndex);
 
 			// Pipeline:
 			VkPipeline pipeline = VK_NULL_HANDLE;
@@ -92,8 +94,9 @@ namespace vulkanRendererBackend
 				vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
 				DEBUG_LOG_TRACE("{} shader {}, call = {}", renderStageNames[static_cast<size_t>(stage)], pComputeShader->GetDebugName(), computeCallIndex);
 
-				if constexpr(stage == RenderStage::postRenderCompute)
-					RecordFinalPostRenderComputeBarrier(commandBuffer, computeCallIndex);
+				// Automatically synchronize scene-color writes before subsequent compute calls:
+				if (computeCall.sceneColorBindingMode != SceneColorBindingMode::none)
+					RecordComputeToComputeShaderBarrier(commandBuffer, computeCallIndex);
 			}
 
 			// Dispatch:
@@ -123,7 +126,7 @@ namespace vulkanRendererBackend
 		DEBUG_LOG_TRACE("{} barrier, call = {}", renderStageNames[static_cast<size_t>(stage)], computeCallIndex);
 	}
 	template<RenderStage stage>
-	void ComputeStage<stage>::RecordFinalPostRenderComputeBarrier(VkCommandBuffer commandBuffer, size_t computeCallIndex) const
+	void ComputeStage<stage>::RecordComputeToComputeShaderBarrier(VkCommandBuffer commandBuffer, size_t computeCallIndex) const
 	{
 		VkMemoryBarrier2 memoryBarrier = { VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 };
 		memoryBarrier.srcStageMask = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
@@ -135,7 +138,7 @@ namespace vulkanRendererBackend
 		dependencyInfo.memoryBarrierCount = 1;
 		dependencyInfo.pMemoryBarriers = &memoryBarrier;
 		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
-		DEBUG_LOG_TRACE("Post render compute barrier, call = {}", computeCallIndex);
+		DEBUG_LOG_TRACE("{} barrier, call = {}", renderStageNames[static_cast<size_t>(stage)], computeCallIndex);
 	}
 	template<RenderStage stage>
 	void ComputeStage<stage>::RecordFinalPreRenderComputeBarrier(VkCommandBuffer commandBuffer) const

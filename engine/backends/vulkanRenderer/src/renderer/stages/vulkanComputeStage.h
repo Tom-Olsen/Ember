@@ -22,7 +22,7 @@ namespace vulkanRendererBackend
 
 	private: // Methods:
 		void RecordBarrier(VkCommandBuffer commandBuffer, const ComputeCall& computeCall, size_t computeCallIndex) const;
-		void RecordFinalPostRenderComputeBarrier(VkCommandBuffer commandBuffer, size_t computeCallIndex) const;
+		void RecordComputeToComputeShaderBarrier(VkCommandBuffer commandBuffer, size_t computeCallIndex) const;
 		void RecordFinalPreRenderComputeBarrier(VkCommandBuffer commandBuffer) const;
 	};
 }

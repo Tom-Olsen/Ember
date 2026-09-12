@@ -8,7 +8,6 @@
 #include "profiler.h"
 #include "shadowConstants.h"
 #include "vmaImage.h"
-#include "vulkanAccessMask.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanCommandPool.h"
@@ -19,16 +18,10 @@
 #include "vulkanConvertTextureFormat.h"
 #include "vulkanDefaultGpuResources.h"
 #include "vulkanDeferredDrawCall.h"
-#include "vulkanDeferredGeometryRenderPass.h"
-#include "vulkanDeferredLightingRenderPass.h"
-#include "vulkanDeferredRenderingContract.h"
 #include "vulkanDepthTexture2d.h"
-#include "vulkanDepthTexture2dArray.h"
 #include "vulkanDescriptorPoolManager.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanForwardDrawCall.h"
-#include "vulkanForwardOpaqueRenderPass.h"
-#include "vulkanForwardTransparentRenderPass.h"
 #include "vulkanFrameContext.h"
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vulkanFrameRenderData.h"
@@ -36,7 +29,6 @@
 #include "vulkanGarbageCollector.h"
 #include "vulkanGBufferTexture2d.h"
 #include "vulkanGizmoDrawCall.h"
-#include "vulkanGizmoRenderPass.h"
 #include "vulkanGlobalDescriptorSetLayout.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -45,12 +37,12 @@
 #include "vulkanMaterialShaderManager.h"
 #include "vulkanMesh.h"
 #include "vulkanOutlineDrawCall.h"
-#include "vulkanOutlineRenderPass.h"
 #include "vulkanPoolManager.h"
 #include "vulkanPostRenderComputeQueue.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderGraph.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include "vulkanRenderStage.h"
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSampleTexture2d.h"
@@ -59,8 +51,8 @@
 #include "vulkanSampler.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include "vulkanSceneDescriptorSetLayout.h"
+#include "vulkanScreenSpaceComputeQueue.h"
 #include "vulkanShadowDrawCall.h"
-#include "vulkanShadowRenderPass.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageSampleTexture2d.h"
@@ -97,9 +89,9 @@ namespace vulkanRendererBackend
 		DescriptorPoolManager::Init();
 		DefaultGpuResources::InitSamplers();
 		PoolManager::Init();
-		CreateSceneTextures(createInfo.renderWidth, createInfo.renderHeight);
-		RenderPassManager::Init(createInfo.renderWidth, createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights, m_pSceneColorTexturePair->GetRenderTargetTextures(), m_pSceneDepthTextures);
-		GlobalDescriptorSetLayout::Init();
+		m_pRenderTargets = std::make_unique<RenderTargetResources>(createInfo.renderWidth, createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights);
+		RenderPassManager::Init(*m_pRenderTargets);
+		GlobalDescriptorSetLayout::Init(*m_pRenderTargets);
 		SceneDescriptorSetLayout::Init();
 		FrameDescriptorSetLayout::Init();
 		DefaultGpuResources::Init();
@@ -170,10 +162,7 @@ namespace vulkanRendererBackend
 		PoolManager::Clear();
 		DefaultGpuResources::Clear();
 		RenderPassManager::Clear();
-		m_pHorizontalExpandedOutlineMaskTextures.clear();
-		m_pExpandedOutlineMaskTextures.clear();
-		m_pSceneDepthTextures.clear();
-		m_pSceneColorTexturePair.reset();
+		m_pRenderTargets.reset();
 		GarbageCollector::Flush();		// descriptor sets must be destroyed while their parent pools are alive.
 		DescriptorPoolManager::Clear();
 		GarbageCollector::Clear();
@@ -236,20 +225,24 @@ namespace vulkanRendererBackend
 		m_pRenderGraph->ResetFrameFence(m_frameIndex);
 		m_frameResources[m_frameIndex].ResetCommandPools();
 		Context::MarkDeviceBusy();
-		m_pSceneColorTexturePair->BeginFrame(m_frameIndex);
+		SceneColorTexture2dPair& sceneColorTexturePair = m_pRenderTargets->GetSceneColorTexturePair();
+		sceneColorTexturePair.BeginFrame(m_frameIndex);
 
 		SortDrawCallPointers();
 		QueueRendererOwnedComputeShaders();
 		UpdateShaderData();
+		// happends here atm as the resulitng transparent scene color index must be forwarded to frameContext.
+		// ToDo: cleaner architecture so this call can be put back into UpdateShaderData() and the transparend scene color index still gets assigned somehow.
+		uint32_t transparentSceneColorIndex = m_pCompute->UpdateShaderData(m_frameIndex, sceneColorTexturePair, m_pRenderTargets->GetSceneDepthTexture(m_frameIndex));
 
 		// Record and submit current frame commands:
 		uint32_t shadowMapCount = m_directionalLightsCount + m_positionalLightsCount;
 		FrameContext frameContext(
-			m_frameIndex, m_imageIndex, m_time, m_deltaTime,
+			m_frameIndex, m_imageIndex, transparentSceneColorIndex, m_time, m_deltaTime,
 			m_shadowMapResolution, shadowMapCount, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor,
 			m_frameResources[m_frameIndex],
 			m_frameRenderData[m_frameIndex],
-			*m_pSceneColorTexturePair,
+			*m_pRenderTargets,
 			m_pIGui,
 			m_pCompute->GetPreRenderCompute()->GetComputeCalls(),
 			m_pCompute->GetMidRenderCompute()->GetComputeCalls(),
@@ -259,7 +252,7 @@ namespace vulkanRendererBackend
 		m_pCompute->CommitFrame(m_frameIndex);
 
 		// Finalize frame:
-		m_pSceneColorTexturePair->FinalizeFrame(m_frameIndex);
+		sceneColorTexturePair.FinalizeFrame(m_frameIndex);
 		ResetFrameCalls();
 
 		// Cancel current frame on failed presentation (e.g. window resize):
@@ -518,13 +511,13 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::ITexture* Renderer::GetFinalRenderTexture()
 	{
-		RenderTexture2d* pRenderTexture = m_pSceneColorTexturePair->GetFinalTexture();
+		RenderTexture2d* pRenderTexture = m_pRenderTargets->GetSceneColorTexturePair().GetFinalTexture();
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
 	emberBackendInterface::ITexture* Renderer::GetGizmoTexture()
 	{
-		RenderTexture2d* pRenderTexture = RenderPassManager::GetGizmoRenderPass()->GetRenderTexture(m_frameIndex);
+		RenderTexture2d* pRenderTexture = &m_pRenderTargets->GetGizmoTexture(m_frameIndex);
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
@@ -734,29 +727,6 @@ namespace vulkanRendererBackend
 
 
 	// Other:
-	void Renderer::CreateSceneTextures(uint32_t renderWidth, uint32_t renderHeight)
-	{
-		const uint32_t framesInFlight = Context::GetFramesInFlight();
-		m_pSceneColorTexturePair = std::make_unique<SceneColorTexture2dPair>(renderWidth, renderHeight, framesInFlight);
-		m_pSceneDepthTextures.reserve(framesInFlight);
-		m_pExpandedOutlineMaskTextures.reserve(framesInFlight);
-		m_pHorizontalExpandedOutlineMaskTextures.reserve(framesInFlight);
-		for (uint32_t frameIndex = 0; frameIndex < framesInFlight; frameIndex++)
-		{
-			m_pSceneDepthTextures.push_back(std::make_unique<DepthTexture2d>(deferredRenderingContract::depthFormat, renderWidth, renderHeight));
-			m_pSceneDepthTextures[frameIndex]->SetDebugName("SceneDepthTexture_Frame" + std::to_string(frameIndex));
-			m_pExpandedOutlineMaskTextures.push_back(std::make_unique<StorageTexture2d>(VK_FORMAT_R8_UNORM, renderWidth, renderHeight));
-			m_pExpandedOutlineMaskTextures[frameIndex]->SetDebugName("StorageTexture_ExpandedOutlineMask_Frame" + std::to_string(frameIndex));
-			m_pHorizontalExpandedOutlineMaskTextures.push_back(std::make_unique<StorageTexture2d>(VK_FORMAT_R8_UNORM, renderWidth, renderHeight));
-			m_pHorizontalExpandedOutlineMaskTextures[frameIndex]->SetDebugName("StorageTexture_HorizontalExpandedOutlineMask_Frame" + std::to_string(frameIndex));
-
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
-			m_pSceneDepthTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
-	}
 	void Renderer::RebuildSwapchain()
 	{
 		// Recreate swapchain:
@@ -809,9 +779,9 @@ namespace vulkanRendererBackend
 		if (!m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls.empty())
 		{
 			// Masks:
-			RenderTexture2d* pInputMask = RenderPassManager::GetOutlineRenderPass()->GetRenderTexture(m_frameIndex);
-			StorageTexture2d* pHorizontalExpandedMask = m_pHorizontalExpandedOutlineMaskTextures[m_frameIndex].get();
-			StorageTexture2d* pExpandedMask = m_pExpandedOutlineMaskTextures[m_frameIndex].get();
+			RenderTexture2d* pInputMask = &m_pRenderTargets->GetOutlineTexture(m_frameIndex);
+			StorageTexture2d* pHorizontalExpandedMask = &m_pRenderTargets->GetHorizontalExpandedOutlineMaskTexture(m_frameIndex);
+			StorageTexture2d* pExpandedMask = &m_pRenderTargets->GetExpandedOutlineMaskTexture(m_frameIndex);
 
 			// Expand mask horizontally (midRenderCompute):
 			Uint3 threadCount = { pInputMask->GetWidth(), pInputMask->GetHeight(), 1 };
@@ -893,12 +863,11 @@ namespace vulkanRendererBackend
 
 		// Deferred lighting:
 		{
-			DeferredLightingRenderPass* pDeferredLightingRenderPass = RenderPassManager::GetDeferredLightingRenderPass();
 			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", pDeferredLightingRenderPass->GetAlbedoTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", pDeferredLightingRenderPass->GetNormalTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", pDeferredLightingRenderPass->GetSurfacePropertiesTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", pDeferredLightingRenderPass->GetDepthTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", &m_pRenderTargets->GetAlbedoTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", &m_pRenderTargets->GetNormalTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", &m_pRenderTargets->GetSurfacePropertiesTexture(m_frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", &m_pRenderTargets->GetSceneDepthTexture(m_frameIndex));
 			pDeferredLightingDescriptorSetBinding->UpdateShaderData(m_frameIndex);
 		}
 
@@ -909,9 +878,6 @@ namespace vulkanRendererBackend
 			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
 			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
 		}
-
-		// Compute calls:
-		m_pCompute->UpdateShaderData(m_frameIndex, *m_pSceneColorTexturePair);
 	}
 	bool Renderer::PresentImage()
 	{

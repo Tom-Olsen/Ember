@@ -3,24 +3,18 @@
 #include "vulkanContext.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderTargetResources.h"
 
 
 
 namespace vulkanRendererBackend
 {
-	// Static members:
-	VkFormat ShadowRenderPass::s_shadowMapFormat = VK_FORMAT_D32_SFLOAT;
-
-
-
 	// Public methods:
 	// Constructor/Destructor:
-	ShadowRenderPass::ShadowRenderPass(uint32_t shadowMapResolution, uint32_t maxLightsCount)
+	ShadowRenderPass::ShadowRenderPass(const RenderTargetResources& renderTargets)
 	{
-		// Create shadow map texture:
-		m_shadowMaps = std::make_unique<DepthTexture2dArray>(s_shadowMapFormat, shadowMapResolution, shadowMapResolution, maxLightsCount);
-		CreateRenderpass();
-		CreateFramebuffers(shadowMapResolution, maxLightsCount);
+		CreateRenderpass(renderTargets);
+		CreateFramebuffers(renderTargets);
 		NAME_VK_OBJECT(m_renderPass, "RenderPass_Shadow");
 	}
 	ShadowRenderPass::~ShadowRenderPass()
@@ -29,20 +23,13 @@ namespace vulkanRendererBackend
 	}
 
 
-    // Getters:
-	DepthTexture2dArray* const ShadowRenderPass::GetShadowMaps() const
-	{
-		return m_shadowMaps.get();
-	}
-
-
 
 	// Private methods:
-	void ShadowRenderPass::CreateRenderpass()
+	void ShadowRenderPass::CreateRenderpass(const RenderTargetResources& renderTargets)
 	{
 		// Attachment description:
 		VkAttachmentDescription attachment = {};
-		attachment.format = s_shadowMapFormat;
+		attachment.format = renderTargets.GetShadowMaps().GetFormat();
 		attachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;					// clear framebuffer to black before rendering.
 		attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store for later render passes.
@@ -69,8 +56,9 @@ namespace vulkanRendererBackend
 		createInfo.pSubpasses = &subpass;
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &createInfo, nullptr, &m_renderPass));
 	}
-	void ShadowRenderPass::CreateFramebuffers(uint32_t shadowMapResolution, uint32_t maxLightsCount)
+	void ShadowRenderPass::CreateFramebuffers(const RenderTargetResources& renderTargets)
 	{
+		const DepthTexture2dArray& shadowMaps = renderTargets.GetShadowMaps();
 		size_t imageCount = 1;
 		m_framebuffers.resize(imageCount);
 		for (uint32_t i = 0; i < 1; i++)
@@ -78,10 +66,10 @@ namespace vulkanRendererBackend
 			VkFramebufferCreateInfo framebufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 			framebufferInfo.renderPass = m_renderPass;
 			framebufferInfo.attachmentCount = 1;
-			framebufferInfo.pAttachments = &m_shadowMaps->GetVmaImage()->GetVkImageView();
-			framebufferInfo.width = shadowMapResolution;
-			framebufferInfo.height = shadowMapResolution;
-			framebufferInfo.layers = maxLightsCount;
+			framebufferInfo.pAttachments = &shadowMaps.GetVmaImage()->GetVkImageView();
+			framebufferInfo.width = shadowMaps.GetWidth();
+			framebufferInfo.height = shadowMaps.GetHeight();
+			framebufferInfo.layers = renderTargets.GetShadowMapLayerCount();
 			VKA(vkCreateFramebuffer(Context::GetVkDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]));
 			NAME_VK_OBJECT(m_framebuffers[i], "Framebuffer_Shadow_Frame" + std::to_string(i));
 		}

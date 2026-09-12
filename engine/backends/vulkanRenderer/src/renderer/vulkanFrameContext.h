@@ -15,7 +15,7 @@ namespace emberBackendInterface
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class SceneColorTexture2dPair;
+	class RenderTargetResources;
 	struct ComputeCall;
 	struct FrameResources;
 	struct FrameRenderData;
@@ -31,6 +31,7 @@ namespace vulkanRendererBackend
 		// Frame indexing:
 		uint32_t frameIndex;
 		uint32_t imageIndex;
+		uint32_t transparentSceneColorIndex;
 		// Frame timings:
 		float time;
 		float deltaTime;
@@ -43,7 +44,7 @@ namespace vulkanRendererBackend
 		// Frame resources:
 		FrameResources& resources;
 		FrameRenderData& frameRenderData;
-		SceneColorTexture2dPair& sceneColorTexturePair;
+		RenderTargetResources& renderTargets;
 		emberBackendInterface::IGui* pGui;
 		// Frame compute calls:
 		std::span<const ComputeCall> preRenderComputeCalls;
@@ -52,6 +53,6 @@ namespace vulkanRendererBackend
 		std::span<const ComputeCall> postRenderComputeCalls;
 
 	public: // Methods:
-		FrameContext(uint32_t frameIndex, uint32_t imageIndex, float time, float deltaTime, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, SceneColorTexture2dPair& sceneColorTexturePair, emberBackendInterface::IGui* pGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
+		FrameContext(uint32_t frameIndex, uint32_t imageIndex, uint32_t transparentSceneColorIndex, float time, float deltaTime, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IGui* pGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
 	};
 }

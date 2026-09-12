@@ -21,6 +21,7 @@
 #include "vulkanMesh.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderPassManager.h"
+#include "vulkanRenderTargetResources.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -47,8 +48,8 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = pDeferredGeometryRenderPass->GetAlbedoTexture(frameContext.frameIndex)->GetWidth();
-			viewport.height = pDeferredGeometryRenderPass->GetAlbedoTexture(frameContext.frameIndex)->GetHeight();
+			viewport.width = frameContext.renderTargets.GetAlbedoTexture(frameContext.frameIndex).GetWidth();
+			viewport.height = frameContext.renderTargets.GetAlbedoTexture(frameContext.frameIndex).GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -141,10 +142,10 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			pDeferredGeometryRenderPass->GetAlbedoTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			pDeferredGeometryRenderPass->GetNormalTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			pDeferredGeometryRenderPass->GetSurfacePropertiesTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			pDeferredGeometryRenderPass->GetDepthTexture(frameContext.frameIndex)->GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetAlbedoTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetNormalTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetSurfacePropertiesTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetSceneDepthTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}

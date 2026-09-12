@@ -1,7 +1,5 @@
 #pragma once
 #include "vulkanRenderPass.h"
-#include <memory>
-#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -9,7 +7,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class RenderTexture2d;
+	class RenderTargetResources;
 
 
 
@@ -19,11 +17,8 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class OutlineRenderPass : public RenderPass
 	{
-	private: // Members:
-		std::vector<std::unique_ptr<RenderTexture2d>> m_pRenderTextures;
-
 	public: // Methods:
-		OutlineRenderPass(uint32_t renderWidth, uint32_t renderHeight);
+		OutlineRenderPass(const RenderTargetResources& renderTargets);
 		~OutlineRenderPass();
 
 		// Non-copyable:
@@ -34,12 +29,8 @@ namespace vulkanRendererBackend
 		OutlineRenderPass(OutlineRenderPass&& other) noexcept = default;
 		OutlineRenderPass& operator=(OutlineRenderPass&& other) noexcept = default;
 
-		// Getters:
-		RenderTexture2d* GetRenderTexture(uint32_t frameIndex) const;
-
 	private: // Methods:
-		void CreateRenderTextures(uint32_t renderWidth, uint32_t renderHeight);
-		void CreateRenderPass();
-		void CreateFrameBuffers();
+		void CreateRenderPass(const RenderTargetResources& renderTargets);
+		void CreateFrameBuffers(const RenderTargetResources& renderTargets);
 	};
 }

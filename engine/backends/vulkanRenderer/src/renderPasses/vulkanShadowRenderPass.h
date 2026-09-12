@@ -1,6 +1,5 @@
 #pragma once
 #include "vulkanRenderPass.h"
-#include <memory>
 #include <vulkan/vulkan.h>
 
 
@@ -8,8 +7,7 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class VmaImage;
-	class DepthTexture2dArray;
+	class RenderTargetResources;
 
 
 
@@ -19,15 +17,8 @@ namespace vulkanRendererBackend
 	/// </summary>
 	class ShadowRenderPass : public RenderPass
 	{
-	private: // Members:
-		std::unique_ptr<DepthTexture2dArray> m_shadowMaps;
-
-	public: // Members:
-		static VkFormat s_shadowMapFormat;
-		static uint32_t s_layerCount;
-
 	public: // Methods:
-		ShadowRenderPass(uint32_t shadowMapResolution, uint32_t maxLightsCount);
+		ShadowRenderPass(const RenderTargetResources& renderTargets);
 		~ShadowRenderPass();
 
 		// Non-copyable:
@@ -38,11 +29,8 @@ namespace vulkanRendererBackend
 		ShadowRenderPass(ShadowRenderPass&& other) noexcept = default;
 		ShadowRenderPass& operator=(ShadowRenderPass&& other) noexcept = default;
 
-		// Getters:
-		DepthTexture2dArray* const GetShadowMaps() const;
-
 	private: // Methods:
-		void CreateRenderpass();
-		void CreateFramebuffers(uint32_t shadowMapResolution, uint32_t maxLightsCount);
+		void CreateRenderpass(const RenderTargetResources& renderTargets);
+		void CreateFramebuffers(const RenderTargetResources& renderTargets);
 	};
 }
