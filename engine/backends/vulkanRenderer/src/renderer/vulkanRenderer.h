@@ -96,8 +96,8 @@ namespace vulkanRendererBackend
 		~Renderer();
 
 		// Non-copyable:
-		Renderer(const Renderer&) = delete;
-		Renderer& operator=(const Renderer&) = delete;
+		Renderer(const Renderer& other) = delete;
+		Renderer& operator=(const Renderer& other) = delete;
 
 		// Movable:
 		Renderer(Renderer&& other) noexcept;

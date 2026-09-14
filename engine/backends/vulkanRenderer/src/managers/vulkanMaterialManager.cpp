@@ -13,6 +13,31 @@
 
 namespace vulkanRendererBackend
 {
+	// Managed material constructor:
+	MaterialManager::ManagedMaterial::ManagedMaterial(std::string name, bool isAccessible, bool isDeletable, bool isMutable, emberCommon::MaterialShaderId materialShaderId, emberCommon::MaterialId shadowMaterialId, std::unique_ptr<Material> pMaterial)
+		: name(std::move(name))
+		, isAccessible(isAccessible)
+		, isDeletable(isDeletable)
+		, isMutable(isMutable)
+		, materialShaderId(materialShaderId)
+		, shadowMaterialId(shadowMaterialId)
+		, pMaterial(std::move(pMaterial))
+	{
+
+	}
+
+
+
+	// Material slot constructor:
+	MaterialManager::MaterialSlot::MaterialSlot(uint32_t generation, ManagedMaterial managedMaterial)
+		: generation(generation)
+		, managedMaterial(std::move(managedMaterial))
+	{
+
+	}
+
+
+
 	// Public methods:
 	// Constructor/Destructor:
 	MaterialManager::MaterialManager(MaterialShaderManager* pMaterialShaderManager)
@@ -533,7 +558,7 @@ namespace vulkanRendererBackend
 			if (m_materialSlots.size() >= emberCommon::invalidMaterialId.index)
 				throw std::runtime_error("MaterialManager::AddMaterial(...) failed. Material id limit reached.");
 			materialId.index = static_cast<uint32_t>(m_materialSlots.size());
-			m_materialSlots.push_back({ 1, ManagedMaterial{ name, isAccessible, isDeletable, isMutable, materialShaderId, shadowMaterialId, std::move(pMaterial) } });
+			m_materialSlots.emplace_back(1, ManagedMaterial(name, isAccessible, isDeletable, isMutable, materialShaderId, shadowMaterialId, std::move(pMaterial)));
 		}
 		else
 		{

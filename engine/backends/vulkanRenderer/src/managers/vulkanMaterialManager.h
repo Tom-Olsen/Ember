@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 
@@ -30,11 +31,33 @@ namespace vulkanRendererBackend
 			emberCommon::MaterialShaderId materialShaderId;
 			emberCommon::MaterialId shadowMaterialId;
 			std::unique_ptr<Material> pMaterial;
+
+			// Constructor:
+			ManagedMaterial(std::string name, bool isAccessible, bool isDeletable, bool isMutable, emberCommon::MaterialShaderId materialShaderId, emberCommon::MaterialId shadowMaterialId, std::unique_ptr<Material> pMaterial);
+			
+			// Non-copyable:
+			ManagedMaterial(const ManagedMaterial& other) = delete;
+			ManagedMaterial& operator=(const ManagedMaterial& other) = delete;
+			
+			// Movable:
+			ManagedMaterial(ManagedMaterial&& other) noexcept = default;
+			ManagedMaterial& operator=(ManagedMaterial&& other) noexcept = default;
 		};
 		struct MaterialSlot
 		{
 			uint32_t generation;
 			ManagedMaterial managedMaterial;
+
+			// Constructor:
+			MaterialSlot(uint32_t generation, ManagedMaterial managedMaterial);
+			
+			// Non-copyable:
+			MaterialSlot(const MaterialSlot& other) = delete;
+			MaterialSlot& operator=(const MaterialSlot& other) = delete;
+			
+			// Movable:
+			MaterialSlot(MaterialSlot&& other) noexcept = default;
+			MaterialSlot& operator=(MaterialSlot&& other) noexcept = default;
 		};
 
 	private: // Members:
@@ -48,6 +71,14 @@ namespace vulkanRendererBackend
 		// Constructor/Destructor:
 		MaterialManager(MaterialShaderManager* pMaterialShaderManager);
 		~MaterialManager() override;
+		
+		// Non-copyable:
+		MaterialManager(const MaterialManager& other) = delete;
+		MaterialManager& operator=(const MaterialManager& other) = delete;
+		
+		// Non-movable:
+		MaterialManager(MaterialManager&& other) = delete;
+		MaterialManager& operator=(MaterialManager&& other) = delete;
 
 		// Creators:
 		emberCommon::MaterialId CreateGizmoMaterial(emberCommon::MaterialShaderId materialShaderId, emberCommon::GizmoRenderMode renderMode, const std::string& name) override;

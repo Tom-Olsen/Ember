@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 
@@ -27,11 +28,33 @@ namespace vulkanRendererBackend
 			std::string name;
 			bool isAccessible;
 			std::unique_ptr<MaterialShader> pMaterialShader;
+
+			// Constructor:
+			ManagedMaterialShader(std::string name, bool isAccessible, std::unique_ptr<MaterialShader> pMaterialShader);
+			
+			// Non-copyable:
+			ManagedMaterialShader(const ManagedMaterialShader& other) = delete;
+			ManagedMaterialShader& operator=(const ManagedMaterialShader& other) = delete;
+			
+			// Movable:
+			ManagedMaterialShader(ManagedMaterialShader&& other) noexcept = default;
+			ManagedMaterialShader& operator=(ManagedMaterialShader&& other) noexcept = default;
 		};
 		struct MaterialShaderSlot
 		{
 			uint32_t generation;
 			ManagedMaterialShader managedMaterialShader;
+			
+			// Constructor:
+			MaterialShaderSlot(uint32_t generation, ManagedMaterialShader managedMaterialShader);
+			
+			// Non-copyable:
+			MaterialShaderSlot(const MaterialShaderSlot& other) = delete;
+			MaterialShaderSlot& operator=(const MaterialShaderSlot& other) = delete;
+			
+			// Movable:
+			MaterialShaderSlot(MaterialShaderSlot&& other) noexcept = default;
+			MaterialShaderSlot& operator=(MaterialShaderSlot&& other) noexcept = default;
 		};
 
 	private: // Members:
@@ -45,6 +68,14 @@ namespace vulkanRendererBackend
 		// Constructor/Destructor:
 		MaterialShaderManager(uint32_t shadowMapResolution);
 		~MaterialShaderManager() override;
+
+		// Non-copyable:
+		MaterialShaderManager(const MaterialShaderManager& other) = delete;
+		MaterialShaderManager& operator=(const MaterialShaderManager& other) = delete;
+
+		// Non-movable:
+		MaterialShaderManager(MaterialShaderManager&& other) = delete;
+		MaterialShaderManager& operator=(MaterialShaderManager&& other) = delete;
 
 		// Creators:
 		emberCommon::MaterialShaderId CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name) override;

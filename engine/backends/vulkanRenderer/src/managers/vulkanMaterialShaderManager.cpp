@@ -9,6 +9,27 @@
 
 namespace vulkanRendererBackend
 {
+	// Managed material shader constructor:
+	MaterialShaderManager::ManagedMaterialShader::ManagedMaterialShader(std::string name, bool isAccessible, std::unique_ptr<MaterialShader> pMaterialShader)
+		: name(std::move(name))
+		, isAccessible(isAccessible)
+		, pMaterialShader(std::move(pMaterialShader))
+	{
+
+	}
+
+	
+
+	// Material shader slot constructor:
+	MaterialShaderManager::MaterialShaderSlot::MaterialShaderSlot(uint32_t generation, ManagedMaterialShader managedMaterialShader)
+		: generation(generation)
+		, managedMaterialShader(std::move(managedMaterialShader))
+	{
+
+	}
+
+
+
 	// Public methods:
 	// Constructor/Destructor:
 	MaterialShaderManager::MaterialShaderManager(uint32_t shadowMapResolution)
@@ -187,7 +208,7 @@ namespace vulkanRendererBackend
 			if (m_materialShaderSlots.size() >= emberCommon::invalidMaterialShaderId.index)
 				throw std::runtime_error("MaterialShaderManager::AddMaterialShader(...) failed. MaterialShader id limit reached.");
 			materialShaderId.index = static_cast<uint32_t>(m_materialShaderSlots.size());
-			m_materialShaderSlots.push_back({ 1, ManagedMaterialShader{ name, isAccessible, std::move(pMaterialShader) } });
+			m_materialShaderSlots.emplace_back(1, ManagedMaterialShader(name, isAccessible, std::move(pMaterialShader)));
 		}
 		else
 		{
