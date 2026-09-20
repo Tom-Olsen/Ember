@@ -5,6 +5,8 @@
 #include "iGui.h"
 #include "iTexture.h"
 #include "texture2d.h"
+#include <algorithm>
+#include <limits>
 
 
 
@@ -300,6 +302,23 @@ namespace emberCore
 		Gui::PopID();
 		return changed;
 	}
+	bool Gui::InputInt2(const std::string& label, Int2* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		int values[] = { value->x, value->y };
+		bool changed = InputIntComponents(label, values, 2, step, stepFast, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		return changed;
+	}
+	bool Gui::InputInt3(const std::string& label, Int3* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		int values[] = { value->x, value->y, value->z };
+		bool changed = InputIntComponents(label, values, 3, step, stepFast, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		return changed;
+	}
 	bool Gui::DragInt(const std::string& label, int* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
 	{
 		static float accumulator;
@@ -310,7 +329,7 @@ namespace emberCore
 			Float2 cursorPos = Gui::GetCursorScreenPos();
 
 			// Invisible interactive area for click and drag detection:
-			bool mouseUp = Gui::InvisibleButton("##drag_text", textSize);
+			static_cast<void>(Gui::InvisibleButton("##drag_text", textSize));
 			bool mouseDown = Gui::IsItemActivated();
 			bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
 
@@ -352,6 +371,121 @@ namespace emberCore
 		Gui::PopID();
 		return changed;
 	}
+	bool Gui::DragInt2(const std::string& label, Int2* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		int values[] = { value->x, value->y };
+		bool changed = InputIntComponents(label, values, 2, step, stepFast, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		return changed;
+	}
+	bool Gui::DragInt3(const std::string& label, Int3* value, int step, int stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		int values[] = { value->x, value->y, value->z };
+		bool changed = InputIntComponents(label, values, 3, step, stepFast, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		return changed;
+	}
+	bool Gui::InputUint(const std::string& label, uint32_t* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		Gui::TextUnformatted(label.c_str());
+
+		Gui::SameLine();
+		Float2 cursorPos = Gui::GetCursorPos();
+		cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+		Gui::SetCursorPos(cursorPos);
+
+		bool changed = false;
+		Gui::PushID(label.c_str());
+		{
+			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX();
+			inputWidth = math::Max(inputWidth, s_minWidgetWidth);
+
+			Gui::SetNextItemWidth(inputWidth);
+			changed = s_pIGui->InputUint("##Input", value, step, stepFast, flags);
+		}
+		Gui::PopID();
+		return changed;
+	}
+	bool Gui::InputUint2(const std::string& label, Uint2* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		uint32_t values[] = { value->x, value->y };
+		bool changed = InputUintComponents(label, values, 2, step, stepFast, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		return changed;
+	}
+	bool Gui::InputUint3(const std::string& label, Uint3* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		uint32_t values[] = { value->x, value->y, value->z };
+		bool changed = InputUintComponents(label, values, 3, step, stepFast, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		return changed;
+	}
+	bool Gui::DragUint(const std::string& label, uint32_t* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		static double accumulator;
+		bool changed = false;
+		Gui::PushID(label.c_str());
+		{
+			Float2 textSize = Gui::CalcTextSize(label.c_str());
+			Float2 cursorPos = Gui::GetCursorScreenPos();
+
+			static_cast<void>(Gui::InvisibleButton("##drag_text", textSize));
+			bool mouseDown = Gui::IsItemActivated();
+			bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
+
+			Gui::SetCursorScreenPos(cursorPos);
+			Gui::TextUnformatted(label.c_str());
+
+			if (mouseDown)
+				accumulator = *value;
+			if (dragging)
+			{
+				Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton::left);
+				double sensitivity = s_intDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
+				double signedSensitivity = (delta.x >= 0.0f) ? sensitivity : -sensitivity;
+				accumulator = std::clamp(accumulator + signedSensitivity, 0.0, static_cast<double>(std::numeric_limits<uint32_t>::max()));
+				*value = static_cast<uint32_t>(std::round(accumulator));
+				Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton::left);
+			}
+
+			Gui::SameLine();
+			cursorPos = Gui::GetCursorPos();
+			cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+			Gui::SetCursorPos(cursorPos);
+
+			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX();
+			inputWidth = math::Max(inputWidth, s_minWidgetWidth);
+			Gui::SetNextItemWidth(inputWidth);
+			bool interaction = s_pIGui->InputUint("##Input", value, step, stepFast, flags);
+
+			changed = dragging || interaction;
+		}
+		Gui::PopID();
+		return changed;
+	}
+	bool Gui::DragUint2(const std::string& label, Uint2* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		uint32_t values[] = { value->x, value->y };
+		bool changed = InputUintComponents(label, values, 2, step, stepFast, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		return changed;
+	}
+	bool Gui::DragUint3(const std::string& label, Uint3* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		uint32_t values[] = { value->x, value->y, value->z };
+		bool changed = InputUintComponents(label, values, 3, step, stepFast, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		return changed;
+	}
 	bool Gui::InputFloat(const std::string& label, float* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
 	{
 		// Draw label:
@@ -375,6 +509,33 @@ namespace emberCore
 			changed = s_pIGui->InputFloat("##Input", value, step, stepFast, format, flags);
 		}
 		Gui::PopID();
+		return changed;
+	}
+	bool Gui::InputFloat2(const std::string& label, Float2* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
+	{
+		float values[] = { value->x, value->y };
+		bool changed = InputFloatComponents(label, values, 2, step, stepFast, format, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		return changed;
+	}
+	bool Gui::InputFloat3(const std::string& label, Float3* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
+	{
+		float values[] = { value->x, value->y, value->z };
+		bool changed = InputFloatComponents(label, values, 3, step, stepFast, format, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		return changed;
+	}
+	bool Gui::InputFloat4(const std::string& label, Float4* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
+	{
+		float values[] = { value->x, value->y, value->z, value->w };
+		bool changed = InputFloatComponents(label, values, 4, step, stepFast, format, flags, false);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		value->w = values[3];
 		return changed;
 	}
 	bool Gui::DragFloat(const std::string& label, float* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
@@ -418,6 +579,193 @@ namespace emberCore
 			bool interaction = s_pIGui->InputFloat("##Input", value, step, stepFast, format, flags);
 
 			changed = dragging || interaction;
+		}
+		Gui::PopID();
+		return changed;
+	}
+	bool Gui::DragFloat2(const std::string& label, Float2* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
+	{
+		float values[] = { value->x, value->y };
+		bool changed = InputFloatComponents(label, values, 2, step, stepFast, format, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		return changed;
+	}
+	bool Gui::DragFloat3(const std::string& label, Float3* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
+	{
+		float values[] = { value->x, value->y, value->z };
+		bool changed = InputFloatComponents(label, values, 3, step, stepFast, format, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		return changed;
+	}
+	bool Gui::DragFloat4(const std::string& label, Float4* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
+	{
+		float values[] = { value->x, value->y, value->z, value->w };
+		bool changed = InputFloatComponents(label, values, 4, step, stepFast, format, flags, true);
+		value->x = values[0];
+		value->y = values[1];
+		value->z = values[2];
+		value->w = values[3];
+		return changed;
+	}
+
+
+
+	// Private methods:
+	bool Gui::InputIntComponents(const std::string& label, int* values, int componentCount, int step, int stepFast, emberCommon::GuiInputTextFlags flags, bool drag)
+	{
+		static double accumulators[4];
+		static const char* componentIDs[] = { "##X", "##Y", "##Z", "##W" };
+		static const char* componentDragIDs[] = { "##DragX", "##DragY", "##DragZ", "##DragW" };
+		static const char* componentLabels[] = { "X", "Y", "Z", "W" };
+		bool changed = false;
+		Gui::PushID(label.c_str());
+		{
+			Gui::TextUnformatted(label.c_str());
+			Gui::SameLine();
+			Float2 cursorPos = Gui::GetCursorPos();
+			cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+			Gui::SetCursorPos(cursorPos);
+
+			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX() * (2 * componentCount - 1);
+			for (int i = 0; i < componentCount; i++)
+				inputWidth -= Gui::CalcTextSize(componentLabels[i]).x;
+			inputWidth = math::Max(inputWidth / componentCount, s_minWidgetWidth);
+			for (int i = 0; i < componentCount; i++)
+			{
+				if (i > 0)
+					Gui::SameLine();
+				if (drag)
+				{
+					Float2 axisCursorPos = Gui::GetCursorScreenPos();
+					static_cast<void>(Gui::InvisibleButton(componentDragIDs[i], Gui::CalcTextSize(componentLabels[i])));
+					bool mouseDown = Gui::IsItemActivated();
+					bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
+					Gui::SetCursorScreenPos(axisCursorPos);
+					Gui::TextUnformatted(componentLabels[i]);
+					if (mouseDown)
+						accumulators[i] = values[i];
+					if (dragging)
+					{
+						Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton::left);
+						double sensitivity = s_intDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
+						double signedSensitivity = (delta.x >= 0.0f) ? sensitivity : -sensitivity;
+						accumulators[i] = std::clamp(accumulators[i] + signedSensitivity, static_cast<double>(std::numeric_limits<int>::min()), static_cast<double>(std::numeric_limits<int>::max()));
+						values[i] = static_cast<int>(std::round(accumulators[i]));
+						Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton::left);
+						changed = true;
+					}
+				}
+				else
+					Gui::TextUnformatted(componentLabels[i]);
+				Gui::SameLine();
+				Gui::SetNextItemWidth(inputWidth);
+				changed |= s_pIGui->InputInt(componentIDs[i], &values[i], step, stepFast, flags);
+			}
+		}
+		Gui::PopID();
+		return changed;
+	}
+	bool Gui::InputUintComponents(const std::string& label, uint32_t* values, int componentCount, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags, bool drag)
+	{
+		static double accumulators[4];
+		static const char* componentIDs[] = { "##X", "##Y", "##Z", "##W" };
+		static const char* componentDragIDs[] = { "##DragX", "##DragY", "##DragZ", "##DragW" };
+		static const char* componentLabels[] = { "X", "Y", "Z", "W" };
+		bool changed = false;
+		Gui::PushID(label.c_str());
+		{
+			Gui::TextUnformatted(label.c_str());
+			Gui::SameLine();
+			Float2 cursorPos = Gui::GetCursorPos();
+			cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+			Gui::SetCursorPos(cursorPos);
+
+			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX() * (2 * componentCount - 1);
+			for (int i = 0; i < componentCount; i++)
+				inputWidth -= Gui::CalcTextSize(componentLabels[i]).x;
+			inputWidth = math::Max(inputWidth / componentCount, s_minWidgetWidth);
+			for (int i = 0; i < componentCount; i++)
+			{
+				if (i > 0)
+					Gui::SameLine();
+				if (drag)
+				{
+					Float2 axisCursorPos = Gui::GetCursorScreenPos();
+					static_cast<void>(Gui::InvisibleButton(componentDragIDs[i], Gui::CalcTextSize(componentLabels[i])));
+					bool mouseDown = Gui::IsItemActivated();
+					bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
+					Gui::SetCursorScreenPos(axisCursorPos);
+					Gui::TextUnformatted(componentLabels[i]);
+					if (mouseDown)
+						accumulators[i] = values[i];
+					if (dragging)
+					{
+						Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton::left);
+						double sensitivity = s_intDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
+						double signedSensitivity = (delta.x >= 0.0f) ? sensitivity : -sensitivity;
+						accumulators[i] = std::clamp(accumulators[i] + signedSensitivity, 0.0, static_cast<double>(std::numeric_limits<uint32_t>::max()));
+						values[i] = static_cast<uint32_t>(std::round(accumulators[i]));
+						Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton::left);
+						changed = true;
+					}
+				}
+				else
+					Gui::TextUnformatted(componentLabels[i]);
+				Gui::SameLine();
+				Gui::SetNextItemWidth(inputWidth);
+				changed |= s_pIGui->InputUint(componentIDs[i], &values[i], step, stepFast, flags);
+			}
+		}
+		Gui::PopID();
+		return changed;
+	}
+	bool Gui::InputFloatComponents(const std::string& label, float* values, int componentCount, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags, bool drag)
+	{
+		static const char* componentIDs[] = { "##X", "##Y", "##Z", "##W" };
+		static const char* componentDragIDs[] = { "##DragX", "##DragY", "##DragZ", "##DragW" };
+		static const char* componentLabels[] = { "X", "Y", "Z", "W" };
+		bool changed = false;
+		Gui::PushID(label.c_str());
+		{
+			Gui::TextUnformatted(label.c_str());
+			Gui::SameLine();
+			Float2 cursorPos = Gui::GetCursorPos();
+			cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+			Gui::SetCursorPos(cursorPos);
+
+			float inputWidth = Editor::GetRemainingWidth() - Editor::GetSpacingX() * (2 * componentCount - 1);
+			for (int i = 0; i < componentCount; i++)
+				inputWidth -= Gui::CalcTextSize(componentLabels[i]).x;
+			inputWidth = math::Max(inputWidth / componentCount, s_minWidgetWidth);
+			for (int i = 0; i < componentCount; i++)
+			{
+				if (i > 0)
+					Gui::SameLine();
+				if (drag)
+				{
+					Float2 axisCursorPos = Gui::GetCursorScreenPos();
+					static_cast<void>(Gui::InvisibleButton(componentDragIDs[i], Gui::CalcTextSize(componentLabels[i])));
+					bool dragging = Gui::IsItemActive() && Gui::IsMouseDragging(emberCommon::GuiMouseButton::left);
+					Gui::SetCursorScreenPos(axisCursorPos);
+					Gui::TextUnformatted(componentLabels[i]);
+					if (dragging)
+					{
+						Float2 delta = Gui::GetMouseDragDelta(emberCommon::GuiMouseButton::left);
+						float sensitivity = s_floatDragSensitivityBase * std::pow(std::abs(delta.x), s_dragSensitivityExponent);
+						values[i] += (delta.x >= 0.0f) ? sensitivity : -sensitivity;
+						Gui::ResetMouseDragDelta(emberCommon::GuiMouseButton::left);
+						changed = true;
+					}
+				}
+				else
+					Gui::TextUnformatted(componentLabels[i]);
+				Gui::SameLine();
+				Gui::SetNextItemWidth(inputWidth);
+				changed |= s_pIGui->InputFloat(componentIDs[i], &values[i], step, stepFast, format, flags);
+			}
 		}
 		Gui::PopID();
 		return changed;

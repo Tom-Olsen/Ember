@@ -348,6 +348,10 @@ namespace imGuiSdlVulkanBackend
 	{
 		return ImGui::InputInt(label, value, step, stepFast, GuiInputTextFlagsCommonToImGui(flags));
 	}
+	bool Gui::InputUint(const char* label, uint32_t* value, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags)
+	{
+		return ImGui::InputScalar(label, ImGuiDataType_U32, value, step > 0 ? &step : nullptr, step > 0 ? &stepFast : nullptr, "%u", GuiInputTextFlagsCommonToImGui(flags));
+	}
 	bool Gui::InputFloat(const char* label, float* value, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags)
 	{
 		return ImGui::InputFloat(label, value, step, stepFast, format, GuiInputTextFlagsCommonToImGui(flags));

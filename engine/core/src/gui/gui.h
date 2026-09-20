@@ -99,11 +99,31 @@ namespace emberCore
 		static bool Checkbox(const std::string& label, bool* value);
 		static bool ColorEdit(const std::string& label, Float4* color);
 		static bool InputInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputInt2(const std::string& label, Int2* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputInt3(const std::string& label, Int3* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 		static bool DragInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragInt2(const std::string& label, Int2* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragInt3(const std::string& label, Int3* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputUint(const std::string& label, uint32_t* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputUint2(const std::string& label, Uint2* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputUint3(const std::string& label, Uint3* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragUint(const std::string& label, uint32_t* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragUint2(const std::string& label, Uint2* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragUint3(const std::string& label, Uint3* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 		static bool InputFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputFloat2(const std::string& label, Float2* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputFloat3(const std::string& label, Float3* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool InputFloat4(const std::string& label, Float4* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 		static bool DragFloat(const std::string& label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragFloat2(const std::string& label, Float2* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragFloat3(const std::string& label, Float3* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
+		static bool DragFloat4(const std::string& label, Float4* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);
 
 	private: // Methods
+		static bool InputIntComponents(const std::string& label, int* values, int componentCount, int step, int stepFast, emberCommon::GuiInputTextFlags flags, bool drag);
+		static bool InputUintComponents(const std::string& label, uint32_t* values, int componentCount, uint32_t step, uint32_t stepFast, emberCommon::GuiInputTextFlags flags, bool drag);
+		static bool InputFloatComponents(const std::string& label, float* values, int componentCount, float step, float stepFast, const char* format, emberCommon::GuiInputTextFlags flags, bool drag);
+
 		// Delete all constructors:
 		Gui() = delete;
 		Gui(const Gui&) = delete;

@@ -126,36 +126,19 @@ namespace emberEditor
 			Gui::Checkbox("Render Volumetric Density:", &m_renderVolumetricDensity);
 			if (m_renderVolumetricDensity)
 			{
-				int x = static_cast<int>(m_volumetricDensityResolution.x);
-				int y = static_cast<int>(m_volumetricDensityResolution.y);
-				int z = static_cast<int>(m_volumetricDensityResolution.z);
-				Gui::DragInt("Density Resolution x:", &x, 0.1f, 1.0f);
-				Gui::DragInt("Density Resolution y:", &y, 0.1f, 1.0f);
-				Gui::DragInt("Density Resolution z:", &z, 0.1f, 1.0f);
-				m_volumetricDensityResolution.x = static_cast<uint32_t>(math::Max(1, x));
-				m_volumetricDensityResolution.y = static_cast<uint32_t>(math::Max(1, y));
-				m_volumetricDensityResolution.z = static_cast<uint32_t>(math::Max(1, z));
+				Gui::DragUint3("Density Resolution:", &m_volumetricDensityResolution);
+				m_volumetricDensityResolution = Uint3::Max(Uint3::one, m_volumetricDensityResolution);
 				Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
 				Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
-				Gui::DragFloat("Scattering r:", &m_volumetricScattering.x, 0.01f, 0.1f, "%.8f");
-				Gui::DragFloat("Scattering g:", &m_volumetricScattering.y, 0.01f, 0.1f, "%.8f");
-				Gui::DragFloat("Scattering b:", &m_volumetricScattering.z, 0.01f, 0.1f, "%.8f");
+				Gui::DragFloat3("Scattering:", &m_volumetricScattering, 0.01f, 0.1f, "%.8f");
 			}
 			// Lighting:
 			Gui::SeparatorText("Lighting");
 			Gui::Checkbox("Render Volumetric Light:", &m_renderVolumetricLight);
 			if (m_renderVolumetricLight)
 			{
-				// ToDo: add support for vector like input/drag widgets: (u)int2/3 float2/3/4, etc.
-				int x = static_cast<int>(m_volumetricLightingResolution.x);
-				int y = static_cast<int>(m_volumetricLightingResolution.y);
-				int z = static_cast<int>(m_volumetricLightingResolution.z);
-				Gui::DragInt("Resolution x:", &x, 0.1f, 1.0f);
-				Gui::DragInt("Resolution y:", &y, 0.1f, 1.0f);
-				Gui::DragInt("Resolution z:", &z, 0.1f, 1.0f);
-				m_volumetricLightingResolution.x = static_cast<uint32_t>(math::Max(1, x));
-				m_volumetricLightingResolution.y = static_cast<uint32_t>(math::Max(1, y));
-				m_volumetricLightingResolution.z = static_cast<uint32_t>(math::Max(1, z));
+				Gui::DragUint3("Resolution:", &m_volumetricLightingResolution);
+				m_volumetricLightingResolution = Uint3::Max(Uint3::one, m_volumetricLightingResolution);
 			}
 
 			// Buttons:

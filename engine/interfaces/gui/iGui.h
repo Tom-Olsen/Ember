@@ -84,6 +84,7 @@ namespace emberBackendInterface
 		virtual bool Checkbox(const char* label, bool* value) = 0;
 		virtual bool ColorEdit(const char* label, float* color) = 0;
 		virtual bool InputInt(const char* label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
+		virtual bool InputUint(const char* label, uint32_t* value, uint32_t step = 1, uint32_t stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
 		virtual bool InputFloat(const char* label, float* value, float step = 0.0f, float stepFast = 0.0f, const char* format = "%.3f", emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none) = 0;
 		virtual void TextUnformatted(const char* text, const char* textEnd = nullptr) = 0;
 		virtual void SeparatorText(const char* label) = 0;
