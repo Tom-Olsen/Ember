@@ -55,7 +55,7 @@ namespace emberCore
 	// Cloners:
 	GizmoMaterial MaterialManager::CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, const std::string& name)
 	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterial(sourceMaterial.m_materialId, name);
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterial(sourceMaterial.m_materialId, sourceMaterial.GetRenderMode(), name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? GizmoMaterial() : GizmoMaterial{ materialId };
 	}
 	GizmoMaterial MaterialManager::CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode, const std::string& name)
@@ -65,7 +65,7 @@ namespace emberCore
 	}
 	GizmoMaterial MaterialManager::CloneGizmoMaterialWithDefaultBindings(const GizmoMaterial& sourceMaterial, const std::string& name)
 	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterialWithDefaultBindings(sourceMaterial.m_materialId, name);
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneGizmoMaterialWithDefaultBindings(sourceMaterial.m_materialId, sourceMaterial.GetRenderMode(), name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? GizmoMaterial() : GizmoMaterial{ materialId };
 	}
 	GizmoMaterial MaterialManager::CloneGizmoMaterialWithDefaultBindings(const GizmoMaterial& sourceMaterial, emberCommon::GizmoRenderMode renderMode, const std::string& name)
@@ -90,7 +90,7 @@ namespace emberCore
 	}
 	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, const std::string& name)
 	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterial(sourceMaterial.m_materialId, name);
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterial(sourceMaterial.m_materialId, sourceMaterial.GetRenderMode(), name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? ForwardMaterial() : ForwardMaterial{ materialId };
 	}
 	ForwardMaterial MaterialManager::CloneForwardMaterial(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name)
@@ -100,7 +100,7 @@ namespace emberCore
 	}
 	ForwardMaterial MaterialManager::CloneForwardMaterialWithDefaultBindings(const ForwardMaterial& sourceMaterial, const std::string& name)
 	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterialWithDefaultBindings(sourceMaterial.m_materialId, name);
+		emberCommon::MaterialId materialId = s_pIMaterialManager->CloneForwardMaterialWithDefaultBindings(sourceMaterial.m_materialId, sourceMaterial.GetRenderMode(), name);
 		return materialId.index == emberCommon::invalidMaterialId.index ? ForwardMaterial() : ForwardMaterial{ materialId };
 	}
 	ForwardMaterial MaterialManager::CloneForwardMaterialWithDefaultBindings(const ForwardMaterial& sourceMaterial, emberCommon::ForwardRenderMode renderMode, const std::string& name)

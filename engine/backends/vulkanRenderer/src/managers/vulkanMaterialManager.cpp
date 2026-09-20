@@ -136,7 +136,7 @@ namespace vulkanRendererBackend
 		SetAccessRights(materialId, materialAsset.accessRights);
 		return materialId;
 	}
-	emberCommon::MaterialId MaterialManager::CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	emberCommon::MaterialId MaterialManager::CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name)
 	{
 		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
 		if (pSourceMaterial == nullptr)
@@ -154,16 +154,15 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("MaterialManager::CloneGizmoMaterial(...) failed. Source material shader is invalid.");
 		
 		emberCommon::ResourceAccessRights accessRights{true, true, true};
-		return AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneGizmo(*pSourceMaterial, name)));
-	}
-	emberCommon::MaterialId MaterialManager::CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = CloneGizmoMaterial(sourceMaterialId, name);
-		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
+		emberCommon::MaterialId materialId = AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneGizmo(*pSourceMaterial, name)));
+		if (renderMode != pSourceMaterial->GetGizmoRenderMode())
+		{
+			Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId));
 			pMaterial->SetGizmoRenderMode(renderMode);
+		}
 		return materialId;
 	}
-	emberCommon::MaterialId MaterialManager::CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	emberCommon::MaterialId MaterialManager::CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name)
 	{
 		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
 		if (pSourceMaterial == nullptr)
@@ -181,13 +180,12 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("MaterialManager::CloneGizmoMaterialWithDefaultBindings(...) failed. Source material shader is invalid.");
 		
 		emberCommon::ResourceAccessRights accessRights{true, true, true};
-		return AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneGizmoWithDefaultBindings(*pSourceMaterial, name)));
-	}
-	emberCommon::MaterialId MaterialManager::CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = CloneGizmoMaterialWithDefaultBindings(sourceMaterialId, name);
-		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
+		emberCommon::MaterialId materialId = AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneGizmoWithDefaultBindings(*pSourceMaterial, name)));
+		if (renderMode != pSourceMaterial->GetGizmoRenderMode())
+		{
+			Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId));
 			pMaterial->SetGizmoRenderMode(renderMode);
+		}
 		return materialId;
 	}
 	emberCommon::MaterialId MaterialManager::CloneOutlineMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name)
@@ -298,7 +296,7 @@ namespace vulkanRendererBackend
 		emberCommon::ResourceAccessRights accessRights{false, false, false};
 		return AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneDeferredLighting(*pSourceMaterial, name)));
 	}
-	emberCommon::MaterialId MaterialManager::CloneForwardMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	emberCommon::MaterialId MaterialManager::CloneForwardMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name)
 	{
 		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
 		if (pSourceMaterial == nullptr)
@@ -317,19 +315,17 @@ namespace vulkanRendererBackend
 		
 		emberCommon::ResourceAccessRights accessRights{true, true, true};
 		emberCommon::MaterialId materialId = AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneForward(*pSourceMaterial, name)));
+		if (renderMode != pSourceMaterial->GetForwardRenderMode())
+		{
+			Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId));
+			pMaterial->SetForwardRenderMode(renderMode);
+		}
 		emberCommon::MaterialId shadowMaterialId = TryGetShadowMaterialId(sourceMaterialId);
 		if (shadowMaterialId.index != emberCommon::invalidMaterialId.index)
 			SetShadowMaterial(materialId, shadowMaterialId);
 		return materialId;
 	}
-	emberCommon::MaterialId MaterialManager::CloneForwardMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = CloneForwardMaterial(sourceMaterialId, name);
-		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
-			pMaterial->SetForwardRenderMode(renderMode);
-		return materialId;
-	}
-	emberCommon::MaterialId MaterialManager::CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name)
+	emberCommon::MaterialId MaterialManager::CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name)
 	{
 		Material* pSourceMaterial = static_cast<Material*>(TryGetMaterial(sourceMaterialId));
 		if (pSourceMaterial == nullptr)
@@ -348,16 +344,14 @@ namespace vulkanRendererBackend
 		
 		emberCommon::ResourceAccessRights accessRights{true, true, true};
 		emberCommon::MaterialId materialId = AddMaterial(name, accessRights, *pMaterialShaderId, std::make_unique<Material>(Material::CloneForwardWithDefaultBindings(*pSourceMaterial, name)));
+		if (renderMode != pSourceMaterial->GetForwardRenderMode())
+		{
+			Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId));
+			pMaterial->SetForwardRenderMode(renderMode);
+		}
 		emberCommon::MaterialId shadowMaterialId = TryGetShadowMaterialId(sourceMaterialId);
 		if (shadowMaterialId.index != emberCommon::invalidMaterialId.index)
 			SetShadowMaterial(materialId, shadowMaterialId);
-		return materialId;
-	}
-	emberCommon::MaterialId MaterialManager::CloneForwardMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, emberCommon::ForwardRenderMode renderMode, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = CloneForwardMaterialWithDefaultBindings(sourceMaterialId, name);
-		if (Material* pMaterial = static_cast<Material*>(TryGetMaterial(materialId)))
-			pMaterial->SetForwardRenderMode(renderMode);
 		return materialId;
 	}
 	emberCommon::MaterialId MaterialManager::ClonePresentMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name)
