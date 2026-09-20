@@ -10,6 +10,7 @@ set(PROJECT_TYPE STATIC)    # Choose SHARED (.dll/.so) or STATIC (.lib/.a) libra
 get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)   # engine
 get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)       # common
 get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)           # libs
+get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)     # shaders
 
 if(TARGET ${TARGET_NAME})
     return()
@@ -36,7 +37,8 @@ add_library(${TARGET_NAME} ${PROJECT_TYPE}
 # Source subdirectories:
 target_include_directories(${TARGET_NAME} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${ENGINE_COMMON_DIR})
+    ${ENGINE_COMMON_DIR}
+    ${ENGINE_SHADERS_DIR}/src/includesCppHlsl)
 
 # Allow linking this static library into shared libraries:
 set_target_properties(${TARGET_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)

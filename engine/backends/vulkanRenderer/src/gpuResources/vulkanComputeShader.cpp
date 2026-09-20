@@ -13,9 +13,51 @@
 namespace vulkanRendererBackend
 {
 	// Public methods:
-	// Constructor/Destructor:
-	ComputeShader::ComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName)
+	// Destructor:
+	ComputeShader::~ComputeShader()
+	{
+	
+	}
+
+
+
+	// Getters:
+	Uint3 ComputeShader::GetBlockSize() const
+	{
+		return m_blockSize;
+	}
+	const emberCommon::ComputeShaderFeatures& ComputeShader::GetFeatures() const
+	{
+		return m_features;
+	}
+	emberBackendInterface::IDescriptorSetBinding* ComputeShader::GetShaderDescriptorSetBinding() const
+	{
+		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(m_pShaderDescriptorSetBinding.get());
+	}
+	DescriptorSetBinding* ComputeShader::GetDescriptorSetBinding() const
+	{
+		return m_pShaderDescriptorSetBinding.get();
+	}
+	const Pipeline* ComputeShader::GetPipeline() const
+	{
+		return m_pPipeline.get();
+	}
+
+
+
+	// Debugging:
+	void ComputeShader::Print() const
+	{
+		PrintShaderInfo();
+	}
+
+
+
+	// Private methods:
+	// Constructor:
+	ComputeShader::ComputeShader(const std::filesystem::path& computeSpv, const emberCommon::ComputeShaderFeatures& features, const std::string& debugName)
 		: Shader(debugName)
+		, m_features(features)
 	{
 		// Load compute shader:
 		std::vector<char> computeCode = emberSpirvReflect::ShaderReflection::ReadShaderCode(computeSpv);
@@ -48,39 +90,10 @@ namespace vulkanRendererBackend
 		// Create shader descriptorSetBinding:
 		m_pShaderDescriptorSetBinding = std::make_unique<DescriptorSetBinding>(static_cast<Shader*>(this), SHADER_SET_INDEX, debugName);
 	}
-	ComputeShader::~ComputeShader()
-	{
-	
-	}
 
 
 
-	// Getters:
-	Uint3 ComputeShader::GetBlockSize() const
-	{
-		return m_blockSize;
-	}
-	emberBackendInterface::IDescriptorSetBinding* ComputeShader::GetShaderDescriptorSetBinding() const
-	{
-		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(m_pShaderDescriptorSetBinding.get());
-	}
-	DescriptorSetBinding* ComputeShader::GetDescriptorSetBinding() const
-	{
-		return m_pShaderDescriptorSetBinding.get();
-	}
-	const Pipeline* ComputeShader::GetPipeline() const
-	{
-		return m_pPipeline.get();
-	}
-	// Debugging:
-	void ComputeShader::Print() const
-	{
-		PrintShaderInfo();
-	}
-
-
-
-	// Private methods:
+	// Use management:
 	void ComputeShader::AddPendingUse()
 	{
 		m_pendingUseCount++;

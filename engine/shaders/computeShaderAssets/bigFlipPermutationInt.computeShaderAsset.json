@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "bigFlipPermutationInt",
+    "sourcePath": "../src/compute/bitonicSortInt/bigFlipPermutationInt.comp.hlsl",
+    "binaryPath": "../bin/bigFlipPermutationInt.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

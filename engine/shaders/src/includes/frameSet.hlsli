@@ -4,7 +4,17 @@
 
 
 
-cbuffer CameraProperties : register(b1399, FRAME_SET)
+// Render targets (for compute shaders only):
+#ifdef EMBER_ENABLE_FRAME_SET_RENDER_TARGETS
+Texture2D<float> sceneDepthTexture : register(t1100, FRAME_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture0 : register(u1200, FRAME_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture1 : register(u1201, FRAME_SET);
+#endif
+
+
+
+// Camera:
+cbuffer CameraProperties : register(b1300, FRAME_SET)
 {
     float4 camera_position;             // camera position.
     float4x4 camera_viewMatrix;         // world to camera matrix.

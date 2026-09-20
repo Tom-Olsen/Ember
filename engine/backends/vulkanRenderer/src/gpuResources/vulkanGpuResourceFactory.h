@@ -2,6 +2,7 @@
 #include "iGpuResourceFactory.h"
 #include "vulkanRendererExport.h"
 #include <cstdint>
+#include <memory>
 
 
 
@@ -9,11 +10,10 @@
 namespace emberBackendInterface
 {
 	class IBuffer;
-	class IComputeShader;
+	class IComputeShaderManager;
 	class IDescriptorSetBinding;
 	class IMaterial;
 	class IMaterialManager;
-	class IMaterialShaderManager;
 	class IMesh;
 	class ITexture;
 }
@@ -22,10 +22,19 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
+	// Forward declarations:
+	class ComputeShaderManager;
+	class MaterialManager;
+	class MaterialShaderManager;
+
+
+
 	class VULKAN_RENDERER_API GpuResourceFactory : public emberBackendInterface::IGpuResourceFactory
 	{
 	private: // Members:
-		uint32_t m_shadowMapResolution;
+	std::unique_ptr<MaterialManager> m_pMaterialManager;
+		std::unique_ptr<MaterialShaderManager> m_pMaterialShaderManager;
+		std::unique_ptr<ComputeShaderManager> m_pComputeShaderManager;
 
 
 
@@ -35,9 +44,8 @@ namespace vulkanRendererBackend
 		~GpuResourceFactory();
 
 		// Gpu resource factories:
-		emberBackendInterface::IMaterialShaderManager* CreateMaterialShaderManager() override;
-		emberBackendInterface::IMaterialManager* CreateMaterialManager(emberBackendInterface::IMaterialShaderManager* pIMaterialShaderManager) override;
-		emberBackendInterface::IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName) override;
+		emberBackendInterface::IMaterialManager* GetMaterialManager() override;
+		emberBackendInterface::IComputeShaderManager* GetComputeShaderManager() override;
 		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) override;
 		//emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data) override;

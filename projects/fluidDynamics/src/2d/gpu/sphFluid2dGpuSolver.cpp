@@ -64,19 +64,18 @@ namespace fluidDynamics
 		computeType = ComputeType::physics;
 		sessionID = -1;
 
-		// Load compute shaders:
-		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		resetDataComputeShader = ComputeShader(directoryPath / "resetData2d.comp.spv", "resetData2d");
-		resetRungeKuttaComputeShader = ComputeShader(directoryPath / "resetRungeKutta2d.comp.spv", "resetRungeKutta2d");
-		cellKeysComputeShader = ComputeShader(directoryPath / "cellKeys2d.comp.spv", "cellKeys2d");
-		startIndicesResetComputeShader = ComputeShader(directoryPath / "startIndicesReset2d.comp.spv", "startIndicesReset2d");
-		startIndicesComputeShader = ComputeShader(directoryPath / "startIndices2d.comp.spv", "startIndices2d");
-		densityComputeShader = ComputeShader(directoryPath / "density2d.comp.spv", "density2d");
-		normalAndCurvatureComputeShader = ComputeShader(directoryPath / "normalAndCurvature2d.comp.spv", "normalAndCurvature2d");
-		forceDensityComputeShader = ComputeShader(directoryPath / "forceDensity2d.comp.spv", "forceDensity2d");
-		rungeKutta2Step1ComputeShader = ComputeShader(directoryPath / "rungeKutta2Step1_2d.comp.spv", "rungeKutta2Step1_2d");
-		rungeKutta2Step2ComputeShader = ComputeShader(directoryPath / "rungeKutta2Step2_2d.comp.spv", "rungeKutta2Step2_2d");
-		boundaryCollisionsComputeShader = ComputeShader(directoryPath / "boundaryCollisions2d.comp.spv", "boundaryCollisions2d");
+		// Retrieve compute shaders:
+		resetDataComputeShader = ComputeShaderManager::TryGetComputeShader("resetData2d");
+		resetRungeKuttaComputeShader = ComputeShaderManager::TryGetComputeShader("resetRungeKutta2d");
+		cellKeysComputeShader = ComputeShaderManager::TryGetComputeShader("cellKeys2d");
+		startIndicesResetComputeShader = ComputeShaderManager::TryGetComputeShader("startIndicesReset2d");
+		startIndicesComputeShader = ComputeShaderManager::TryGetComputeShader("startIndices2d");
+		densityComputeShader = ComputeShaderManager::TryGetComputeShader("density2d");
+		normalAndCurvatureComputeShader = ComputeShaderManager::TryGetComputeShader("normalAndCurvature2d");
+		forceDensityComputeShader = ComputeShaderManager::TryGetComputeShader("forceDensity2d");
+		rungeKutta2Step1ComputeShader = ComputeShaderManager::TryGetComputeShader("rungeKutta2Step1_2d");
+		rungeKutta2Step2ComputeShader = ComputeShaderManager::TryGetComputeShader("rungeKutta2Step2_2d");
+		boundaryCollisionsComputeShader = ComputeShaderManager::TryGetComputeShader("boundaryCollisions2d");
 	}
 	void SphFluid2dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{

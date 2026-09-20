@@ -1,0 +1,25 @@
+{
+    "materialName": "testMaterial",
+    "materialShaderName": "testShader",
+    "materialPass": "forward",
+    "renderMode": "opaque",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/test.vert.hlsl",
+            "binaryPath": "../bin/test.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/test.frag.hlsl",
+            "binaryPath": "../bin/test.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

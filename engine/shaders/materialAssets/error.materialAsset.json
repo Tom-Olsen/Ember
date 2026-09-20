@@ -1,0 +1,25 @@
+{
+    "materialName": "errorMaterial",
+    "materialShaderName": "errorShader",
+    "materialPass": "forward",
+    "renderMode": "opaque",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/error.vert.hlsl",
+            "binaryPath": "../bin/error.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/error.frag.hlsl",
+            "binaryPath": "../bin/error.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "materialName": "pbrDeferredGeometryMaterial",
+    "materialShaderName": "pbrDeferredGeometryShader",
+    "materialPass": "deferredGeometry",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/pbrDeferredGeometry.vert.hlsl",
+            "binaryPath": "../bin/pbrDeferredGeometry.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/pbrDeferredGeometry.frag.hlsl",
+            "binaryPath": "../bin/pbrDeferredGeometry.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -6,11 +6,12 @@
 namespace vulkanRendererBackend
 {
 	// Constructor:
-	ComputePushConstant::ComputePushConstant(Uint3 threadCount, float time, float deltaTime)
+	ComputePushConstant::ComputePushConstant(Uint3 threadCount, float time, float deltaTime, uint32_t sceneColorIndex)
 	{
 		this->threadCount = threadCount;
 		this->time = time;
 		this->deltaTime = deltaTime;
+		this->sceneColorIndex = sceneColorIndex;
 	}
 
 	// Public methods:
@@ -20,7 +21,8 @@ namespace vulkanRendererBackend
 		ss << "ComputePushConstant:\n";
 		ss << "ThreadCount: " << threadCount.ToString() << "\n";
 		ss << "Time: " << time << "\n";
-		ss << "Delta Time: " << deltaTime;
+		ss << "Delta Time: " << deltaTime << "\n";
+		ss << "SceneColorIndex: " << sceneColorIndex;
 		return ss.str();
 	}
 }

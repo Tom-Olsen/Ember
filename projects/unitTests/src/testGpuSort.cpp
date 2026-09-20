@@ -90,8 +90,7 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 	buffer.Upload(uploadData.data(), count * sizeof(int));
 
 	// Prepare compute shader:
-	std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-	ComputeShader sortCS = ComputeShader("localBitonicSort", directoryPath / "localBitonicSortInt.comp.spv");
+	ComputeShader sortCS = ComputeShaderManager::TryGetComputeShader("localBitonicSortInt");
 	Uint3 threadCount(count / 2, 1, 1);
 	uint32_t sessionID = Compute::Async::CreateComputeSession();
 	CallProperties callProperties = Compute::Async::RecordComputeShader(sessionID, sortCS, threadCount);

@@ -1,6 +1,8 @@
 #pragma once
 #include "iMaterialManager.h"
 #include "commonMaterialPass.h"
+#include "commonResourceAccessRights.h"
+#include "vulkanMaterialShaderId.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
@@ -10,8 +12,17 @@
 
 
 
+// Forward declarations:
+namespace emberAssetLoader
+{
+	struct MaterialAsset;
+}
+
+
+
 namespace vulkanRendererBackend
 {
+	// Forward declarations:
 	class Material;
 	class MaterialShaderManager;
 
@@ -19,21 +30,20 @@ namespace vulkanRendererBackend
 
 	class VULKAN_RENDERER_API MaterialManager : public emberBackendInterface::IMaterialManager
 	{
+		// Friends:
 		friend class MaterialShaderManager;
 
 	private: // Structs:
 		struct ManagedMaterial
 		{
 			std::string name;
-			bool isAccessible;
-			bool isDeletable;
-			bool isMutable;
-			emberCommon::MaterialShaderId materialShaderId;
+			emberCommon::ResourceAccessRights accessRights;
+			MaterialShaderId materialShaderId;
 			emberCommon::MaterialId shadowMaterialId;
 			std::unique_ptr<Material> pMaterial;
 
 			// Constructor:
-			ManagedMaterial(std::string name, bool isAccessible, bool isDeletable, bool isMutable, emberCommon::MaterialShaderId materialShaderId, emberCommon::MaterialId shadowMaterialId, std::unique_ptr<Material> pMaterial);
+			ManagedMaterial(std::string name, const emberCommon::ResourceAccessRights& accessRights, MaterialShaderId materialShaderId, emberCommon::MaterialId shadowMaterialId, std::unique_ptr<Material> pMaterial);
 			
 			// Non-copyable:
 			ManagedMaterial(const ManagedMaterial& other) = delete;
@@ -80,16 +90,10 @@ namespace vulkanRendererBackend
 		MaterialManager(MaterialManager&& other) = delete;
 		MaterialManager& operator=(MaterialManager&& other) = delete;
 
-		// Creators:
-		emberCommon::MaterialId CreateGizmoMaterial(emberCommon::MaterialShaderId materialShaderId, emberCommon::GizmoRenderMode renderMode, const std::string& name) override;
-		emberCommon::MaterialId CreateOutlineMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name);
-		emberCommon::MaterialId CreateShadowMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name) override;
-		emberCommon::MaterialId CreateDeferredGeometryMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name) override;
-		emberCommon::MaterialId CreateDeferredLightingMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name);
-		emberCommon::MaterialId CreateForwardMaterial(emberCommon::MaterialShaderId materialShaderId, emberCommon::ForwardRenderMode renderMode, const std::string& name) override;
-		emberCommon::MaterialId CreatePresentMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name);
-
-		// Cloners:
+		// Ember::ToDo: remove the overloads without renderMode? expose them only in core and make interface slimmer.
+		// Creation/Cloning:
+		void InitializeDefaultMaterials() override;
+		emberCommon::MaterialId CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset) override;
 		emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
 		emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::GizmoRenderMode renderMode, const std::string& name) override;
 		emberCommon::MaterialId CloneGizmoMaterialWithDefaultBindings(emberCommon::MaterialId sourceMaterialId, const std::string& name) override;
@@ -111,11 +115,9 @@ namespace vulkanRendererBackend
 		emberCommon::MaterialId TryGetShadowMaterialId(emberCommon::MaterialId surfaceMaterialId) override;
 		emberBackendInterface::IMaterial* TryGetMaterial(emberCommon::MaterialId materialId) const override;
 		const std::string* TryGetMaterialName(emberCommon::MaterialId materialId) const override;
-		const emberCommon::MaterialShaderId* TryGetMaterialShaderId(emberCommon::MaterialId materialId) const override;
 		bool IsMaterialMutable(emberCommon::MaterialId materialId) const override;
 
 		// Setters:
-		void SetAccessRights(emberCommon::MaterialId materialId, bool isAccessible, bool isDeletable, bool isMutable);
 		void SetShadowMaterial(emberCommon::MaterialId surfaceMaterialId, emberCommon::MaterialId shadowMaterialId) override;
 		void ResetShadowMaterial(emberCommon::MaterialId surfaceMaterialId) override;
 
@@ -126,12 +128,24 @@ namespace vulkanRendererBackend
 		void Print() const override;
 
 	private: // Methods:
+		// Creators:
+		emberCommon::MaterialId CreateGizmoMaterial(MaterialShaderId materialShaderId, emberCommon::GizmoRenderMode renderMode, const std::string& name);
+		emberCommon::MaterialId CreateOutlineMaterial(MaterialShaderId materialShaderId, const std::string& name);
+		emberCommon::MaterialId CreateShadowMaterial(MaterialShaderId materialShaderId, const std::string& name);
+		emberCommon::MaterialId CreateDeferredGeometryMaterial(MaterialShaderId materialShaderId, const std::string& name);
+		emberCommon::MaterialId CreateDeferredLightingMaterial(MaterialShaderId materialShaderId, const std::string& name);
+		emberCommon::MaterialId CreateForwardMaterial(MaterialShaderId materialShaderId, emberCommon::ForwardRenderMode renderMode, const std::string& name);
+		emberCommon::MaterialId CreatePresentMaterial(MaterialShaderId materialShaderId, const std::string& name);
+
 		// Management:
-		emberCommon::MaterialId AddMaterial(const std::string& name, bool isAccessible, bool isDeletable, bool isMutable, emberCommon::MaterialShaderId materialShaderId, std::unique_ptr<Material> pMaterial);
-		void DestroyMaterial(std::unique_ptr<Material> pMaterial);
 		void Clear();
+		emberCommon::MaterialId AddMaterial(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, MaterialShaderId materialShaderId, std::unique_ptr<Material> pMaterial);
+		void DestroyMaterial(std::unique_ptr<Material> pMaterial);
 		emberCommon::MaterialId FindMaterialId(const std::string& name) const;
-		bool IsMaterialShaderInUse(emberCommon::MaterialShaderId materialShaderId) const;
+		Material* GetMaterial(const std::string& name) const;
+		bool IsMaterialShaderInUse(MaterialShaderId materialShaderId) const;
 		bool IsSurfaceMaterialPass(emberCommon::MaterialPass materialPass) const;
+		const MaterialShaderId* TryGetMaterialShaderId(emberCommon::MaterialId materialId) const;
+		void SetAccessRights(emberCommon::MaterialId materialId, const emberCommon::ResourceAccessRights& accessRights);
 	};
 }

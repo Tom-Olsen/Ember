@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "updatePositions",
+    "sourcePath": "../src/compute/updatePositions.comp.hlsl",
+    "binaryPath": "../bin/updatePositions.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

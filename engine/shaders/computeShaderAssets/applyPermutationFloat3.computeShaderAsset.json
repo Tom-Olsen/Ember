@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "applyPermutationFloat3",
+    "sourcePath": "../src/compute/permutation/applyPermutationFloat3.comp.hlsl",
+    "binaryPath": "../bin/applyPermutationFloat3.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

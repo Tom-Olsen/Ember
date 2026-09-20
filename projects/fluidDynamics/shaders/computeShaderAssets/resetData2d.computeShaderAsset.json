@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "resetData2d",
+    "sourcePath": "../src/resetData2d.comp.hlsl",
+    "binaryPath": "../bin/resetData2d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

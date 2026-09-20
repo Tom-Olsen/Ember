@@ -1,46 +1,71 @@
 #pragma once
+#include "commonComputeShaderId.h"
+#include "computeShader.h"
 #include "emberCoreExport.h"
-#include <unordered_map>
-#include <memory>
+#include <filesystem>
 #include <string>
+
+
+
+// Forward declarations:
+namespace emberAssetLoader
+{
+	struct ComputeShaderAsset;
+}
+namespace emberBackendInterface
+{
+	class IComputeShader;
+	class IComputeShaderManager;
+}
 
 
 
 namespace emberCore
 {
-    // Forward declarations:
-    class ComputeShader;
+	// Forward declarations:
+	class Renderer;
 
 
 
-    /// <summary>
-    /// Purely static class that takes care of lifetime of all Material objects.
-    /// </summary>
-    class EMBER_CORE_API ComputeShaderManager
-    {
-    private: // Members
-        static bool s_isInitialized;
-        static std::unordered_map<std::string, std::unique_ptr<ComputeShader>> s_computeShaders;
+	/// <summary>
+	/// Static facade for the backend compute shader manager.
+	/// ComputeShader is a non-owning, generational handle to a backend-owned slot.
+	/// </summary>
+	class EMBER_CORE_API ComputeShaderManager
+	{
+		// Friends:
+		friend class ComputeShader;
+		friend class Renderer;
 
-    public: // Methods
-        // Initialization/Cleanup:
-        static void Init();
-        static void Clear();
+	private: // Members:
+		static emberBackendInterface::IComputeShaderManager* s_pIComputeShaderManager;
 
-        static void AddComputeShader(ComputeShader&& computeShader);  // must be called as AddComputeShader(std::move(computeShader)). Leaves input computeShader empty.
-        static ComputeShader& GetComputeShader(const std::string& name);
-        static ComputeShader* TryGetComputeShader(const std::string& name);
-        static void DeleteComputeShader(const std::string& name);
+	public: // Methods:
+		// Asset loading:
+		static void LoadComputeShaderAssets(const std::filesystem::path& directoryPath);
 
-        static void Print();
+		// Getters:
+		static ComputeShader TryGetComputeShader(const std::string& name);
 
-    private: // Methods
+		// Debugging:
+		static void Print();
+
+	private: // Methods:
+		// Initialization/Cleanup:
+		static void Init();
+		static void Clear();
+
+		// Getters:
+		static bool IsComputeShaderMutable(emberCommon::ComputeShaderId computeShaderId);
+		static emberBackendInterface::IComputeShader* TryGetComputeShaderInterface(emberCommon::ComputeShaderId computeShaderId);
+		static const std::string* TryGetComputeShaderName(emberCommon::ComputeShaderId computeShaderId);
+
         // Delete all constructors:
-        ComputeShaderManager() = delete;
-        ComputeShaderManager(const ComputeShaderManager&) = delete;
-        ComputeShaderManager& operator=(const ComputeShaderManager&) = delete;
-        ComputeShaderManager(ComputeShaderManager&&) = delete;
-        ComputeShaderManager& operator=(ComputeShaderManager&&) = delete;
-        ~ComputeShaderManager() = delete;
-    };
+		ComputeShaderManager() = delete;
+		ComputeShaderManager(const ComputeShaderManager&) = delete;
+		ComputeShaderManager& operator=(const ComputeShaderManager&) = delete;
+		ComputeShaderManager(ComputeShaderManager&&) = delete;
+		ComputeShaderManager& operator=(ComputeShaderManager&&) = delete;
+		~ComputeShaderManager() = delete;
+	};
 }

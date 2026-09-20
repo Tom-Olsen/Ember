@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "initialPositions",
+    "sourcePath": "../src/compute/initialPositions.comp.hlsl",
+    "binaryPath": "../bin/initialPositions.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

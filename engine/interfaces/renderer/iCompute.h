@@ -112,17 +112,11 @@ namespace emberBackendInterface
 		{
         public: // Methods:
             // Virtual destructor for v-table:
-		    virtual ~IQueue() = default;
+            virtual ~IQueue() = default;
 
             // Workload recording:
 		    virtual IDescriptorSetBinding* RecordComputeShader(IComputeShader* pComputeShader, Uint3 threadCount) = 0;
 		    virtual void RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags) = 0;
-		};
-
-		class IPostRenderQueue : public virtual IQueue
-		{
-		public: // Methods:
-		    virtual IDescriptorSetBinding* RecordPostProcessingShader(IComputeShader* pComputeShader, Uint3 threadCount) = 0;
 		};
 
 
@@ -132,6 +126,6 @@ namespace emberBackendInterface
 		virtual ICompute::IQueue* GetPreRenderComputeInterfaceHandle() = 0;
 		virtual ICompute::IQueue* GetMidRenderComputeInterfaceHandle() = 0;
 		virtual ICompute::IQueue* GetScreenSpaceComputeInterfaceHandle() = 0;
-		virtual ICompute::IPostRenderQueue* GetPostRenderComputeInterfaceHandle() = 0;
+		virtual ICompute::IQueue* GetPostRenderComputeInterfaceHandle() = 0;
     };
 }

@@ -8,8 +8,8 @@ namespace emberEngine
 	class TestInstancedRendering : public emberEcs::Component
 	{
 	private: // Members:
-		emberCore::ComputeShader* m_pStartCS;
-		emberCore::ComputeShader* m_pUpdateCS;
+		emberCore::ComputeShader m_startComputeShader;
+		emberCore::ComputeShader m_updateComputeShader;
 		std::unique_ptr<emberCore::Buffer> m_pInstanceBuffer;
 
 	public: // Methods:

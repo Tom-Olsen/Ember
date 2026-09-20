@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "density3d",
+    "sourcePath": "../src/density3d.comp.hlsl",
+    "binaryPath": "../bin/density3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

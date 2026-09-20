@@ -1,0 +1,19 @@
+{
+    "materialName": "defaultShadowMaterial",
+    "materialShaderName": "shadowShader",
+    "materialPass": "shadow",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/shadow.vert.hlsl",
+            "binaryPath": "../bin/shadow.vert.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": false,
+        "isMutable": true
+    }
+}

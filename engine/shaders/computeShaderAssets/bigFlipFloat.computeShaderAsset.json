@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "bigFlipFloat",
+    "sourcePath": "../src/compute/bitonicSortFloat/bigFlipFloat.comp.hlsl",
+    "binaryPath": "../bin/bigFlipFloat.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

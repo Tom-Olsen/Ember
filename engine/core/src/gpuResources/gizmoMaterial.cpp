@@ -22,11 +22,7 @@ namespace emberCore
 
 
 
-	// Creation/Cloning:
-	GizmoMaterial GizmoMaterial::CreateFromShader(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
-	{
-		return MaterialManager::CreateGizmoMaterial(renderMode, materialShader, name);
-	}
+	// Cloning:
 	GizmoMaterial GizmoMaterial::Clone(const std::string& name) const
 	{
 		return MaterialManager::CloneGizmoMaterial(*this, name);
@@ -49,7 +45,7 @@ namespace emberCore
 	// Getters:
 	emberCommon::GizmoRenderMode GizmoMaterial::GetRenderMode() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("GizmoMaterial::GetRenderMode() failed. Material is invalid or expired.");
@@ -59,7 +55,7 @@ namespace emberCore
 	}
 	const emberCommon::GizmoRenderState* GizmoMaterial::GetRenderState() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("GizmoMaterial::GetRenderState() failed. Material is invalid or expired.");
@@ -69,7 +65,7 @@ namespace emberCore
 	}
 	int32_t GizmoMaterial::GetRenderQueue() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("GizmoMaterial::GetRenderQueue() failed. Material is invalid or expired.");
@@ -79,7 +75,7 @@ namespace emberCore
 	}
 	bool GizmoMaterial::GetIsTransparent() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("GizmoMaterial::GetIsTransparent() failed. Material is invalid or expired.");
@@ -93,21 +89,21 @@ namespace emberCore
 	// Setters:
 	void GizmoMaterial::SetRenderMode(emberCommon::GizmoRenderMode renderMode)
 	{
-		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+		if (emberBackendInterface::IMaterial* pIMaterial = TryGetMutableInterfaceHandle())
 			pIMaterial->SetGizmoRenderMode(renderMode);
 		else
 			LOG_WARN("GizmoMaterial::SetRenderMode(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void GizmoMaterial::SetCullMode(emberCommon::CullMode cullMode)
 	{
-		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+		if (emberBackendInterface::IMaterial* pIMaterial = TryGetMutableInterfaceHandle())
 			pIMaterial->SetCullMode(cullMode);
 		else
 			LOG_WARN("GizmoMaterial::SetCullMode(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void GizmoMaterial::SetRenderQueue(int32_t renderQueue)
 	{
-		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+		if (emberBackendInterface::IMaterial* pIMaterial = TryGetMutableInterfaceHandle())
 			pIMaterial->SetRenderQueue(renderQueue);
 		else
 			LOG_WARN("GizmoMaterial::SetRenderQueue(...) failed. Material is invalid, expired, or immutable.");
@@ -119,7 +115,7 @@ namespace emberCore
 	GizmoMaterial::GizmoMaterial(emberCommon::MaterialId materialId)
 		: Material(materialId)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("GizmoMaterial::GizmoMaterial(...) failed. Material is invalid or expired.");
 		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::gizmo)

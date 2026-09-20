@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "localBitonicSortFloat",
+    "sourcePath": "../src/compute/bitonicSortFloat/localBitonicSortFloat.comp.hlsl",
+    "binaryPath": "../bin/localBitonicSortFloat.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

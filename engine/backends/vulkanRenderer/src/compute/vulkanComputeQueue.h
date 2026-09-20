@@ -19,6 +19,11 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
+	// Forward declarations:
+	class SceneColorTexture2dPair;
+
+
+
 	/// <summary>
 	/// Base class for different compute queues: preRender, midRender, screenSpace, postRender.
 	/// </summary>
@@ -26,10 +31,11 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		ComputeCallQueue m_computeCallQueue;
+		bool m_allowRenderTextureSize;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ComputeQueue();
+		ComputeQueue(bool allowRenderTextureSize = false);
 		~ComputeQueue() override;
 
 		// Non-copyable:
@@ -50,7 +56,7 @@ namespace vulkanRendererBackend
 		void RetireAllComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
-		void UpdateShaderData(uint32_t frameIndex);
+		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair* pSceneColorTexturePair = nullptr);
 
 	protected: // Methods:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeCall(ComputeCall computeCall);

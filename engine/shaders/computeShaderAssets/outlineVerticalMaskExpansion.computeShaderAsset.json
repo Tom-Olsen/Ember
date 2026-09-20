@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "outlineVerticalMaskExpansion",
+    "sourcePath": "../src/compute/outlineVerticalMaskExpansion.comp.hlsl",
+    "binaryPath": "../bin/outlineVerticalMaskExpansion.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

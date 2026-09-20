@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "startIndicesReset2d",
+    "sourcePath": "../src/startIndicesReset2d.comp.hlsl",
+    "binaryPath": "../bin/startIndicesReset2d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

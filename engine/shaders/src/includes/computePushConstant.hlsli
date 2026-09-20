@@ -8,6 +8,7 @@ struct ComputePushConstant
     uint3 threadCount;
     float time;
     float deltaTime;
+    uint sceneColorIndex;	// used automatically picking the correct sceneColor (see computeShaderCommon.hlsli)
 };
 #if defined(_DXC)
 [[vk::push_constant]] ComputePushConstant pc;

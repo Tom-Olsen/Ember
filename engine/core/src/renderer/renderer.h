@@ -40,8 +40,8 @@ namespace emberCore
 {
 	// Forward declarations:
 	class Buffer;
+	class ComputeShaderManager;
 	class Material;
-	class MaterialShaderManager;
 	class Mesh;
 	class CallProperties;
 	class ShadowMaterial;
@@ -52,9 +52,8 @@ namespace emberCore
 	{
 		// Friends:
 		friend class Buffer;
-		friend class ComputeShader;
+		friend class ComputeShaderManager;
 		friend class MaterialManager;
-		friend class MaterialShaderManager;
 		friend class Mesh;
 		friend class CallProperties;
 		friend class Texture2d;
@@ -143,7 +142,6 @@ namespace emberCore
 
 	private: // Methods:
 		// Gpu resource factories:
-		static emberBackendInterface::IComputeShader* CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& name);
 		static emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage);
 		//static emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
 		static emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data);
@@ -152,9 +150,6 @@ namespace emberCore
 		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
 		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
 		
-		// Gpu resource destruction:
-		static void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader);
-
 		// Delete all constructors:
 		Renderer() = delete;
 		Renderer(const Renderer&) = delete;

@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "localBitonicSortPermutationFloat3",
+    "sourcePath": "../src/compute/bitonicSortFloat3/localBitonicSortPermutationFloat3.comp.hlsl",
+    "binaryPath": "../bin/localBitonicSortPermutationFloat3.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

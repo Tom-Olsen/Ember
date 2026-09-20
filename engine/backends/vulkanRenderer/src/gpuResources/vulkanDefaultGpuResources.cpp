@@ -35,10 +35,10 @@ namespace vulkanRendererBackend
 	Material* DefaultGpuResources::s_pDefaultDeferredLightingMaterial = nullptr;
 	Material* DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
 	// Compute shaders:
-	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
-	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineCompositeComputeShader = nullptr;
-	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineHorizontalMaskExpansionComputeShader = nullptr;
-	std::unique_ptr<ComputeShader> DefaultGpuResources::s_pOutlineVerticalMaskExpansionComputeShader = nullptr;
+	ComputeShader* DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
+	ComputeShader* DefaultGpuResources::s_pOutlineCompositeComputeShader = nullptr;
+	ComputeShader* DefaultGpuResources::s_pOutlineHorizontalMaskExpansionComputeShader = nullptr;
+	ComputeShader* DefaultGpuResources::s_pOutlineVerticalMaskExpansionComputeShader = nullptr;
 	// Buffers:
 	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
 	// Textures:
@@ -76,7 +76,6 @@ namespace vulkanRendererBackend
 		if (s_isInitialized)
 			return;
 		s_isInitialized = true;
-		std::filesystem::path shadersBinDirectory = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 
 		// Samplers:
 		InitSamplers();
@@ -93,11 +92,6 @@ namespace vulkanRendererBackend
 		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
 		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
 		s_pDefaultStorageTexture3d = std::make_unique<StorageTexture3d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, 1, (void*)&Float4::one);
-		// Compute shaders:
-		s_pGammaCorrectionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "gammaCorrection.comp.spv", "gammaCorrectionComputeShader");
-		s_pOutlineCompositeComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineComposite.comp.spv", "outlineCompositeComputeShader");
-		s_pOutlineHorizontalMaskExpansionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineHorizontalMaskExpansion.comp.spv", "outlineHorizontalMaskExpansionComputeShader");
-		s_pOutlineVerticalMaskExpansionComputeShader = std::make_unique<ComputeShader>(shadersBinDirectory / "outlineVerticalMaskExpansion.comp.spv", "outlineVerticalMaskExpansionComputeShader");
 	}
 	void DefaultGpuResources::Clear()
 	{
@@ -108,10 +102,7 @@ namespace vulkanRendererBackend
 		// Materials:
 		ClearDefaultMaterials();
 		// Compute shaders:
-		s_pGammaCorrectionComputeShader.reset();
-		s_pOutlineCompositeComputeShader.reset();
-		s_pOutlineHorizontalMaskExpansionComputeShader.reset();
-		s_pOutlineVerticalMaskExpansionComputeShader.reset();
+		ClearDefaultComputeShaders();
 		// Buffers:
 		s_pDefaultStorageBuffer.reset();
 		// Textures:
@@ -152,9 +143,9 @@ namespace vulkanRendererBackend
 		if (pPresentMaterial->GetMaterialPass() != emberCommon::MaterialPass::present)
 			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material has wrong material pass.");
 
-			s_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
-			s_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
-			s_pDefaultDeferredLightingMaterial = static_cast<Material*>(pDeferredLightingMaterial);
+		s_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
+		s_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
+		s_pDefaultDeferredLightingMaterial = static_cast<Material*>(pDeferredLightingMaterial);
 		s_pDefaultPresentMaterial = static_cast<Material*>(pPresentMaterial);
 	}
 	void DefaultGpuResources::ClearDefaultMaterials()
@@ -163,6 +154,33 @@ namespace vulkanRendererBackend
 		s_pDefaultShadowMaterial = nullptr;
 		s_pDefaultDeferredLightingMaterial = nullptr;
 		s_pDefaultPresentMaterial = nullptr;
+	}
+	void DefaultGpuResources::SetDefaultComputeShaders(
+		ComputeShader* pGammaCorrectionComputeShader,
+		ComputeShader* pOutlineCompositeComputeShader,
+		ComputeShader* pOutlineHorizontalMaskExpansionComputeShader,
+		ComputeShader* pOutlineVerticalMaskExpansionComputeShader)
+	{
+		if (pGammaCorrectionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. GammaCorrectionComputeShader compute shader is null.");
+		if (pOutlineCompositeComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. OutlineCompositeComputeShader compute shader is null.");
+		if (pOutlineHorizontalMaskExpansionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. OutlineHorizontalMaskExpansionComputeShader compute shader is null.");
+		if (pOutlineVerticalMaskExpansionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. OutlineVerticalMaskExpansionComputeShader compute shader is null.");
+
+		s_pGammaCorrectionComputeShader = pGammaCorrectionComputeShader;
+		s_pOutlineCompositeComputeShader = pOutlineCompositeComputeShader;
+		s_pOutlineHorizontalMaskExpansionComputeShader = pOutlineHorizontalMaskExpansionComputeShader;
+		s_pOutlineVerticalMaskExpansionComputeShader = pOutlineVerticalMaskExpansionComputeShader;
+	}
+	void DefaultGpuResources::ClearDefaultComputeShaders()
+	{
+		s_pGammaCorrectionComputeShader = nullptr;
+		s_pOutlineCompositeComputeShader = nullptr;
+		s_pOutlineHorizontalMaskExpansionComputeShader = nullptr;
+		s_pOutlineVerticalMaskExpansionComputeShader = nullptr;
 	}
 	// Samplers:
 	Sampler* DefaultGpuResources::GetColorSampler()
@@ -205,19 +223,19 @@ namespace vulkanRendererBackend
 	// Compute shaders:
 	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()
 	{
-		return s_pGammaCorrectionComputeShader.get();
+		return s_pGammaCorrectionComputeShader;
 	}
 	ComputeShader* DefaultGpuResources::GetOutlineCompositeComputeShader()
 	{
-		return s_pOutlineCompositeComputeShader.get();
+		return s_pOutlineCompositeComputeShader;
 	}
 	ComputeShader* DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader()
 	{
-		return s_pOutlineHorizontalMaskExpansionComputeShader.get();
+		return s_pOutlineHorizontalMaskExpansionComputeShader;
 	}
 	ComputeShader* DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader()
 	{
-		return s_pOutlineVerticalMaskExpansionComputeShader.get();
+		return s_pOutlineVerticalMaskExpansionComputeShader;
 	}
 	// Buffers:
 	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()

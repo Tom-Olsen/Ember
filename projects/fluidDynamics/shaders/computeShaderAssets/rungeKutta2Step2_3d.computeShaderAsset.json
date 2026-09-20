@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "rungeKutta2Step2_3d",
+    "sourcePath": "../src/rungeKutta2Step2_3d.comp.hlsl",
+    "binaryPath": "../bin/rungeKutta2Step2_3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

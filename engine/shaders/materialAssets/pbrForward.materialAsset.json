@@ -1,0 +1,25 @@
+{
+    "materialName": "pbrForwardMaterial",
+    "materialShaderName": "pbrForwardShader",
+    "materialPass": "forward",
+    "renderMode": "opaque",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/pbrForward.vert.hlsl",
+            "binaryPath": "../bin/pbrForward.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/pbrForward.frag.hlsl",
+            "binaryPath": "../bin/pbrForward.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

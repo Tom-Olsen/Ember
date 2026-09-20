@@ -1,0 +1,25 @@
+{
+    "materialName": "volumeRaycastMaterial",
+    "materialShaderName": "volumeRaycastShader",
+    "materialPass": "forward",
+    "renderMode": "transparent",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/volumeRaycast.vert.hlsl",
+            "binaryPath": "../bin/volumeRaycast.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/volumeRaycast.frag.hlsl",
+            "binaryPath": "../bin/volumeRaycast.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

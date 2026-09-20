@@ -21,7 +21,6 @@ namespace emberBackendInterface
 	class ICompute;
 	class IMaterial;
 	class IMaterialManager;
-	class IMaterialShaderManager;
 	class IMesh;
 	class IDescriptorSetBinding;
 	class ITexture;
@@ -149,9 +148,6 @@ namespace vulkanRendererBackend
 		void CollectGarbage() override;
 		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
 		void WaitForFrameFinished(uint32_t frameIndex) override;
-
-		// Gpu resource destruction:
-		void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) override;
 
 		// Vulkan handle passthrough for API coupling:
 		void* GetVkInstance() const override;

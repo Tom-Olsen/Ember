@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "bigFlipUint",
+    "sourcePath": "../src/compute/bitonicSortUint/bigFlipUint.comp.hlsl",
+    "binaryPath": "../bin/bigFlipUint.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

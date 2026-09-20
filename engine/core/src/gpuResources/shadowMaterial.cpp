@@ -21,11 +21,7 @@ namespace emberCore
 
 
 
-	// Creation/Cloning:
-	ShadowMaterial ShadowMaterial::CreateFromShader(const MaterialShader& materialShader, const std::string& name)
-	{
-		return MaterialManager::CreateShadowMaterial(materialShader, name);
-	}
+	// Cloning:
 	ShadowMaterial ShadowMaterial::Clone(const std::string& name) const
 	{
 		return MaterialManager::CloneShadowMaterial(*this, name);
@@ -37,7 +33,7 @@ namespace emberCore
 	ShadowMaterial::ShadowMaterial(emberCommon::MaterialId materialId)
 		: Material(materialId)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("ShadowMaterial::ShadowMaterial(...) failed. Material is invalid or expired.");
 		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)

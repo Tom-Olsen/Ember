@@ -1,75 +1,45 @@
 #include "computeShader.h"
-#include "compute.h"
+#include "computeShaderManager.h"
 #include "iComputeShader.h"
-#include "renderer.h"
-#include <utility>
+#include <stdexcept>
 
 
 
 namespace emberCore
 {
-	// Private methods:
-	emberBackendInterface::IComputeShader* ComputeShader::GetInterfaceHandle()
-	{
-		return m_pIComputeShader.get();
-	}
-
-
-
 	// Public methods:
 	// Constructor/Destructor:
 	ComputeShader::ComputeShader()
-        : Shader()
-	{
-		m_name = "";
-		m_pIComputeShader = nullptr;
-	}
-	ComputeShader::ComputeShader(const std::filesystem::path& computeSpv, const std::string& name)
 		: Shader()
-		, m_name(name)
+		, m_computeShaderId(emberCommon::invalidComputeShaderId)
 	{
-		m_pIComputeShader = std::unique_ptr<emberBackendInterface::IComputeShader>(Renderer::CreateComputeShader(computeSpv, name));
-		m_pIShaderDescriptorSetBinding = m_pIComputeShader->GetShaderDescriptorSetBinding();
+
 	}
 	ComputeShader::~ComputeShader()
 	{
-		Renderer::DestroyComputeShader(m_pIComputeShader.release());
+
 	}
 
 
 
-	// Movable:
-	ComputeShader::ComputeShader(ComputeShader&& other) noexcept
-		: Shader(std::move(other))
-		, m_name(std::move(other.m_name))
-	{
-		m_pIComputeShader = std::move(other.m_pIComputeShader);
-	}
-	ComputeShader& ComputeShader::operator=(ComputeShader&& other) noexcept
-	{
-	    if (this != &other)
-	    {
-	        emberBackendInterface::IComputeShader* pOldComputeShader = m_pIComputeShader.release();
-
-	        Shader::operator=(std::move(other));
-	        m_name = std::move(other.m_name);
-	        m_pIComputeShader = std::move(other.m_pIComputeShader);
-
-	        Renderer::DestroyComputeShader(pOldComputeShader);
-	    }
-	    return *this;
-	}
-
-
-
-	// Public methods:
+	// Getters:
 	Uint3 ComputeShader::GetBlockSize() const
 	{
-		return m_pIComputeShader->GetBlockSize();
+		emberBackendInterface::IComputeShader* pIComputeShader = TryGetInterfaceHandle();
+		if (pIComputeShader == nullptr)
+			throw std::runtime_error("ComputeShader::GetBlockSize() failed. ComputeShader is invalid or expired.");
+		return pIComputeShader->GetBlockSize();
 	}
 	const std::string& ComputeShader::GetName() const
 	{
-		return m_name;
+		const std::string* pName = ComputeShaderManager::TryGetComputeShaderName(m_computeShaderId);
+		if (pName == nullptr)
+			throw std::runtime_error("ComputeShader::GetName() failed. ComputeShader is invalid or expired.");
+		return *pName;
+	}
+	bool ComputeShader::IsValid() const
+	{
+		return TryGetInterfaceHandle() != nullptr;
 	}
 
 
@@ -77,6 +47,31 @@ namespace emberCore
 	// Debugging:
 	void ComputeShader::Print() const
 	{
-		m_pIComputeShader->Print();
+		emberBackendInterface::IComputeShader* pIComputeShader = TryGetInterfaceHandle();
+		if (pIComputeShader == nullptr)
+			throw std::runtime_error("ComputeShader::Print() failed. ComputeShader is invalid or expired.");
+		pIComputeShader->Print();
+	}
+
+
+
+	// Private methods:
+	ComputeShader::ComputeShader(emberCommon::ComputeShaderId computeShaderId)
+		: Shader()
+		, m_computeShaderId(computeShaderId)
+	{
+
+	}
+	emberBackendInterface::IComputeShader* ComputeShader::TryGetInterfaceHandle() const
+	{
+		return ComputeShaderManager::TryGetComputeShaderInterface(m_computeShaderId);
+	}
+	emberBackendInterface::IDescriptorSetBinding* ComputeShader::TryGetShaderDescriptorSetBinding() const
+	{
+		if (!ComputeShaderManager::IsComputeShaderMutable(m_computeShaderId))
+			return nullptr;
+		if (emberBackendInterface::IComputeShader* pIComputeShader = TryGetInterfaceHandle())
+			return pIComputeShader->GetShaderDescriptorSetBinding();
+		return nullptr;
 	}
 }

@@ -14,7 +14,7 @@
 //  HLSL spaces:
 #define GLOBAL_SET	space0  // global:    samplers, shadowMaps, global noise textures, etc	(static)
 #define SCENE_SET	space1  // lighting:  dirLightCount, posLightsCount						(static)
-#define FRAME_SET	space2  // camera:    view, proj, viewProj, cameraPos					(static)
+#define FRAME_SET	space2  // frame:     camera + render targets							(static)
 #define SHADER_SET	space3  // material:  textures, buffers, instanceData, metallicity etc.	(dynamic)
 #define CALL_SET	space4  // call:      draw/dispatch-local parameters					(dynamic)
 

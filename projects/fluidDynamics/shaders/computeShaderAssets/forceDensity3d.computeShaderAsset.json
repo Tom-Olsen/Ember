@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "forceDensity3d",
+    "sourcePath": "../src/forceDensity3d.comp.hlsl",
+    "binaryPath": "../bin/forceDensity3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

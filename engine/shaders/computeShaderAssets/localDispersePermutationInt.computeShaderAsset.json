@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "localDispersePermutationInt",
+    "sourcePath": "../src/compute/bitonicSortInt/localDispersePermutationInt.comp.hlsl",
+    "binaryPath": "../bin/localDispersePermutationInt.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

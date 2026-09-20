@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "invertPermutation",
+    "sourcePath": "../src/compute/permutation/invertPermutation.comp.hlsl",
+    "binaryPath": "../bin/invertPermutation.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

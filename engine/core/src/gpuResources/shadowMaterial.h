@@ -10,7 +10,6 @@ namespace emberCore
 	class DeferredMaterial;
 	class ForwardMaterial;
 	class MaterialManager;
-	class MaterialShader;
 
 
 
@@ -35,8 +34,7 @@ namespace emberCore
 		ShadowMaterial(ShadowMaterial&& other) noexcept = default;
 		ShadowMaterial& operator=(ShadowMaterial&& other) noexcept = default;
 
-		// Creation/Cloning:
-		static ShadowMaterial CreateFromShader(const MaterialShader& materialShader, const std::string& name);
+		// Cloning:
 		ShadowMaterial Clone(const std::string& name) const;
 
 	private: // Methods:

@@ -37,7 +37,7 @@ namespace vulkanRendererBackend
 		// Record compute commands:
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
-			// These stages consume sceneColor texture and must transition it to general layout first:
+			// These stages may read or write sceneColor textures and must transition them to general layout first:
 			if constexpr(stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute)
 				frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutForCompute(commandBuffer, frameContext.frameIndex);
 
@@ -83,7 +83,7 @@ namespace vulkanRendererBackend
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &descriptorSet, 0, nullptr);
 
 				// Push constant:
-				ComputePushConstant pushConstant(computeCall.threadCount, frameContext.time, frameContext.deltaTime);
+				ComputePushConstant pushConstant(computeCall.threadCount, frameContext.time, frameContext.deltaTime, computeCall.sceneColorIndex);
 				vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 
 				// Group counts:
@@ -95,7 +95,7 @@ namespace vulkanRendererBackend
 				DEBUG_LOG_TRACE("{} shader {}, call = {}", renderStageNames[static_cast<size_t>(stage)], pComputeShader->GetDebugName(), computeCallIndex);
 
 				// Automatically synchronize scene-color writes before subsequent compute calls:
-				if (computeCall.sceneColorBindingMode != SceneColorBindingMode::none)
+				if (pComputeShader->GetFeatures().WritesSceneColor())
 					RecordComputeToComputeShaderBarrier(commandBuffer, computeCallIndex);
 			}
 

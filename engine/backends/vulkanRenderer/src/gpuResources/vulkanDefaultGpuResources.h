@@ -42,10 +42,10 @@ namespace vulkanRendererBackend
         static Material* s_pDefaultDeferredLightingMaterial;
         static Material* s_pDefaultPresentMaterial;
         // Compute shaders:
-        static std::unique_ptr<ComputeShader> s_pGammaCorrectionComputeShader;
-        static std::unique_ptr<ComputeShader> s_pOutlineCompositeComputeShader;
-        static std::unique_ptr<ComputeShader> s_pOutlineHorizontalMaskExpansionComputeShader;
-        static std::unique_ptr<ComputeShader> s_pOutlineVerticalMaskExpansionComputeShader;
+		static ComputeShader* s_pGammaCorrectionComputeShader;
+		static ComputeShader* s_pOutlineCompositeComputeShader;
+		static ComputeShader* s_pOutlineHorizontalMaskExpansionComputeShader;
+		static ComputeShader* s_pOutlineVerticalMaskExpansionComputeShader;
         // Buffers:
         static std::unique_ptr<StorageBuffer> s_pDefaultStorageBuffer;
         // Textures:
@@ -69,6 +69,12 @@ namespace vulkanRendererBackend
 			emberBackendInterface::IMaterial* pDeferredLightingMaterial, 
 			emberBackendInterface::IMaterial* pPresentMaterial);
 		static void ClearDefaultMaterials();
+		static void SetDefaultComputeShaders(
+			ComputeShader* pGammaCorrectionComputeShader,
+			ComputeShader* pOutlineCompositeComputeShader,
+			ComputeShader* pOutlineHorizontalMaskExpansionComputeShader,
+			ComputeShader* pOutlineVerticalMaskExpansionComputeShader);
+		static void ClearDefaultComputeShaders();
 
         // Samplers:
         static Sampler* GetColorSampler();

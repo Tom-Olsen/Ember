@@ -2,6 +2,7 @@
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
 #include "commonMaterialPass.h"
+#include "commonResourceAccessRights.h"
 #include "commonShaderStage.h"
 #include <array>
 #include <cstddef>
@@ -19,7 +20,8 @@ namespace emberAssetLoader
 		struct ShaderStageAsset
 		{
 			emberCommon::ShaderStage shaderStage = emberCommon::ShaderStage::count;
-			std::filesystem::path path;
+			std::filesystem::path sourcePath;
+			std::filesystem::path binaryPath;
 		};
 		struct GizmoSettings
 		{
@@ -29,7 +31,15 @@ namespace emberAssetLoader
 		{
 
 		};
+		struct OutlineSettings
+		{
+
+		};
 		struct DeferredGeometrySettings
+		{
+
+		};
+		struct DeferredLightingSettings
 		{
 
 		};
@@ -37,18 +47,26 @@ namespace emberAssetLoader
 		{
 			emberCommon::ForwardRenderMode renderMode = emberCommon::ForwardRenderMode::count;
 		};
+		struct PresentSettings
+		{
+
+		};
 		using RenderModeSettings = std::variant<
 			std::monostate,
 			GizmoSettings,
+			OutlineSettings,
 			ShadowSettings,
 			DeferredGeometrySettings,
-			ForwardSettings>;
+			DeferredLightingSettings,
+			ForwardSettings,
+			PresentSettings>;
 
 		// Members:
 		std::string materialName;
 		std::string materialShaderName;
-		std::array<std::filesystem::path, static_cast<size_t>(emberCommon::ShaderStage::count)> shaderStagePaths;
+		std::array<ShaderStageAsset, static_cast<size_t>(emberCommon::ShaderStage::count)> shaderStages;
 		RenderModeSettings renderModeSettings = std::monostate{};
+		emberCommon::ResourceAccessRights accessRights;
 
 		// Methods:
 		emberCommon::MaterialPass GetMaterialPass() const;

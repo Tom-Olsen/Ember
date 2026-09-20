@@ -1,10 +1,7 @@
 #include "vulkanCompute.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanComputeQueue.h"
-#include "vulkanDepthTexture2d.h"
-#include "vulkanPostRenderComputeQueue.h"
 #include "vulkanSceneColorTexture2dPair.h"
-#include "vulkanScreenSpaceComputeQueue.h"
 
 
 
@@ -14,11 +11,12 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	Compute::Compute()
 	{
-		m_pIAsync = std::make_unique<Async>(10);	// 10 = max session count.
+		uint32_t asyncSessionCount = 10;
+		m_pIAsync = std::make_unique<Async>(asyncSessionCount);
 		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
 		m_pMidRenderComputeQueue = std::make_unique<ComputeQueue>();
-		m_pScreenSpaceComputeQueue = std::make_unique<ScreenSpaceComputeQueue>();
-		m_pPostRenderComputeQueue = std::make_unique<PostRenderComputeQueue>();
+		m_pScreenSpaceComputeQueue = std::make_unique<ComputeQueue>(true);
+		m_pPostRenderComputeQueue = std::make_unique<ComputeQueue>(true);
 	}
 	Compute::~Compute()
 	{
@@ -46,11 +44,11 @@ namespace vulkanRendererBackend
 	{
 		return m_pMidRenderComputeQueue.get();
 	}
-	ScreenSpaceComputeQueue* Compute::GetScreenSpaceCompute()
+	ComputeQueue* Compute::GetScreenSpaceCompute()
 	{
 		return m_pScreenSpaceComputeQueue.get();
 	}
-	PostRenderComputeQueue* Compute::GetPostRenderCompute()
+	ComputeQueue* Compute::GetPostRenderCompute()
 	{
 		return m_pPostRenderComputeQueue.get();
 	}
@@ -70,7 +68,7 @@ namespace vulkanRendererBackend
 	{
 		return m_pScreenSpaceComputeQueue.get();
 	}
-	emberBackendInterface::ICompute::IPostRenderQueue* Compute::GetPostRenderComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IQueue* Compute::GetPostRenderComputeInterfaceHandle()
 	{
 		return m_pPostRenderComputeQueue.get();
 	}
@@ -78,13 +76,13 @@ namespace vulkanRendererBackend
 
 
 	// Frame lifecycle:
-	uint32_t Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair, DepthTexture2d& sceneDepth)
+	uint32_t Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
 	{
 		GetPreRenderCompute()->UpdateShaderData(frameIndex);
 		GetMidRenderCompute()->UpdateShaderData(frameIndex);
-		GetScreenSpaceCompute()->UpdateShaderData(frameIndex, sceneColorTexturePair, sceneDepth);
+		GetScreenSpaceCompute()->UpdateShaderData(frameIndex, &sceneColorTexturePair);
 		uint32_t sceneColorTextureIndex = sceneColorTexturePair.GetCurrentTextureIndex(frameIndex);
-		GetPostRenderCompute()->UpdateShaderData(frameIndex, sceneColorTexturePair);
+		GetPostRenderCompute()->UpdateShaderData(frameIndex, &sceneColorTexturePair);
 		return sceneColorTextureIndex;
 	}
 	void Compute::CommitFrame(uint32_t frameIndex)

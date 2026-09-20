@@ -15,24 +15,16 @@ namespace vulkanRendererBackend
 
 
 
-	enum class SceneColorBindingMode : uint8_t
-	{
-		none,
-		inPlace,
-		outOfPlace
-	};
-
-
-
 	struct ComputeCall
 	{
-		Uint3 threadCount;													// Total thread count in each dimension. GroupCount is automatically computed from blockSize of the ComputeShader.
-		ShaderHandle computeShaderHandle;									// Empty for barrier calls.
-		DescriptorSetBindingHandle callDescriptorSetBindingHandle;			// Borrowed from pool for dispatch calls, empty for barriers.
-		AccessMask srcAccessMask;											// Only applies to barriers.
-		AccessMask dstAccessMask;											// Only applies to barriers.
-		SceneColorBindingMode sceneColorBindingMode = SceneColorBindingMode::none;	// Determines how this call automatically binds scene color textures.
-		bool useRenderTextureSize = false; 											// Determines whether this call provides its own threadCount or uses the render texture size.
+		Uint3 threadCount;											// Total thread count in each dimension. GroupCount is automatically computed from blockSize of the ComputeShader.
+		ShaderHandle computeShaderHandle;							// Empty for barrier calls.
+		DescriptorSetBindingHandle callDescriptorSetBindingHandle;	// Borrowed from pool for dispatch calls, empty for barriers.
+		AccessMask srcAccessMask;									// Only applies to barriers.
+		AccessMask dstAccessMask;									// Only applies to barriers.
+		bool useRenderTextureSize = false; 							// Determines whether this call provides its own threadCount or uses the render texture size.
+		bool flipSceneColors = false; 								// Determines whether this call writes the alternate scene color texture.
+		uint32_t sceneColorIndex = 0;								// Current scene color texture index before this call runs.
 
 		ComputeShader* GetComputeShader() const;
 		bool IsBarrier() const;

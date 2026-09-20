@@ -1,7 +1,7 @@
 #include "vulkanGpuResourceFactory.h"
 #include "descriptorSetMacros.h"
 #include "vulkanConvertTextureFormat.h"
-#include "vulkanComputeShader.h"
+#include "vulkanComputeShaderManager.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanMaterial.h"
@@ -27,7 +27,9 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	GpuResourceFactory::GpuResourceFactory(uint32_t shadowMapResolution)
 	{
-		m_shadowMapResolution = shadowMapResolution;
+		m_pMaterialShaderManager = std::make_unique<MaterialShaderManager>(shadowMapResolution);
+		m_pMaterialManager = std::make_unique<MaterialManager>(m_pMaterialShaderManager.get());
+		m_pComputeShaderManager = std::make_unique<ComputeShaderManager>();
 	}
 	GpuResourceFactory::~GpuResourceFactory()
 	{
@@ -37,19 +39,13 @@ namespace vulkanRendererBackend
 
 
 	// Gpu resource factories:
-	emberBackendInterface::IComputeShader* GpuResourceFactory::CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName)
+	emberBackendInterface::IMaterialManager* GpuResourceFactory::GetMaterialManager()
 	{
-		return new ComputeShader(computeSpv, debugName);
+		return m_pMaterialManager.get();
 	}
-	emberBackendInterface::IMaterialShaderManager* GpuResourceFactory::CreateMaterialShaderManager()
+	emberBackendInterface::IComputeShaderManager* GpuResourceFactory::GetComputeShaderManager()
 	{
-		return new MaterialShaderManager(m_shadowMapResolution);
-	}
-	emberBackendInterface::IMaterialManager* GpuResourceFactory::CreateMaterialManager(emberBackendInterface::IMaterialShaderManager* pIMaterialShaderManager)
-	{
-		if (pIMaterialShaderManager == nullptr)
-			throw std::runtime_error("GpuResourceFactory::CreateMaterialManager(...) failed. pIMaterialShaderManager is nullptr.");
-		return new MaterialManager(static_cast<MaterialShaderManager*>(pIMaterialShaderManager));
+		return m_pComputeShaderManager.get();
 	}
 	emberBackendInterface::IBuffer* GpuResourceFactory::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{

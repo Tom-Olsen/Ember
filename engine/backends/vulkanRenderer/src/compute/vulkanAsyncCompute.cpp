@@ -167,6 +167,11 @@ namespace vulkanRendererBackend
 			return nullptr;
 		}
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
+		if (pComputeShader->GetFeatures().ReadsSceneColor() || pComputeShader->GetFeatures().WritesSceneColor())
+		{
+			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. Async compute shaders cannot access scene color textures.", pComputeShader->GetDebugName());
+			return nullptr;
+		}
 		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
 			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. threadCount has 0 entry.", pComputeShader->GetDebugName());

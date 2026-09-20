@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "buffer.h"
 #include "callProperties.h"
+#include "computeShaderManager.h"
 #include "emberTime.h"
 #include "iGpuResourceFactory.h"
 #include "iMaterial.h"
@@ -8,7 +9,6 @@
 #include "logger.h"
 #include "material.h"
 #include "materialManager.h"
-#include "materialShaderManager.h"
 #include "mesh.h"
 #include "shadowMaterial.h"
 #include "texture.h"
@@ -52,14 +52,14 @@ namespace emberCore
 
 		s_pIRenderer = std::unique_ptr<emberBackendInterface::IRenderer>(pIRenderer);
 		s_pIGpuResourceFactory = std::unique_ptr<emberBackendInterface::IGpuResourceFactory>(pIGpuResourceFactory);
-		MaterialShaderManager::Init();
 		MaterialManager::Init();
+		ComputeShaderManager::Init();
 		s_isInitialized = true;
 	}
 	void Renderer::Clear()
 	{
+		ComputeShaderManager::Clear();
 		MaterialManager::Clear();
-		MaterialShaderManager::Clear();
 		s_pIGpuResourceFactory.reset();
 		s_pIRenderer.reset();
 		s_isInitialized = false;
@@ -102,7 +102,7 @@ namespace emberCore
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = callProperties.GetCallInterfaceHandle();
 		if (!pICallDescriptorSetBinding)
 		{
@@ -122,7 +122,7 @@ namespace emberCore
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, cullMode, receiveShadows, 0);
 		if (castShadows)
 			DrawMeshShadow(localToWorldMatrix, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
@@ -131,7 +131,7 @@ namespace emberCore
 	void Renderer::DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material, CallProperties& callProperties)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("Renderer::DrawMeshShadow(...) failed. Shadow material is invalid or expired.");
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = callProperties.GetCallInterfaceHandle();
@@ -145,7 +145,7 @@ namespace emberCore
 	CallProperties Renderer::DrawMeshShadow(const Float4x4& localToWorldMatrix, const Mesh& mesh, const ShadowMaterial& material)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("Renderer::DrawMeshShadow(...) failed. Shadow material is invalid or expired.");
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMeshShadow(localToWorldMatrix, pIMesh, pIMaterial, 0);
@@ -158,7 +158,7 @@ namespace emberCore
 	void Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, CallProperties& callProperties, emberCommon::CullMode cullMode)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = callProperties.GetCallInterfaceHandle();
 		if (!pICallDescriptorSetBinding)
 		{
@@ -174,7 +174,7 @@ namespace emberCore
 	CallProperties Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, emberCommon::CullMode cullMode)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawGizmo(localToWorldMatrix, pIMesh, pIMaterial, cullMode, 0);
 		return CallProperties(pICallDescriptorSetBinding);
 	}
@@ -197,7 +197,7 @@ namespace emberCore
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = callProperties.GetCallInterfaceHandle();
 		if (!pICallDescriptorSetBinding)
 		{
@@ -219,7 +219,7 @@ namespace emberCore
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, cullMode, receiveShadows, instanceCount);
 		CallProperties callProperties(pICallDescriptorSetBinding);
 		if (callProperties.HasBinding("instanceBuffer"))
@@ -237,7 +237,7 @@ namespace emberCore
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = callProperties.GetCallInterfaceHandle();
 		if (!pICallDescriptorSetBinding)
 		{
@@ -257,7 +257,7 @@ namespace emberCore
 		if (material.GetName() == "errorMaterial")
 			receiveShadows = castShadows = false;
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(localToWorldMatrix, pIMesh, pIMaterial, cullMode, receiveShadows, instanceCount);
 		if (castShadows)
 			DrawMeshShadowInstanced(localToWorldMatrix, instanceCount, mesh, MaterialManager::GetShadowMaterialForSurfaceMaterial(material.m_materialId));
@@ -279,7 +279,7 @@ namespace emberCore
 	void Renderer::DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material, CallProperties& callProperties)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("Renderer::DrawMeshShadowInstanced(...) failed. Shadow material is invalid or expired.");
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = callProperties.GetCallInterfaceHandle();
@@ -293,7 +293,7 @@ namespace emberCore
 	CallProperties Renderer::DrawMeshShadowInstanced(const Float4x4& localToWorldMatrix, uint32_t instanceCount, const Mesh& mesh, const ShadowMaterial& material)
 	{
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("Renderer::DrawMeshShadowInstanced(...) failed. Shadow material is invalid or expired.");
 		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMeshShadow(localToWorldMatrix, pIMesh, pIMaterial, instanceCount);
@@ -419,10 +419,6 @@ namespace emberCore
 
 
 	// Gpu resource factories:
-	emberBackendInterface::IComputeShader* Renderer::CreateComputeShader(const std::filesystem::path& computeSpv, const std::string& name)
-	{
-		return s_pIGpuResourceFactory->CreateComputeShader(computeSpv, name);
-	}
 	emberBackendInterface::IBuffer* Renderer::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
 		return s_pIGpuResourceFactory->CreateBuffer(count, elementSize, usage);
@@ -450,15 +446,5 @@ namespace emberCore
 	emberBackendInterface::IDescriptorSetBinding* Renderer::CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial)
 	{
 		return s_pIGpuResourceFactory->CreateDrawCallDescriptorSetBinding(pIMaterial);
-	}
-	
-
-	
-	// Gpu resource destruction:
-	void Renderer::DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
-	{
-		if (!pIComputeShader)
-			return;
-		s_pIRenderer->DestroyComputeShader(pIComputeShader);
 	}
 }

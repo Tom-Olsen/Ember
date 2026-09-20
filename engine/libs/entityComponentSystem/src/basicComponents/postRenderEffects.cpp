@@ -23,7 +23,7 @@ namespace emberEcs
 	// Overrides:
 	void PostRenderEffects::LateUpdate()
 	{
-		for (ComputeShader* pComputeShader : effects)
-			CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(*pComputeShader);
+		for (ComputeShader& computeShader : effects)
+			CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(computeShader);
 	}
 }

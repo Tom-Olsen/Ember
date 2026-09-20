@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "localDispersePermutationFloat3",
+    "sourcePath": "../src/compute/bitonicSortFloat3/localDispersePermutationFloat3.comp.hlsl",
+    "binaryPath": "../bin/localDispersePermutationFloat3.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

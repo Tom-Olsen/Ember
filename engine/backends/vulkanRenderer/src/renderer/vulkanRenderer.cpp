@@ -34,11 +34,9 @@
 #include "vulkanMacros.h"
 #include "vulkanMaterial.h"
 #include "vulkanMaterialManager.h"
-#include "vulkanMaterialShaderManager.h"
 #include "vulkanMesh.h"
 #include "vulkanOutlineDrawCall.h"
 #include "vulkanPoolManager.h"
-#include "vulkanPostRenderComputeQueue.h"
 #include "vulkanPresentRenderPass.h"
 #include "vulkanRenderGraph.h"
 #include "vulkanRenderPassManager.h"
@@ -51,7 +49,6 @@
 #include "vulkanSampler.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include "vulkanSceneDescriptorSetLayout.h"
-#include "vulkanScreenSpaceComputeQueue.h"
 #include "vulkanShadowDrawCall.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStorageBuffer.h"
@@ -231,9 +228,9 @@ namespace vulkanRendererBackend
 		SortDrawCallPointers();
 		QueueRendererOwnedComputeShaders();
 		UpdateShaderData();
-		// happends here atm as the resulitng transparent scene color index must be forwarded to frameContext.
-		// ToDo: cleaner architecture so this call can be put back into UpdateShaderData() and the transparend scene color index still gets assigned somehow.
-		uint32_t transparentSceneColorIndex = m_pCompute->UpdateShaderData(m_frameIndex, sceneColorTexturePair, m_pRenderTargets->GetSceneDepthTexture(m_frameIndex));
+		// Happens here atm as the resulting transparent scene color index must be forwarded to frameContext.
+		// ToDo: cleaner architecture so this call can be put back into UpdateShaderData() and the transparent scene color index still gets assigned somehow.
+		uint32_t transparentSceneColorIndex = m_pCompute->UpdateShaderData(m_frameIndex, sceneColorTexturePair);
 
 		// Record and submit current frame commands:
 		uint32_t shadowMapCount = m_directionalLightsCount + m_positionalLightsCount;
@@ -608,23 +605,6 @@ namespace vulkanRendererBackend
 
 
 
-	// Gpu resource destruction:
-	void Renderer::DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader)
-	{
-	    if (!pIComputeShader)
-	        return;
-
-	    ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
-		GarbageCollector::RecordPendingGarbage([pComputeShader]()
-	    {
-	        if (pComputeShader->HasPendingUse())
-	            return false;
-	        delete pComputeShader;
-	        return true;
-	    });
-	}
-
-
 	// Vulkan handle passthrough for API coupling:
 	void* Renderer::GetVkInstance() const
 	{
@@ -775,7 +755,7 @@ namespace vulkanRendererBackend
 	{
 		// Outline mask:
 		ComputeQueue* pMidRenderCompute = m_pCompute->GetMidRenderCompute();
-		PostRenderComputeQueue* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
+		ComputeQueue* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
 		if (!m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls.empty())
 		{
 			// Masks:
@@ -808,14 +788,14 @@ namespace vulkanRendererBackend
 			// Composite outline into render texture (postRenderCompute):
 			ComputeShader* pOutlineCompositeComputeShader = DefaultGpuResources::GetOutlineCompositeComputeShader();
 			pOutlineCompositeComputeShader->GetDescriptorSetBinding()->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
-			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordPostProcessingShader(pOutlineCompositeComputeShader, Uint3::zero));
+			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordComputeShader(pOutlineCompositeComputeShader, Uint3::zero));
 			if (!pCompositeCallDescriptorSetBinding)
 				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the outline composite compute shader.");
 			pCompositeCallDescriptorSetBinding->SetTexture("outlineMask", pExpandedMask);
 		}
 
 		// Renderer uses linear color space, apply gamma correction is always the final post-render operation:
-		if (pPostRenderCompute->RecordPostProcessingShader(DefaultGpuResources::GetGammaCorrectionComputeShader(), Uint3::zero) == nullptr)
+		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::GetGammaCorrectionComputeShader(), Uint3::zero) == nullptr)
 			throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the gamma correction compute shader.");
 	}
 	void Renderer::UpdateShaderData()
@@ -826,6 +806,7 @@ namespace vulkanRendererBackend
 
 		// Frame descriptor set:
 		FrameDescriptorSetLayout::SetCameraData(Float4(m_activeCamera.position, 1.0f), m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
+		FrameDescriptorSetLayout::SetRenderTargetData(m_frameIndex, m_pRenderTargets->GetSceneColorTexturePair(), m_pRenderTargets->GetSceneDepthTexture(m_frameIndex));
 		FrameDescriptorSetLayout::UpdateShaderData(m_frameIndex);
 
 		// Gizmo calls:

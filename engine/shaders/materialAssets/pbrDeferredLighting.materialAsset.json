@@ -1,0 +1,24 @@
+{
+    "materialName": "pbrDeferredLightingMaterial",
+    "materialShaderName": "pbrDeferredLightingShader",
+    "materialPass": "deferredLighting",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/pbrDeferredLighting.vert.hlsl",
+            "binaryPath": "../bin/pbrDeferredLighting.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/pbrDeferredLighting.frag.hlsl",
+            "binaryPath": "../bin/pbrDeferredLighting.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

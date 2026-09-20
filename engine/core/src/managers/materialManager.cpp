@@ -3,95 +3,51 @@
 #include "iMaterial.h"
 #include "iMaterialManager.h"
 #include "logger.h"
+#include "materialAsset.h"
 #include "materialAssetLoader.h"
-#include "materialShader.h"
-#include "materialShaderManager.h"
 #include "renderer.h"
+#include <algorithm>
+#include <filesystem>
 #include <stdexcept>
+#include <vector>
 
 
 
 namespace emberCore
 {
 	// Static members:
-	std::unique_ptr<emberBackendInterface::IMaterialManager> MaterialManager::s_pIMaterialManager;
+	emberBackendInterface::IMaterialManager* MaterialManager::s_pIMaterialManager = nullptr;
 
 
 
 	// Public methods:
-	// Creators:
-	Material MaterialManager::CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset)
+	// Asset loading:
+	void MaterialManager::LoadMaterialAssets(const std::filesystem::path& directoryPath)
 	{
-		const std::filesystem::path& vertexSpv = materialAsset.shaderStagePaths[static_cast<size_t>(emberCommon::ShaderStage::vertex)];
-		const std::filesystem::path& fragmentSpv = materialAsset.shaderStagePaths[static_cast<size_t>(emberCommon::ShaderStage::fragment)];
+		// Error handling:
+		if (s_pIMaterialManager == nullptr)
+			throw std::runtime_error("MaterialManager::LoadMaterialAssets(...) failed. Material manager is not initialized.");
+		if (!std::filesystem::is_directory(directoryPath))
+			throw std::runtime_error("MaterialManager::LoadMaterialAssets(...) failed. Directory does not exist: " + directoryPath.string());
 
-		switch (materialAsset.GetMaterialPass())
+		// Collect all asset paths:
+		std::vector<std::filesystem::path> assetPaths;
+		for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directoryPath))
 		{
-			case emberCommon::MaterialPass::gizmo:
-			{
-				MaterialShader materialShader = MaterialShaderManager::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, materialAsset.materialShaderName);
-				const emberAssetLoader::MaterialAsset::GizmoSettings& settings = std::get<emberAssetLoader::MaterialAsset::GizmoSettings>(materialAsset.renderModeSettings);
-				return CreateGizmoMaterial(settings.renderMode, materialShader, materialAsset.materialName);
-			}
-			case emberCommon::MaterialPass::shadow:
-			{
-				MaterialShader materialShader = MaterialShaderManager::CreateShadowMaterialShader(vertexSpv, materialAsset.materialShaderName);
-				return CreateShadowMaterial(materialShader, materialAsset.materialName);
-			}
-			case emberCommon::MaterialPass::deferredGeometry:
-			{
-				MaterialShader materialShader = MaterialShaderManager::CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, materialAsset.materialShaderName);
-				return CreateDeferredGeometryMaterial(materialShader, materialAsset.materialName);
-			}
-			case emberCommon::MaterialPass::forward:
-			{
-				MaterialShader materialShader = MaterialShaderManager::CreateForwardMaterialShader(vertexSpv, fragmentSpv, materialAsset.materialShaderName);
-				const emberAssetLoader::MaterialAsset::ForwardSettings& settings = std::get<emberAssetLoader::MaterialAsset::ForwardSettings>(materialAsset.renderModeSettings);
-				return CreateForwardMaterial(settings.renderMode, materialShader, materialAsset.materialName);
-			}
-			default:
-				throw std::runtime_error("MaterialManager::CreateMaterial(...) failed. Unsupported material pass.");
+			if (entry.is_regular_file() && entry.path().filename().string().ends_with(".materialAsset.json"))
+				assetPaths.push_back(entry.path());
 		}
-	}
-	GizmoMaterial MaterialManager::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShader materialShader = MaterialShaderManager::CreateGizmoMaterialShader(vertexSpv, fragmentSpv, name);
-		return CreateGizmoMaterial(renderMode, materialShader, name);
-	}
-	GizmoMaterial MaterialManager::CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CreateGizmoMaterial(materialShader.m_materialShaderId, renderMode, name);
-		return materialId.index == emberCommon::invalidMaterialId.index ? GizmoMaterial() : GizmoMaterial{ materialId };
-	}
-	ShadowMaterial MaterialManager::CreateShadowMaterial(const std::filesystem::path& vertexSpv, const std::string& name)
-	{
-		MaterialShader materialShader = MaterialShaderManager::CreateShadowMaterialShader(vertexSpv, name);
-		return CreateShadowMaterial(materialShader, name);
-	}
-	ShadowMaterial MaterialManager::CreateShadowMaterial(const MaterialShader& materialShader, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CreateShadowMaterial(materialShader.m_materialShaderId, name);
-		return materialId.index == emberCommon::invalidMaterialId.index ? ShadowMaterial() : ShadowMaterial{ materialId };
-	}
-	DeferredMaterial MaterialManager::CreateDeferredGeometryMaterial(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShader materialShader = MaterialShaderManager::CreateDeferredGeometryMaterialShader(vertexSpv, fragmentSpv, name);
-		return CreateDeferredGeometryMaterial(materialShader, name);
-	}
-	DeferredMaterial MaterialManager::CreateDeferredGeometryMaterial(const MaterialShader& materialShader, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CreateDeferredGeometryMaterial(materialShader.m_materialShaderId, name);
-		return materialId.index == emberCommon::invalidMaterialId.index ? DeferredMaterial() : DeferredMaterial{ materialId };
-	}
-	ForwardMaterial MaterialManager::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name)
-	{
-		MaterialShader materialShader = MaterialShaderManager::CreateForwardMaterialShader(vertexSpv, fragmentSpv, name);
-		return CreateForwardMaterial(renderMode, materialShader, name);
-	}
-	ForwardMaterial MaterialManager::CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name)
-	{
-		emberCommon::MaterialId materialId = s_pIMaterialManager->CreateForwardMaterial(materialShader.m_materialShaderId, renderMode, name);
-		return materialId.index == emberCommon::invalidMaterialId.index ? ForwardMaterial() : ForwardMaterial{ materialId };
+		std::sort(assetPaths.begin(), assetPaths.end());
+
+		// Create all material assets:
+		std::vector<emberAssetLoader::MaterialAsset> materialAssets;
+		materialAssets.reserve(assetPaths.size());
+		for (const std::filesystem::path& assetPath : assetPaths)
+			materialAssets.push_back(emberAssetLoader::MaterialAssetLoader::Load(assetPath));
+
+		// Create all materials:
+		for (const emberAssetLoader::MaterialAsset& materialAsset : materialAssets)
+			s_pIMaterialManager->CreateMaterial(materialAsset);
 	}
 
 
@@ -268,27 +224,17 @@ namespace emberCore
 		if (Renderer::s_pIGpuResourceFactory == nullptr)
 			throw std::runtime_error("MaterialManager::Init() failed. Gpu resource factory is not initialized.");
 
-		s_pIMaterialManager.reset(Renderer::s_pIGpuResourceFactory->CreateMaterialManager(MaterialShaderManager::GetInterfaceHandle()));
+		s_pIMaterialManager = Renderer::s_pIGpuResourceFactory->GetMaterialManager();
 		if (s_pIMaterialManager == nullptr)
 			throw std::runtime_error("MaterialManager::Init() failed. Gpu resource factory returned a nullptr material manager.");
 
-		const std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "materialAssets").make_preferred();
-    	for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directoryPath))
-    	{
-			// Skip invalid files:
-    	    if (!entry.is_regular_file())
-    	        continue;
-    	    if (entry.path().extension() != ".json")
-    	        continue;
-
-    	    const std::filesystem::path& jsonPath = entry.path();
-			emberAssetLoader::MaterialAsset materialAsset = emberAssetLoader::MaterialAssetLoader::Load(jsonPath);
-			CreateMaterial(materialAsset);
-    	}
+		// Load engines default materials:
+		LoadMaterialAssets(std::filesystem::path(ENGINE_SHADERS_DIR) / "materialAssets");
+		s_pIMaterialManager->InitializeDefaultMaterials();
 	}
 	void MaterialManager::Clear()
 	{
-		s_pIMaterialManager.reset();
+		s_pIMaterialManager = nullptr;
 	}
 
 
@@ -343,10 +289,6 @@ namespace emberCore
 	const std::string* MaterialManager::TryGetMaterialName(emberCommon::MaterialId materialId)
 	{
 		return s_pIMaterialManager->TryGetMaterialName(materialId);
-	}
-	const emberCommon::MaterialShaderId* MaterialManager::TryGetMaterialShaderId(emberCommon::MaterialId materialId)
-	{
-		return s_pIMaterialManager->TryGetMaterialShaderId(materialId);
 	}
 	emberCommon::MaterialId MaterialManager::TryGetShadowMaterialIdOfSurfaceMaterial(emberCommon::MaterialId surfaceMaterialId)
 	{

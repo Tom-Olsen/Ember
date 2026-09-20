@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "outlineComposite",
+    "sourcePath": "../src/compute/outlineComposite.comp.hlsl",
+    "binaryPath": "../bin/outlineComposite.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

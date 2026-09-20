@@ -2,7 +2,6 @@
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
 #include "commonMaterialId.h"
-#include "commonMaterialShaderId.h"
 #include "deferredMaterial.h"
 #include "emberCoreExport.h"
 #include "forwardMaterial.h"
@@ -10,7 +9,6 @@
 #include "material.h"
 #include "shadowMaterial.h"
 #include <filesystem>
-#include <memory>
 #include <string>
 
 
@@ -23,18 +21,13 @@ namespace emberBackendInterface
 }
 namespace emberAssetLoader
 {
-	class MaterialAsset;
+	struct MaterialAsset;
 }
 
 
 
 namespace emberCore
 {
-	// Forward declarations:
-	class MaterialShader;
-
-
-
 	/// <summary>
 	/// Purely static facade for the backend material manager.
 	/// Material is a non-owning, generational handle to a backend-owned slot.
@@ -48,19 +41,11 @@ namespace emberCore
 		friend class Renderer;
 
 	private: // Members:
-		static std::unique_ptr<emberBackendInterface::IMaterialManager> s_pIMaterialManager;
+		static emberBackendInterface::IMaterialManager* s_pIMaterialManager;
 
 	public: // Methods:
-		// Creators:
-		static Material CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset);
-		static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static GizmoMaterial CreateGizmoMaterial(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
-		static ShadowMaterial CreateShadowMaterial(const std::filesystem::path& vertexSpv, const std::string& name);
-		static ShadowMaterial CreateShadowMaterial(const MaterialShader& materialShader, const std::string& name);
-		static DeferredMaterial CreateDeferredGeometryMaterial(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static DeferredMaterial CreateDeferredGeometryMaterial(const MaterialShader& materialShader, const std::string& name);
-		static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static ForwardMaterial CreateForwardMaterial(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
+		// Asset loading:
+		static void LoadMaterialAssets(const std::filesystem::path& directoryPath);
 
 		// Cloners:
 		static GizmoMaterial CloneGizmoMaterial(const GizmoMaterial& sourceMaterial, const std::string& name);
@@ -104,7 +89,6 @@ namespace emberCore
 		static emberCommon::MaterialId TryGetMaterialId(const std::string& name);
 		static emberBackendInterface::IMaterial* TryGetMaterialInterface(emberCommon::MaterialId materialId);
 		static const std::string* TryGetMaterialName(emberCommon::MaterialId materialId);
-		static const emberCommon::MaterialShaderId* TryGetMaterialShaderId(emberCommon::MaterialId materialId);
 		static emberCommon::MaterialId TryGetShadowMaterialIdOfSurfaceMaterial(emberCommon::MaterialId surfaceMaterialId);
 		static bool IsMaterialMutable(emberCommon::MaterialId materialId);
 

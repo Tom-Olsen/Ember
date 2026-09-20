@@ -1,9 +1,14 @@
 #include "vulkanFrameDescriptorSetLayout.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanDepthTexture2d.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanMacros.h"
+#include "vulkanRenderTexture2d.h"
+#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanTexture.h"
 #include "vulkanUniformBuffer.h"
+#include <array>
 
 
 
@@ -23,17 +28,42 @@ namespace vulkanRendererBackend
     {
         // Create descriptor set layout:
         {
-            // cbuffer CameraProperties : register(b1399, FRAME_SET):
-            VkDescriptorSetLayoutBinding binding{};
-            binding.binding = 1399;
-            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            binding.descriptorCount = 1;
-            binding.stageFlags = VK_SHADER_STAGE_ALL;
-            binding.pImmutableSamplers = nullptr;
+			// Texture2D<float> sceneDepthTexture : register(t1100, FRAME_SET);
+            VkDescriptorSetLayoutBinding sceneDepthBinding{};
+            sceneDepthBinding.binding = 1100;
+            sceneDepthBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            sceneDepthBinding.descriptorCount = 1;
+            sceneDepthBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            sceneDepthBinding.pImmutableSamplers = nullptr;
 
+			// [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture0 : register(u1200, FRAME_SET);
+            VkDescriptorSetLayoutBinding sceneColorBinding0{};
+            sceneColorBinding0.binding = 1200;
+            sceneColorBinding0.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            sceneColorBinding0.descriptorCount = 1;
+            sceneColorBinding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            sceneColorBinding0.pImmutableSamplers = nullptr;
+
+			// [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture1 : register(u1201, FRAME_SET);
+            VkDescriptorSetLayoutBinding sceneColorBinding1{};
+            sceneColorBinding1.binding = 1201;
+            sceneColorBinding1.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+            sceneColorBinding1.descriptorCount = 1;
+            sceneColorBinding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            sceneColorBinding1.pImmutableSamplers = nullptr;
+
+			// cbuffer CameraProperties : register(b1300, FRAME_SET)
+            VkDescriptorSetLayoutBinding cameraBinding{};
+            cameraBinding.binding = 1300;
+            cameraBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            cameraBinding.descriptorCount = 1;
+            cameraBinding.stageFlags = VK_SHADER_STAGE_ALL;
+            cameraBinding.pImmutableSamplers = nullptr;
+
+            std::array<VkDescriptorSetLayoutBinding, 4> bindings = { sceneDepthBinding, sceneColorBinding0, sceneColorBinding1, cameraBinding };
             VkDescriptorSetLayoutCreateInfo createInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-            createInfo.bindingCount = 1;
-            createInfo.pBindings = &binding;
+            createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+            createInfo.pBindings = bindings.data();
 
             VKA(vkCreateDescriptorSetLayout(Context::GetVkDevice(), &createInfo, nullptr, &s_descriptorSetLayout));
             NAME_VK_OBJECT(s_descriptorSetLayout, "DescriptorSetLayout_FrameData");
@@ -85,7 +115,7 @@ namespace vulkanRendererBackend
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];
-            descriptorWrite.dstBinding = 1399;
+            descriptorWrite.dstBinding = 1300;
             descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrite.descriptorCount = 1;
             descriptorWrite.pBufferInfo = &bufferInfo;
@@ -126,6 +156,12 @@ namespace vulkanRendererBackend
         s_pUniformCameraBuffer->SetFloat4x4("camera_worldToClipMatrix", worldToClipMatrix);
         s_pUniformCameraBuffer->SetFloat4x4("camera_clipToWorldMatrix", clipToWorldMatrix);
     }
+    void FrameDescriptorSetLayout::SetRenderTargetData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair, DepthTexture2d& sceneDepth)
+    {
+        UpdateTextureDescriptor(frameIndex, 1100, sceneDepth, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+        UpdateTextureDescriptor(frameIndex, 1200, sceneColorTexturePair.GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+        UpdateTextureDescriptor(frameIndex, 1201, sceneColorTexturePair.GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+    }
 
 
 
@@ -145,5 +181,27 @@ namespace vulkanRendererBackend
     void FrameDescriptorSetLayout::UpdateShaderData(uint32_t frameIndex)
     {
         s_pUniformCameraBuffer->UpdateBuffer(frameIndex);
+    }
+
+
+
+    // Private methods:
+    void FrameDescriptorSetLayout::UpdateTextureDescriptor(uint32_t frameIndex, uint32_t binding, Texture& texture, VkDescriptorType descriptorType, VkImageLayout imageLayout)
+    {
+        VkDescriptorImageInfo imageInfo{};
+        imageInfo.imageLayout = imageLayout;
+        imageInfo.imageView = texture.GetVkImageView();
+
+        VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+        descriptorWrite.dstSet = s_descriptorSets[frameIndex];
+        descriptorWrite.dstBinding = binding;
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = descriptorType;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = nullptr;
+        descriptorWrite.pImageInfo = &imageInfo;
+        descriptorWrite.pTexelBufferView = nullptr;
+
+        vkUpdateDescriptorSets(Context::GetVkDevice(), 1, &descriptorWrite, 0, nullptr);
     }
 }

@@ -22,11 +22,7 @@ namespace emberCore
 
 
 
-	// Creation/Cloning:
-	DeferredMaterial DeferredMaterial::CreateFromShader(const MaterialShader& materialShader, const std::string& name)
-	{
-		return MaterialManager::CreateDeferredGeometryMaterial(materialShader, name);
-	}
+	// Cloning:
 	DeferredMaterial DeferredMaterial::Clone(const std::string& name) const
 	{
 		return MaterialManager::CloneDeferredGeometryMaterial(*this, name);
@@ -41,7 +37,7 @@ namespace emberCore
 	// Getters:
 	const emberCommon::DeferredGeometryRenderState* DeferredMaterial::GetRenderState() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("DeferredMaterial::GetRenderState() failed. Material is invalid or expired.");
@@ -51,7 +47,7 @@ namespace emberCore
 	}
 	ShadowMaterial DeferredMaterial::GetShadowMaterial() const
 	{
-		if (GetInterfaceHandle() == nullptr)
+		if (TryGetInterfaceHandle() == nullptr)
 		{
 			LOG_WARN("DeferredMaterial::GetShadowMaterial() failed. Material is invalid or expired.");
 			return ShadowMaterial();
@@ -64,7 +60,7 @@ namespace emberCore
 	}
 	int32_t DeferredMaterial::GetRenderQueue() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("DeferredMaterial::GetRenderQueue() failed. Material is invalid or expired.");
@@ -78,21 +74,21 @@ namespace emberCore
 	// Setters:
 	void DeferredMaterial::SetCullMode(emberCommon::CullMode cullMode)
 	{
-		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+		if (emberBackendInterface::IMaterial* pIMaterial = TryGetMutableInterfaceHandle())
 			pIMaterial->SetCullMode(cullMode);
 		else
 			LOG_WARN("DeferredMaterial::SetCullMode(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void DeferredMaterial::SetRenderQueue(int32_t renderQueue)
 	{
-		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
+		if (emberBackendInterface::IMaterial* pIMaterial = TryGetMutableInterfaceHandle())
 			pIMaterial->SetRenderQueue(renderQueue);
 		else
 			LOG_WARN("DeferredMaterial::SetRenderQueue(...) failed. Material is invalid, expired, or immutable.");
 	}
 	void DeferredMaterial::SetShadowMaterial(const ShadowMaterial& shadowMaterial)
 	{
-		if (GetMutableInterfaceHandle() == nullptr)
+		if (TryGetMutableInterfaceHandle() == nullptr)
 		{
 			LOG_WARN("DeferredMaterial::SetShadowMaterial(...) failed. Material is invalid, expired, or immutable.");
 			return;
@@ -101,7 +97,7 @@ namespace emberCore
 	}
 	void DeferredMaterial::ResetShadowMaterial()
 	{
-		if (GetMutableInterfaceHandle() == nullptr)
+		if (TryGetMutableInterfaceHandle() == nullptr)
 		{
 			LOG_WARN("DeferredMaterial::ResetShadowMaterial() failed. Material is invalid, expired, or immutable.");
 			return;
@@ -115,7 +111,7 @@ namespace emberCore
 	DeferredMaterial::DeferredMaterial(emberCommon::MaterialId materialId)
 		: Material(materialId)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("DeferredMaterial::DeferredMaterial(...) failed. Material is invalid or expired.");
 		if (pIMaterial->GetMaterialPass() != emberCommon::MaterialPass::deferredGeometry)

@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "outlineHorizontalMaskExpansion",
+    "sourcePath": "../src/compute/outlineHorizontalMaskExpansion.comp.hlsl",
+    "binaryPath": "../bin/outlineHorizontalMaskExpansion.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

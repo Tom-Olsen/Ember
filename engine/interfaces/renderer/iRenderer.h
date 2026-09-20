@@ -71,9 +71,6 @@ namespace emberBackendInterface
         virtual void WaitDeviceIdle() = 0;
         virtual void WaitForFrameFinished(uint32_t frameIndex) = 0;
 
-		// Gpu resource destruction:
-		virtual void DestroyComputeShader(emberBackendInterface::IComputeShader* pIComputeShader) = 0;
-
         // Vulkan handle passthrough for API coupling:
         virtual void* GetVkInstance() const = 0;
         virtual void* GetVkPhysicalDevice() const = 0;

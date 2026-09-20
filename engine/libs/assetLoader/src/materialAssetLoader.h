@@ -3,7 +3,6 @@
 #include "materialAsset.h"
 #include <filesystem>
 #include <string>
-#include <string_view>
 
 
 
@@ -16,7 +15,6 @@ namespace emberAssetLoader
 
 	private: // Methods:
 		static void ValidateRootMembers(const nlohmann::json& json, const std::filesystem::path& path);
-		static std::string GetRequiredString(const nlohmann::json& json, const std::filesystem::path& path, std::string_view memberName);
 		static emberCommon::MaterialPass ParseMaterialPass(const std::filesystem::path& path, const std::string& value);
 		static void SetRenderModeSettings(MaterialAsset& materialAsset, const nlohmann::json& json, const std::filesystem::path& path, emberCommon::MaterialPass materialPass);
 		static emberCommon::GizmoRenderMode ParseGizmoRenderMode(const std::filesystem::path& path, const std::string& value);

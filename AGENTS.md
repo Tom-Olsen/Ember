@@ -9,6 +9,18 @@
 - In header files have minimal includes and use forward decleration where possible. An exception to this rule is the #include <vulkan/vulkan.h> in vulkan backend header files.
 - In cpp files inclue the header file first, then all custom includes via "..." and then all system includes via "<...>". Both custom and system includes must be sorted alphabetically. Exception to the alphabetical ordering is the include of the .h file into the .cpp file and the parent interface into the .h file which must always be first.
 - No new line at end of files.
+- In classes/structs the order is always:
+	private: // Structs/Enums/...:
+	protected: // Structs/Enums/...:
+	public: // Structs/Enums/...:
+	private: // Members:
+	protected: // Members:
+	public: // Members:
+	public: // Methods:
+	protected: // Methods:
+	private: // Methods:
+	only those that have entries should be listed. If a section is empty it should be omitted.
+- The order of methods in .h and .cpp files should be the same. The .cpp must always contain the same header comments above the methods as the .h file.
 - GetX should always return a proper valid value, or throw if they cant.
 - TryGetX should always return a "invalid" value (nullptr/-1/etc case dependent) on failure that the user can check for success. Log warning on failure.
 

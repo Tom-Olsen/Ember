@@ -1,9 +1,5 @@
+#define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_OUT_OF_PLACE
 #include "computeShaderCommon.hlsli"
-
-
-
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> inputImage : register(u200, CALL_SET);
-[[vk::image_format("rgba16f")]] RWTexture2D<float4> outputImage : register(u201, CALL_SET);
 
 
 
@@ -12,12 +8,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
 {
     if (threadID.x < pc.threadCount.x && threadID.y < pc.threadCount.y)
     {
-        float4 color = inputImage[threadID.xy];
+        float4 color = GetSceneColor(threadID.xy);
         //if ((threadID.y / 10)  % 2 == 0)
         //    color.x = 0;
         //else
         //    color.y = 0;
         
-        outputImage[threadID.xy] = color;
+        SetSceneColor(threadID.xy, color);
     }
 }

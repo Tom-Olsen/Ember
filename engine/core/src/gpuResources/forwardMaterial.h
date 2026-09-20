@@ -13,7 +13,6 @@ namespace emberCore
 {
 	// Forward declarations:
 	class MaterialManager;
-	class MaterialShader;
 
 
 
@@ -35,8 +34,7 @@ namespace emberCore
 		ForwardMaterial(ForwardMaterial&& other) noexcept = default;
 		ForwardMaterial& operator=(ForwardMaterial&& other) noexcept = default;
 
-		// Creation/Cloning:
-		static ForwardMaterial CreateFromShader(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
+		// Cloning:
 		ForwardMaterial Clone(const std::string& name) const;
 		ForwardMaterial Clone(const std::string& name, emberCommon::ForwardRenderMode renderMode) const;
 		ForwardMaterial CloneWithDefaultBindings(const std::string& name) const;

@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "cellKeys3d",
+    "sourcePath": "../src/cellKeys3d.comp.hlsl",
+    "binaryPath": "../bin/cellKeys3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "applyPermutationUint",
+    "sourcePath": "../src/compute/permutation/applyPermutationUint.comp.hlsl",
+    "binaryPath": "../bin/applyPermutationUint.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

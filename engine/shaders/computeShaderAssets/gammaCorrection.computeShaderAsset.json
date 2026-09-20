@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "gammaCorrection",
+    "sourcePath": "../src/compute/gammaCorrection.comp.hlsl",
+    "binaryPath": "../bin/gammaCorrection.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

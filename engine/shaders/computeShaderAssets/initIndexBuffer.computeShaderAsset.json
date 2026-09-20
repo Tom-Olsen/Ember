@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "initIndexBuffer",
+    "sourcePath": "../src/compute/permutation/initIndexBuffer.comp.hlsl",
+    "binaryPath": "../bin/initIndexBuffer.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

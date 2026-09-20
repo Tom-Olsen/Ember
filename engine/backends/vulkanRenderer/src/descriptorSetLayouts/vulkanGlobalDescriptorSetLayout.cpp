@@ -27,36 +27,39 @@ namespace vulkanRendererBackend
     {
         // Create descriptor set layout:
         {
-            std::array<VkDescriptorSetLayoutBinding, 4> bindings{};
+			// SamplerComparisonState shadowSampler : register(s3000, GLOBAL_SET);
+            VkDescriptorSetLayoutBinding shadowSamplerBinding{};
+            shadowSamplerBinding.binding = 3000;
+            shadowSamplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+            shadowSamplerBinding.descriptorCount = 1;
+            shadowSamplerBinding.stageFlags = VK_SHADER_STAGE_ALL;
+            shadowSamplerBinding.pImmutableSamplers = &DefaultGpuResources::GetShadowSampler()->GetVkSampler();
 
-            // SamplerComparisonState shadowSampler : register(s3098, GLOBAL_SET):
-            bindings[0].binding = 3099;
-            bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-            bindings[0].descriptorCount = 1;
-            bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-            bindings[0].pImmutableSamplers = &DefaultGpuResources::GetShadowSampler()->GetVkSampler();
+            // SamplerState colorSampler : register(s3001, GLOBAL_SET):
+            VkDescriptorSetLayoutBinding colorSamplerBinding{};
+            colorSamplerBinding.binding = 3001;
+            colorSamplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+            colorSamplerBinding.descriptorCount = 1;
+            colorSamplerBinding.stageFlags = VK_SHADER_STAGE_ALL; // or restrict if desired
+            colorSamplerBinding.pImmutableSamplers = &DefaultGpuResources::GetColorSampler()->GetVkSampler();
 
-            // SamplerState colorSampler : register(s3099, GLOBAL_SET):
-            bindings[1].binding = 3098;
-            bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-            bindings[1].descriptorCount = 1;
-            bindings[1].stageFlags = VK_SHADER_STAGE_ALL; // or restrict if desired
-            bindings[1].pImmutableSamplers = &DefaultGpuResources::GetColorSampler()->GetVkSampler();
+            // SamplerState colorSamplerClampEdge : register(s3002, GLOBAL_SET):
+            VkDescriptorSetLayoutBinding colorSamplerClampEdgeBinding{};
+            colorSamplerClampEdgeBinding.binding = 3002;
+            colorSamplerClampEdgeBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+            colorSamplerClampEdgeBinding.descriptorCount = 1;
+            colorSamplerClampEdgeBinding.stageFlags = VK_SHADER_STAGE_ALL;
+            colorSamplerClampEdgeBinding.pImmutableSamplers = &DefaultGpuResources::GetColorSamplerClampEdge()->GetVkSampler();
 
-            // SamplerState colorSamplerClampEdge : register(s3097, GLOBAL_SET):
-            bindings[2].binding = 3097;
-            bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-            bindings[2].descriptorCount = 1;
-            bindings[2].stageFlags = VK_SHADER_STAGE_ALL;
-            bindings[2].pImmutableSamplers = &DefaultGpuResources::GetColorSamplerClampEdge()->GetVkSampler();
+            // Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET):
+            VkDescriptorSetLayoutBinding shadowMapsBinding{};
+            shadowMapsBinding.binding = 3100;
+            shadowMapsBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            shadowMapsBinding.descriptorCount = 1;
+            shadowMapsBinding.stageFlags = VK_SHADER_STAGE_ALL;
+            shadowMapsBinding.pImmutableSamplers = nullptr;
 
-            // Texture2DArray<float> shadowMaps : register(t3199, GLOBAL_SET):
-            bindings[3].binding = 3199;
-            bindings[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-            bindings[3].descriptorCount = 1;
-            bindings[3].stageFlags = VK_SHADER_STAGE_ALL;
-            bindings[3].pImmutableSamplers = nullptr;
-
+            std::array<VkDescriptorSetLayoutBinding, 4> bindings = { shadowSamplerBinding, colorSamplerBinding, colorSamplerClampEdgeBinding, shadowMapsBinding };
             VkDescriptorSetLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
             createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
             createInfo.pBindings = bindings.data();
@@ -87,7 +90,7 @@ namespace vulkanRendererBackend
 
             VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
             descriptorWrite.dstSet = s_descriptorSets[i];
-            descriptorWrite.dstBinding = 3199;
+            descriptorWrite.dstBinding = 3100;
             descriptorWrite.dstArrayElement = 0;
             descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             descriptorWrite.descriptorCount = 1;

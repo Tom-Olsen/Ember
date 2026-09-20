@@ -59,7 +59,7 @@ namespace vulkanRendererBackend
 		{
 			ForwardTransparentRenderPass* pForwardTransparentRenderPass = RenderPassManager::GetForwardTransparentRenderPass();
 			pRenderPass = pForwardTransparentRenderPass;
-			// Forward transparent rendering renders to renderTexture 0 or 1, depending on how many screenSpace compute shaders ise inOutImage and swap the two:
+			// Forward transparent rendering renders to renderTexture 0 or 1, depending on sceneColor swaps in screen-space compute stage:
 			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, frameContext.transparentSceneColorIndex);
 			framebuffer = pForwardTransparentRenderPass->GetFramebuffer(frameContext.frameIndex, frameContext.transparentSceneColorIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardTransparentDrawCallPointers;

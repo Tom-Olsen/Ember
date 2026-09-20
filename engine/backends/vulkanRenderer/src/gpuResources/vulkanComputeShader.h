@@ -1,5 +1,6 @@
 #pragma once
 #include "iComputeShader.h"
+#include "commonComputeShaderFeatures.h"
 #include "emberMath.h"
 #include "vulkanRendererExport.h"
 #include "vulkanShader.h"
@@ -28,17 +29,18 @@ namespace vulkanRendererBackend
 		friend class Async;
 		friend class ComputeCallQueue;
 		friend class ComputeQueue;
+		friend class ComputeShaderManager;
 		friend class Renderer;
 
 	private: // Members:
 		Uint3 m_blockSize;
+		emberCommon::ComputeShaderFeatures m_features;
 		std::unique_ptr<DescriptorSetBinding> m_pShaderDescriptorSetBinding;
 		std::unique_ptr<Pipeline> m_pPipeline;
 		uint32_t m_pendingUseCount = 0;
 
 	public: // Methods:
-		// Constructors/Destructor:
-		ComputeShader(const std::filesystem::path& computeSpv, const std::string& debugName);
+		// Destructor:
 		~ComputeShader();
 
 		// Non-copyable:
@@ -51,6 +53,7 @@ namespace vulkanRendererBackend
 
 		// Getters:
 		Uint3 GetBlockSize() const override;
+		const emberCommon::ComputeShaderFeatures& GetFeatures() const;
 		emberBackendInterface::IDescriptorSetBinding* GetShaderDescriptorSetBinding() const override;
 		DescriptorSetBinding* GetDescriptorSetBinding() const;
 		const Pipeline* GetPipeline() const;
@@ -59,6 +62,10 @@ namespace vulkanRendererBackend
 		void Print() const override;
 
 	private: // Methods:
+		// Constructor:
+		ComputeShader(const std::filesystem::path& computeSpv, const emberCommon::ComputeShaderFeatures& features, const std::string& debugName);
+		
+		// Use management:
 		void AddPendingUse();
 		void RemovePendingUse();
 		bool HasPendingUse() const;

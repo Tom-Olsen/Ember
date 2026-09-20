@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "postProcessing",
+    "sourcePath": "../src/compute/postProcessing.comp.hlsl",
+    "binaryPath": "../bin/postProcessing.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

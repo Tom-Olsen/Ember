@@ -150,13 +150,16 @@ int main()
 		appCreateInfo.shadowMapResolution = 1024;
 		emberApplication::Application::Init(appCreateInfo);
 
-		// Add project specific shaders:
-		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		Material::CreateForward(emberCommon::ForwardRenderMode::opaque, directoryPath / "particle2d.vert.spv", directoryPath / "particle2d.frag.spv", "particleMaterial2d");
-		ForwardMaterial particleMaterial3d = Material::CreateForward(emberCommon::ForwardRenderMode::opaque, directoryPath / "particle3d.vert.spv", directoryPath / "particle3d.frag.spv", "particleMaterial3d");
-		ShadowMaterial particleShadowMaterial3d = Material::CreateShadow(directoryPath / "particle3dShadow.vert.spv", "particleShadowMaterial3d");
+		// Load project shader assets:
+		const std::filesystem::path shadersDirectory = std::filesystem::path(PROJECT_SHADERS_DIR).make_preferred();
+		MaterialManager::LoadMaterialAssets(shadersDirectory / "materialAssets");
+		ComputeShaderManager::LoadComputeShaderAssets(shadersDirectory / "computeShaderAssets");
+
+		// Ember::ToDo: move these into the fluid dynamic files that actually use them.
+		ForwardMaterial particleMaterial3d = MaterialManager::TryGetForwardMaterial("particleMaterial3d");
+		ShadowMaterial particleShadowMaterial3d = MaterialManager::TryGetShadowMaterial("particleShadowMaterial3d");
 		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
-		ForwardMaterial volumeRaycastMaterial = Material::CreateForward(emberCommon::ForwardRenderMode::transparent, directoryPath / "volumeRaycast.vert.spv", directoryPath / "volumeRaycast.frag.spv", "volumeRaycastMaterial");
+		ForwardMaterial volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
 		volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// drawing back facing trianles enables us to move the camera inside the fluid volume and still render it.
 
 		// Create scene:

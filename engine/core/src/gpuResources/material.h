@@ -1,12 +1,9 @@
 #pragma once
 #include "commonCullMode.h"
-#include "commonForwardRenderMode.h"
-#include "commonGizmoRenderMode.h"
+#include "commonMaterialId.h"
 #include "commonMaterialPass.h"
 #include "emberCoreExport.h"
-#include "commonMaterialId.h"
 #include "shader.h"
-#include <filesystem>
 #include <string>
 
 
@@ -26,7 +23,6 @@ namespace emberCore
 	class ShadowMaterial;
 	class DeferredMaterial;
 	class ForwardMaterial;
-	class MaterialShader;
 
 
 
@@ -44,26 +40,10 @@ namespace emberCore
 	private: // Members:
 		emberCommon::MaterialId m_materialId;
 
-	protected: // Methods:
-		Material(emberCommon::MaterialId materialId);
-		emberBackendInterface::IMaterial* GetMutableInterfaceHandle() const;
-		emberBackendInterface::IDescriptorSetBinding* TryGetShaderDescriptorSetBinding() const override;
-
 	public: // Methods:
 		// Constructor/Destructor:
 		Material(); // for invalid materials only.
 		~Material();
-
-		// Creation/Destruction:
-		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static GizmoMaterial CreateGizmo(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
-		static ShadowMaterial CreateShadow(const std::filesystem::path& vertexSpv, const std::string& name);
-		static ShadowMaterial CreateShadow(const MaterialShader& materialShader, const std::string& name);
-		static DeferredMaterial CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static DeferredMaterial CreateDeferredGeometry(const MaterialShader& materialShader, const std::string& name);
-		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		static ForwardMaterial CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& name);
-		void Destroy();
 
 		// Copyable:
 		Material(const Material&) = default;
@@ -72,6 +52,9 @@ namespace emberCore
 		// Movable:
 		Material(Material&& other) = default;
 		Material& operator=(Material&& other) = default;
+
+		// Destruction:
+		void Destroy();
 
 		// Getters:
 		const std::string& GetName() const;
@@ -82,7 +65,10 @@ namespace emberCore
 		// Debugging:
 		void Print() const;
 
-	private: // Methods:
-		emberBackendInterface::IMaterial* GetInterfaceHandle() const;
+	protected: // Methods:
+		explicit Material(emberCommon::MaterialId materialId);
+		emberBackendInterface::IMaterial* TryGetInterfaceHandle() const;
+		emberBackendInterface::IMaterial* TryGetMutableInterfaceHandle() const;
+		emberBackendInterface::IDescriptorSetBinding* TryGetShaderDescriptorSetBinding() const override;
 	};
 }

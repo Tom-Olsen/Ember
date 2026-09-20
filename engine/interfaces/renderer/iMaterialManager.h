@@ -2,13 +2,21 @@
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
 #include "commonMaterialId.h"
-#include "commonMaterialShaderId.h"
 #include <string>
+
+
+
+// Forward declarations:
+namespace emberAssetLoader
+{
+	struct MaterialAsset;
+}
 
 
 
 namespace emberBackendInterface
 {
+	// Forward declarations:
 	class IMaterial;
 
 
@@ -19,11 +27,9 @@ namespace emberBackendInterface
 		// Virtual destructor for v-table:
 		virtual ~IMaterialManager() = default;
 
-		// Creators:
-		virtual emberCommon::MaterialId CreateGizmoMaterial(emberCommon::MaterialShaderId materialShaderId, emberCommon::GizmoRenderMode renderMode, const std::string& name) = 0;
-		virtual emberCommon::MaterialId CreateShadowMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name) = 0;
-		virtual emberCommon::MaterialId CreateDeferredGeometryMaterial(emberCommon::MaterialShaderId materialShaderId, const std::string& name) = 0;
-		virtual emberCommon::MaterialId CreateForwardMaterial(emberCommon::MaterialShaderId materialShaderId, emberCommon::ForwardRenderMode renderMode, const std::string& name) = 0;
+		// Asset creation/initialization:
+		virtual void InitializeDefaultMaterials() = 0;
+		virtual emberCommon::MaterialId CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset) = 0;
 
 		// Cloners:
 		virtual emberCommon::MaterialId CloneGizmoMaterial(emberCommon::MaterialId sourceMaterialId, const std::string& name) = 0;
@@ -44,7 +50,6 @@ namespace emberBackendInterface
 		virtual emberCommon::MaterialId TryGetShadowMaterialId(emberCommon::MaterialId surfaceMaterialId) = 0;
 		virtual IMaterial* TryGetMaterial(emberCommon::MaterialId materialId) const = 0;
 		virtual const std::string* TryGetMaterialName(emberCommon::MaterialId materialId) const = 0;
-		virtual const emberCommon::MaterialShaderId* TryGetMaterialShaderId(emberCommon::MaterialId materialId) const = 0;
 		virtual bool IsMaterialMutable(emberCommon::MaterialId materialId) const = 0;
 
 		// Setters:

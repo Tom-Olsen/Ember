@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "localBitonicSortPermutationUint",
+    "sourcePath": "../src/compute/bitonicSortUint/localBitonicSortPermutationUint.comp.hlsl",
+    "binaryPath": "../bin/localBitonicSortPermutationUint.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "normalAndCurvature3d",
+    "sourcePath": "../src/normalAndCurvature3d.comp.hlsl",
+    "binaryPath": "../bin/normalAndCurvature3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

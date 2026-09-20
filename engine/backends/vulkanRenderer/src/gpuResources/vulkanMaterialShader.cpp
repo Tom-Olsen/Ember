@@ -25,7 +25,50 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Factories/Destructor:
-	MaterialShader MaterialShader::CreateGizmo(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	MaterialShader::~MaterialShader()
+	{
+
+	}
+
+
+
+	// Movable:
+	MaterialShader::MaterialShader(MaterialShader&& other) noexcept = default;
+	MaterialShader& MaterialShader::operator=(MaterialShader&& other) noexcept
+	{
+		if (this != &other)
+		{
+			m_pipelines.clear();
+			Shader::operator=(std::move(other));
+			m_materialPass = other.m_materialPass;
+			m_pipelines = std::move(other.m_pipelines);
+		}
+		return *this;
+	}
+
+
+
+	// Getters:
+	emberCommon::MaterialPass MaterialShader::GetMaterialPass() const
+	{
+		return m_materialPass;
+	}
+
+
+
+	// Private methods:
+	// Constructor:
+	MaterialShader::MaterialShader(emberCommon::MaterialPass materialPass, const std::string& debugName)
+		: Shader(debugName)
+		, m_materialPass(materialPass)
+	{
+
+	}
+
+
+
+	// Factories:
+	MaterialShader MaterialShader::CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::gizmo, debugName);
 
@@ -84,7 +127,7 @@ namespace vulkanRendererBackend
 
 		return materialShader;
 	}
-	MaterialShader MaterialShader::CreateOutline(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	MaterialShader MaterialShader::CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::outline, debugName);
 
@@ -139,7 +182,7 @@ namespace vulkanRendererBackend
 
 		return materialShader;
 	}
-	MaterialShader MaterialShader::CreateShadow(uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv, const std::string& debugName)
+	MaterialShader MaterialShader::CreateShadowMaterialShader(uint32_t shadowMapResolution, const std::filesystem::path& vertexSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::shadow, debugName);
 
@@ -190,7 +233,7 @@ namespace vulkanRendererBackend
 
 		return materialShader;
 	}
-	MaterialShader MaterialShader::CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	MaterialShader MaterialShader::CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::deferredGeometry, debugName);
 
@@ -245,7 +288,7 @@ namespace vulkanRendererBackend
 
 		return materialShader;
 	}
-	MaterialShader MaterialShader::CreateDeferredLighting(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	MaterialShader MaterialShader::CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::deferredLighting, debugName);
 
@@ -279,7 +322,7 @@ namespace vulkanRendererBackend
 
 		return materialShader;
 	}
-	MaterialShader MaterialShader::CreateForward(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	MaterialShader MaterialShader::CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::forward, debugName);
 
@@ -345,7 +388,7 @@ namespace vulkanRendererBackend
 
 		return materialShader;
 	}
-	MaterialShader MaterialShader::CreatePresent(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
+	MaterialShader MaterialShader::CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
 	{
 		MaterialShader materialShader(emberCommon::MaterialPass::present, debugName);
 
@@ -386,45 +429,6 @@ namespace vulkanRendererBackend
 				debugName));
 
 		return materialShader;
-	}
-	MaterialShader::~MaterialShader()
-	{
-
-	}
-
-
-
-	// Movable:
-	MaterialShader::MaterialShader(MaterialShader&& other) noexcept = default;
-	MaterialShader& MaterialShader::operator=(MaterialShader&& other) noexcept
-	{
-		if (this != &other)
-		{
-			m_pipelines.clear();
-			Shader::operator=(std::move(other));
-			m_materialPass = other.m_materialPass;
-			m_pipelines = std::move(other.m_pipelines);
-		}
-		return *this;
-	}
-
-
-
-	// Getters:
-	emberCommon::MaterialPass MaterialShader::GetMaterialPass() const
-	{
-		return m_materialPass;
-	}
-
-
-
-	// Private methods:
-	// Constructor:
-	MaterialShader::MaterialShader(emberCommon::MaterialPass materialPass, const std::string& debugName)
-		: Shader(debugName)
-		, m_materialPass(materialPass)
-	{
-
 	}
 
 

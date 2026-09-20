@@ -1,6 +1,7 @@
 #pragma once
-#include "iMaterialShaderManager.h"
+#include "vulkanMaterialShaderId.h"
 #include "vulkanRendererExport.h"
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -17,7 +18,7 @@ namespace vulkanRendererBackend
 
 
 
-	class VULKAN_RENDERER_API MaterialShaderManager : public emberBackendInterface::IMaterialShaderManager
+	class VULKAN_RENDERER_API MaterialShaderManager
 	{
 		// Friends:
 		friend class MaterialManager;
@@ -26,11 +27,10 @@ namespace vulkanRendererBackend
 		struct ManagedMaterialShader
 		{
 			std::string name;
-			bool isAccessible;
 			std::unique_ptr<MaterialShader> pMaterialShader;
 
 			// Constructor:
-			ManagedMaterialShader(std::string name, bool isAccessible, std::unique_ptr<MaterialShader> pMaterialShader);
+			ManagedMaterialShader(std::string name, std::unique_ptr<MaterialShader> pMaterialShader);
 			
 			// Non-copyable:
 			ManagedMaterialShader(const ManagedMaterialShader& other) = delete;
@@ -67,7 +67,7 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		// Constructor/Destructor:
 		MaterialShaderManager(uint32_t shadowMapResolution);
-		~MaterialShaderManager() override;
+		~MaterialShaderManager();
 
 		// Non-copyable:
 		MaterialShaderManager(const MaterialShaderManager& other) = delete;
@@ -77,32 +77,30 @@ namespace vulkanRendererBackend
 		MaterialShaderManager(MaterialShaderManager&& other) = delete;
 		MaterialShaderManager& operator=(MaterialShaderManager&& other) = delete;
 
-		// Creators:
-		emberCommon::MaterialShaderId CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name) override;
-		emberCommon::MaterialShaderId CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		emberCommon::MaterialShaderId CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name) override;
-		emberCommon::MaterialShaderId CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name) override;
-		emberCommon::MaterialShaderId CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-		emberCommon::MaterialShaderId CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name) override;
-		emberCommon::MaterialShaderId CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
-
 		// Getters:
-		emberCommon::MaterialShaderId TryGetMaterialShaderId(const std::string& name) const override;
-		emberBackendInterface::IMaterialShader* TryGetMaterialShader(emberCommon::MaterialShaderId materialShaderId) const override;
-		const std::string* TryGetMaterialShaderName(emberCommon::MaterialShaderId materialShaderId) const override;
+		MaterialShader* TryGetMaterialShader(MaterialShaderId materialShaderId) const;
 
 		// Deleter:
-		void DeleteMaterialShader(emberCommon::MaterialShaderId materialShaderId) override;
+		void DeleteMaterialShader(MaterialShaderId materialShaderId);
 
 		// Debugging:
-		void Print() const override;
+		void Print() const;
 
 	private: // Methods:
+		// Creators:
+		MaterialShaderId CreateGizmoMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		MaterialShaderId CreateOutlineMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		MaterialShaderId CreateShadowMaterialShader(const std::filesystem::path& vertexSpv, const std::string& name);
+		MaterialShaderId CreateDeferredGeometryMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		MaterialShaderId CreateDeferredLightingMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		MaterialShaderId CreateForwardMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+		MaterialShaderId CreatePresentMaterialShader(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& name);
+
 		// Management:
-		emberCommon::MaterialShaderId AddMaterialShader(const std::string& name, bool isAccessible, std::unique_ptr<MaterialShader> pMaterialShader);
+		MaterialShaderId AddMaterialShader(const std::string& name, std::unique_ptr<MaterialShader> pMaterialShader);
 		void DestroyMaterialShader(std::unique_ptr<MaterialShader> pMaterialShader);
 		void Clear();
-		emberCommon::MaterialShaderId FindMaterialShaderId(const std::string& name) const;
+		MaterialShaderId FindMaterialShaderId(const std::string& name) const;
 		void LinkMaterialManager(MaterialManager* pMaterialManager);
 	};
 }

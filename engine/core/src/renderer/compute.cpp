@@ -54,7 +54,7 @@ namespace emberCore
 	// Workload recording:
 	CallProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
 	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = s_pIAsync->RecordComputeShader(sessionID, pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIDescriptorSetBinding);
 		return callProperties;
@@ -102,7 +102,7 @@ namespace emberCore
 	// Workload recording:
 	CallProperties Compute::PreRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPreRender->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
@@ -150,7 +150,7 @@ namespace emberCore
 	// Workload recording:
 	CallProperties Compute::MidRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIMidRender->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
@@ -198,7 +198,7 @@ namespace emberCore
 	// Workload recording:
 	CallProperties Compute::ScreenSpace::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIScreenSpace->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
@@ -231,10 +231,10 @@ namespace emberCore
 
 
 	// Compute::PostRender subclass:
-	emberBackendInterface::ICompute::IPostRenderQueue* Compute::PostRender::s_pIPostRender;
+	emberBackendInterface::ICompute::IQueue* Compute::PostRender::s_pIPostRender;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::PostRender::Init(emberBackendInterface::ICompute::IPostRenderQueue* pIPostRender)
+	void Compute::PostRender::Init(emberBackendInterface::ICompute::IQueue* pIPostRender)
 	{
 		s_pIPostRender = pIPostRender;
 	}
@@ -246,15 +246,15 @@ namespace emberCore
 	// Workload recording:
 	CallProperties Compute::PostRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
 	}
 	CallProperties Compute::PostRender::RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
-		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordPostProcessingShader(pIComputeShader, threadCount);
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
 	}

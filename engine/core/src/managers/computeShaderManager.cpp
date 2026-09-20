@@ -1,77 +1,66 @@
 #include "computeShaderManager.h"
-#include "computeShader.h"
+#include "computeShaderAsset.h"
+#include "computeShaderAssetLoader.h"
+#include "iComputeShaderManager.h"
+#include "iGpuResourceFactory.h"
 #include "logger.h"
-#include "emberMath.h"
+#include "renderer.h"
+#include <algorithm>
 #include <filesystem>
+#include <stdexcept>
+#include <vector>
 
 
 
 namespace emberCore
 {
 	// Static members:
-	bool ComputeShaderManager::s_isInitialized = false;
-	std::unordered_map<std::string, std::unique_ptr<ComputeShader>> ComputeShaderManager::s_computeShaders;
+	emberBackendInterface::IComputeShaderManager* ComputeShaderManager::s_pIComputeShaderManager = nullptr;
 
 
 
-	// Initialization/Cleanup:
-	void ComputeShaderManager::Init()
+	// Public methods:
+	// Asset loading:
+	void ComputeShaderManager::LoadComputeShaderAssets(const std::filesystem::path& directoryPath)
 	{
-		if (s_isInitialized)
-			return;
-		s_isInitialized = true;
+		if (s_pIComputeShaderManager == nullptr)
+			throw std::runtime_error("ComputeShaderManager::LoadComputeShaderAssets(...) failed. Compute shader manager is not initialized.");
+		if (!std::filesystem::is_directory(directoryPath))
+			throw std::runtime_error("ComputeShaderManager::LoadComputeShaderAssets(...) failed. Directory does not exist: " + directoryPath.string());
 
-		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
-		for (const auto& entry : std::filesystem::directory_iterator(directoryPath))
+		std::vector<std::filesystem::path> assetPaths;
+		for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directoryPath))
 		{
-			if (!entry.is_regular_file())
-				continue;
-
-			std::filesystem::path filePath = entry.path();
-			if (filePath.extension() == ".spv" && filePath.stem().string().ends_with(".comp"))
-			{
-				// Extract shader name by removing the ".comp.spv" suffix
-				std::string name = filePath.stem().string();		// remove '.spv'
-				name = name.substr(0, name.size() - 5);	// remove '.comp'
-
-				ComputeShader computeShader(filePath, name);
-				AddComputeShader(std::move(computeShader));
-			}
+			if (entry.is_regular_file() && entry.path().filename().string().ends_with(".computeShaderAsset.json"))
+				assetPaths.push_back(entry.path());
 		}
-	}
-	void ComputeShaderManager::Clear()
-	{
-		s_computeShaders.clear();
-		s_isInitialized = false;
+		std::sort(assetPaths.begin(), assetPaths.end());
+
+		std::vector<emberAssetLoader::ComputeShaderAsset> computeShaderAssets;
+		computeShaderAssets.reserve(assetPaths.size());
+		for (const std::filesystem::path& assetPath : assetPaths)
+			computeShaderAssets.push_back(emberAssetLoader::ComputeShaderAssetLoader::Load(assetPath));
+		for (const emberAssetLoader::ComputeShaderAsset& computeShaderAsset : computeShaderAssets)
+			s_pIComputeShaderManager->CreateComputeShader(computeShaderAsset);
 	}
 
 
 
-	// Add/Get/Delete:
-	void ComputeShaderManager::AddComputeShader(ComputeShader&& computeShader)
+	// Getters:
+	ComputeShader ComputeShaderManager::TryGetComputeShader(const std::string& name)
 	{
-		auto newComputeShader = std::make_unique<ComputeShader>(std::move(computeShader));
-		if (!s_computeShaders.emplace(newComputeShader->GetName(), std::move(newComputeShader)).second)
-			LOG_WARN("ComputeShader with the name: {} already exists in ComputeShaderManager!", newComputeShader->GetName());
-	}
-	ComputeShader& ComputeShaderManager::GetComputeShader(const std::string& name)
-	{
-		auto it = s_computeShaders.find(name);
-		if (it == s_computeShaders.end())
-			throw std::runtime_error("ComputeShader not found: " + name);
-		return *(it->second);
-	}
-	ComputeShader* ComputeShaderManager::TryGetComputeShader(const std::string& name)
-	{
-		auto it = s_computeShaders.find(name);
-		if (it != s_computeShaders.end())
-			return it->second.get();
-		LOG_WARN("ComputeShader '{}' not found!", name);
-		return nullptr;
-	}
-	void ComputeShaderManager::DeleteComputeShader(const std::string& name)
-	{
-		s_computeShaders.erase(name);
+		if (s_pIComputeShaderManager == nullptr)
+		{
+			LOG_WARN("ComputeShaderManager::TryGetComputeShader(...) failed. Compute shader manager is not initialized.");
+			return ComputeShader();
+		}
+		emberCommon::ComputeShaderId computeShaderId = s_pIComputeShaderManager->TryGetComputeShaderId(name);
+		if (computeShaderId.index == emberCommon::invalidComputeShaderId.index)
+		{
+			LOG_WARN("ComputeShaderManager::TryGetComputeShader(...) failed. ComputeShader '{}' not found or inaccessible.", name);
+			return ComputeShader();
+		}
+		return ComputeShader(computeShaderId);
 	}
 
 
@@ -79,8 +68,49 @@ namespace emberCore
 	// Debugging:
 	void ComputeShaderManager::Print()
 	{
-		LOG_TRACE("ComputeShaderManager content:");
-		for (const auto& pair : s_computeShaders)
-			LOG_TRACE(pair.first);
+		s_pIComputeShaderManager->Print();
+	}
+
+
+
+	// Private methods:
+	// Initialization/Cleanup:
+	void ComputeShaderManager::Init()
+	{
+		if (s_pIComputeShaderManager != nullptr)
+			return;
+		if (Renderer::s_pIGpuResourceFactory == nullptr)
+			throw std::runtime_error("ComputeShaderManager::Init() failed. Gpu resource factory is not initialized.");
+
+		s_pIComputeShaderManager = Renderer::s_pIGpuResourceFactory->GetComputeShaderManager();
+		if (s_pIComputeShaderManager == nullptr)
+			throw std::runtime_error("ComputeShaderManager::Init() failed. Gpu resource factory returned a nullptr compute shader manager.");
+
+		LoadComputeShaderAssets(std::filesystem::path(ENGINE_SHADERS_DIR) / "computeShaderAssets");
+		s_pIComputeShaderManager->InitializeDefaultComputeShaders();
+	}
+	void ComputeShaderManager::Clear()
+	{
+		s_pIComputeShaderManager = nullptr;
+	}
+
+
+
+	// Getters:
+	bool ComputeShaderManager::IsComputeShaderMutable(emberCommon::ComputeShaderId computeShaderId)
+	{
+		return s_pIComputeShaderManager != nullptr && s_pIComputeShaderManager->IsComputeShaderMutable(computeShaderId);
+	}
+	emberBackendInterface::IComputeShader* ComputeShaderManager::TryGetComputeShaderInterface(emberCommon::ComputeShaderId computeShaderId)
+	{
+		if (s_pIComputeShaderManager == nullptr)
+			return nullptr;
+		return s_pIComputeShaderManager->TryGetComputeShader(computeShaderId);
+	}
+	const std::string* ComputeShaderManager::TryGetComputeShaderName(emberCommon::ComputeShaderId computeShaderId)
+	{
+		if (s_pIComputeShaderManager == nullptr)
+			return nullptr;
+		return s_pIComputeShaderManager->TryGetComputeShaderName(computeShaderId);
 	}
 }

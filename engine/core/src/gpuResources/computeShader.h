@@ -1,9 +1,8 @@
 #pragma once
+#include "commonComputeShaderId.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
 #include "shader.h"
-#include <filesystem>
-#include <memory>
 #include <string>
 
 
@@ -12,6 +11,7 @@
 namespace emberBackendInterface
 {
 	class IComputeShader;
+	class IDescriptorSetBinding;
 }
 
 
@@ -29,31 +29,35 @@ namespace emberCore
 		// Friends:
 		friend class Compute;
 		friend class CallProperties;
+		friend class ComputeShaderManager;
 
 	private: // Members:
-		std::string m_name;
-		std::unique_ptr<emberBackendInterface::IComputeShader> m_pIComputeShader;
-		emberBackendInterface::IComputeShader* GetInterfaceHandle();
+		emberCommon::ComputeShaderId m_computeShaderId;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ComputeShader();
-		ComputeShader(const std::filesystem::path& computeSpv, const std::string& name);
+		ComputeShader(); // for invalid compute shaders only.
 		~ComputeShader();
 
-		// Non-copyable:
-		ComputeShader(const ComputeShader&) = delete;
-		ComputeShader& operator=(const ComputeShader&) = delete;
+		// Copyable:
+		ComputeShader(const ComputeShader&) = default;
+		ComputeShader& operator=(const ComputeShader&) = default;
 
 		// Movable:
-		ComputeShader(ComputeShader&& other) noexcept;
-		ComputeShader& operator=(ComputeShader&& other) noexcept;
+		ComputeShader(ComputeShader&& other) noexcept = default;
+		ComputeShader& operator=(ComputeShader&& other) noexcept = default;
 
 		// Getters:
 		Uint3 GetBlockSize() const;
 		const std::string& GetName() const;
+		bool IsValid() const;
 
 		// Debugging:
 		void Print() const;
+
+	private: // Methods:
+		explicit ComputeShader(emberCommon::ComputeShaderId computeShaderId);
+		emberBackendInterface::IComputeShader* TryGetInterfaceHandle() const;
+		emberBackendInterface::IDescriptorSetBinding* TryGetShaderDescriptorSetBinding() const override;
 	};
 }

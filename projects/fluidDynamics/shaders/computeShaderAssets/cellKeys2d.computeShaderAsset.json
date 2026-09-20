@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "cellKeys2d",
+    "sourcePath": "../src/cellKeys2d.comp.hlsl",
+    "binaryPath": "../bin/cellKeys2d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

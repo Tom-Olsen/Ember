@@ -1,40 +1,13 @@
 #include "material.h"
-#include "deferredMaterial.h"
-#include "forwardMaterial.h"
-#include "gizmoMaterial.h"
 #include "iMaterial.h"
 #include "logger.h"
 #include "materialManager.h"
-#include "materialShader.h"
-#include "shadowMaterial.h"
 #include <stdexcept>
 
 
 
 namespace emberCore
 {
-	// Protected methods:
-	Material::Material(emberCommon::MaterialId materialId)
-		: Shader()
-	{
-		m_materialId = materialId;
-	}
-	emberBackendInterface::IMaterial* Material::GetMutableInterfaceHandle() const
-	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
-		if (pIMaterial == nullptr || !MaterialManager::IsMaterialMutable(m_materialId))
-			return nullptr;
-		return pIMaterial;
-	}
-	emberBackendInterface::IDescriptorSetBinding* Material::TryGetShaderDescriptorSetBinding() const
-	{
-		if (emberBackendInterface::IMaterial* pIMaterial = GetMutableInterfaceHandle())
-			return pIMaterial->GetShaderDescriptorSetBinding();
-		return nullptr;
-	}
-
-
-
 	// Public methods:
 	// Constructor/Destructor:
 	Material::Material()
@@ -48,39 +21,7 @@ namespace emberCore
 
 
 
-	// Creation/Destruction:
-	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreateGizmoMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
-	}
-	GizmoMaterial Material::CreateGizmo(emberCommon::GizmoRenderMode renderMode, const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreateGizmoMaterial(renderMode, materialShader, debugName);
-	}
-	ShadowMaterial Material::CreateShadow(const std::filesystem::path& vertexSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreateShadowMaterial(vertexSpv, debugName);
-	}
-	ShadowMaterial Material::CreateShadow(const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreateShadowMaterial(materialShader, debugName);
-	}
-	DeferredMaterial Material::CreateDeferredGeometry(const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreateDeferredGeometryMaterial(vertexSpv, fragmentSpv, debugName);
-	}
-	DeferredMaterial Material::CreateDeferredGeometry(const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreateDeferredGeometryMaterial(materialShader, debugName);
-	}
-	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const std::filesystem::path& vertexSpv, const std::filesystem::path& fragmentSpv, const std::string& debugName)
-	{
-		return MaterialManager::CreateForwardMaterial(renderMode, vertexSpv, fragmentSpv, debugName);
-	}
-	ForwardMaterial Material::CreateForward(emberCommon::ForwardRenderMode renderMode, const MaterialShader& materialShader, const std::string& debugName)
-	{
-		return MaterialManager::CreateForwardMaterial(renderMode, materialShader, debugName);
-	}
+	// Destruction:
 	void Material::Destroy()
 	{
 		if (!IsValid())
@@ -107,7 +48,7 @@ namespace emberCore
 	}
 	emberCommon::MaterialPass Material::GetMaterialPass() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("Material::GetMaterialPass() failed. Material is invalid or expired.");
@@ -117,7 +58,7 @@ namespace emberCore
 	}
 	emberCommon::CullMode Material::GetCullMode() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("Material::GetCullMode() failed. Material is invalid or expired.");
@@ -127,7 +68,7 @@ namespace emberCore
 	}
 	bool Material::IsValid() const
 	{
-		return GetInterfaceHandle() != nullptr;
+		return TryGetInterfaceHandle() != nullptr;
 	}
 
 
@@ -135,7 +76,7 @@ namespace emberCore
 	// Debugging:
 	void Material::Print() const
 	{
-		emberBackendInterface::IMaterial* pIMaterial = GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
 			throw std::runtime_error("Material::Print() failed. Material is invalid or expired.");
 		pIMaterial->Print();
@@ -143,9 +84,27 @@ namespace emberCore
 
 
 
-	// Private methods:
-	emberBackendInterface::IMaterial* Material::GetInterfaceHandle() const
+	// Protected methods:
+	Material::Material(emberCommon::MaterialId materialId)
+		: Shader()
+	{
+		m_materialId = materialId;
+	}
+	emberBackendInterface::IMaterial* Material::TryGetInterfaceHandle() const
 	{
 		return MaterialManager::TryGetMaterialInterface(m_materialId);
+	}
+	emberBackendInterface::IMaterial* Material::TryGetMutableInterfaceHandle() const
+	{
+		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
+		if (pIMaterial == nullptr || !MaterialManager::IsMaterialMutable(m_materialId))
+			return nullptr;
+		return pIMaterial;
+	}
+	emberBackendInterface::IDescriptorSetBinding* Material::TryGetShaderDescriptorSetBinding() const
+	{
+		if (emberBackendInterface::IMaterial* pIMaterial = TryGetMutableInterfaceHandle())
+			return pIMaterial->GetShaderDescriptorSetBinding();
+		return nullptr;
 	}
 }

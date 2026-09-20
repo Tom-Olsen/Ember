@@ -1,6 +1,6 @@
 #include "materialAssetLoader.h"
 #include "json.h"
-#include <fstream>
+#include "jsonUtility.h"
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -12,39 +12,16 @@ namespace emberAssetLoader
 	// Public methods:
 	MaterialAsset MaterialAssetLoader::Load(const std::filesystem::path& path)
 	{
-		// Error handling:
-		if (!std::filesystem::exists(path))
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. File does not exist.");
-		if (!std::filesystem::is_regular_file(path))
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Path is not a regular file.");
-
-		// File loading:
-		std::ifstream file(path);
-		if (!file.is_open())
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Could not open file.");
-
-		// Json loading:
-		nlohmann::json json;
-		try
-		{
-			file >> json;
-		}
-		catch (const nlohmann::json::exception& exception)
-		{
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Invalid JSON: " + std::string(exception.what()));
-		}
-		if (!json.is_object())
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Root value must be an object.");
-			
-		// Parse json file:
+		nlohmann::json json = JsonUtility::LoadObject(path);
 		ValidateRootMembers(json, path);
 		MaterialAsset materialAsset = {};
-		materialAsset.materialName = GetRequiredString(json, path, "materialName");
-		materialAsset.materialShaderName = GetRequiredString(json, path, "materialShaderName");
-		emberCommon::MaterialPass materialPass = ParseMaterialPass(path, GetRequiredString(json, path, "materialPass"));
+		materialAsset.materialName = JsonUtility::GetRequiredString(json, path, "materialName");
+		materialAsset.materialShaderName = JsonUtility::GetRequiredString(json, path, "materialShaderName");
+		emberCommon::MaterialPass materialPass = ParseMaterialPass(path, JsonUtility::GetRequiredString(json, path, "materialPass"));
 		SetRenderModeSettings(materialAsset, json, path, materialPass);
 		SetShaderStages(materialAsset, json, path);
 		ValidateShaderStages(materialAsset, path);
+		materialAsset.accessRights = JsonUtility::GetResourceAccessRights(json, path);
 		return materialAsset;
 	}
 
@@ -60,40 +37,29 @@ namespace emberAssetLoader
 				&& memberName != "materialShaderName"
 				&& memberName != "materialPass"
 				&& memberName != "renderMode"
-				&& memberName != "shaderStages")
+				&& memberName != "shaderStages"
+				&& memberName != "accessRights")
 			{
 				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Unknown member '" + memberName + "'.");
 			}
 		}
 	}
-	std::string MaterialAssetLoader::GetRequiredString(const nlohmann::json& json, const std::filesystem::path& path, std::string_view memberName)
-	{
-		// memberName must exist:
-		std::string memberNameString(memberName);
-		if (!json.contains(memberNameString))
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Missing '" + memberNameString + "'.");
-
-		// memberName value must be a string:
-		const nlohmann::json& value = json.at(memberNameString);
-		if (!value.is_string())
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Member '" + memberNameString + "' must be a string.");
-
-		// memberName value string must not be empty:
-		std::string stringValue = value.get<std::string>();
-		if (stringValue.empty())
-			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Member '" + memberNameString + "' cannot be empty.");
-		return stringValue;
-	}
 	emberCommon::MaterialPass MaterialAssetLoader::ParseMaterialPass(const std::filesystem::path& path, const std::string& value)
 	{
 		if (value == "gizmo")
 			return emberCommon::MaterialPass::gizmo;
+		if (value == "outline")
+			return emberCommon::MaterialPass::outline;
 		if (value == "shadow")
 			return emberCommon::MaterialPass::shadow;
 		if (value == "deferredGeometry")
 			return emberCommon::MaterialPass::deferredGeometry;
+		if (value == "deferredLighting")
+			return emberCommon::MaterialPass::deferredLighting;
 		if (value == "forward")
 			return emberCommon::MaterialPass::forward;
+		if (value == "present")
+			return emberCommon::MaterialPass::present;
 
 		throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Unsupported material pass '" + value + "'.");
 	}
@@ -110,9 +76,16 @@ namespace emberAssetLoader
 			{
 				if (!hasRenderMode)
 					throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Gizmo material is missing 'renderMode'.");
-				std::string gizmoRenderModeString = GetRequiredString(json, path, "renderMode");
+				std::string gizmoRenderModeString = JsonUtility::GetRequiredString(json, path, "renderMode");
 				emberCommon::GizmoRenderMode gizmoRenderMode = ParseGizmoRenderMode(path, gizmoRenderModeString);
 				materialAsset.renderModeSettings = MaterialAsset::GizmoSettings{ gizmoRenderMode };
+				break;
+			}
+			case emberCommon::MaterialPass::outline:
+			{
+				if (hasRenderMode)
+					throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Outline material cannot contain 'renderMode'.");
+				materialAsset.renderModeSettings = MaterialAsset::OutlineSettings{};
 				break;
 			}
 			case emberCommon::MaterialPass::shadow:
@@ -129,13 +102,27 @@ namespace emberAssetLoader
 				materialAsset.renderModeSettings = MaterialAsset::DeferredGeometrySettings{};
 				break;
 			}
+			case emberCommon::MaterialPass::deferredLighting:
+			{
+				if (hasRenderMode)
+					throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Deferred lighting material cannot contain 'renderMode'.");
+				materialAsset.renderModeSettings = MaterialAsset::DeferredLightingSettings{};
+				break;
+			}
 			case emberCommon::MaterialPass::forward:
 			{
 				if (!hasRenderMode)
 					throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Forward material is missing 'renderMode'.");
-				std::string forwardRenderModeString = GetRequiredString(json, path, "renderMode");
+				std::string forwardRenderModeString = JsonUtility::GetRequiredString(json, path, "renderMode");
 				emberCommon::ForwardRenderMode forwardRenderMode = ParseForwardRenderMode(path, forwardRenderModeString);
 				materialAsset.renderModeSettings = MaterialAsset::ForwardSettings{ forwardRenderMode };
+				break;
+			}
+			case emberCommon::MaterialPass::present:
+			{
+				if (hasRenderMode)
+					throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Present material cannot contain 'renderMode'.");
+				materialAsset.renderModeSettings = MaterialAsset::PresentSettings{};
 				break;
 			}
 			default:
@@ -177,24 +164,18 @@ namespace emberAssetLoader
 
 		for (auto iterator = shaderStages.begin(); iterator != shaderStages.end(); iterator++)
 		{
-			if (!iterator.value().is_string())
-				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Shader path for stage '" + iterator.key() + "' must be a string.");
-
-			std::string shaderPathString = iterator.value().get<std::string>();
-			if (shaderPathString.empty())
-				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Shader path for stage '" + iterator.key() + "' cannot be empty.");
-
 			emberCommon::ShaderStage shaderStage = ParseShaderStage(path, iterator.key());
-			std::filesystem::path shaderPath = shaderPathString;
-			if (shaderPath.is_relative())
-				shaderPath = path.parent_path() / shaderPath;
-			shaderPath = std::filesystem::absolute(shaderPath).lexically_normal().make_preferred();
-			if (!std::filesystem::exists(shaderPath))
-				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Shader file does not exist: " + shaderPath.string());
-			if (!std::filesystem::is_regular_file(shaderPath))
-				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Shader path is not a regular file: " + shaderPath.string());
+			const nlohmann::json& shaderStageJson = iterator.value();
+			if (!shaderStageJson.is_object())
+				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Shader stage '" + iterator.key() + "' must be an object.");
+			for (auto memberIterator = shaderStageJson.begin(); memberIterator != shaderStageJson.end(); memberIterator++)
+				if (memberIterator.key() != "sourcePath" && memberIterator.key() != "binaryPath")
+					throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Unknown member '" + memberIterator.key() + "' in shader stage '" + iterator.key() + "'.");
 
-			materialAsset.shaderStagePaths[static_cast<size_t>(shaderStage)] = std::move(shaderPath);
+			MaterialAsset::ShaderStageAsset& shaderStageAsset = materialAsset.shaderStages[static_cast<size_t>(shaderStage)];
+			shaderStageAsset.shaderStage = shaderStage;
+			shaderStageAsset.sourcePath = JsonUtility::ResolveFilePath(path, JsonUtility::GetRequiredString(shaderStageJson, path, "sourcePath"), "sourcePath");
+			shaderStageAsset.binaryPath = JsonUtility::ResolveFilePath(path, JsonUtility::GetRequiredString(shaderStageJson, path, "binaryPath"), "binaryPath");
 		}
 	}
 	emberCommon::ShaderStage MaterialAssetLoader::ParseShaderStage(const std::filesystem::path& path, const std::string& value)
@@ -208,23 +189,23 @@ namespace emberAssetLoader
 	}
 	void MaterialAssetLoader::ValidateShaderStages(const MaterialAsset& materialAsset, const std::filesystem::path& path)
 	{
-		const std::filesystem::path& vertexPath = materialAsset.shaderStagePaths[static_cast<size_t>(emberCommon::ShaderStage::vertex)];
-		const std::filesystem::path& fragmentPath = materialAsset.shaderStagePaths[static_cast<size_t>(emberCommon::ShaderStage::fragment)];
+		const MaterialAsset::ShaderStageAsset& vertexStage = materialAsset.shaderStages[static_cast<size_t>(emberCommon::ShaderStage::vertex)];
+		const MaterialAsset::ShaderStageAsset& fragmentStage = materialAsset.shaderStages[static_cast<size_t>(emberCommon::ShaderStage::fragment)];
 		
 		// Vertex shader is always required:
-		if (vertexPath.empty())
+		if (vertexStage.sourcePath.empty() || vertexStage.binaryPath.empty())
 			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Missing vertex shader stage.");
 
 		// Shadow shaders can't contain a fragment shader:
 		if (materialAsset.GetMaterialPass() == emberCommon::MaterialPass::shadow)
 		{
-			if (!fragmentPath.empty())
+			if (!fragmentStage.sourcePath.empty() || !fragmentStage.binaryPath.empty())
 				throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Shadow materials cannot contain a fragment shader stage.");
 			return;
 		}
 
 		// Fragment shader required for none shadow shaders:
-		if (fragmentPath.empty())
+		if (fragmentStage.sourcePath.empty() || fragmentStage.binaryPath.empty())
 			throw std::runtime_error("MaterialAssetLoader::Load(...) failed for '" + path.string() + "'. Missing fragment shader stage.");
 	}
 }

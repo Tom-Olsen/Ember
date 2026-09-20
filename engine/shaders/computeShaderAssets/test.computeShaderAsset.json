@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "test",
+    "sourcePath": "../src/compute/test.comp.hlsl",
+    "binaryPath": "../bin/test.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "materialName": "presentMaterial",
+    "materialShaderName": "presentShader",
+    "materialPass": "present",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/present.vert.hlsl",
+            "binaryPath": "../bin/present.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/present.frag.hlsl",
+            "binaryPath": "../bin/present.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

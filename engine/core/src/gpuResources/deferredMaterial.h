@@ -12,7 +12,6 @@ namespace emberCore
 {
 	// Forward declarations:
 	class MaterialManager;
-	class MaterialShader;
 
 
 
@@ -34,8 +33,7 @@ namespace emberCore
 		DeferredMaterial(DeferredMaterial&& other) noexcept = default;
 		DeferredMaterial& operator=(DeferredMaterial&& other) noexcept = default;
 
-		// Creation/Cloning:
-		static DeferredMaterial CreateFromShader(const MaterialShader& materialShader, const std::string& name);
+		// Cloning:
 		DeferredMaterial Clone(const std::string& name) const;
 		DeferredMaterial CloneWithDefaultBindings(const std::string& name) const;
 

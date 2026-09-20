@@ -168,16 +168,16 @@ namespace emberCore
 		class EMBER_CORE_API PostRender
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IPostRenderQueue* s_pIPostRender;
+			static emberBackendInterface::ICompute::IQueue* s_pIPostRender;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IPostRenderQueue* pIPostRender);
+			static void Init(emberBackendInterface::ICompute::IQueue* pIPostRender);
 			static void Clear();
 
 			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
-			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);	// for postRender compute calls that do not use renderTextures.
-			static CallProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero); // auto binds renderTextures to either inputImage/outputImage or inOutImage.
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static CallProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();

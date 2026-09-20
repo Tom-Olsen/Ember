@@ -1,0 +1,25 @@
+{
+    "materialName": "particleMaterial3d",
+    "materialShaderName": "particleShader3d",
+    "materialPass": "forward",
+    "renderMode": "opaque",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/particle3d.vert.hlsl",
+            "binaryPath": "../bin/particle3d.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/particle3d.frag.hlsl",
+            "binaryPath": "../bin/particle3d.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

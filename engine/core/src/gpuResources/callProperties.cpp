@@ -45,7 +45,7 @@ namespace emberCore
 	}
 	CallProperties::CallProperties(const Material& material)
 	{
-		emberBackendInterface::IMaterial* pIMaterial = material.GetInterfaceHandle();
+		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		m_ownsICallDescriptorSetBinding = true;
 		m_callDescriptorSetBindingExpired = false;
 		m_pICallDescriptorSetBinding = Renderer::CreateDrawCallDescriptorSetBinding(pIMaterial);

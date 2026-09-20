@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "startIndicesReset3d",
+    "sourcePath": "../src/startIndicesReset3d.comp.hlsl",
+    "binaryPath": "../bin/startIndicesReset3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

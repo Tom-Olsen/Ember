@@ -1,5 +1,6 @@
 #pragma once
 #include "emberMath.h"
+#include <cstdint>
 #include <string>
 
 
@@ -15,8 +16,9 @@ namespace vulkanRendererBackend
 		alignas(4) Uint3 threadCount;
 		alignas(4) float time;
 		alignas(4) float deltaTime;
+		alignas(4) uint32_t sceneColorIndex;
 
-		ComputePushConstant(Uint3 threadCount, float time, float deltaTime);
+		ComputePushConstant(Uint3 threadCount, float time, float deltaTime, uint32_t sceneColorIndex = 0);
 		std::string ToString();
 	};
 }

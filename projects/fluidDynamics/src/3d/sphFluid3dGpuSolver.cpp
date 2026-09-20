@@ -110,21 +110,20 @@ namespace fluidDynamics
 		computeType = ComputeType::physics;
 		sessionID = -1;
 
-		// Load compute shaders:
-		std::filesystem::path directoryPath = (std::filesystem::path(PROJECT_SHADERS_DIR) / "bin").make_preferred();
-		resetDataComputeShader = ComputeShader(directoryPath / "resetData3d.comp.spv", "resetData3d");
-		resetRungeKuttaComputeShader = ComputeShader(directoryPath / "resetRungeKutta3d.comp.spv", "resetRungeKutta3d");
-		cellKeysComputeShader = ComputeShader(directoryPath / "cellKeys3d.comp.spv", "cellKeys3d");
-		startIndicesResetComputeShader = ComputeShader(directoryPath / "startIndicesReset3d.comp.spv", "startIndicesReset3d");
-		startIndicesComputeShader = ComputeShader(directoryPath / "startIndices3d.comp.spv", "startIndices3d");
-		densityComputeShader = ComputeShader(directoryPath / "density3d.comp.spv", "density3d");
-		normalAndCurvatureComputeShader = ComputeShader(directoryPath / "normalAndCurvature3d.comp.spv", "normalAndCurvature3d");
-		forceDensityComputeShader = ComputeShader(directoryPath / "forceDensity3d.comp.spv", "forceDensity3d");
-		rungeKutta2Step1ComputeShader = ComputeShader(directoryPath / "rungeKutta2Step1_3d.comp.spv", "rungeKutta2Step1_3d");
-		rungeKutta2Step2ComputeShader = ComputeShader(directoryPath / "rungeKutta2Step2_3d.comp.spv", "rungeKutta2Step2_3d");
-		boundaryCollisionsComputeShader = ComputeShader(directoryPath / "boundaryCollisions3d.comp.spv", "boundaryCollisions3d");
-		densityTexture3dComputeShader = ComputeShader(directoryPath / "densityTexture3d.comp.spv", "densityTexture3d");
-		opticalDepthTexture3dComputeShader = ComputeShader(directoryPath / "opticalDepthTexture3d.comp.spv", "opticalDepthTexture3d");
+		// Retrieve compute shaders:
+		resetDataComputeShader = ComputeShaderManager::TryGetComputeShader("resetData3d");
+		resetRungeKuttaComputeShader = ComputeShaderManager::TryGetComputeShader("resetRungeKutta3d");
+		cellKeysComputeShader = ComputeShaderManager::TryGetComputeShader("cellKeys3d");
+		startIndicesResetComputeShader = ComputeShaderManager::TryGetComputeShader("startIndicesReset3d");
+		startIndicesComputeShader = ComputeShaderManager::TryGetComputeShader("startIndices3d");
+		densityComputeShader = ComputeShaderManager::TryGetComputeShader("density3d");
+		normalAndCurvatureComputeShader = ComputeShaderManager::TryGetComputeShader("normalAndCurvature3d");
+		forceDensityComputeShader = ComputeShaderManager::TryGetComputeShader("forceDensity3d");
+		rungeKutta2Step1ComputeShader = ComputeShaderManager::TryGetComputeShader("rungeKutta2Step1_3d");
+		rungeKutta2Step2ComputeShader = ComputeShaderManager::TryGetComputeShader("rungeKutta2Step2_3d");
+		boundaryCollisionsComputeShader = ComputeShaderManager::TryGetComputeShader("boundaryCollisions3d");
+		densityTexture3dComputeShader = ComputeShaderManager::TryGetComputeShader("densityTexture3d");
+		opticalDepthTexture3dComputeShader = ComputeShaderManager::TryGetComputeShader("opticalDepthTexture3d");
 	}
 	void SphFluid3dGpuSolver::ComputeShaders::SetUseHashGridOptimization(bool useHashGridOptimization)
 	{

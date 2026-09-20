@@ -10,7 +10,7 @@ namespace emberEcs
 	class PostRenderEffects : public Component
 	{
 	private: // Members:
-		std::vector<emberCore::ComputeShader*> effects;
+		std::vector<emberCore::ComputeShader> effects;
 
 	public: // Methods:
 		PostRenderEffects();

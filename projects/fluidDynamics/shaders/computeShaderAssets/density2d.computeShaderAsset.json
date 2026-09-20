@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "density2d",
+    "sourcePath": "../src/density2d.comp.hlsl",
+    "binaryPath": "../bin/density2d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

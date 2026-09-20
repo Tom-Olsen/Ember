@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "boundaryCollisions2d",
+    "sourcePath": "../src/boundaryCollisions2d.comp.hlsl",
+    "binaryPath": "../bin/boundaryCollisions2d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

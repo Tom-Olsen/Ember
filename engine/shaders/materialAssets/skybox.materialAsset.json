@@ -1,0 +1,25 @@
+{
+    "materialName": "skyboxMaterial",
+    "materialShaderName": "skyboxShader",
+    "materialPass": "forward",
+    "renderMode": "skybox",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/skybox.vert.hlsl",
+            "binaryPath": "../bin/skybox.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/skybox.frag.hlsl",
+            "binaryPath": "../bin/skybox.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

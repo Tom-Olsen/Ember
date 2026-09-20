@@ -1,0 +1,25 @@
+{
+    "materialName": "gizmoMaterial",
+    "materialShaderName": "gizmoShader",
+    "materialPass": "gizmo",
+    "renderMode": "opaque",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/gizmo.vert.hlsl",
+            "binaryPath": "../bin/gizmo.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/gizmo.frag.hlsl",
+            "binaryPath": "../bin/gizmo.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -1,7 +1,6 @@
 #include "core.h"
 #include "bufferManager.h"
 #include "compute.h"
-#include "computeShaderManager.h"
 #include "editor.h"
 #include "emberMath.h"
 #include "eventSystem.h"
@@ -43,7 +42,6 @@ namespace emberCore
 	}
 	void Core::InitManagers()
 	{
-		ComputeShaderManager::Init();
 		BufferManager::Init();
 		TextureManager::Init();
 		MeshManager::Init();
@@ -80,7 +78,6 @@ namespace emberCore
 		MeshManager::Clear();
 		TextureManager::Clear();
 		BufferManager::Clear();
-		ComputeShaderManager::Clear();
 	}
 	void Core::ClearOther()
 	{

@@ -1,11 +1,13 @@
 #include "gpuSort.h"
 #include "callProperties.h"
+#include "computeShaderManager.h"
 #include <assert.h>
 
 
 
 namespace emberCore
 {
+	// Ember::ToDo: replace computeShader unique ptrs with value members.
 	// Static members:
 	template <typename T>
 	bool GpuSort<T>::s_isInitialized = false;
@@ -46,155 +48,99 @@ namespace emberCore
 			return;
 		s_isInitialized = true;
 
-		std::filesystem::path directoryPath = (std::filesystem::path(ENGINE_SHADERS_DIR) / "bin").make_preferred();
 		if constexpr (std::is_same_v<T, int>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortInt.comp.spv", "localBitonicSortInt");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipInt.comp.spv", "bigFlipInt");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseInt.comp.spv", "bigDisperseInt");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseInt.comp.spv", "localDisperseInt");
+			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortInt"));
+			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipInt"));
+			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseInt"));
+			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseInt"));
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationInt.comp.spv", "localBitonicSortPermutationInt");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationInt.comp.spv", "bigFlipPermutationInt");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationInt.comp.spv", "bigDispersePermutationInt");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationInt.comp.spv", "localDispersePermutationInt");
+			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationInt"));
+			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationInt"));
+			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationInt"));
+			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationInt"));
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationInt.comp.spv", "applyPermutationInt");
+			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationInt"));
 		}
 		if constexpr (std::is_same_v<T, Int2>)
 		{
 			throw std::runtime_error("GpuSort<Int2>::Init: shaders for Int2 not implemented yet.");
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortInt2.comp.spv", "localBitonicSortInt2");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipInt2.comp.spv", "bigFlipInt2");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseInt2.comp.spv", "bigDisperseInt2");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseInt2.comp.spv", "localDisperseInt2");
-
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationInt2.comp.spv", "localBitonicSortPermutationInt2");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationInt2.comp.spv", "bigFlipPermutationInt2");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationInt2.comp.spv", "bigDispersePermutationInt2");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationInt2.comp.spv", "localDispersePermutationInt2");
-
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationInt2.comp.spv", "applyPermutationInt2");
 		}
 		if constexpr (std::is_same_v<T, Int3>)
 		{
 			throw std::runtime_error("GpuSort<Int3>::Init: shaders for Int3 not implemented yet.");
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortInt3.comp.spv", "localBitonicSortInt3");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipInt3.comp.spv", "bigFlipInt3");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseInt3.comp.spv", "bigDisperseInt3");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseInt3.comp.spv", "localDisperseInt3");
-
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationInt3.comp.spv", "localBitonicSortPermutationInt3");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationInt3.comp.spv", "bigFlipPermutationInt3");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationInt3.comp.spv", "bigDispersePermutationInt3");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationInt3.comp.spv", "localDispersePermutationInt3");
-
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationInt3.comp.spv", "applyPermutationInt3");
 		}
 		if constexpr (std::is_same_v<T, uint32_t>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortUint.comp.spv", "localBitonicSortUint");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipUint.comp.spv", "bigFlipUint");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseInt.comp.spv", "bigDisperseUint");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseUint.comp.spv", "localDisperseUint");
+			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortUint"));
+			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipUint"));
+			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseInt"));
+			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseUint"));
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationUint.comp.spv", "localBitonicSortPermutationUint");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationUint.comp.spv", "bigFlipPermutationUint");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationUint.comp.spv", "bigDispersePermutationUint");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationUint.comp.spv", "localDispersePermutationUint");
+			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationUint"));
+			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationUint"));
+			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationUint"));
+			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationUint"));
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationUint.comp.spv", "applyPermutationUint");
+			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationUint"));
 		}
 		if constexpr (std::is_same_v<T, Uint2>)
 		{
 			throw std::runtime_error("GpuSort<Uint2>::Init: shaders for Uint2 not implemented yet.");
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortUint2.comp.spv", "localBitonicSortUint2");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipUint2.comp.spv", "bigFlipUint2");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseUint2.comp.spv", "bigDisperseUint2");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseUint2.comp.spv", "localDisperseUint2");
-
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationUint2.comp.spv", "localBitonicSortPermutationUint2");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationUint2.comp.spv", "bigFlipPermutationUint2");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationUint2.comp.spv", "bigDispersePermutationUint2");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationUint2.comp.spv", "localDispersePermutationUint2");
-
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationUint2.comp.spv", "applyPermutationUint2");
 		}
 		if constexpr (std::is_same_v<T, Uint3>)
 		{
 			throw std::runtime_error("GpuSort<Uint3>::Init: shaders for Uint3 not implemented yet.");
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortUint3.comp.spv", "localBitonicSortUint3");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipUint3.comp.spv", "bigFlipUint3");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseUint3.comp.spv", "bigDisperseUint3");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseUint3.comp.spv", "localDisperseUint3");
-
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationUint3.comp.spv", "localBitonicSortPermutationUint3");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationUint3.comp.spv", "bigFlipPermutationUint3");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationUint3.comp.spv", "bigDispersePermutationUint3");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationUint3.comp.spv", "localDispersePermutationUint3");
-
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationUint3.comp.spv", "applyPermutationUint3");
 		}
 		if constexpr (std::is_same_v<T, float>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortFloat.comp.spv", "localBitonicSortFloat");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipFloat.comp.spv", "bigFlipFloat");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseFloat.comp.spv", "bigDisperseFloat");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseFloat.comp.spv", "localDisperseFloat");
+			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat"));
+			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipFloat"));
+			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseFloat"));
+			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseFloat"));
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationFloat.comp.spv", "localBitonicSortPermutationFloat");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationFloat.comp.spv", "bigFlipPermutationFloat");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationFloat.comp.spv", "bigDispersePermutationFloat");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationFloat.comp.spv", "localDispersePermutationFloat");
+			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat"));
+			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat"));
+			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat"));
+			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat"));
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationFloat.comp.spv", "applyPermutationFloat");
+			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationFloat"));
 		}
 		if constexpr (std::is_same_v<T, Float2>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortFloat2.comp.spv", "localBitonicSortFloat2");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipFloat2.comp.spv", "bigFlipFloat2");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseFloat2.comp.spv", "bigDisperseFloat2");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseFloat2.comp.spv", "localDisperseFloat2");
+			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat2"));
+			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipFloat2"));
+			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseFloat2"));
+			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseFloat2"));
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationFloat2.comp.spv", "localBitonicSortPermutationFloat2");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationFloat2.comp.spv", "bigFlipPermutationFloat2");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationFloat2.comp.spv", "bigDispersePermutationFloat2");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationFloat2.comp.spv", "localDispersePermutationFloat2");
+			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat2"));
+			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat2"));
+			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat2"));
+			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat2"));
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationFloat2.comp.spv", "applyPermutationFloat2");
+			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationFloat2"));
 		}
 		if constexpr (std::is_same_v<T, Float3>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortFloat3.comp.spv", "localBitonicSortFloat3");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipFloat3.comp.spv", "bigFlipFloat3");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseFloat3.comp.spv", "bigDisperseFloat3");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseFloat3.comp.spv", "localDisperseFloat3");
+			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat3"));
+			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipFloat3"));
+			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseFloat3"));
+			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseFloat3"));
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationFloat3.comp.spv", "localBitonicSortPermutationFloat3");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationFloat3.comp.spv", "bigFlipPermutationFloat3");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationFloat3.comp.spv", "bigDispersePermutationFloat3");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationFloat3.comp.spv", "localDispersePermutationFloat3");
+			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat3"));
+			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat3"));
+			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat3"));
+			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat3"));
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationFloat3.comp.spv", "applyPermutationFloat3");
+			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationFloat3"));
 		}
 		if constexpr (std::is_same_v<T, Float4>)
 		{
 			throw std::runtime_error("GpuSort<Float4>::Init: shaders for Float4 not implemented yet.");
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortFloat4.comp.spv", "localBitonicSortFloat4");
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipFloat4.comp.spv", "bigFlipFloat4");
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDisperseFloat4.comp.spv", "bigDisperseFloat4");
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDisperseFloat4.comp.spv", "localDisperseFloat4");
-
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localBitonicSortPermutationFloat4.comp.spv", "localBitonicSortPermutationFloat4");
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigFlipPermutationFloat4.comp.spv", "bigFlipPermutationFloat4");
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "bigDispersePermutationFloat4.comp.spv", "bigDispersePermutationFloat4");
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "localDispersePermutationFloat4.comp.spv", "localDispersePermutationFloat4");
-
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "applyPermutationFloat4.comp.spv", "applyPermutationFloat4");
 		}
 
-		s_pInitIndexBufferComputeShader = std::make_unique<ComputeShader>(directoryPath / "initIndexBuffer.comp.spv", "initIndexBuffer");
-		s_pInvertPermutationComputeShader = std::make_unique<ComputeShader>(directoryPath / "invertPermutation.comp.spv", "invertPermutation");
+		s_pInitIndexBufferComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("initIndexBuffer"));
+		s_pInvertPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("invertPermutation"));
 	}
 	template <typename T>
 	void GpuSort<T>::Clear()

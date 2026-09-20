@@ -1,0 +1,24 @@
+{
+    "materialName": "outlineMaterial",
+    "materialShaderName": "outlineShader",
+    "materialPass": "outline",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/outline.vert.hlsl",
+            "binaryPath": "../bin/outline.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/outline.frag.hlsl",
+            "binaryPath": "../bin/outline.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": false,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

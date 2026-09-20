@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "resetRungeKutta2d",
+    "sourcePath": "../src/resetRungeKutta2d.comp.hlsl",
+    "binaryPath": "../bin/resetRungeKutta2d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

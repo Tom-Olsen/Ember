@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "opticalDepthTexture3d",
+    "sourcePath": "../src/opticalDepthTexture3d.comp.hlsl",
+    "binaryPath": "../bin/opticalDepthTexture3d.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

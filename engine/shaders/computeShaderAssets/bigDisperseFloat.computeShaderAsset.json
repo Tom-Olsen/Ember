@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "bigDisperseFloat",
+    "sourcePath": "../src/compute/bitonicSortFloat/bigDisperseFloat.comp.hlsl",
+    "binaryPath": "../bin/bigDisperseFloat.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

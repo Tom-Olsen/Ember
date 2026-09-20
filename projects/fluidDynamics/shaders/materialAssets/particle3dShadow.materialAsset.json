@@ -1,0 +1,19 @@
+{
+    "materialName": "particleShadowMaterial3d",
+    "materialShaderName": "particleShadowShader3d",
+    "materialPass": "shadow",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/particle3dShadow.vert.hlsl",
+            "binaryPath": "../bin/particle3dShadow.vert.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}
