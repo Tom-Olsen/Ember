@@ -63,72 +63,57 @@ Alternatively you can setup visual studio or any IDE of your liking to compile/r
 
 
 Implemented features:
--clean architecture split of core and backends
--multiple application modes:
-    -emberGameApp:         sdlWindow, nullGui.
-    -emberGameDebugApp:    sdlWindow, imGuiSdlVulkan.
-    -emberEditorApp:       sdlWindow, imGuiSdlVulkan + custom editor window classes.
-    -emberHeadlessApp:     nullWindow, nullGui.
--clean separation of editor code into its own application.
--Pipelines:
-    -preRender compute (instancing data manipulation).
-    -shadoow mapping (multiple light sources, directional/positional lights, physical based(roughnessMap, normalMap, metallicity, reflectivity), shadow cascades with shadow snapping, instanced rendering support).
-    -forward renderpass (opaque + skybox + transparent, instanced rendering support).
-    -postRender compute (post processing effects).
-    -async comppute.
-    -immediate compue.
--Pipeline Modes:
-    -interleaved (vertex input memory layout)
-    -separate (vertex input memory layout)
--Fully automated descriptorSet system for callProperties (Ember/engine/libs/spirvReflect/shaderReflection.h/cpp) which handles descriptorSets for Materials and ComputeShaders.
--ECS: static library (Embere/engine/libs/entityComponentSystem) which gets linked to the applications. The core has no access to the ECS.
--EventSystem that catches SDL events and makes them visible to Gui+Editor+Entities/Components.
--CameraController that is identical to unities editor.
--Custom math library (Embere/engine/libs/math.h/cpp).
--Dear ImGui integration with docking feature.
--VulkanBackend features:
-    -vulkan object gargabe collector
-    -dynamic meshes with multibuffering
+- Modular architecture with a backend-independent core and interfaces, plus separate Vulkan renderer, SDL window, ImGui, and null backends.
+- Reusable libraries for asset loading, buffer layouts, data structures, ECS, editor tools, logging, math, shader reflection, task scheduling/profiling, and Vulkan utilities.
+- Editor functionality is isolated from the core and linked only by applications that need it.
+- Preconfigured application modes:
+    - emberGameApp:      sdlWindow, nullGui.
+    - emberGameDebugApp: sdlWindow, imGuiSdlVulkan.
+    - emberEditorApp:    sdlWindow, imGuiSdlVulkan + custom editor window classes.
+    - emberHeadlessApp:  nullWindow, nullGui.
+- Vulkan render graph with explicit synchronization across graphics and compute queues:
+ Acquire
+ └>ResourceUpdate
+   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
+   └> PreRenderCompute ┬> Outline ──────────> MidRenderCompute  ────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
+                       ├> Shadow ──────────┬> DeferredLighting ─> ForwardOpaque ─> ScreenSpaceCompute ─> ForwardTransparent ┘
+                       └> DeferredGeometry ┘
+- Rendering features:
+    - Deferred geometry and lighting, forward opaque and transparent rendering, shadow maps, object outlines, gizmos, and presentation/post-processing passes.
+    - Directional, point, and spot lights with configurable light limits and shadow-map resolution.
+    - Configurable VSync, frames in flight, render resolution, and MSAA sample count.
+    - Interleaved and separate vertex-buffer layouts, indexed meshes, instanced rendering, and transparent draw sorting.
+- Compute features:
+    - Pre-render, mid-render, screen-space, and post-render compute queues integrated into the render graph.
+    - Asynchronous compute sessions with explicit barriers, completion polling, and a triple-buffered physics workflow.
+    - GPU bitonic sorting with optional permutation generation and application.
+- GPU resources and asset management:
+    - Managed vertex, index, uniform, storage, and staging buffers.
+    - Sampled, storage, render-target, depth, G-buffer, and combined sampled/storage textures in 1D, 2D, 3D, array, and cube variants where applicable.
+    - Dynamic, multi-buffered meshes and triple-buffered data for CPU/GPU update workflows.
+    - Named resource managers for buffers, textures, meshes, materials, material shaders, and compute shaders.
+    - Image and cubemap loading, CSV mesh loading, and JSON material+computeShader assets.
+    - Batched texture uploads, staging-buffer reuse, descriptor-pool management, VMA-backed allocation, allocation tracking, and deferred Vulkan object destruction.
+- Descriptor and shader system:
+    - Five descriptor sets ordered by update frequency: global (set 0), scene (set 1), frame (set 2), shader/material (set 3), and draw/dispatch call (set 4).
+    - Static global, scene, and frame sets are managed by the renderer; dynamic shader and call sets are generated from SPIR-V reflection.
+    - Reflected descriptor layouts and automatic descriptor binding for materials, compute shaders, and per-call properties.
+    - HLSL shader compilation for vertex, fragment, and compute stages, with shared C++/HLSL constants and structures.
+- Scene and gameplay systems:
+    - Entity-component system with scenes, entities, component registration, lifecycle callbacks, transforms, cameras, lights, mesh renderers, instanced renderers, and post-render effects.
+    - SDL event routing with separate game/scene, GUI, and editor consumers.
+    - Fixed-step physics update scheduling and GPU-compute integration.
+    - Editor-style camera controller.
+- Editor and GUI:
+    - Dear ImGui integration with docking and detached editor-window support.
+    - Scene selection, hierarchy and inspector tooling, configurable outlines, and translate/rotate/scale/bounds manipulation handles.
+    - Game, scene, project, console, FPS, depth-bias, and Vulkan backend debug windows.
+- Foundation libraries and diagnostics:
+    - Custom vector, matrix, random, interpolation, sorting, bounds, ray, plane, triangle, sphere, capsule, cone, quad, and intersection math.
+    - Parallel thread pool, hierarchical CPU profiler, structured logging, reusable index allocation, and reflected buffer-layout utilities.
+    - Vulkan validation-layer support, debug object naming, and human-readable Vulkan/VMA diagnostics.
 
 
-Ember::ToDo now!
-- math::Random has static state and is in a static library that gets linked multiple times => inconcistent state. Fix this.
-- rewrite math library to be a wrapper around glm?
-- improve PercentageCloserFilteredShadow (shadowMapping.hlsli) to work across shadowmap boundaries.
-- sort entities first by material (to reduce pipeline changes) and then by proximity to pCamera to reduce fragment culling (render closer objects first)
-- implement frustum culling.
-- headless mode
-
-
-
-Ember::ToDo:
-- use transfer queue in mesh class instead of graphics queue for index and vertex data transfer.
-  use framesInFlight many vertex and index buffers, with two staging buffers (one for vertex and one for index data).
-  adjust staging buffer -> mesh buffers copy to account fro frame index (same as callProperties) and sync with render pipeline.
-- when not using input.vertexColor in the vertex shader, spirv optimizes the input binding away, which leads to incorrect bindings in
-  my spirv reflection => other bindings are wrong, and textures are not displayed at all.
-- optimize eventsystem::AnyKey etc.
-- remove scaling from view matrizes of lights and cameras?
-- optimizations: multi threaded render loop, culling, etc.
-- add entity selection (need gizmos => ui renderpass?)
-- add geometry shader stage => wireframe rendering
-- entity parent system (entity € entity => transform hierarchy)
-- add logic to mesh class to only update the parts of the buffer that have changed (e.g. pos, normal, ...)
-- add debugOnly assert to check if 'normal' vectors are normalized and 'tangent' vectors are orthogonal to 'normal' vectors.
-  remove normalization of any input vector that is namen 'normal' or 'tangent' or 'direction' in mathf library (same for linearAlgebra.hlsli).
-
-Ember::ToDo long term:
-- dimm line between shadow cascades.
-- change image loading library, stb_image sucks.
-- proper quaternion support
-- render image while resizing
-- physics
-- audio
-- entity clipping logic for pCamera and lights (requires bounding box)
-- better shadow mapping (PCF, soft shadows, etc.)
-- blender model import
-- text rendering
-- only load textures that are used. parallel loading of textures.
 
 
 
