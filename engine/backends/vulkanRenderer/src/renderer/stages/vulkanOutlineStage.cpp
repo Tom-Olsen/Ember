@@ -46,8 +46,8 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = frameContext.renderTargets.GetOutlineTexture(frameContext.frameIndex).GetWidth();
-			viewport.height = frameContext.renderTargets.GetOutlineTexture(frameContext.frameIndex).GetHeight();
+			viewport.width = frameContext.renderTargets.GetOutlineTexture(frameContext.frameExecutionData.frameIndex).GetWidth();
+			viewport.height = frameContext.renderTargets.GetOutlineTexture(frameContext.frameExecutionData.frameIndex).GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -61,7 +61,7 @@ namespace vulkanRendererBackend
 			clearValues.color = { 0.0f, 0.0f, 0.0f, 0.0f };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pOutlineRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pOutlineRenderPass->GetFramebuffer(frameContext.frameIndex);
+			renderPassBeginInfo.framebuffer = pOutlineRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
@@ -108,7 +108,7 @@ namespace vulkanRendererBackend
 					}
 
 					// Bind per shader descriptor set:
-					VkDescriptorSet newShaderDescriptorSet = pOutlineMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex);
+					VkDescriptorSet newShaderDescriptorSet = pOutlineMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex);
 					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
 					{
 						shaderDescriptorSet = newShaderDescriptorSet;
@@ -116,11 +116,11 @@ namespace vulkanRendererBackend
 					}
 
 					// Push constant:
-					DefaultPushConstant pushConstant(0, drawCall.instanceCount, false, frameContext.time, frameContext.deltaTime);
+					DefaultPushConstant pushConstant(0, drawCall.instanceCount, false, frameContext.frameExecutionData.time, frameContext.frameExecutionData.deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Bind per draw call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = drawCall.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+					if (VkDescriptorSet vkDescriptorSet = drawCall.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
 					// Bind mesh data:
@@ -137,6 +137,6 @@ namespace vulkanRendererBackend
 		VKA(vkEndCommandBuffer(commandBuffer));
 
 		// Align renderTexture layout with final renderPass layout: 
-		frameContext.renderTargets.GetOutlineTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
+		frameContext.renderTargets.GetOutlineTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_GENERAL);
 	}
 }

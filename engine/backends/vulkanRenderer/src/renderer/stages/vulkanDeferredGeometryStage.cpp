@@ -48,8 +48,8 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			viewport.width = frameContext.renderTargets.GetAlbedoTexture(frameContext.frameIndex).GetWidth();
-			viewport.height = frameContext.renderTargets.GetAlbedoTexture(frameContext.frameIndex).GetHeight();
+			viewport.width = frameContext.renderTargets.GetAlbedoTexture(frameContext.frameExecutionData.frameIndex).GetWidth();
+			viewport.height = frameContext.renderTargets.GetAlbedoTexture(frameContext.frameExecutionData.frameIndex).GetHeight();
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			VkRect2D scissor = {};
@@ -66,7 +66,7 @@ namespace vulkanRendererBackend
 			clearValues[3].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pDeferredGeometryRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pDeferredGeometryRenderPass->GetFramebuffer(frameContext.frameIndex);
+			renderPassBeginInfo.framebuffer = pDeferredGeometryRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
@@ -113,7 +113,7 @@ namespace vulkanRendererBackend
 					}
 
 					// Bind per shader descriptor set:
-					VkDescriptorSet newShaderDescriptorSet = pDeferredMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex);
+					VkDescriptorSet newShaderDescriptorSet = pDeferredMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex);
 					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
 					{
 						shaderDescriptorSet = newShaderDescriptorSet;
@@ -121,14 +121,14 @@ namespace vulkanRendererBackend
 					}
 
 					// Push constant:
-					DefaultPushConstant pushConstant(0, drawCall->instanceCount, drawCall->receiveShadows, frameContext.time, frameContext.deltaTime);
+					DefaultPushConstant pushConstant(0, drawCall->instanceCount, drawCall->receiveShadows, frameContext.frameExecutionData.time, frameContext.frameExecutionData.deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
 					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->cullMode));
 
 					// Bind per draw call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
 					// Bind mesh data:
@@ -142,10 +142,10 @@ namespace vulkanRendererBackend
 			}
 			vkCmdEndRenderPass(commandBuffer);
 
-			frameContext.renderTargets.GetAlbedoTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			frameContext.renderTargets.GetNormalTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			frameContext.renderTargets.GetSurfacePropertiesTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			frameContext.renderTargets.GetSceneDepthTexture(frameContext.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetAlbedoTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetNormalTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetSurfacePropertiesTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetSceneDepthTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}

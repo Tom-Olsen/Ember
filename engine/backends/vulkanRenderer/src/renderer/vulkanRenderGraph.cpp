@@ -38,12 +38,12 @@ namespace vulkanRendererBackend
 	void RenderGraph::RecordAndSubmit(const FrameContext& frameContext)
 	{
 		PROFILE_FUNCTION();
-		DEBUG_LOG_TRACE("Recording frame {}", frameContext.frameIndex);
+		DEBUG_LOG_TRACE("Recording frame {}", frameContext.frameExecutionData.frameIndex);
 
-		const uint32_t frameIndex = frameContext.frameIndex;
+		const uint32_t frameIndex = frameContext.frameExecutionData.frameIndex;
 		if (frameIndex >= m_frameSyncObjects.size())
 			throw std::out_of_range("RenderGraph::RecordAndSubmit(...) failed. frameIndex is out of range.");
-		if (frameContext.imageIndex >= m_releaseSemaphores.size())
+		if (frameContext.frameExecutionData.imageIndex >= m_releaseSemaphores.size())
 			throw std::out_of_range("RenderGraph::RecordAndSubmit(...) failed. imageIndex is out of range.");
 
 		// Queues:
@@ -146,7 +146,7 @@ namespace vulkanRendererBackend
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postRenderComputeToPresent), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT),
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::gizmoToPresent), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT)
 		};
-		VkSemaphoreSubmitInfo presentSignal = CreateSemaphoreSubmitInfo(m_releaseSemaphores[frameContext.imageIndex], VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
+		VkSemaphoreSubmitInfo presentSignal = CreateSemaphoreSubmitInfo(m_releaseSemaphores[frameContext.frameExecutionData.imageIndex], VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
 		SubmitStage(frameContext, RenderStage::present, graphicsQueue, presentWaits, std::span<const VkSemaphoreSubmitInfo>(&presentSignal, 1), m_frameSyncObjects[frameIndex].frameFence);
 	}
 	VkResult RenderGraph::Present(uint32_t imageIndex) const

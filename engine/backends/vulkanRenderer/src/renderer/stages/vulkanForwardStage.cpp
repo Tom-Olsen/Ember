@@ -51,8 +51,8 @@ namespace vulkanRendererBackend
 			ForwardOpaqueRenderPass* pForwardOpaqueRenderPass = RenderPassManager::GetForwardOpaqueRenderPass();
 			pRenderPass = pForwardOpaqueRenderPass;
 			// Forward opaque rendering always renders to 0th sceneColor texture:
-			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, 0);
-			framebuffer = pForwardOpaqueRenderPass->GetFramebuffer(frameContext.frameIndex);
+			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, 0);
+			framebuffer = pForwardOpaqueRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardOpaqueDrawCallPointers;
 		}
 		else
@@ -60,8 +60,8 @@ namespace vulkanRendererBackend
 			ForwardTransparentRenderPass* pForwardTransparentRenderPass = RenderPassManager::GetForwardTransparentRenderPass();
 			pRenderPass = pForwardTransparentRenderPass;
 			// Forward transparent rendering renders to renderTexture 0 or 1, depending on sceneColor swaps in screen-space compute stage:
-			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, frameContext.transparentSceneColorIndex);
-			framebuffer = pForwardTransparentRenderPass->GetFramebuffer(frameContext.frameIndex, frameContext.transparentSceneColorIndex);
+			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, frameContext.frameExecutionData.transparentSceneColorIndex);
+			framebuffer = pForwardTransparentRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex, frameContext.frameExecutionData.transparentSceneColorIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardTransparentDrawCallPointers;
 		}
 
@@ -139,7 +139,7 @@ namespace vulkanRendererBackend
 					}
 
 					// Bind per shader descriptor set:
-					VkDescriptorSet newShaderDescriptorSet = pForwardMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex);
+					VkDescriptorSet newShaderDescriptorSet = pForwardMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex);
 					if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
 					{
 						shaderDescriptorSet = newShaderDescriptorSet;
@@ -147,14 +147,14 @@ namespace vulkanRendererBackend
 					}
 
 					// Push constant:
-					DefaultPushConstant pushConstant(0, drawCall->instanceCount, drawCall->receiveShadows, frameContext.time, frameContext.deltaTime);
+					DefaultPushConstant pushConstant(0, drawCall->instanceCount, drawCall->receiveShadows, frameContext.frameExecutionData.time, frameContext.frameExecutionData.deltaTime);
 					vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 					// Cull mode:
 					vkCmdSetCullMode(commandBuffer, CullModeCommonToVulkan(drawCall->cullMode));
 
 					// Bind per draw call descriptor set:
-					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+					if (VkDescriptorSet vkDescriptorSet = drawCall->descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
 					// Bind mesh data:

@@ -5,6 +5,7 @@
 #include "commonRendererCreateInfo.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
+#include "vulkanFrameExecutionData.h"
 #include "vulkanRendererExport.h"
 #include <array>
 #include <memory>
@@ -77,10 +78,7 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
 		// Render management:
-		uint32_t m_frameIndex = 0;
-		uint32_t m_imageIndex = 0;  // updated by vkAcquireNextImageKHR(...)
-		float m_time;
-		float m_deltaTime;
+		FrameExecutionData m_frameExecutionData;
 		DescriptorSetBinding* m_pSceneDescriptorSetBinding;
 		bool m_rebuildSwapchain;
 

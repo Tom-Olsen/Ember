@@ -92,9 +92,6 @@ namespace vulkanRendererBackend
 		SceneDescriptorSetLayout::Init();
 		FrameDescriptorSetLayout::Init();
 		DefaultGpuResources::Init();
-
-		m_time = 0.0f;
-		m_deltaTime = 0.0f;
 		m_rebuildSwapchain = false;
 
 		// Render resources:
@@ -181,9 +178,9 @@ namespace vulkanRendererBackend
 		if (!m_pCompute)
 			throw std::runtime_error("vulkanRendererBackend::Renderer::RenderFrame(...) failed. Compute backend is not linked.");
 
-		m_frameIndex = Context::GetFrameIndex();
-		m_time = time;
-		m_deltaTime = deltaTime;
+		m_frameExecutionData.frameIndex = Context::GetFrameIndex();
+		m_frameExecutionData.time = time;
+		m_frameExecutionData.deltaTime = deltaTime;
 
 		// Defer swapchain rebuild until the resize event stream settles.
 		if (m_pIWindow->GetIsResizing())
@@ -205,11 +202,11 @@ namespace vulkanRendererBackend
 		// Wait for previous frame fence:
 		{
 			PROFILE_SCOPE("Renderer::WaitForFrameFence");
-			m_pRenderGraph->WaitForFrame(m_frameIndex);
+			m_pRenderGraph->WaitForFrame(m_frameExecutionData.frameIndex);
 		}
 
 		// Return frame compute shaders callDescriptorSetBindings and decrement their usage count of previous submission with this frame index:
-		m_pCompute->RetireFrame(m_frameIndex);
+		m_pCompute->RetireFrame(m_frameExecutionData.frameIndex);
 
 		// Cancel current frame on failed acquisition:
 		if (!AcquireImage())
@@ -219,26 +216,23 @@ namespace vulkanRendererBackend
 		}
 
 		// Begin next frame:
-		m_pRenderGraph->ResetFrameFence(m_frameIndex);
-		m_frameResources[m_frameIndex].ResetCommandPools();
+		m_pRenderGraph->ResetFrameFence(m_frameExecutionData.frameIndex);
+		m_frameResources[m_frameExecutionData.frameIndex].ResetCommandPools();
 		Context::MarkDeviceBusy();
 		SceneColorTexture2dPair& sceneColorTexturePair = m_pRenderTargets->GetSceneColorTexturePair();
-		sceneColorTexturePair.BeginFrame(m_frameIndex);
+		sceneColorTexturePair.BeginFrame(m_frameExecutionData.frameIndex);
 
 		SortDrawCallPointers();
 		QueueRendererOwnedComputeShaders();
 		UpdateShaderData();
-		// Happens here atm as the resulting transparent scene color index must be forwarded to frameContext.
-		// ToDo: cleaner architecture so this call can be put back into UpdateShaderData() and the transparent scene color index still gets assigned somehow.
-		uint32_t transparentSceneColorIndex = m_pCompute->UpdateShaderData(m_frameIndex, sceneColorTexturePair);
 
 		// Record and submit current frame commands:
 		uint32_t shadowMapCount = m_directionalLightsCount + m_positionalLightsCount;
 		FrameContext frameContext(
-			m_frameIndex, m_imageIndex, transparentSceneColorIndex, m_time, m_deltaTime,
+			m_frameExecutionData,
 			m_shadowMapResolution, shadowMapCount, m_depthBiasConstantFactor, m_depthBiasClamp, m_depthBiasSlopeFactor,
-			m_frameResources[m_frameIndex],
-			m_frameRenderData[m_frameIndex],
+			m_frameResources[m_frameExecutionData.frameIndex],
+			m_frameRenderData[m_frameExecutionData.frameIndex],
 			*m_pRenderTargets,
 			m_pIGui,
 			m_pCompute->GetPreRenderCompute()->GetComputeCalls(),
@@ -246,10 +240,10 @@ namespace vulkanRendererBackend
 			m_pCompute->GetScreenSpaceCompute()->GetComputeCalls(),
 			m_pCompute->GetPostRenderCompute()->GetComputeCalls());
 		m_pRenderGraph->RecordAndSubmit(frameContext);
-		m_pCompute->CommitFrame(m_frameIndex);
+		m_pCompute->CommitFrame(m_frameExecutionData.frameIndex);
 
 		// Finalize frame:
-		sceneColorTexturePair.FinalizeFrame(m_frameIndex);
+		sceneColorTexturePair.FinalizeFrame(m_frameExecutionData.frameIndex);
 		ResetFrameCalls();
 
 		// Cancel current frame on failed presentation (e.g. window resize):
@@ -514,7 +508,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::ITexture* Renderer::GetGizmoTexture()
 	{
-		RenderTexture2d* pRenderTexture = &m_pRenderTargets->GetGizmoTexture(m_frameIndex);
+		RenderTexture2d* pRenderTexture = &m_pRenderTargets->GetGizmoTexture(m_frameExecutionData.frameIndex);
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
@@ -701,7 +695,7 @@ namespace vulkanRendererBackend
 		m_directionalLightsCount = 0;
 		m_positionalLightsCount = 0;
 		// Draw calls:
-		m_frameRenderData[m_frameIndex].Reset();;
+		m_frameRenderData[m_frameExecutionData.frameIndex].Reset();;
 	}
 
 
@@ -730,7 +724,8 @@ namespace vulkanRendererBackend
 			return false;
 		}
 
-		VkResult result = m_pRenderGraph->AcquireImage(m_frameIndex, m_imageIndex);
+		// Sets m_frameExecutionData.imageIndex by reference:
+		VkResult result = m_pRenderGraph->AcquireImage(m_frameExecutionData.frameIndex, m_frameExecutionData.imageIndex);
 
 		switch (result)
 		{
@@ -749,19 +744,19 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::SortDrawCallPointers()
 	{
-		m_frameRenderData[m_frameIndex].SortDrawCalls(m_activeCamera);
+		m_frameRenderData[m_frameExecutionData.frameIndex].SortDrawCalls(m_activeCamera);
 	}
 	void Renderer::QueueRendererOwnedComputeShaders()
 	{
 		// Outline mask:
 		ComputeQueue* pMidRenderCompute = m_pCompute->GetMidRenderCompute();
 		ComputeQueue* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
-		if (!m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls.empty())
+		if (!m_frameRenderData[m_frameExecutionData.frameIndex].outlineDrawCalls.empty())
 		{
 			// Masks:
-			RenderTexture2d* pInputMask = &m_pRenderTargets->GetOutlineTexture(m_frameIndex);
-			StorageTexture2d* pHorizontalExpandedMask = &m_pRenderTargets->GetHorizontalExpandedOutlineMaskTexture(m_frameIndex);
-			StorageTexture2d* pExpandedMask = &m_pRenderTargets->GetExpandedOutlineMaskTexture(m_frameIndex);
+			RenderTexture2d* pInputMask = &m_pRenderTargets->GetOutlineTexture(m_frameExecutionData.frameIndex);
+			StorageTexture2d* pHorizontalExpandedMask = &m_pRenderTargets->GetHorizontalExpandedOutlineMaskTexture(m_frameExecutionData.frameIndex);
+			StorageTexture2d* pExpandedMask = &m_pRenderTargets->GetExpandedOutlineMaskTexture(m_frameExecutionData.frameIndex);
 
 			// Expand mask horizontally (midRenderCompute):
 			Uint3 threadCount = { pInputMask->GetWidth(), pInputMask->GetHeight(), 1 };
@@ -802,67 +797,70 @@ namespace vulkanRendererBackend
 	{
 		// Scene descriptor set:
 		SceneDescriptorSetLayout::SetLightData(m_directionalLights, m_directionalLightsCount, m_positionalLights, m_positionalLightsCount);
-		SceneDescriptorSetLayout::UpdateShaderData(m_frameIndex);
+		SceneDescriptorSetLayout::UpdateShaderData(m_frameExecutionData.frameIndex);
 
 		// Frame descriptor set:
 		FrameDescriptorSetLayout::SetCameraData(Float4(m_activeCamera.position, 1.0f), m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
-		FrameDescriptorSetLayout::SetRenderTargetData(m_frameIndex, m_pRenderTargets->GetSceneColorTexturePair(), m_pRenderTargets->GetSceneDepthTexture(m_frameIndex));
-		FrameDescriptorSetLayout::UpdateShaderData(m_frameIndex);
+		FrameDescriptorSetLayout::SetRenderTargetData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorTexturePair(), m_pRenderTargets->GetSceneDepthTexture(m_frameExecutionData.frameIndex));
+		FrameDescriptorSetLayout::UpdateShaderData(m_frameExecutionData.frameIndex);
 
 		// Gizmo calls:
-		for (GizmoDrawCall& drawCall : m_frameRenderData[m_frameIndex].gizmoDrawCalls)
+		for (GizmoDrawCall& drawCall : m_frameRenderData[m_frameExecutionData.frameIndex].gizmoDrawCalls)
 		{
 			drawCall.UpdateModelData();
-			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
 
 		// Outline calls:
-		if (!m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls.empty())
-			DefaultGpuResources::GetDefaultOutlineMaterial()->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-		for (OutlineDrawCall& drawCall : m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls)
+		if (!m_frameRenderData[m_frameExecutionData.frameIndex].outlineDrawCalls.empty())
+			DefaultGpuResources::GetDefaultOutlineMaterial()->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
+		for (OutlineDrawCall& drawCall : m_frameRenderData[m_frameExecutionData.frameIndex].outlineDrawCalls)
 		{
 			drawCall.UpdateModelData();
-			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
 
 		// Shadow calls:
-		for (ShadowDrawCall& drawCall : m_frameRenderData[Context::GetFrameIndex()].shadowDrawCalls)
+		for (ShadowDrawCall& drawCall : m_frameRenderData[m_frameExecutionData.frameIndex].shadowDrawCalls)
 		{
 			drawCall.UpdateModelData();
-			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
 
 		// Deferred calls:
-		for (DeferredDrawCall& drawCall : m_frameRenderData[Context::GetFrameIndex()].deferredDrawCalls)
+		for (DeferredDrawCall& drawCall : m_frameRenderData[m_frameExecutionData.frameIndex].deferredDrawCalls)
 		{
 			drawCall.UpdateModelData();
-			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
 
 		// Deferred lighting:
 		{
 			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", &m_pRenderTargets->GetAlbedoTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", &m_pRenderTargets->GetNormalTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", &m_pRenderTargets->GetSurfacePropertiesTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", &m_pRenderTargets->GetSceneDepthTexture(m_frameIndex));
-			pDeferredLightingDescriptorSetBinding->UpdateShaderData(m_frameIndex);
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", &m_pRenderTargets->GetAlbedoTexture(m_frameExecutionData.frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", &m_pRenderTargets->GetNormalTexture(m_frameExecutionData.frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", &m_pRenderTargets->GetSurfacePropertiesTexture(m_frameExecutionData.frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", &m_pRenderTargets->GetSceneDepthTexture(m_frameExecutionData.frameIndex));
+			pDeferredLightingDescriptorSetBinding->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
 
 		// Forward calls:
-		for (ForwardDrawCall& drawCall : m_frameRenderData[Context::GetFrameIndex()].forwardDrawCalls)
+		for (ForwardDrawCall& drawCall : m_frameRenderData[m_frameExecutionData.frameIndex].forwardDrawCalls)
 		{
 			drawCall.UpdateModelData();
-			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameIndex);
-			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameIndex);
+			drawCall.pMaterial->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
+			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
+
+		// Compute calls:
+		m_frameExecutionData.transparentSceneColorIndex = m_pCompute->UpdateShaderData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorTexturePair());
 	}
 	bool Renderer::PresentImage()
 	{
-		VkResult result = m_pRenderGraph->Present(m_imageIndex);
+		VkResult result = m_pRenderGraph->Present(m_frameExecutionData.imageIndex);
 		switch (result)
 		{
 		case VK_SUCCESS:

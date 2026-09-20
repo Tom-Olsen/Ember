@@ -37,7 +37,7 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			RenderTexture2d& sceneColorTexture = frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameIndex, 0);
+			RenderTexture2d& sceneColorTexture = frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, 0);
 			viewport.width = sceneColorTexture.GetWidth();
 			viewport.height = sceneColorTexture.GetHeight();
 			viewport.minDepth = 0.0f;
@@ -53,7 +53,7 @@ namespace vulkanRendererBackend
 			clearValue.color = { 0.0f, 0.0f, 0.0f, 1.0f };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pDeferredLightingRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = pDeferredLightingRenderPass->GetFramebuffer(frameContext.frameIndex);
+			renderPassBeginInfo.framebuffer = pDeferredLightingRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
@@ -73,7 +73,7 @@ namespace vulkanRendererBackend
 					frameContext.resources.staticDescriptorSets[0],
 					frameContext.resources.staticDescriptorSets[1],
 					frameContext.resources.staticDescriptorSets[2],
-					pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex)
+					pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex)
 				};
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetVkPipelineLayout(), 0, 4, descriptorSets, 0, nullptr);
 

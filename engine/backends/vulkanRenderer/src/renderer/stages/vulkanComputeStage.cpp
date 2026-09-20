@@ -39,7 +39,7 @@ namespace vulkanRendererBackend
 		{
 			// These stages may read or write sceneColor textures and must transition them to general layout first:
 			if constexpr(stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute)
-				frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutForCompute(commandBuffer, frameContext.frameIndex);
+				frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutForCompute(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			// Pipeline:
 			VkPipeline pipeline = VK_NULL_HANDLE;
@@ -74,16 +74,16 @@ namespace vulkanRendererBackend
 					}
 
 					// Bind per shader descriptor set:
-					if (VkDescriptorSet descriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex); descriptorSet != VK_NULL_HANDLE)
+					if (VkDescriptorSet descriptorSet = pComputeShader->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex); descriptorSet != VK_NULL_HANDLE)
 						vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, SHADER_SET_INDEX, 1, &descriptorSet, 0, nullptr);
 				}
 
 				// Bind per compute call descriptor set:
-				if (VkDescriptorSet descriptorSet = computeCall.callDescriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameIndex); descriptorSet != VK_NULL_HANDLE)
+				if (VkDescriptorSet descriptorSet = computeCall.callDescriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex); descriptorSet != VK_NULL_HANDLE)
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipelineLayout, CALL_SET_INDEX, 1, &descriptorSet, 0, nullptr);
 
 				// Push constant:
-				ComputePushConstant pushConstant(computeCall.threadCount, frameContext.time, frameContext.deltaTime, computeCall.sceneColorIndex);
+				ComputePushConstant pushConstant(computeCall.threadCount, frameContext.frameExecutionData.time, frameContext.frameExecutionData.deltaTime, computeCall.sceneColorIndex);
 				vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstant), &pushConstant);
 
 				// Group counts:

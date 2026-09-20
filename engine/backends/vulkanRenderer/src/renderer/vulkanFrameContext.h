@@ -1,5 +1,6 @@
 #pragma once
 // #include "commonCamera.h"
+#include "vulkanFrameExecutionData.h"
 #include <cstdint>
 #include <span>
 
@@ -28,13 +29,8 @@ namespace vulkanRendererBackend
 	struct FrameContext
 	{
 	public: // Members:
-		// Frame indexing:
-		uint32_t frameIndex;
-		uint32_t imageIndex;
-		uint32_t transparentSceneColorIndex;
-		// Frame timings:
-		float time;
-		float deltaTime;
+		// Frame execution data:
+		const FrameExecutionData& frameExecutionData;
 		// Frame shadow data:
 		uint32_t shadowMapResolution;
 		uint32_t shadowMapCount;
@@ -53,6 +49,6 @@ namespace vulkanRendererBackend
 		std::span<const ComputeCall> postRenderComputeCalls;
 
 	public: // Methods:
-		FrameContext(uint32_t frameIndex, uint32_t imageIndex, uint32_t transparentSceneColorIndex, float time, float deltaTime, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IGui* pGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
+		FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IGui* pGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
 	};
 }

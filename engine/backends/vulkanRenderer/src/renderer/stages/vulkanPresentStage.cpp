@@ -50,12 +50,12 @@ namespace vulkanRendererBackend
 		{
 			// Publish the final scene color for editor sampling:
 			SceneColorTexture2dPair& sceneColorTexturePair = frameContext.renderTargets.GetSceneColorTexturePair();
-			sceneColorTexturePair.TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameIndex);
+			sceneColorTexturePair.TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
-			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", sceneColorTexturePair.GetCurrentTexture(frameContext.frameIndex));
-			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", &frameContext.renderTargets.GetGizmoTexture(frameContext.frameIndex));
-			pPresentShaderDescriptorSetBinding->UpdateShaderData(frameContext.frameIndex);
+			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", sceneColorTexturePair.GetCurrentTexture(frameContext.frameExecutionData.frameIndex));
+			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", &frameContext.renderTargets.GetGizmoTexture(frameContext.frameExecutionData.frameIndex));
+			pPresentShaderDescriptorSetBinding->UpdateShaderData(frameContext.frameExecutionData.frameIndex);
 
 			// Viewport and scissor:
 			Uint2 swapchainExtent = Context::GetSwapchain()->GetExtent();
@@ -74,7 +74,7 @@ namespace vulkanRendererBackend
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(frameContext.imageIndex);
+			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(frameContext.frameExecutionData.imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = VkExtent2D{swapchainExtent.x, swapchainExtent.y};
 
@@ -91,7 +91,7 @@ namespace vulkanRendererBackend
 					frameContext.resources.staticDescriptorSets[0],
 					frameContext.resources.staticDescriptorSets[1],
 					frameContext.resources.staticDescriptorSets[2],
-					pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex)
+					pMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex)
 				};
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pMaterial->GetVkPipelineLayout(), 0, 4, descriptorSets, 0, nullptr);
 
@@ -120,14 +120,14 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Publish the final scene color for editor sampling:
-			frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameIndex);
+			frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			// Render pass info:
 			Uint2 swapchainExtent = Context::GetSwapchain()->GetExtent();
 			PresentRenderPass* presentRenderPass = RenderPassManager::GetPresentRenderPass();
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = presentRenderPass->GetVkRenderPass();
-			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(frameContext.imageIndex);
+			renderPassBeginInfo.framebuffer = presentRenderPass->GetFramebuffer(frameContext.frameExecutionData.imageIndex);
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent = VkExtent2D{swapchainExtent.x, swapchainExtent.y};
 

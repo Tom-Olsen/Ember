@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			for (Mesh* mesh : meshUpdates)
-				mesh->RecordUpdateCommand(commandBuffer, frameContext.frameIndex);
+				mesh->RecordUpdateCommand(commandBuffer, frameContext.frameExecutionData.frameIndex);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));
 

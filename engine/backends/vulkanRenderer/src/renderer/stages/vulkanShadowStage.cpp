@@ -101,7 +101,7 @@ namespace vulkanRendererBackend
 						}
 
 						// Bind per shader descriptor set:
-						VkDescriptorSet newShaderDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameIndex);
+						VkDescriptorSet newShaderDescriptorSet = pShadowMaterial->GetDescriptorSetBinding()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex);
 						if (newShaderDescriptorSet != VK_NULL_HANDLE && (pipelineLayoutChanged || shaderDescriptorSet != newShaderDescriptorSet))
 						{
 							shaderDescriptorSet = newShaderDescriptorSet;
@@ -109,7 +109,7 @@ namespace vulkanRendererBackend
 						}
 
 						// Bind per draw call descriptor set:
-						if (VkDescriptorSet vkDescriptorSet = drawCall.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
+						if (VkDescriptorSet vkDescriptorSet = drawCall.descriptorSetBindingHandle.Get()->GetVkDescriptorSet(frameContext.frameExecutionData.frameIndex); vkDescriptorSet != VK_NULL_HANDLE)
 							vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, CALL_SET_INDEX, 1, &vkDescriptorSet, 0, nullptr);
 
 						// Bind mesh data:
@@ -119,7 +119,7 @@ namespace vulkanRendererBackend
 						for (uint32_t shadowMapIndex = 0; shadowMapIndex < shadowLightCount; shadowMapIndex++)
 						{
 							// Push constant:
-							DefaultPushConstant pushConstant(shadowMapIndex, drawCall.instanceCount, false, frameContext.time, frameContext.deltaTime);
+							DefaultPushConstant pushConstant(shadowMapIndex, drawCall.instanceCount, false, frameContext.frameExecutionData.time, frameContext.frameExecutionData.deltaTime);
 							vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 							// Dispatch:
