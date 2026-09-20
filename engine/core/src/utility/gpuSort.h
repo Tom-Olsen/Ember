@@ -3,7 +3,6 @@
 #include "bufferView.h"
 #include "compute.h"
 #include "computeShader.h"
-#include <memory>
 
 
 
@@ -20,19 +19,19 @@ namespace emberCore
     private: // Members
         static bool s_isInitialized;
         // Bitonic sort compute shaders:
-        static std::unique_ptr<ComputeShader> s_pLocalBitonicSortComputeShader;
-        static std::unique_ptr<ComputeShader> s_pBigFlipComputeShader;
-        static std::unique_ptr<ComputeShader> s_pBigDisperseComputeShader;
-        static std::unique_ptr<ComputeShader> s_pLocalDisperseComputeShader;
+        static ComputeShader s_localBitonicSortComputeShader;
+        static ComputeShader s_bigFlipComputeShader;
+        static ComputeShader s_bigDisperseComputeShader;
+        static ComputeShader s_localDisperseComputeShader;
         // Bitonic permutation sort compute shaders:
-        static std::unique_ptr<ComputeShader> s_pLocalBitonicSortPermutationComputeShader;
-        static std::unique_ptr<ComputeShader> s_pBigFlipPermutationComputeShader;
-        static std::unique_ptr<ComputeShader> s_pBigDispersePermutationComputeShader;
-        static std::unique_ptr<ComputeShader> s_pLocalDispersePermutationComputeShader;
+        static ComputeShader s_localBitonicSortPermutationComputeShader;
+        static ComputeShader s_bigFlipPermutationComputeShader;
+        static ComputeShader s_bigDispersePermutationComputeShader;
+        static ComputeShader s_localDispersePermutationComputeShader;
         // Other compute shaders:
-        static std::unique_ptr<ComputeShader> s_pInitIndexBufferComputeShader;
-        static std::unique_ptr<ComputeShader> s_pApplyPermutationComputeShader;
-        static std::unique_ptr<ComputeShader> s_pInvertPermutationComputeShader;
+        static ComputeShader s_initIndexBufferComputeShader;
+        static ComputeShader s_applyPermutationComputeShader;
+        static ComputeShader s_invertPermutationComputeShader;
 
     public: // Methods:
 	    // Initialization/Cleanup:

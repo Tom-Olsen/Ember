@@ -7,35 +7,34 @@
 
 namespace emberCore
 {
-	// Ember::ToDo: replace computeShader unique ptrs with value members.
 	// Static members:
 	template <typename T>
 	bool GpuSort<T>::s_isInitialized = false;
 	// Bitonic sort compute shaders:
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalBitonicSortComputeShader;
+	ComputeShader GpuSort<T>::s_localBitonicSortComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigFlipComputeShader;
+	ComputeShader GpuSort<T>::s_bigFlipComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigDisperseComputeShader;
+	ComputeShader GpuSort<T>::s_bigDisperseComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalDisperseComputeShader;
+	ComputeShader GpuSort<T>::s_localDisperseComputeShader;
 	// Bitonic permutation sort compute shaders:
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalBitonicSortPermutationComputeShader;
+	ComputeShader GpuSort<T>::s_localBitonicSortPermutationComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigFlipPermutationComputeShader;
+	ComputeShader GpuSort<T>::s_bigFlipPermutationComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pBigDispersePermutationComputeShader;
+	ComputeShader GpuSort<T>::s_bigDispersePermutationComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pLocalDispersePermutationComputeShader;
+	ComputeShader GpuSort<T>::s_localDispersePermutationComputeShader;
 	// Other compute shaders:
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pInitIndexBufferComputeShader;
+	ComputeShader GpuSort<T>::s_initIndexBufferComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pApplyPermutationComputeShader;
+	ComputeShader GpuSort<T>::s_applyPermutationComputeShader;
 	template <typename T>
-	std::unique_ptr<ComputeShader> GpuSort<T>::s_pInvertPermutationComputeShader;
+	ComputeShader GpuSort<T>::s_invertPermutationComputeShader;
 
 
 
@@ -50,17 +49,17 @@ namespace emberCore
 
 		if constexpr (std::is_same_v<T, int>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortInt"));
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipInt"));
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseInt"));
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseInt"));
+			s_localBitonicSortComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortInt");
+			s_bigFlipComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipInt");
+			s_bigDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("bigDisperseInt");
+			s_localDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("localDisperseInt");
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationInt"));
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationInt"));
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationInt"));
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationInt"));
+			s_localBitonicSortPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationInt");
+			s_bigFlipPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipPermutationInt");
+			s_bigDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigDispersePermutationInt");
+			s_localDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localDispersePermutationInt");
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationInt"));
+			s_applyPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("applyPermutationInt");
 		}
 		if constexpr (std::is_same_v<T, Int2>)
 		{
@@ -72,17 +71,17 @@ namespace emberCore
 		}
 		if constexpr (std::is_same_v<T, uint32_t>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortUint"));
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipUint"));
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseInt"));
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseUint"));
+			s_localBitonicSortComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortUint");
+			s_bigFlipComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipUint");
+			s_bigDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("bigDisperseInt");
+			s_localDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("localDisperseUint");
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationUint"));
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationUint"));
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationUint"));
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationUint"));
+			s_localBitonicSortPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationUint");
+			s_bigFlipPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipPermutationUint");
+			s_bigDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigDispersePermutationUint");
+			s_localDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localDispersePermutationUint");
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationUint"));
+			s_applyPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("applyPermutationUint");
 		}
 		if constexpr (std::is_same_v<T, Uint2>)
 		{
@@ -94,71 +93,71 @@ namespace emberCore
 		}
 		if constexpr (std::is_same_v<T, float>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat"));
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipFloat"));
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseFloat"));
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseFloat"));
+			s_localBitonicSortComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat");
+			s_bigFlipComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipFloat");
+			s_bigDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("bigDisperseFloat");
+			s_localDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("localDisperseFloat");
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat"));
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat"));
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat"));
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat"));
+			s_localBitonicSortPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat");
+			s_bigFlipPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat");
+			s_bigDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat");
+			s_localDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat");
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationFloat"));
+			s_applyPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("applyPermutationFloat");
 		}
 		if constexpr (std::is_same_v<T, Float2>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat2"));
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipFloat2"));
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseFloat2"));
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseFloat2"));
+			s_localBitonicSortComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat2");
+			s_bigFlipComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipFloat2");
+			s_bigDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("bigDisperseFloat2");
+			s_localDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("localDisperseFloat2");
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat2"));
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat2"));
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat2"));
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat2"));
+			s_localBitonicSortPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat2");
+			s_bigFlipPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat2");
+			s_bigDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat2");
+			s_localDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat2");
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationFloat2"));
+			s_applyPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("applyPermutationFloat2");
 		}
 		if constexpr (std::is_same_v<T, Float3>)
 		{
-			s_pLocalBitonicSortComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat3"));
-			s_pBigFlipComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipFloat3"));
-			s_pBigDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDisperseFloat3"));
-			s_pLocalDisperseComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDisperseFloat3"));
+			s_localBitonicSortComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortFloat3");
+			s_bigFlipComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipFloat3");
+			s_bigDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("bigDisperseFloat3");
+			s_localDisperseComputeShader = ComputeShaderManager::TryGetComputeShader("localDisperseFloat3");
 
-			s_pLocalBitonicSortPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat3"));
-			s_pBigFlipPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat3"));
-			s_pBigDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat3"));
-			s_pLocalDispersePermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat3"));
+			s_localBitonicSortPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localBitonicSortPermutationFloat3");
+			s_bigFlipPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigFlipPermutationFloat3");
+			s_bigDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("bigDispersePermutationFloat3");
+			s_localDispersePermutationComputeShader = ComputeShaderManager::TryGetComputeShader("localDispersePermutationFloat3");
 
-			s_pApplyPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("applyPermutationFloat3"));
+			s_applyPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("applyPermutationFloat3");
 		}
 		if constexpr (std::is_same_v<T, Float4>)
 		{
 			throw std::runtime_error("GpuSort<Float4>::Init: shaders for Float4 not implemented yet.");
 		}
 
-		s_pInitIndexBufferComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("initIndexBuffer"));
-		s_pInvertPermutationComputeShader = std::make_unique<ComputeShader>(ComputeShaderManager::TryGetComputeShader("invertPermutation"));
+		s_initIndexBufferComputeShader = ComputeShaderManager::TryGetComputeShader("initIndexBuffer");
+		s_invertPermutationComputeShader = ComputeShaderManager::TryGetComputeShader("invertPermutation");
 	}
 	template <typename T>
 	void GpuSort<T>::Clear()
 	{
 		// Bitonic sort compute shaders:
-		s_pLocalBitonicSortComputeShader.reset();
-		s_pBigFlipComputeShader.reset();
-		s_pBigDisperseComputeShader.reset();
-		s_pLocalDisperseComputeShader.reset();
+		s_localBitonicSortComputeShader = ComputeShader();
+		s_bigFlipComputeShader = ComputeShader();
+		s_bigDisperseComputeShader = ComputeShader();
+		s_localDisperseComputeShader = ComputeShader();
 		// Bitonic permutation sort compute shaders:
-		s_pLocalBitonicSortPermutationComputeShader.reset();
-		s_pBigFlipPermutationComputeShader.reset();
-		s_pBigDispersePermutationComputeShader.reset();
-		s_pLocalDispersePermutationComputeShader.reset();
+		s_localBitonicSortPermutationComputeShader = ComputeShader();
+		s_bigFlipPermutationComputeShader = ComputeShader();
+		s_bigDispersePermutationComputeShader = ComputeShader();
+		s_localDispersePermutationComputeShader = ComputeShader();
 		// Other compute shaders:
-		s_pInitIndexBufferComputeShader.reset();
-		s_pApplyPermutationComputeShader.reset();
-		s_pInvertPermutationComputeShader.reset();
+		s_initIndexBufferComputeShader = ComputeShader();
+		s_applyPermutationComputeShader = ComputeShader();
+		s_invertPermutationComputeShader = ComputeShader();
 
 		s_isInitialized = false;
 	}
@@ -171,11 +170,11 @@ namespace emberCore
 	{
 		// Post render compute derives dispatch size from the render target and does not record barriers, so sorting is unsupported:
 		assert(computeType != ComputeType::postRender);
-		if (!s_pLocalBitonicSortComputeShader)
+		if (!s_localBitonicSortComputeShader.IsValid())
 			throw std::runtime_error("GpuSort::Sort: shaders for this type not implemented yet.");
 
 		// Gpu buffer access setup:
-		int blockSize = 2 * s_pLocalBitonicSortComputeShader->GetBlockSize().x;
+		int blockSize = 2 * s_localBitonicSortComputeShader.GetBlockSize().x;
 		int bufferSize = static_cast<int>(bufferView.GetCount());   // total number of elements for sorting (entire buffer).
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
@@ -184,7 +183,7 @@ namespace emberCore
 		// Record compute shaders:
 		{
 			// Local bitonic sort for each block:
-			CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortComputeShader, threadCountLocal, sessionID);
+			CallProperties callProperties = Compute::RecordComputeShader(computeType, s_localBitonicSortComputeShader, threadCountLocal, sessionID);
 			callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 			callProperties.SetValue("Values", "bufferSize", bufferSize);
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
@@ -192,7 +191,7 @@ namespace emberCore
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
-				callProperties = Compute::RecordComputeShader(computeType, *s_pBigFlipComputeShader, threadCountBig, sessionID);
+				callProperties = Compute::RecordComputeShader(computeType, s_bigFlipComputeShader, threadCountBig, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetValue("Values", "flipHeight", flipHeight);
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
@@ -201,7 +200,7 @@ namespace emberCore
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
-					callProperties = Compute::RecordComputeShader(computeType, *s_pBigDisperseComputeShader, threadCountBig, sessionID);
+					callProperties = Compute::RecordComputeShader(computeType, s_bigDisperseComputeShader, threadCountBig, sessionID);
 					callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 					callProperties.SetValue("Values", "disperseHeight", disperseHeight);
 					callProperties.SetValue("Values", "bufferSize", bufferSize);
@@ -209,7 +208,7 @@ namespace emberCore
 				}
 
 				// Local disperse:
-				callProperties = Compute::RecordComputeShader(computeType, *s_pLocalDisperseComputeShader, threadCountLocal, sessionID);
+				callProperties = Compute::RecordComputeShader(computeType, s_localDisperseComputeShader, threadCountLocal, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
 				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
@@ -225,11 +224,11 @@ namespace emberCore
 	{
 		// Post render compute derives dispatch size from the render target and does not record barriers, so sorting is unsupported:
 		assert(computeType != ComputeType::postRender);
-		if (!s_pLocalBitonicSortPermutationComputeShader)
+		if (!s_localBitonicSortPermutationComputeShader.IsValid())
 			throw std::runtime_error("GpuSort::SortPermutation: shaders for this type not implemented yet.");
 
 		// Gpu buffer access setup:
-		int blockSize = 2 * s_pLocalBitonicSortPermutationComputeShader->GetBlockSize().x;
+		int blockSize = 2 * s_localBitonicSortPermutationComputeShader.GetBlockSize().x;
 		int bufferSize = static_cast<int>(bufferView.GetCount());	// total number of elements for sorting (entire buffer).
 		int height = math::NextPowerOfTwo((uint32_t)bufferSize);	// height of biggest flip.
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
@@ -239,12 +238,12 @@ namespace emberCore
 		{
 			// Initialize index(permutation) buffer:
 			Uint3 threadCountInit = Uint3(permutationBufferView.GetCount(), 1, 1);
-			CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pInitIndexBufferComputeShader, threadCountInit, sessionID);
+			CallProperties callProperties = Compute::RecordComputeShader(computeType, s_initIndexBufferComputeShader, threadCountInit, sessionID);
 			callProperties.SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			// Local bitonic sort for each block:
-			callProperties = Compute::RecordComputeShader(computeType, *s_pLocalBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
+			callProperties = Compute::RecordComputeShader(computeType, s_localBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
 			callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 			callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 			callProperties.SetValue("Values", "bufferSize", bufferSize);
@@ -253,7 +252,7 @@ namespace emberCore
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
-				callProperties = Compute::RecordComputeShader(computeType, *s_pBigFlipPermutationComputeShader, threadCountBig, sessionID);
+				callProperties = Compute::RecordComputeShader(computeType, s_bigFlipPermutationComputeShader, threadCountBig, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 				callProperties.SetValue("Values", "flipHeight", flipHeight);
@@ -263,7 +262,7 @@ namespace emberCore
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
-					callProperties = Compute::RecordComputeShader(computeType, *s_pBigDispersePermutationComputeShader, threadCountBig, sessionID);
+					callProperties = Compute::RecordComputeShader(computeType, s_bigDispersePermutationComputeShader, threadCountBig, sessionID);
 					callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 					callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 					callProperties.SetValue("Values", "disperseHeight", disperseHeight);
@@ -272,7 +271,7 @@ namespace emberCore
 				}
 
 				// Local disperse:
-				callProperties = Compute::RecordComputeShader(computeType, *s_pLocalDispersePermutationComputeShader, threadCountLocal, sessionID);
+				callProperties = Compute::RecordComputeShader(computeType, s_localDispersePermutationComputeShader, threadCountLocal, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
@@ -288,7 +287,7 @@ namespace emberCore
 	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pApplyPermutationComputeShader, threadCount, sessionID);
+		CallProperties callProperties = Compute::RecordComputeShader(computeType, s_applyPermutationComputeShader, threadCount, sessionID);
 		callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 		callProperties.SetBuffer("inBuffer", inBufferView.GetBuffer());
 		callProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
@@ -300,7 +299,7 @@ namespace emberCore
 	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeType, *s_pInvertPermutationComputeShader, threadCount, sessionID);
+		CallProperties callProperties = Compute::RecordComputeShader(computeType, s_invertPermutationComputeShader, threadCount, sessionID);
 		callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 		callProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
 	}
