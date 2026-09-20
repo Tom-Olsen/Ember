@@ -32,8 +32,8 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API GpuResourceFactory : public emberBackendInterface::IGpuResourceFactory
 	{
 	private: // Members:
-	std::unique_ptr<MaterialManager> m_pMaterialManager;
 		std::unique_ptr<MaterialShaderManager> m_pMaterialShaderManager;
+		std::unique_ptr<MaterialManager> m_pMaterialManager;
 		std::unique_ptr<ComputeShaderManager> m_pComputeShaderManager;
 
 
