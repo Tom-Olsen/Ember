@@ -17,26 +17,6 @@ namespace emberCommon
             X2
         };
 
-        enum class ControllerButton
-        {
-            None,
-            South,
-            East,
-            West,
-            North,
-            Back,
-            Guide,
-            Start,
-            LeftStick,
-            RightStick,
-            LeftShoulder,
-            RightShoulder,
-            DpadUp,
-            DpadDown,
-            DpadLeft,
-            DpadRight
-		};
-
         enum class Key
         {
             Unknown,
@@ -93,6 +73,48 @@ namespace emberCommon
             Pause
         };
 
+        enum class ControllerButton
+        {
+            None,
+            South,
+            East,
+            West,
+            North,
+            Back,
+            Guide,
+            Start,
+            LeftStick,
+            RightStick,
+            LeftShoulder,
+            RightShoulder,
+            DpadUp,
+            DpadDown,
+            DpadLeft,
+            DpadRight,
+            Misc1,
+            RightPaddle1,
+            LeftPaddle1,
+            RightPaddle2,
+            LeftPaddle2,
+            Touchpad,
+            Misc2,
+            Misc3,
+            Misc4,
+            Misc5,
+            Misc6
+        };
+
+        enum class ControllerAxis
+        {
+            None,
+            LeftX,
+            LeftY,
+            RightX,
+            RightY,
+            LeftTrigger,
+            RightTrigger
+        };
+
         inline static constexpr std::string_view MouseButtonToString(MouseButton button)
         {
             switch (button)
@@ -103,30 +125,6 @@ namespace emberCommon
                 case MouseButton::Middle: return "Middle";
                 case MouseButton::X1: return "X1";
                 case MouseButton::X2: return "X2";
-                default: return "Unknown";
-            }
-        }
-
-        inline static constexpr std::string_view ControllerButtonToString(ControllerButton button)
-        {
-            switch (button)
-            {
-                case ControllerButton::None: return "None";
-                case ControllerButton::South: return "South";
-                case ControllerButton::East: return "East";
-                case ControllerButton::West: return "West";
-                case ControllerButton::North: return "North";
-                case ControllerButton::Back: return "Back";
-                case ControllerButton::Guide: return "Guide";
-                case ControllerButton::Start: return "Start";
-                case ControllerButton::LeftStick: return "LeftStick";
-                case ControllerButton::RightStick: return "RightStick";
-                case ControllerButton::LeftShoulder: return "LeftShoulder";
-                case ControllerButton::RightShoulder: return "RightShoulder";
-                case ControllerButton::DpadUp: return "DpadUp";
-                case ControllerButton::DpadDown: return "DpadDown";
-                case ControllerButton::DpadLeft: return "DpadLeft";
-                case ControllerButton::DpadRight: return "DpadRight";
                 default: return "Unknown";
             }
         }
@@ -236,6 +234,56 @@ namespace emberCommon
                 case Key::ScrollLock: return "ScrollLock";
                 case Key::PrintScreen: return "PrintScreen";
                 case Key::Pause: return "Pause";
+                default: return "Unknown";
+            }
+        }
+
+        inline static constexpr std::string_view ControllerButtonToString(ControllerButton button)
+        {
+            switch (button)
+            {
+                case ControllerButton::None: return "None";
+                case ControllerButton::South: return "South";
+                case ControllerButton::East: return "East";
+                case ControllerButton::West: return "West";
+                case ControllerButton::North: return "North";
+                case ControllerButton::Back: return "Back";
+                case ControllerButton::Guide: return "Guide";
+                case ControllerButton::Start: return "Start";
+                case ControllerButton::LeftStick: return "LeftStick";
+                case ControllerButton::RightStick: return "RightStick";
+                case ControllerButton::LeftShoulder: return "LeftShoulder";
+                case ControllerButton::RightShoulder: return "RightShoulder";
+                case ControllerButton::DpadUp: return "DpadUp";
+                case ControllerButton::DpadDown: return "DpadDown";
+                case ControllerButton::DpadLeft: return "DpadLeft";
+                case ControllerButton::DpadRight: return "DpadRight";
+                case ControllerButton::Misc1: return "Misc1";
+                case ControllerButton::RightPaddle1: return "RightPaddle1";
+                case ControllerButton::LeftPaddle1: return "LeftPaddle1";
+                case ControllerButton::RightPaddle2: return "RightPaddle2";
+                case ControllerButton::LeftPaddle2: return "LeftPaddle2";
+                case ControllerButton::Touchpad: return "Touchpad";
+                case ControllerButton::Misc2: return "Misc2";
+                case ControllerButton::Misc3: return "Misc3";
+                case ControllerButton::Misc4: return "Misc4";
+                case ControllerButton::Misc5: return "Misc5";
+                case ControllerButton::Misc6: return "Misc6";
+                default: return "Unknown";
+            }
+        }
+
+        inline static constexpr std::string_view ControllerAxisToString(ControllerAxis axis)
+        {
+            switch (axis)
+            {
+                case ControllerAxis::None: return "None";
+                case ControllerAxis::LeftX: return "LeftX";
+                case ControllerAxis::LeftY: return "LeftY";
+                case ControllerAxis::RightX: return "RightX";
+                case ControllerAxis::RightY: return "RightY";
+                case ControllerAxis::LeftTrigger: return "LeftTrigger";
+                case ControllerAxis::RightTrigger: return "RightTrigger";
                 default: return "Unknown";
             }
         }

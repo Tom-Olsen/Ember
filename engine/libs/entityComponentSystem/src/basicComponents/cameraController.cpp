@@ -6,6 +6,7 @@
 #include "entity.inl"
 #include "eventSystem.h"
 #include "transform.h"
+#include <cstdint>
 using namespace emberCore;
 using namespace emberCommon;
 
@@ -115,6 +116,48 @@ namespace emberEcs
 			transform->AddToPosition(mouseScroll * currentSpeed * transform->GetDown());
 		}
 	}
+	void CameraController::ControllerControls()
+	{
+		uint32_t controllerId = EventSystem::GetMainControllerId();
+		if (controllerId == EventSystem::invalidControllerId)
+			return;
+		Transform* transform = GetTransform();
+
+		// Translation xy:
+		Float2 leftStick = EventSystem::ControllerLeftStick(controllerId);
+		Float3 direction = leftStick.x * transform->GetRight() + leftStick.y * transform->GetUp();
+		if (leftStick.x != 0.0f)
+			EventSystem::ConsumeControllerAxis(controllerId, Input::ControllerAxis::LeftX);
+		if (leftStick.y != 0.0f)
+			EventSystem::ConsumeControllerAxis(controllerId, Input::ControllerAxis::LeftY);
+
+		// Translation z:
+		if (EventSystem::ControllerButtonDownOrHeld(controllerId, Input::ControllerButton::LeftShoulder))
+		{
+			direction -= transform->GetForward();
+			EventSystem::ConsumeControllerButton(controllerId, Input::ControllerButton::LeftShoulder);
+		}
+		if (EventSystem::ControllerButtonDownOrHeld(controllerId, Input::ControllerButton::RightShoulder))
+		{
+			direction += transform->GetForward();
+			EventSystem::ConsumeControllerButton(controllerId, Input::ControllerButton::RightShoulder);
+		}
+		transform->AddToPosition(direction * m_moveSpeed * Time::GetDeltaTime());
+
+		// Rotation:
+		Float2 rightStick = EventSystem::ControllerRightStick(controllerId);
+		if (rightStick.x != 0.0f)
+			EventSystem::ConsumeControllerAxis(controllerId, Input::ControllerAxis::RightX);
+		if (rightStick.y != 0.0f)
+			EventSystem::ConsumeControllerAxis(controllerId, Input::ControllerAxis::RightY);
+		if (!rightStick.IsEpsilonZero())
+		{
+			Float2 delta = m_rotationSpeed * Time::GetDeltaTime() * rightStick;
+			Float3x3 rotZ = Float3x3::RotateZ(-delta.x);
+			Float3x3 rotX = Float3x3::RotateX(-delta.y);
+			transform->SetRotationMatrix(rotZ * transform->GetRotation3x3() * rotX);
+		}
+	}
 	void CameraController::TogglePerspectiveType()
 	{
 		if (EventSystem::KeyDown(Input::Key::P))
@@ -185,6 +228,7 @@ namespace emberEcs
 		Translation();
 		Rotation();
 		Zoom();
+		ControllerControls();
 		TogglePerspectiveType();
 	}
 }

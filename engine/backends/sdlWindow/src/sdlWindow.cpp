@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 #include "sdlWindow.h"
 #include "iGui.h"
+#include "logger.h"
 #include "sdlEventTranslation.h"
 #include <assert.h>
 #include <SDL3/SDL.h>
@@ -28,43 +29,26 @@ namespace sdlWindowBackend
 			SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "x11");
 
 		// Initialize SDL:
-		if (SDL_Init(SDL_INIT_VIDEO) == false)	// crashes after pulling latest version of sdl3
+		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD) == false)
 			throw std::runtime_error((std::string)"Window::Init: " + (std::string)SDL_GetError());
 
 		// Create a window pointer:
 		SDL_WindowFlags windowFlags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
 		m_pSdlWindow = SDL_CreateWindow("Ember", windowWidth, windowHeight, windowFlags);
 		if (!m_pSdlWindow)
-			throw std::runtime_error((std::string)"Window::Init: " + (std::string)SDL_GetError());
+		{
+			std::string error = SDL_GetError();
+			SDL_Quit();
+			throw std::runtime_error("Window::Init: " + error);
+		}
 
 		m_events.reserve(m_maxEvents);
 	}
 	Window::~Window()
 	{
+		CloseGamepads();
 		SDL_DestroyWindow(m_pSdlWindow);
 		SDL_Quit();
-	}
-
-
-
-	// Move semantics:
-	Window::Window(Window&& other) noexcept
-	{
-		m_pSdlWindow = other.m_pSdlWindow;
-		m_events.reserve(m_maxEvents);
-		other.m_pSdlWindow = nullptr;
-	}
-	Window& Window::operator=(Window&& other) noexcept
-	{
-		if (this != &other)
-		{
-			if (m_pSdlWindow)
-				SDL_DestroyWindow(m_pSdlWindow);
-			m_pSdlWindow = other.m_pSdlWindow;
-			m_events.reserve(m_maxEvents);
-			other.m_pSdlWindow = nullptr;
-		}
-		return *this;
 	}
 
 
@@ -173,13 +157,35 @@ namespace sdlWindowBackend
 
 				// Controller:
 				case SDL_EVENT_GAMEPAD_ADDED:
+				{
+					uint32_t controllerId = sdlEvent.gdevice.which;
+					if (!m_gamepads.contains(controllerId))
+					{
+						SDL_Gamepad* pGamepad = SDL_OpenGamepad(controllerId);
+						if (!pGamepad)
+						{
+							LOG_WARN("Failed to open controller '{}': {}", controllerId, SDL_GetError());
+							isEvent = false;
+							break;
+						}
+						m_gamepads.emplace(controllerId, pGamepad);
+					}
 					event.type = emberCommon::EventType::ControllerConnected;
-					event.controllerId = sdlEvent.cdevice.which;
+					event.controllerId = controllerId;
 					break;
+				}
 				case SDL_EVENT_GAMEPAD_REMOVED:
+				{
+					auto it = m_gamepads.find(sdlEvent.gdevice.which);
+					if (it != m_gamepads.end())
+					{
+						SDL_CloseGamepad(it->second);
+						m_gamepads.erase(it);
+					}
 					event.type = emberCommon::EventType::ControllerDisconnected;
-					event.controllerId = sdlEvent.cdevice.which;
+					event.controllerId = sdlEvent.gdevice.which;
 					break;
+				}
 				case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
 					event.type = emberCommon::EventType::ControllerButtonDown;
 					event.controllerId = sdlEvent.gbutton.which;
@@ -193,8 +199,8 @@ namespace sdlWindowBackend
 				case SDL_EVENT_GAMEPAD_AXIS_MOTION:
 					event.type = emberCommon::EventType::ControllerAxisMotion;
 					event.controllerId = sdlEvent.gaxis.which;
-					event.axis = sdlEvent.gaxis.axis;
-					event.axisValue = sdlEvent.gaxis.value;
+					event.controllerAxis = TranslateControllerAxis(sdlEvent.gaxis.axis);
+					event.controllerAxisValue = NormalizeControllerAxisValue(event.controllerAxis, sdlEvent.gaxis.value);
 					break;
 				default:
 					isEvent = false;
@@ -261,5 +267,15 @@ namespace sdlWindowBackend
 	void Window::ResetIsResizing()
 	{
 		m_isResizing = false;
+	}
+
+
+
+	// Private methods:
+	void Window::CloseGamepads()
+	{
+		for (const auto& gamepad : m_gamepads)
+			SDL_CloseGamepad(gamepad.second);
+		m_gamepads.clear();
 	}
 }

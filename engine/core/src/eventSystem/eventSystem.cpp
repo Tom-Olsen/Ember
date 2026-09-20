@@ -2,6 +2,7 @@
 #include "commonEvent.h"
 #include "profiler.h"
 #include "window.h"
+#include <algorithm>
 
 
 
@@ -9,15 +10,20 @@ namespace emberCore
 {
     // Static members:
     bool EventSystem::s_isInitialized = false;
-    // Key/MouseButton states:
+    // Input states:
     std::unordered_map<emberCommon::Input::Key, EventSystem::KeyState> EventSystem::s_keyStates;
     std::unordered_map<emberCommon::Input::MouseButton, EventSystem::MouseState> EventSystem::s_mouseButtonStates;
+    std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerButton, EventSystem::ControllerButtonState>> EventSystem::s_controllerButtonStates;
+    std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerAxis, float>> EventSystem::s_controllerAxisStates;
+    std::unordered_set<uint32_t> EventSystem::s_connectedControllers;
     // MouseButton lock/unlock:
     std::unordered_map<emberCommon::Input::MouseButton, EventSystem::Consumer> EventSystem::s_lockedMouseButtons;
     std::unordered_set<emberCommon::Input::MouseButton> EventSystem::s_mouseButtonLocksPendingUnlock;
-    // Key/MouseButton consumption:
+    // Input consumption:
     std::unordered_map<emberCommon::Input::Key, EventSystem::Consumer> EventSystem::s_consumedKeys;
     std::unordered_map<emberCommon::Input::MouseButton, EventSystem::Consumer> EventSystem::s_consumedMouseButtons;
+    std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerButton, EventSystem::Consumer>> EventSystem::s_consumedControllerButtons;
+    std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerAxis, EventSystem::Consumer>> EventSystem::s_consumedControllerAxes;
     EventSystem::Consumer EventSystem::s_currentConsumer;
     EventSystem::Consumer EventSystem::s_keyboardLockConsumer;
     EventSystem::Consumer EventSystem::s_mouseScrollConsumer;
@@ -38,15 +44,20 @@ namespace emberCore
             return;
         s_isInitialized = true;
 
-        // Key/MouseButton states:
+        // Input states:
         s_keyStates = std::unordered_map<emberCommon::Input::Key, KeyState>();
         s_mouseButtonStates = std::unordered_map<emberCommon::Input::MouseButton, MouseState>();
+        s_controllerButtonStates = std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerButton, ControllerButtonState>>();
+        s_controllerAxisStates = std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerAxis, float>>();
+        s_connectedControllers = std::unordered_set<uint32_t>();
         // MouseButton lock/unlock:
         s_lockedMouseButtons = std::unordered_map<emberCommon::Input::MouseButton, Consumer>();
         s_mouseButtonLocksPendingUnlock = std::unordered_set<emberCommon::Input::MouseButton>();
-        // Key/MouseButton consumption:
+        // Input consumption:
         s_consumedKeys = std::unordered_map<emberCommon::Input::Key, Consumer>();
         s_consumedMouseButtons = std::unordered_map<emberCommon::Input::MouseButton, Consumer>();
+        s_consumedControllerButtons = std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerButton, Consumer>>();
+        s_consumedControllerAxes = std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerAxis, Consumer>>();
         s_currentConsumer = Consumer::none;
         s_keyboardLockConsumer = Consumer::none;
         s_mouseScrollConsumer = Consumer::none;
@@ -61,6 +72,7 @@ namespace emberCore
     void EventSystem::Clear()
     {
         ClearInputState();
+        s_connectedControllers.clear();
         s_isInitialized = false;
     }
 
@@ -151,19 +163,28 @@ namespace emberCore
 
                 // Controller events:
                 case emberCommon::EventType::ControllerConnected:
-                    // Ember::ToDo: handle controller connection.
+                    s_connectedControllers.insert(event.controllerId);
+                    s_controllerButtonStates.try_emplace(event.controllerId);
+                    s_controllerAxisStates.try_emplace(event.controllerId);
                     break;
                 case emberCommon::EventType::ControllerDisconnected:
-                    // Ember::ToDo: handle controller disconnection.
+                    s_connectedControllers.erase(event.controllerId);
+                    s_controllerButtonStates.erase(event.controllerId);
+                    s_controllerAxisStates.erase(event.controllerId);
+                    s_consumedControllerButtons.erase(event.controllerId);
+                    s_consumedControllerAxes.erase(event.controllerId);
                     break;
                 case emberCommon::EventType::ControllerButtonDown:
-                    // Ember::ToDo: handle controller button down.
+                    if (event.controllerButton != emberCommon::Input::ControllerButton::None && ControllerConnected(event.controllerId))
+                        s_controllerButtonStates[event.controllerId][event.controllerButton] = ControllerButtonState::down;
                     break;
                 case emberCommon::EventType::ControllerButtonUp:
-                    // Ember::ToDo: handle controller button up.
+                    if (event.controllerButton != emberCommon::Input::ControllerButton::None && ControllerConnected(event.controllerId))
+                        s_controllerButtonStates[event.controllerId][event.controllerButton] = ControllerButtonState::up;
                     break;
                 case emberCommon::EventType::ControllerAxisMotion:
-                    // Ember::ToDo: handle controller axis motion.
+                    if (event.controllerAxis != emberCommon::Input::ControllerAxis::None && ControllerConnected(event.controllerId))
+                        s_controllerAxisStates[event.controllerId][event.controllerAxis] = event.controllerAxisValue;
                     break;
 
                 default:
@@ -278,6 +299,60 @@ namespace emberCore
     {
         return MouseScrollBlocked() ? 0.0f : s_mouseScrollY;
     }
+    bool EventSystem::ControllerButtonDown(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        return ControllerButtonDownRaw(controllerId, button) && !ControllerButtonBlocked(controllerId, button);
+    }
+    bool EventSystem::ControllerButtonUp(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        return ControllerButtonUpRaw(controllerId, button) && !ControllerButtonBlocked(controllerId, button);
+    }
+    bool EventSystem::ControllerButtonHeld(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        return ControllerButtonHeldRaw(controllerId, button) && !ControllerButtonBlocked(controllerId, button);
+    }
+    bool EventSystem::ControllerButtonDownOrHeld(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        return ControllerButtonDownOrHeldRaw(controllerId, button) && !ControllerButtonBlocked(controllerId, button);
+    }
+    float EventSystem::ControllerAxis(uint32_t controllerId, emberCommon::Input::ControllerAxis axis)
+    {
+        return ControllerAxisBlocked(controllerId, axis) ? 0.0f : ControllerAxisRaw(controllerId, axis);
+    }
+    Float2 EventSystem::ControllerLeftStick(uint32_t controllerId, float deadZone)
+    {
+        Float2 stick(
+            ControllerAxis(controllerId, emberCommon::Input::ControllerAxis::LeftX),
+            ControllerAxis(controllerId, emberCommon::Input::ControllerAxis::LeftY));
+        return ApplyControllerDeadZone(stick, deadZone);
+    }
+    Float2 EventSystem::ControllerRightStick(uint32_t controllerId, float deadZone)
+    {
+        Float2 stick(
+            ControllerAxis(controllerId, emberCommon::Input::ControllerAxis::RightX),
+            ControllerAxis(controllerId, emberCommon::Input::ControllerAxis::RightY));
+        return ApplyControllerDeadZone(stick, deadZone);
+    }
+
+
+
+	// Controller id:
+    uint32_t EventSystem::GetMainControllerId()
+    {
+        if (s_connectedControllers.empty())
+            return invalidControllerId;
+        return *std::min_element(s_connectedControllers.begin(), s_connectedControllers.end());
+    }
+    bool EventSystem::ControllerConnected(uint32_t controllerId)
+    {
+        return s_connectedControllers.find(controllerId) != s_connectedControllers.end();
+    }
+    std::vector<uint32_t> EventSystem::GetConnectedControllerIds()
+    {
+        std::vector<uint32_t> controllerIds(s_connectedControllers.begin(), s_connectedControllers.end());
+        std::sort(controllerIds.begin(), controllerIds.end());
+        return controllerIds;
+    }
 
 
 
@@ -367,6 +442,64 @@ namespace emberCore
     {
         return s_mouseScrollY;
     }
+    bool EventSystem::ControllerButtonDownRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        auto controllerIt = s_controllerButtonStates.find(controllerId);
+        if (controllerIt == s_controllerButtonStates.end())
+            return false;
+        auto buttonIt = controllerIt->second.find(button);
+        return buttonIt != controllerIt->second.end() && buttonIt->second == ControllerButtonState::down;
+    }
+    bool EventSystem::ControllerButtonUpRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        auto controllerIt = s_controllerButtonStates.find(controllerId);
+        if (controllerIt == s_controllerButtonStates.end())
+            return false;
+        auto buttonIt = controllerIt->second.find(button);
+        return buttonIt != controllerIt->second.end() && buttonIt->second == ControllerButtonState::up;
+    }
+    bool EventSystem::ControllerButtonHeldRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        auto controllerIt = s_controllerButtonStates.find(controllerId);
+        if (controllerIt == s_controllerButtonStates.end())
+            return false;
+        auto buttonIt = controllerIt->second.find(button);
+        return buttonIt != controllerIt->second.end() && buttonIt->second == ControllerButtonState::held;
+    }
+    bool EventSystem::ControllerButtonDownOrHeldRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        auto controllerIt = s_controllerButtonStates.find(controllerId);
+        if (controllerIt == s_controllerButtonStates.end())
+            return false;
+        auto buttonIt = controllerIt->second.find(button);
+        return buttonIt != controllerIt->second.end() && (buttonIt->second == ControllerButtonState::down || buttonIt->second == ControllerButtonState::held);
+    }
+    float EventSystem::ControllerAxisRaw(uint32_t controllerId, emberCommon::Input::ControllerAxis axis)
+    {
+        auto controllerIt = s_controllerAxisStates.find(controllerId);
+        if (controllerIt == s_controllerAxisStates.end())
+            return 0.0f;
+        auto axisIt = controllerIt->second.find(axis);
+        return axisIt == controllerIt->second.end() ? 0.0f : axisIt->second;
+    }
+    Float2 EventSystem::ControllerLeftStickRaw(uint32_t controllerId, float deadZone)
+    {
+        Float2 stick(
+            ControllerAxisRaw(controllerId, emberCommon::Input::ControllerAxis::LeftX),
+            ControllerAxisRaw(controllerId, emberCommon::Input::ControllerAxis::LeftY));
+        return ApplyControllerDeadZone(stick, deadZone);
+    }
+    Float2 EventSystem::ControllerRightStickRaw(uint32_t controllerId, float deadZone)
+    {
+        Float2 stick(
+            ControllerAxisRaw(controllerId, emberCommon::Input::ControllerAxis::RightX),
+            ControllerAxisRaw(controllerId, emberCommon::Input::ControllerAxis::RightY));
+        return ApplyControllerDeadZone(stick, deadZone);
+    }
+
+
+
+	// Event consumption:
     void EventSystem::ConsumeKey(emberCommon::Input::Key key)
     {
         if (key == emberCommon::Input::Key::Unknown || s_currentConsumer == Consumer::none || KeyConsumed(key))
@@ -385,6 +518,24 @@ namespace emberCore
             return;
         s_mouseScrollConsumer = s_currentConsumer;
     }
+    void EventSystem::ConsumeControllerButton(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        if (button == emberCommon::Input::ControllerButton::None
+			|| !ControllerConnected(controllerId)
+			|| s_currentConsumer == Consumer::none
+			|| ControllerButtonConsumed(controllerId, button))
+            return;
+        s_consumedControllerButtons[controllerId][button] = s_currentConsumer;
+    }
+    void EventSystem::ConsumeControllerAxis(uint32_t controllerId, emberCommon::Input::ControllerAxis axis)
+    {
+        if (axis == emberCommon::Input::ControllerAxis::None
+			|| !ControllerConnected(controllerId)
+			|| s_currentConsumer == Consumer::none
+			|| ControllerAxisConsumed(controllerId, axis))
+            return;
+        s_consumedControllerAxes[controllerId][axis] = s_currentConsumer;
+    }
     bool EventSystem::KeyConsumed(emberCommon::Input::Key key)
     {
         return GetKeyConsumer(key) != Consumer::none;
@@ -396,6 +547,14 @@ namespace emberCore
     bool EventSystem::MouseScrollConsumed()
     {
         return s_mouseScrollConsumer != Consumer::none;
+    }
+    bool EventSystem::ControllerButtonConsumed(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        return GetControllerButtonConsumer(controllerId, button) != Consumer::none;
+    }
+    bool EventSystem::ControllerAxisConsumed(uint32_t controllerId, emberCommon::Input::ControllerAxis axis)
+    {
+        return GetControllerAxisConsumer(controllerId, axis) != Consumer::none;
     }
     EventSystem::Consumer EventSystem::GetKeyConsumer(emberCommon::Input::Key key)
     {
@@ -411,6 +570,26 @@ namespace emberCore
     {
         return s_mouseScrollConsumer;
     }
+    EventSystem::Consumer EventSystem::GetControllerButtonConsumer(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        auto controllerIt = s_consumedControllerButtons.find(controllerId);
+        if (controllerIt == s_consumedControllerButtons.end())
+            return Consumer::none;
+        auto buttonIt = controllerIt->second.find(button);
+        return buttonIt == controllerIt->second.end() ? Consumer::none : buttonIt->second;
+    }
+    EventSystem::Consumer EventSystem::GetControllerAxisConsumer(uint32_t controllerId, emberCommon::Input::ControllerAxis axis)
+    {
+        auto controllerIt = s_consumedControllerAxes.find(controllerId);
+        if (controllerIt == s_consumedControllerAxes.end())
+            return Consumer::none;
+        auto axisIt = controllerIt->second.find(axis);
+        return axisIt == controllerIt->second.end() ? Consumer::none : axisIt->second;
+    }
+
+
+
+	// Event locking:
     bool EventSystem::TryLockMouseButton(emberCommon::Input::MouseButton button)
     {
         // No button or no consumer:
@@ -505,6 +684,8 @@ namespace emberCore
     {
         s_keyStates.clear();
         s_mouseButtonStates.clear();
+        s_controllerButtonStates.clear();
+        s_controllerAxisStates.clear();
         s_lockedMouseButtons.clear();
         s_mouseButtonLocksPendingUnlock.clear();
         s_keyboardLockConsumer = Consumer::none;
@@ -535,6 +716,18 @@ namespace emberCore
                 state = MouseState::none;
         }
 
+        // Reset released controller buttons and transition pressed controller buttons to held:
+        for (auto& [controllerId, buttonStates] : s_controllerButtonStates)
+        {
+            for (auto& [button, state] : buttonStates)
+            {
+                if (state == ControllerButtonState::down)
+                    state = ControllerButtonState::held;
+                else if (state == ControllerButtonState::up)
+                    state = ControllerButtonState::none;
+            }
+        }
+
         // Reset mouse scroll:
         s_mouseScrollX = 0;
         s_mouseScrollY = 0;
@@ -549,6 +742,8 @@ namespace emberCore
     {
         s_consumedKeys.clear();
         s_consumedMouseButtons.clear();
+        s_consumedControllerButtons.clear();
+        s_consumedControllerAxes.clear();
         s_mouseScrollConsumer = Consumer::none;
     }
     bool EventSystem::KeyBlocked(emberCommon::Input::Key key)
@@ -569,6 +764,16 @@ namespace emberCore
     bool EventSystem::MouseScrollBlocked()
     {
         return s_mouseScrollConsumer != Consumer::none && s_mouseScrollConsumer != s_currentConsumer;
+    }
+    bool EventSystem::ControllerButtonBlocked(uint32_t controllerId, emberCommon::Input::ControllerButton button)
+    {
+        Consumer buttonConsumer = GetControllerButtonConsumer(controllerId, button);
+        return buttonConsumer != Consumer::none && buttonConsumer != s_currentConsumer;
+    }
+    bool EventSystem::ControllerAxisBlocked(uint32_t controllerId, emberCommon::Input::ControllerAxis axis)
+    {
+        Consumer axisConsumer = GetControllerAxisConsumer(controllerId, axis);
+        return axisConsumer != Consumer::none && axisConsumer != s_currentConsumer;
     }
     bool EventSystem::ProcessGuiEventFilter(const emberCommon::Event& event)
     {
@@ -611,6 +816,18 @@ namespace emberCore
             if (lock.second == consumer)
                 return true;
         return false;
+    }
+    Float2 EventSystem::ApplyControllerDeadZone(const Float2& stick, float deadZone)
+    {
+        if (deadZone <= 0.0f)
+            return stick;
+        if (deadZone >= 1.0f)
+            return Float2::zero;
+
+        float stickLength = stick.Length();
+        if (stickLength <= deadZone)
+            return Float2::zero;
+        return stick * ((stickLength - deadZone) / (stickLength * (1.0f - deadZone)));
     }
 
 

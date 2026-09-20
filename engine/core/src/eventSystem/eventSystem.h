@@ -2,8 +2,11 @@
 #include "emberCoreExport.h"
 #include "emberMath.h"
 #include "commonInput.h"
+#include <cstdint>
+#include <limits>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 
 
@@ -38,18 +41,24 @@ namespace emberCore
         enum class Consumer { none, gui, editor, scene, game };
         enum class KeyState { none, down, up, held };
         enum class MouseState { none, down, up, held };
+        enum class ControllerButtonState { none, down, up, held };
 
     private: // Members
         static bool s_isInitialized;
-        // Key/MouseButton states:
+        // Input states:
         static std::unordered_map<emberCommon::Input::Key, KeyState> s_keyStates;
         static std::unordered_map<emberCommon::Input::MouseButton, MouseState> s_mouseButtonStates;
+        static std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerButton, ControllerButtonState>> s_controllerButtonStates;
+        static std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerAxis, float>> s_controllerAxisStates;
+        static std::unordered_set<uint32_t> s_connectedControllers;
         // MouseButton lock/unlock:
         static std::unordered_map<emberCommon::Input::MouseButton, Consumer> s_lockedMouseButtons;
         static std::unordered_set<emberCommon::Input::MouseButton> s_mouseButtonLocksPendingUnlock;
-        // Key/MouseButton consumption:
+        // Input consumption:
         static std::unordered_map<emberCommon::Input::Key, Consumer> s_consumedKeys;
         static std::unordered_map<emberCommon::Input::MouseButton, Consumer> s_consumedMouseButtons;
+        static std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerButton, Consumer>> s_consumedControllerButtons;
+        static std::unordered_map<uint32_t, std::unordered_map<emberCommon::Input::ControllerAxis, Consumer>> s_consumedControllerAxes;
         static Consumer s_currentConsumer;
         static Consumer s_keyboardLockConsumer;
         static Consumer s_mouseScrollConsumer;
@@ -60,6 +69,9 @@ namespace emberCore
         static float s_mouseScrollY;
 		static int s_windowWidth;
 		static int s_windowHeight;
+
+	public: // Members:
+		static constexpr uint32_t invalidControllerId = std::numeric_limits<uint32_t>::max();
 
     public: // Methods:
         static void Init();
@@ -90,6 +102,18 @@ namespace emberCore
         static Float2 MousePos01(); // relative to main SDL window, only for game logic, do not use for GUI or editor.
         static float MouseScrollX();
         static float MouseScrollY();
+        static bool ControllerButtonDown(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerButtonUp(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerButtonHeld(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerButtonDownOrHeld(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static float ControllerAxis(uint32_t controllerId, emberCommon::Input::ControllerAxis axis);
+        static Float2 ControllerLeftStick(uint32_t controllerId, float deadZone = 0.05f);
+        static Float2 ControllerRightStick(uint32_t controllerId, float deadZone = 0.05f);
+
+		// Controller id:
+        static uint32_t GetMainControllerId();
+        static bool ControllerConnected(uint32_t controllerId);
+        static std::vector<uint32_t> GetConnectedControllerIds();
 
         // Raw event queries:
         static bool AnyKeyDownRaw();
@@ -107,18 +131,31 @@ namespace emberCore
         static bool MouseHeldRaw(emberCommon::Input::MouseButton button);
         static float MouseScrollXRaw();
         static float MouseScrollYRaw();
+        static bool ControllerButtonDownRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerButtonUpRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerButtonHeldRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerButtonDownOrHeldRaw(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static float ControllerAxisRaw(uint32_t controllerId, emberCommon::Input::ControllerAxis axis);
+        static Float2 ControllerLeftStickRaw(uint32_t controllerId, float deadZone = 0.05f);
+        static Float2 ControllerRightStickRaw(uint32_t controllerId, float deadZone = 0.05f);
 
         // Event consumption:
         // Marks an input as used for the current frame. For ordered input phases (e.g. gui->editor->scene), not arbitrary ECS component conflict resolution.
         static void ConsumeKey(emberCommon::Input::Key key);
         static void ConsumeMouseButton(emberCommon::Input::MouseButton button);
         static void ConsumeMouseScroll();
+        static void ConsumeControllerButton(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static void ConsumeControllerAxis(uint32_t controllerId, emberCommon::Input::ControllerAxis axis);
         static bool KeyConsumed(emberCommon::Input::Key key);
         static bool MouseButtonConsumed(emberCommon::Input::MouseButton button);
         static bool MouseScrollConsumed();
+        static bool ControllerButtonConsumed(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerAxisConsumed(uint32_t controllerId, emberCommon::Input::ControllerAxis axis);
         static Consumer GetKeyConsumer(emberCommon::Input::Key key);
         static Consumer GetMouseButtonConsumer(emberCommon::Input::MouseButton button);
         static Consumer GetMouseScrollConsumer();
+        static Consumer GetControllerButtonConsumer(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static Consumer GetControllerAxisConsumer(uint32_t controllerId, emberCommon::Input::ControllerAxis axis);
 
         // Event locking:
         // Locks give one consumer exclusive access across frames, e.g. mouse drags or keyboard focus.
@@ -144,8 +181,11 @@ namespace emberCore
         static bool KeyBlocked(emberCommon::Input::Key key);
         static bool MouseButtonBlocked(emberCommon::Input::MouseButton button);
         static bool MouseScrollBlocked();
+        static bool ControllerButtonBlocked(uint32_t controllerId, emberCommon::Input::ControllerButton button);
+        static bool ControllerAxisBlocked(uint32_t controllerId, emberCommon::Input::ControllerAxis axis);
         static bool ProcessGuiEventFilter(const emberCommon::Event& event);
         static bool AnyMouseButtonLockedBy(Consumer consumer);
+        static Float2 ApplyControllerDeadZone(const Float2& stick, float deadZone);
 
         // Delete all constructors:
         EventSystem() = delete;

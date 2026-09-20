@@ -109,7 +109,6 @@ namespace vulkanRendererBackend
 
 		// Draw mesh:
         void DrawOutline(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, uint32_t instanceCount) override;
-		// Ember::ToDo: emberBackendInterface::IDescriptorSetBinding* DrawOutline(...) is missing.
 		void DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount) override;
 		emberBackendInterface::IDescriptorSetBinding* DrawMesh(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount) override;
 		void DrawMeshShadow(const Float4x4& localToWorldMatrix,emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount) override;

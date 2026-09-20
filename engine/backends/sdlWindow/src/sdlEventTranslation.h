@@ -37,7 +37,18 @@ namespace sdlWindowBackend
             case SDL_GAMEPAD_BUTTON_DPAD_UP:        return emberCommon::Input::ControllerButton::DpadUp;
             case SDL_GAMEPAD_BUTTON_DPAD_DOWN:      return emberCommon::Input::ControllerButton::DpadDown;
             case SDL_GAMEPAD_BUTTON_DPAD_LEFT:      return emberCommon::Input::ControllerButton::DpadLeft;
-			case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:     return emberCommon::Input::ControllerButton::DpadRight;
+            case SDL_GAMEPAD_BUTTON_DPAD_RIGHT:     return emberCommon::Input::ControllerButton::DpadRight;
+            case SDL_GAMEPAD_BUTTON_MISC1:          return emberCommon::Input::ControllerButton::Misc1;
+            case SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1:  return emberCommon::Input::ControllerButton::RightPaddle1;
+            case SDL_GAMEPAD_BUTTON_LEFT_PADDLE1:   return emberCommon::Input::ControllerButton::LeftPaddle1;
+            case SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2:  return emberCommon::Input::ControllerButton::RightPaddle2;
+            case SDL_GAMEPAD_BUTTON_LEFT_PADDLE2:   return emberCommon::Input::ControllerButton::LeftPaddle2;
+            case SDL_GAMEPAD_BUTTON_TOUCHPAD:       return emberCommon::Input::ControllerButton::Touchpad;
+            case SDL_GAMEPAD_BUTTON_MISC2:          return emberCommon::Input::ControllerButton::Misc2;
+            case SDL_GAMEPAD_BUTTON_MISC3:          return emberCommon::Input::ControllerButton::Misc3;
+            case SDL_GAMEPAD_BUTTON_MISC4:          return emberCommon::Input::ControllerButton::Misc4;
+            case SDL_GAMEPAD_BUTTON_MISC5:          return emberCommon::Input::ControllerButton::Misc5;
+            case SDL_GAMEPAD_BUTTON_MISC6:          return emberCommon::Input::ControllerButton::Misc6;
             default:                                return emberCommon::Input::ControllerButton::None;
         }
 	}
@@ -169,5 +180,28 @@ namespace sdlWindowBackend
 
             default: return emberCommon::Input::Key::Unknown;
         }
+    }
+
+    emberCommon::Input::ControllerAxis TranslateControllerAxis(uint8_t sdlControllerAxis)
+    {
+        switch (sdlControllerAxis)
+        {
+            case SDL_GAMEPAD_AXIS_LEFTX:         return emberCommon::Input::ControllerAxis::LeftX;
+            case SDL_GAMEPAD_AXIS_LEFTY:         return emberCommon::Input::ControllerAxis::LeftY;
+            case SDL_GAMEPAD_AXIS_RIGHTX:        return emberCommon::Input::ControllerAxis::RightX;
+            case SDL_GAMEPAD_AXIS_RIGHTY:        return emberCommon::Input::ControllerAxis::RightY;
+            case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:  return emberCommon::Input::ControllerAxis::LeftTrigger;
+            case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER: return emberCommon::Input::ControllerAxis::RightTrigger;
+            default:                             return emberCommon::Input::ControllerAxis::None;
+        }
+    }
+
+    float NormalizeControllerAxisValue(emberCommon::Input::ControllerAxis axis, int16_t value)
+    {
+        if (axis == emberCommon::Input::ControllerAxis::None)
+            return 0.0f;
+        if (axis == emberCommon::Input::ControllerAxis::LeftTrigger || axis == emberCommon::Input::ControllerAxis::RightTrigger)
+            return value > 0 ? static_cast<float>(value) / 32767.0f : 0.0f;
+        return value < 0 ? static_cast<float>(value) / 32768.0f : static_cast<float>(value) / 32767.0f;
     }
 }

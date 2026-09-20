@@ -1,15 +1,17 @@
 #pragma once
+#include "iWindow.h"
 #include "commonEvent.h"
 #include "emberMath.h"
 #include "sdlWindowExport.h"
-#include "iWindow.h"
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 
 
 // Forward decleration:
+struct SDL_Gamepad;
 struct SDL_Window;
 typedef struct VkInstance_T* VkInstance;
 struct VkAllocationCallbacks;
@@ -29,6 +31,7 @@ namespace sdlWindowBackend
 		SDL_Window* m_pSdlWindow = nullptr;
 		emberBackendInterface::IGui* m_pIGui = nullptr;
 		std::vector<emberCommon::Event> m_events;
+		std::unordered_map<uint32_t, SDL_Gamepad*> m_gamepads;
 		const int m_maxEvents = 32;
 		bool m_isMinimized = false;
 		bool m_isResizing = false;
@@ -43,9 +46,9 @@ namespace sdlWindowBackend
 		Window(const Window&) = delete;
 		Window& operator=(const Window&) = delete;
 
-		// Movable:
-		Window(Window&& other) noexcept;
-		Window& operator=(Window&& other) noexcept;
+		// Non-movable:
+		Window(Window&&) = delete;
+		Window& operator=(Window&&) = delete;
 
 		// Window Methods:
 		void LinkIGuiHandle(emberBackendInterface::IGui* pIGui) override;
@@ -63,5 +66,8 @@ namespace sdlWindowBackend
 
 		// Setters:
 		void ResetIsResizing() override;
+
+	private: // Methods:
+		void CloseGamepads();
 	};
 }

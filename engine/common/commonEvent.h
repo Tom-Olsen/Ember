@@ -87,8 +87,8 @@ namespace emberCommon
         // Controller:
 		uint32_t controllerId = 0;
 		Input::ControllerButton controllerButton = Input::ControllerButton::None;
-        uint8_t axis = 0;
-		int16_t axisValue = 0;
+        Input::ControllerAxis controllerAxis = Input::ControllerAxis::None;
+		float controllerAxisValue = 0.0f;
 
         // Text input:
         std::string text;
@@ -112,8 +112,8 @@ namespace emberCommon
             ss << ", mouseWheel: (" << mouseWheelX << ", " << mouseWheelY << ")";
             ss << ", controllerId: " << controllerId;
             ss << ", controllerButton: " << Input::ControllerButtonToString(controllerButton);
-            ss << ", axis: " << static_cast<uint32_t>(axis);
-            ss << ", axisValue: " << axisValue;
+            ss << ", controllerAxis: " << Input::ControllerAxisToString(controllerAxis);
+            ss << ", controllerAxisValue: " << controllerAxisValue;
             ss << ", text: " << text;
             ss << ", windowID: " << windowID;
             ss << ", resize: (" << resizeWidth << ", " << resizeHeight << ")";

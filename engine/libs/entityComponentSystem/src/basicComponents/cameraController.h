@@ -15,10 +15,8 @@ namespace emberEcs
 		float m_fastMoveMultiplier;
 		float m_rotationSpeed;
 		float m_zoomSpeed;
-
 		Float2 m_mousePosOnDown;
 		Float3x3 m_rotationMatrixOnDown;
-
 
 	public: // Methods:
 		CameraController();
@@ -32,6 +30,7 @@ namespace emberEcs
 		void Translation();
 		void Rotation();
 		void Zoom();
+		void ControllerControls();
 		void TogglePerspectiveType();
 		void UpdateNavigationLock();
 		void CancelNavigation();

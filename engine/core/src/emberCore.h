@@ -64,8 +64,9 @@ namespace emberCore
     // Input aliasing:
     using Input = emberCommon::Input;
     using MouseButton = emberCommon::Input::MouseButton;
-    using ControllerButton = emberCommon::Input::ControllerButton;
     using Key = emberCommon::Input::Key;
+    using ControllerButton = emberCommon::Input::ControllerButton;
+    using ControllerAxis = emberCommon::Input::ControllerAxis;
 
     using BufferUsage = emberCommon::BufferUsage;
     using ShadowType = emberCommon::ShadowType;
