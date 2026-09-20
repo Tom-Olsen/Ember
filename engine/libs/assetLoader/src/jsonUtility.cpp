@@ -9,7 +9,7 @@ namespace emberAssetLoader
 {
 	namespace JsonUtility
 	{
-		nlohmann::json JsonUtility::LoadObject(const std::filesystem::path& path)
+		nlohmann::json LoadObject(const std::filesystem::path& path)
 		{
 			// Error handling:
 			if (!std::filesystem::exists(path))
@@ -36,7 +36,7 @@ namespace emberAssetLoader
 				throw std::runtime_error("JsonUtility::LoadObject(...) failed for '" + path.string() + "'. Root value must be an object.");
 			return json;
 		}
-		bool JsonUtility::GetRequiredBool(const nlohmann::json& json, const std::filesystem::path& jsonPath, std::string_view memberName)
+		bool GetRequiredBool(const nlohmann::json& json, const std::filesystem::path& jsonPath, std::string_view memberName)
 		{
 			// Json must contain 'memberName':
 			std::string memberNameString(memberName);
@@ -49,7 +49,7 @@ namespace emberAssetLoader
 				throw std::runtime_error("JsonUtility::GetRequiredBool(...) failed for '" + jsonPath.string() + "'. Member '" + memberNameString + "' must be a boolean.");
 			return value.get<bool>();
 		}
-		std::string JsonUtility::GetRequiredString(const nlohmann::json& json, const std::filesystem::path& jsonPath, std::string_view memberName)
+		std::string GetRequiredString(const nlohmann::json& json, const std::filesystem::path& jsonPath, std::string_view memberName)
 		{
 			// Json must contain 'memberName':
 			std::string memberNameString(memberName);
@@ -67,7 +67,7 @@ namespace emberAssetLoader
 				throw std::runtime_error("JsonUtility::GetRequiredString(...) failed for '" + jsonPath.string() + "'. Member '" + memberNameString + "' cannot be empty.");
 			return stringValue;
 		}
-		emberCommon::ResourceAccessRights JsonUtility::GetResourceAccessRights(const nlohmann::json& json, const std::filesystem::path& jsonPath)
+		emberCommon::ResourceAccessRights GetResourceAccessRights(const nlohmann::json& json, const std::filesystem::path& jsonPath)
 		{
 			// Json must contain accessRights field:
 			if (!json.contains("accessRights"))
@@ -92,7 +92,7 @@ namespace emberAssetLoader
 				GetRequiredBool(accessRightsJson, jsonPath, "isMutable")
 			};
 		}
-		std::filesystem::path JsonUtility::ResolveFilePath(const std::filesystem::path& jsonPath, const std::string& filePath, std::string_view memberName)
+		std::filesystem::path ResolveFilePath(const std::filesystem::path& jsonPath, const std::string& filePath, std::string_view memberName)
 		{
 			std::filesystem::path resolvedPath = filePath;
 			if (resolvedPath.is_relative())
