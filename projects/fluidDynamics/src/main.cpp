@@ -155,13 +155,6 @@ int main()
 		MaterialManager::LoadMaterialAssets(shadersDirectory / "materialAssets");
 		ComputeShaderManager::LoadComputeShaderAssets(shadersDirectory / "computeShaderAssets");
 
-		// Ember::ToDo: move these into the fluid dynamic files that actually use them.
-		ForwardMaterial particleMaterial3d = MaterialManager::TryGetForwardMaterial("particleMaterial3d");
-		ShadowMaterial particleShadowMaterial3d = MaterialManager::TryGetShadowMaterial("particleShadowMaterial3d");
-		particleMaterial3d.SetShadowMaterial(particleShadowMaterial3d);
-		ForwardMaterial volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
-		volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// drawing back facing trianles enables us to move the camera inside the fluid volume and still render it.
-
 		// Create scene:
 		//Scene* pScene = Fluid2dCpuScene();
 		//Scene* pScene = Fluid2dGpuScene();

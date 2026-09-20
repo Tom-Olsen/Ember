@@ -12,7 +12,10 @@ namespace fluidDynamics
 	{
 		// Material setup:
 		m_particleMaterial = MaterialManager::TryGetForwardMaterial("particleMaterial3d");
+		ShadowMaterial particleShadowMaterial = MaterialManager::TryGetShadowMaterial("particleShadowMaterial3d");
+		m_particleMaterial.SetShadowMaterial(particleShadowMaterial);
 		m_volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
+		m_volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// Drawing back-facing triangles enables the camera to enter the fluid volume while it remains rendered.
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_callProperties = CallProperties(m_particleMaterial);
