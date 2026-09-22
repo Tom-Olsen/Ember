@@ -80,6 +80,7 @@ inline Scene* DefaultScene()
 		pCamera->SetFarClip(1000.0f);
 
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
+		ScreenSpaceEffects* pScreenSpaceEffects = entity.AddComponent<ScreenSpaceEffects>();
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);

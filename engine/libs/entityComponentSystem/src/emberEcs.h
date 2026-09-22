@@ -16,5 +16,6 @@
 #include "meshRenderer.h"
 #include "pointLight.h"
 #include "postRenderEffects.h"
+#include "screenSpaceEffects.h"
 #include "spotLight.h"
 #include "transform.h"
