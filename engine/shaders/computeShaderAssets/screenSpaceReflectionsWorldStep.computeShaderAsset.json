@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "screenSpaceReflectionsWorldStep",
+    "sourcePath": "../src/compute/screenSpaceReflectionsWorldStep.comp.hlsl",
+    "binaryPath": "../bin/screenSpaceReflectionsWorldStep.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "screenSpaceReflectionsDda",
+    "sourcePath": "../src/compute/screenSpaceReflectionsDda.comp.hlsl",
+    "binaryPath": "../bin/screenSpaceReflectionsDda.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}
