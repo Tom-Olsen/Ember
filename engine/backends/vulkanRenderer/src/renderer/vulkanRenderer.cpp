@@ -801,7 +801,7 @@ namespace vulkanRendererBackend
 
 		// Frame descriptor set:
 		FrameDescriptorSetLayout::SetCameraData(Float4(m_activeCamera.position, 1.0f), m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
-		FrameDescriptorSetLayout::SetRenderTargetData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorTexturePair(), m_pRenderTargets->GetSceneDepthTexture(m_frameExecutionData.frameIndex), m_pRenderTargets->GetNormalTexture(m_frameExecutionData.frameIndex));
+		FrameDescriptorSetLayout::SetRenderTargetData(m_frameExecutionData.frameIndex, *m_pRenderTargets);
 		FrameDescriptorSetLayout::UpdateShaderData(m_frameExecutionData.frameIndex);
 
 		// Gizmo calls:

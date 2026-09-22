@@ -8,6 +8,8 @@
 #ifdef EMBER_ENABLE_FRAME_SET_RENDER_TARGETS
 Texture2D<float> sceneDepthTexture : register(t1100, FRAME_SET);
 Texture2D<float4> gbufferNormalTexture : register(t1101, FRAME_SET);
+Texture2D<float4> gbufferAlbedoTexture : register(t1102, FRAME_SET);
+Texture2D<float4> gbufferSurfacePropertiesTexture : register(t1103, FRAME_SET);
 [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture0 : register(u1200, FRAME_SET);
 [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture1 : register(u1201, FRAME_SET);
 #endif
