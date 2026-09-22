@@ -9,7 +9,8 @@ using namespace emberCore;
 namespace emberEcs
 {
 	// Constructor/Destructor:
-	ScreenSpaceEffects::ScreenSpaceEffects()
+	ScreenSpaceEffects::ScreenSpaceEffects(Texture& environmentMap)
+		: m_pEnvironmentMap(&environmentMap)
 	{
 		effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflections"));
 	}
@@ -24,6 +25,9 @@ namespace emberEcs
 	void ScreenSpaceEffects::LateUpdate()
 	{
 		for (ComputeShader& computeShader : effects)
+		{
 			CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(computeShader);
+			callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
+		}
 	}
 }

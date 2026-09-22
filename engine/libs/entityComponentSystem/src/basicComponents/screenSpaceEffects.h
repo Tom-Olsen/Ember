@@ -5,15 +5,23 @@
 
 
 
+namespace emberCore
+{
+	class Texture;
+}
+
+
+
 namespace emberEcs
 {
 	class ScreenSpaceEffects : public Component
 	{
 	private: // Members:
 		std::vector<emberCore::ComputeShader> effects;
+		emberCore::Texture* m_pEnvironmentMap;
 
 	public: // Methods:
-		ScreenSpaceEffects();
+		ScreenSpaceEffects(emberCore::Texture& environmentMap);
 		~ScreenSpaceEffects();
 
 		// Overrides:

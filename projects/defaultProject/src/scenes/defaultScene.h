@@ -25,8 +25,9 @@ inline Scene* DefaultScene()
 	DeferredMaterial lightSourceMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
 	lightSourceMaterial.SetValue("SurfaceProperties", "surface_isLit", false);
 	lightSourceMaterial.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::white);
+	Texture& skyboxTexture = TextureManager::GetTexture("skybox0");
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
-	skyboxMaterial.SetTexture("colorMap", TextureManager::GetTexture("skybox0"));
+	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = pbrMaterial.CloneWithDefaultBindings("floorMaterial");
 	floorMaterial.SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
 	floorMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
@@ -80,7 +81,7 @@ inline Scene* DefaultScene()
 		pCamera->SetFarClip(1000.0f);
 
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
-		ScreenSpaceEffects* pScreenSpaceEffects = entity.AddComponent<ScreenSpaceEffects>();
+		ScreenSpaceEffects* pScreenSpaceEffects = entity.AddComponent<ScreenSpaceEffects>(skyboxTexture);
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);
