@@ -43,27 +43,26 @@ namespace vulkanRendererBackend
 		PROFILE_FUNCTION();
 
 		RenderPass* pRenderPass;
-		RenderTexture2d* pRenderTexture;
-		VkFramebuffer framebuffer;
 		const std::vector<ForwardDrawCall*>* pDrawCallPointers;
 		if constexpr (stage == RenderStage::forwardOpaque)
 		{
 			ForwardOpaqueRenderPass* pForwardOpaqueRenderPass = RenderPassManager::GetForwardOpaqueRenderPass();
 			pRenderPass = pForwardOpaqueRenderPass;
-			// Forward opaque rendering always renders to 0th sceneColor texture:
-			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, 0);
-			framebuffer = pForwardOpaqueRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardOpaqueDrawCallPointers;
 		}
 		else
 		{
 			ForwardTransparentRenderPass* pForwardTransparentRenderPass = RenderPassManager::GetForwardTransparentRenderPass();
 			pRenderPass = pForwardTransparentRenderPass;
-			// Forward transparent rendering renders to renderTexture 0 or 1, depending on sceneColor swaps in screen-space compute stage:
-			pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, frameContext.frameExecutionData.transparentSceneColorIndex);
-			framebuffer = pForwardTransparentRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex, frameContext.frameExecutionData.transparentSceneColorIndex);
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardTransparentDrawCallPointers;
 		}
+
+		// Both forward passes continue on the scene color selected by screen-space compute.
+		// Their framebuffer arrays are ordered by frame index, then scene color index.
+		const uint32_t frameIndex = frameContext.frameExecutionData.frameIndex;
+		const uint32_t sceneColorIndex = frameContext.frameExecutionData.forwardSceneColorIndex;
+		RenderTexture2d* pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, sceneColorIndex);
+		VkFramebuffer framebuffer = pRenderPass->GetFramebuffer(static_cast<int>(2 * frameIndex + sceneColorIndex));
 
 		// Prepare command recording:
 		CommandPool& commandPool = frameContext.resources.GetCommandPool(stage);

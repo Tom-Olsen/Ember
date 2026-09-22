@@ -101,31 +101,31 @@ namespace vulkanRendererBackend
 		VkSemaphoreSubmitInfo deferredGeometrySignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToDeferredLighting), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
 		SubmitStage(frameContext, RenderStage::deferredGeometry, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&deferredGeometryWait, 1), std::span<const VkSemaphoreSubmitInfo>(&deferredGeometrySignal, 1));
 
-		// Shadow + DeferredGeometry -> DeferredLighting -> ForwardOpaque:
+		// Shadow + DeferredGeometry -> DeferredLighting -> ScreenSpaceCompute:
 		m_deferredLightingStage.Record(frameContext);
 		std::array<VkSemaphoreSubmitInfo, 2> deferredLightingWaits =
 		{
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT),
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 		};
-		VkSemaphoreSubmitInfo deferredLightingSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToForwardOpaque), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo deferredLightingSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToScreenSpaceCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 		SubmitStage(frameContext, RenderStage::deferredLighting, graphicsQueue, deferredLightingWaits, std::span<const VkSemaphoreSubmitInfo>(&deferredLightingSignal, 1));
 
-		// DeferredLighting -> ForwardOpaque -> ScreenSpaceCompute:
-		m_forwardOpaqueStage.Record(frameContext);
-		VkSemaphoreSubmitInfo forwardOpaqueWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToForwardOpaque), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-		VkSemaphoreSubmitInfo forwardOpaqueSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToScreenSpaceCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
-		SubmitStage(frameContext, RenderStage::forwardOpaque, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueSignal, 1));
-
-		// ForwardOpaque -> ScreenSpaceCompute -> ForwardTransparent:
+		// DeferredLighting -> ScreenSpaceCompute -> ForwardOpaque:
 		m_screenSpaceComputeStage.Record(frameContext, frameContext.screenSpaceComputeCalls);
-		VkSemaphoreSubmitInfo screenSpaceComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToScreenSpaceCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
-		VkSemaphoreSubmitInfo screenSpaceComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::screenSpaceComputeToForwardTransparent), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+		VkSemaphoreSubmitInfo screenSpaceComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToScreenSpaceCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+		VkSemaphoreSubmitInfo screenSpaceComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::screenSpaceComputeToForwardOpaque), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 		SubmitStage(frameContext, RenderStage::screenSpaceCompute, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&screenSpaceComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&screenSpaceComputeSignal, 1));
 
-		// ScreenSpaceCompute -> ForwardTransparent -> PostRenderCompute:
+		// ScreenSpaceCompute -> ForwardOpaque -> ForwardTransparent:
+		m_forwardOpaqueStage.Record(frameContext);
+		VkSemaphoreSubmitInfo forwardOpaqueWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::screenSpaceComputeToForwardOpaque), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo forwardOpaqueSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToForwardTransparent), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
+		SubmitStage(frameContext, RenderStage::forwardOpaque, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueSignal, 1));
+
+		// ForwardOpaque -> ForwardTransparent -> PostRenderCompute:
 		m_forwardTransparentStage.Record(frameContext);
-		VkSemaphoreSubmitInfo forwardTransparentWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::screenSpaceComputeToForwardTransparent), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo forwardTransparentWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToForwardTransparent), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 		VkSemaphoreSubmitInfo forwardTransparentSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardTransparentToPostRenderCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 		SubmitStage(frameContext, RenderStage::forwardTransparent, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardTransparentWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardTransparentSignal, 1));
 
@@ -316,9 +316,9 @@ namespace vulkanRendererBackend
 			case Dependency::midRenderComputeToPostRenderCompute: return "MidRenderComputeToPostRenderCompute";
 			case Dependency::shadowToDeferredLighting: return "ShadowToDeferredLighting";
 			case Dependency::deferredGeometryToDeferredLighting: return "DeferredGeometryToDeferredLighting";
-			case Dependency::deferredLightingToForwardOpaque: return "DeferredLightingToForwardOpaque";
-			case Dependency::forwardOpaqueToScreenSpaceCompute: return "ForwardOpaqueToScreenSpaceCompute";
-			case Dependency::screenSpaceComputeToForwardTransparent: return "ScreenSpaceComputeToForwardTransparent";
+			case Dependency::deferredLightingToScreenSpaceCompute: return "DeferredLightingToScreenSpaceCompute";
+			case Dependency::screenSpaceComputeToForwardOpaque: return "ScreenSpaceComputeToForwardOpaque";
+			case Dependency::forwardOpaqueToForwardTransparent: return "ForwardOpaqueToForwardTransparent";
 			case Dependency::forwardTransparentToPostRenderCompute: return "ForwardTransparentToPostRenderCompute";
 			case Dependency::postRenderComputeToPresent: return "PostRenderComputeToPresent";
 			default: throw std::out_of_range("RenderGraph::GetDependencyName(...) failed. dependency is out of range.");

@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
 	/// └>ResourceUpdate
 	///   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
 	///   └> PreRenderCompute ┬> Outline ──────────> MidRenderCompute  ────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
-	///                       ├> Shadow ──────────┬> DeferredLighting ─> ForwardOpaque ─> ScreenSpaceCompute ─> ForwardTransparent ┘
+	///                       ├> Shadow ──────────┬> DeferredLighting ─> ScreenSpaceCompute ─> ForwardOpaque ─> ForwardTransparent ┘
 	///                       └> DeferredGeometry ┘
 	/// </summary>
 	class RenderGraph
@@ -49,9 +49,9 @@ namespace vulkanRendererBackend
 			midRenderComputeToPostRenderCompute,
 			shadowToDeferredLighting,
 			deferredGeometryToDeferredLighting,
-			deferredLightingToForwardOpaque,
-			forwardOpaqueToScreenSpaceCompute,
-			screenSpaceComputeToForwardTransparent,
+			deferredLightingToScreenSpaceCompute,
+			screenSpaceComputeToForwardOpaque,
+			forwardOpaqueToForwardTransparent,
 			forwardTransparentToPostRenderCompute,
 			postRenderComputeToPresent,
 			dependencyCount
@@ -72,8 +72,8 @@ namespace vulkanRendererBackend
 		ShadowStage m_shadowStage;
 		DeferredGeometryStage m_deferredGeometryStage;
 		DeferredLightingStage m_deferredLightingStage;
-		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;
 		ComputeStage<RenderStage::screenSpaceCompute> m_screenSpaceComputeStage;
+		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;
 		ForwardStage<RenderStage::forwardTransparent> m_forwardTransparentStage;
 		ComputeStage<RenderStage::postRenderCompute> m_postRenderComputeStage;
 		PresentStage m_presentStage;

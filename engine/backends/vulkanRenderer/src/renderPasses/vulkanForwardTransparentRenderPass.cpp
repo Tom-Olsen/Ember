@@ -85,14 +85,14 @@ namespace vulkanRendererBackend
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
 
 		// Synchronization dependencies of individual subpasses:
-		VkSubpassDependency screenSpaceComputeToForwardTransparentDependency = {};
-		screenSpaceComputeToForwardTransparentDependency.srcSubpass = VK_SUBPASS_EXTERNAL; // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
-		screenSpaceComputeToForwardTransparentDependency.dstSubpass = 0;                   // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
-		screenSpaceComputeToForwardTransparentDependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // screen space compute and forward opaque producer stages.
-		screenSpaceComputeToForwardTransparentDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward transparent shader, color, and depth consumer stages.
-		screenSpaceComputeToForwardTransparentDependency.srcAccessMask = AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // complete compute reads/writes and preserve opaque attachment writes.
-		screenSpaceComputeToForwardTransparentDependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead; // forward transparent shader reads, color loads/writes, and depth tests.
-		screenSpaceComputeToForwardTransparentDependency.dependencyFlags = 0; 			// screen space compute may access arbitrary pixels.
+		VkSubpassDependency forwardOpaqueToForwardTransparentDependency = {};
+		forwardOpaqueToForwardTransparentDependency.srcSubpass = VK_SUBPASS_EXTERNAL; // index of source subpass, where dependency originates. VK_SUBPASS_EXTERNAL = before renderpass.
+		forwardOpaqueToForwardTransparentDependency.dstSubpass = 0;                   // index of destination subpass, where dependency ends. VK_SUBPASS_EXTERNAL = after renderpass.
+		forwardOpaqueToForwardTransparentDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward opaque producer stages.
+		forwardOpaqueToForwardTransparentDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT; // forward transparent shader, color, and depth consumer stages.
+		forwardOpaqueToForwardTransparentDependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite; // preserve opaque attachment writes.
+		forwardOpaqueToForwardTransparentDependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead; // forward transparent shader reads, color loads/writes, and depth tests.
+		forwardOpaqueToForwardTransparentDependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -100,7 +100,7 @@ namespace vulkanRendererBackend
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
 		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &screenSpaceComputeToForwardTransparentDependency;
+		renderPassInfo.pDependencies = &forwardOpaqueToForwardTransparentDependency;
 
 		VKA(vkCreateRenderPass(Context::GetVkDevice(), &renderPassInfo, nullptr, &m_renderPass));
 	}

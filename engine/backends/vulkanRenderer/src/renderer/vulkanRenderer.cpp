@@ -856,7 +856,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Compute calls:
-		m_frameExecutionData.transparentSceneColorIndex = m_pCompute->UpdateShaderData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorTexturePair());
+		m_frameExecutionData.forwardSceneColorIndex = m_pCompute->UpdateShaderData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorTexturePair());
 	}
 	bool Renderer::PresentImage()
 	{
