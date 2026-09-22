@@ -11,6 +11,7 @@ namespace vulkanRendererBackend
 {
     // Forward declarations:
     class DepthTexture2d;
+    class GBufferTexture2d;
     class SceneColorTexture2dPair;
     class Texture;
     class UniformBuffer;
@@ -32,7 +33,7 @@ namespace vulkanRendererBackend
 
         // Setters:
         static void SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix);
-        static void SetRenderTargetData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair, DepthTexture2d& sceneDepth);
+        static void SetRenderTargetData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair, DepthTexture2d& sceneDepth, GBufferTexture2d& gbufferNormal);
         
         // Getters:
         static VkDescriptorSetLayout GetVkDescriptorSetLayout();
