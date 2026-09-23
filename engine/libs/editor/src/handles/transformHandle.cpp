@@ -69,7 +69,7 @@ namespace emberEditor
 	}
 	void TransformHandle::ConsumeModeHotkeys()
 	{
-		if (GetIsDragging())
+		if (GetIsDragging() || !HasTarget())
 			return;
 
 		if (emberCore::EventSystem::KeyDown(emberCommon::Input::Key::W) && m_pHandleTarget->CanTranslate())
