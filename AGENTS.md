@@ -56,3 +56,11 @@
 - `unitTests/`: Top-level test aggregation CMake plus `runAllTests.sh` and `runAllTests.bat`.
 - `docs/`, root `readme.txt`, `ToDo*.txt`: Project documentation, design notes, and planned work.
 - Generated output is commonly stored in `build/` and backend `bin/` directories. Exclude these directories from source searches unless investigating build artifacts.
+
+## Documentation
+- The `docs/` directory contains Ember's standalone documentation website. Its purpose is to explain the engine's big-picture architecture, public API design, and interactions between systems. Portfolio-oriented feature highlights and media belong on the separate portfolio website, which links to both this documentation site and the Ember repository.
+- The website is built with Material for MkDocs. `mkdocs.yml` defines site metadata, theme settings, Markdown extensions, and navigation; documentation pages are Markdown files below `docs/`.
+- `docs/index.md` is the landing page. Add new pages below `docs/` and register them in the `nav` section of `mkdocs.yml` so the site hierarchy remains explicit.
+- Run `mkdocs serve` from the repository root for a local preview. Run `mkdocs build --strict` before publishing to catch invalid configuration, links, and navigation entries.
+- `.github/workflows/docs.yml` builds and deploys the site through GitHub Pages when documentation-related files are pushed to `master`. The default public URL is `https://tom-olsen.github.io/Ember/`; GitHub repository settings may replace it with a custom domain.
+- Keep documentation conceptual and task-oriented. Prefer diagrams and focused examples where they clarify system relationships; do not duplicate implementation details that are clearer in the source code.
