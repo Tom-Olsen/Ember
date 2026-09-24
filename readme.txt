@@ -1,3 +1,5 @@
+[Documentation](https://tom-olsen.github.io/Ember/)
+
 Build Requirements:
 To compile this project, you need to have Vulkan SDK 1.3.290.0 (or later), cmake version 3.30 (or later), and dxc
 (included in vulkan on windows and some linux distros, see https://github.com/microsoft/DirectXShaderCompiler/releases for latest release and install if needed).
