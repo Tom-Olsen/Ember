@@ -24,3 +24,10 @@ markdown_extensions:
 
 nav:
   - Overview: index.md
+  - Vulkan Renderer:
+      - Overview: vulkan-renderer/index.md
+      - Frame Lifecycle and Render Graph: vulkan-renderer/frame-lifecycle.md
+      - Rendering Pipeline: vulkan-renderer/rendering-pipeline.md
+      - GPU Resources and Descriptors: vulkan-renderer/gpu-resources.md
+      - Compute: vulkan-renderer/compute.md
+      - Context and Lifetime: vulkan-renderer/context-and-lifetime.md
