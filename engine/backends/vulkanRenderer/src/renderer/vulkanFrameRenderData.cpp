@@ -31,10 +31,8 @@ namespace vulkanRendererBackend
 			const bool transparentB = drawCallB->pMaterial->IsTransparent();
 			if (transparentA && transparentB)
 			{
-				const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-				const Float3 drawPositionB = Float3(drawCallB->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-				const float distanceA = Float3::DistanceSq(drawPositionA, camera.position);
-				const float distanceB = Float3::DistanceSq(drawPositionB, camera.position);
+				const float distanceA = Float3::DistanceSq(drawCallA->worldPosition, camera.position);
+				const float distanceB = Float3::DistanceSq(drawCallB->worldPosition, camera.position);
 				if (distanceA != distanceB)
 					return distanceA > distanceB;
 			}
@@ -89,10 +87,8 @@ namespace vulkanRendererBackend
 			const bool transparentB = drawCallB->pMaterial->IsTransparent();
 			if (transparentA && transparentB)
 			{
-				const Float3 drawPositionA = Float3(drawCallA->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-				const Float3 drawPositionB = Float3(drawCallB->localToWorldMatrix * Float4(0.0f, 0.0f, 0.0f, 1.0f));
-				const float distanceA = Float3::DistanceSq(drawPositionA, camera.position);
-				const float distanceB = Float3::DistanceSq(drawPositionB, camera.position);
+				const float distanceA = Float3::DistanceSq(drawCallA->worldPosition, camera.position);
+				const float distanceB = Float3::DistanceSq(drawCallB->worldPosition, camera.position);
 				if (distanceA != distanceB)
 					return distanceA > distanceB;
 			}

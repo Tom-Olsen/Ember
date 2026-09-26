@@ -1,5 +1,4 @@
 #pragma once
-#include "emberMath.h"
 #include "vulkanDescriptorSetBindingHandle.h"
 #include <cstdint>
 
@@ -24,7 +23,6 @@ namespace vulkanRendererBackend
 	struct DeferredDrawCall
 	{
 	public: // Members:
-		Float4x4 localToWorldMatrix;
 		Mesh* pMesh;
 		Material* pMaterial;
 		DescriptorSetBindingHandle descriptorSetBindingHandle;
@@ -33,9 +31,7 @@ namespace vulkanRendererBackend
 		uint32_t instanceCount;
 
 	public: // Methods:
-		DeferredDrawCall(const Float4x4& localToWorldMatrix, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount);
+		DeferredDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount);
 		~DeferredDrawCall();
-
-		void UpdateModelData();
 	};
 }

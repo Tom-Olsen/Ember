@@ -115,7 +115,12 @@ namespace emberCore
 		// Draw mesh helpers:
 		static void ValidateDrawData(const DrawData& drawData);
 		static emberCommon::CullMode ResolveCullMode(const DrawData& drawData, emberBackendInterface::IMaterial* pIMaterial);
+		
+		// Set default bindings:
+		static void SetModelData(const Float4x4& localToWorldMatrix, CallProperties& callProperties);
 		static void SetInstanceBuffer(const DrawData& drawData, CallProperties& callProperties);
+
+		// Shadow draws calls:
 		static CallProperties DrawMeshShadow(const DrawData& drawData);
 		static void DrawMeshShadow(const DrawData& drawData, CallProperties& callProperties);
 

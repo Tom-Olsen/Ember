@@ -1,6 +1,5 @@
 #include "vulkanForwardDrawCall.h"
 #include "commonCullMode.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMaterial.h"
 #include <cassert>
 
@@ -8,8 +7,8 @@
 
 namespace vulkanRendererBackend
 {
-	ForwardDrawCall::ForwardDrawCall(const Float4x4& localToWorldMatrix, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
-		: localToWorldMatrix(localToWorldMatrix)
+	ForwardDrawCall::ForwardDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
+		: worldPosition(worldPosition)
 		, pMesh(pMesh)
 		, pMaterial(pMaterial)
 		, descriptorSetBindingHandle(descriptorSetBindingHandle)
@@ -27,18 +26,5 @@ namespace vulkanRendererBackend
 	ForwardDrawCall::~ForwardDrawCall()
 	{
 
-	}
-
-
-
-	void ForwardDrawCall::UpdateModelData()
-	{
-		DescriptorSetBinding* pDescriptorSetBinding = descriptorSetBindingHandle.Get();
-    	assert(pDescriptorSetBinding != nullptr);
-    	if (!pDescriptorSetBinding->HasBinding("ModelMatrizes"))
-    	    return;
-
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix", localToWorldMatrix.Inverse());
 	}
 }

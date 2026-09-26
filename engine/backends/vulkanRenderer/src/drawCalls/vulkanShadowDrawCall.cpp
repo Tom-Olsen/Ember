@@ -1,5 +1,4 @@
 #include "vulkanShadowDrawCall.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMaterial.h"
 #include <cassert>
 
@@ -7,9 +6,8 @@
 
 namespace vulkanRendererBackend
 {
-	ShadowDrawCall::ShadowDrawCall(const Float4x4& localToWorldMatrix, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, uint32_t instanceCount)
-		: localToWorldMatrix(localToWorldMatrix)
-		, pMesh(pMesh)
+	ShadowDrawCall::ShadowDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, uint32_t instanceCount)
+		: pMesh(pMesh)
 		, pMaterial(pMaterial)
 		, descriptorSetBindingHandle(descriptorSetBindingHandle)
 		, instanceCount(instanceCount)
@@ -22,18 +20,5 @@ namespace vulkanRendererBackend
 	ShadowDrawCall::~ShadowDrawCall()
 	{
 
-	}
-
-
-
-	void ShadowDrawCall::UpdateModelData()
-	{
-		DescriptorSetBinding* pDescriptorSetBinding = descriptorSetBindingHandle.Get();
-		assert(pDescriptorSetBinding != nullptr);
-		if (!pDescriptorSetBinding->HasBinding("ModelMatrizes"))
-			return;
-
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix", localToWorldMatrix.Inverse());
 	}
 }

@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	struct ForwardDrawCall
 	{
 	public: // Members:
-		Float4x4 localToWorldMatrix;
+		Float3 worldPosition;
 		Mesh* pMesh;
 		Material* pMaterial;
 		DescriptorSetBindingHandle descriptorSetBindingHandle;
@@ -33,9 +33,7 @@ namespace vulkanRendererBackend
 		uint32_t instanceCount;
 
 	public: // Methods:
-		ForwardDrawCall(const Float4x4& localToWorldMatrix, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount);
+		ForwardDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount);
 		~ForwardDrawCall();
-
-		void UpdateModelData();
 	};
 }

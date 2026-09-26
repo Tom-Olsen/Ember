@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	struct GizmoDrawCall
 	{
 	public: // Members:
-		Float4x4 localToWorldMatrix;
+		Float3 worldPosition;
 		Mesh* pMesh;
 		Material* pMaterial;
 		DescriptorSetBindingHandle descriptorSetBindingHandle;
@@ -32,9 +32,7 @@ namespace vulkanRendererBackend
 		uint32_t instanceCount;
 
 	public: // Methods:
-		GizmoDrawCall(const Float4x4& localToWorldMatrix, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, uint32_t instanceCount);
+		GizmoDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, uint32_t instanceCount);
 		~GizmoDrawCall();
-
-		void UpdateModelData();
 	};
 }

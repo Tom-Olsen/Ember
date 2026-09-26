@@ -1,6 +1,5 @@
 #include "vulkanDeferredDrawCall.h"
 #include "commonCullMode.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanMaterial.h"
 #include <cassert>
 
@@ -8,9 +7,8 @@
 
 namespace vulkanRendererBackend
 {
-	DeferredDrawCall::DeferredDrawCall(const Float4x4& localToWorldMatrix, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
-		: localToWorldMatrix(localToWorldMatrix)
-		, pMesh(pMesh)
+	DeferredDrawCall::DeferredDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
+		: pMesh(pMesh)
 		, pMaterial(pMaterial)
 		, descriptorSetBindingHandle(descriptorSetBindingHandle)
 		, cullMode(cullMode)
@@ -27,18 +25,5 @@ namespace vulkanRendererBackend
 	DeferredDrawCall::~DeferredDrawCall()
 	{
 
-	}
-
-
-
-	void DeferredDrawCall::UpdateModelData()
-	{
-		DescriptorSetBinding* pDescriptorSetBinding = descriptorSetBindingHandle.Get();
-		assert(pDescriptorSetBinding != nullptr);
-		if (!pDescriptorSetBinding->HasBinding("ModelMatrizes"))
-			return;
-
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
-		pDescriptorSetBinding->SetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix", localToWorldMatrix.Inverse());
 	}
 }

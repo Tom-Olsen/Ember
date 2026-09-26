@@ -102,7 +102,8 @@ namespace emberCore
 		}
 
 		// Valid draw call:
-        s_pIRenderer->DrawOutline(localToWorldMatrix, pIMesh, 0);
+		CallProperties callProperties(s_pIRenderer->DrawOutline(pIMesh, 0));
+		SetModelData(localToWorldMatrix, callProperties);
     }
 	CallProperties Renderer::DrawMesh(const DrawData& drawData)
 	{
@@ -125,8 +126,9 @@ namespace emberCore
 			receiveShadows = castShadows = false;
 
 		// Valid draw call:
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(drawData.localToWorldMatrix, pIMesh, pIMaterial, cullMode, receiveShadows, drawData.instanceCount);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, receiveShadows, drawData.instanceCount);
 		CallProperties callProperties(pICallDescriptorSetBinding);
+		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		if (castShadows)
 			callProperties.SetShadowProperties(DrawMeshShadow(drawData));
@@ -149,7 +151,8 @@ namespace emberCore
 		// Error material fallback:
 		if (pIMaterial == MaterialManager::s_pIErrorMaterial)
 		{
-			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix, pIMesh, pIMaterial, cullMode, false, drawData.instanceCount));
+			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, false, drawData.instanceCount));
+			SetModelData(drawData.localToWorldMatrix, fallbackCallProperties);
 			SetInstanceBuffer(drawData, fallbackCallProperties);
 			return;
 		}
@@ -159,7 +162,8 @@ namespace emberCore
 		if (pICallDescriptorSetBinding == nullptr)
 		{
 			LOG_WARN("Renderer::DrawMesh(...) received invalid CallProperties. Drawing with default call properties. Reassign CallProperties before reusing it for another draw call.");
-			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix, pIMesh, pIMaterial, cullMode, drawData.receiveShadows, drawData.instanceCount));
+			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, drawData.receiveShadows, drawData.instanceCount));
+			SetModelData(drawData.localToWorldMatrix, fallbackCallProperties);
 			SetInstanceBuffer(drawData, fallbackCallProperties);
 			if (drawData.castShadows)
 				fallbackCallProperties.SetShadowProperties(DrawMeshShadow(drawData));
@@ -167,8 +171,9 @@ namespace emberCore
 		}
 
 		// Valid draw call:
+		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
-		s_pIRenderer->DrawMesh(drawData.localToWorldMatrix, pIMesh, pIMaterial, pICallDescriptorSetBinding, cullMode, drawData.receiveShadows, drawData.instanceCount);
+		s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, pICallDescriptorSetBinding, cullMode, drawData.receiveShadows, drawData.instanceCount);
 		if (drawData.castShadows)
 		{
 			if (callProperties.HasShadowProperties())
@@ -192,8 +197,9 @@ namespace emberCore
 		}
 
 		// Valid draw call:
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix, pIMesh, pIMaterial, cullMode, drawData.instanceCount);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, drawData.instanceCount);
 		CallProperties callProperties(pICallDescriptorSetBinding);
+		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		return callProperties;
 	}
@@ -214,7 +220,8 @@ namespace emberCore
 		// Error gizmo material fallback:
 		if (pIMaterial == MaterialManager::s_pIErrorGizmoMaterial)
 		{
-			CallProperties fallbackCallProperties(s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix, pIMesh, pIMaterial, cullMode, drawData.instanceCount));
+			CallProperties fallbackCallProperties(s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, drawData.instanceCount));
+			SetModelData(drawData.localToWorldMatrix, fallbackCallProperties);
 			SetInstanceBuffer(drawData, fallbackCallProperties);
 			return;
 		}
@@ -224,14 +231,16 @@ namespace emberCore
 		if (pICallDescriptorSetBinding == nullptr)
 		{
 			LOG_WARN("Renderer::DrawGizmo(...) received invalid CallProperties. Drawing with default call properties. Reassign CallProperties before reusing it for another draw call.");
-			CallProperties fallbackCallProperties(s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix, pIMesh, pIMaterial, cullMode, drawData.instanceCount));
+			CallProperties fallbackCallProperties(s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, drawData.instanceCount));
+			SetModelData(drawData.localToWorldMatrix, fallbackCallProperties);
 			SetInstanceBuffer(drawData, fallbackCallProperties);
 			return;
 		}
 
 		// Valid draw call:
+		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
-		s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix, pIMesh, pIMaterial, pICallDescriptorSetBinding, cullMode, drawData.instanceCount);
+		s_pIRenderer->DrawGizmo(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, pICallDescriptorSetBinding, cullMode, drawData.instanceCount);
 	}
 
 
@@ -370,6 +379,18 @@ namespace emberCore
 		assert(cullMode != emberCommon::CullMode::materialDefault);
 		return cullMode;
 	}
+
+
+
+	// Set default bindings:
+	void Renderer::SetModelData(const Float4x4& localToWorldMatrix, CallProperties& callProperties)
+	{
+		if (!callProperties.HasBinding("ModelMatrizes"))
+			return;
+
+		callProperties.SetValue("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
+		callProperties.SetValue("ModelMatrizes", "model_worldToLocalMatrix", localToWorldMatrix.Inverse());
+	}
 	void Renderer::SetInstanceBuffer(const DrawData& drawData, CallProperties& callProperties)
 	{
 		if (drawData.instanceCount == 0 || drawData.pInstanceBuffer == nullptr)
@@ -381,6 +402,10 @@ namespace emberCore
 		}
 		callProperties.SetBuffer("instanceBuffer", *drawData.pInstanceBuffer);
 	}
+
+
+
+	// Shadow draws calls:
 	CallProperties Renderer::DrawMeshShadow(const DrawData& drawData)
 	{
 		ShadowMaterial shadowMaterial = drawData.material.GetShadowMaterial();
@@ -390,8 +415,9 @@ namespace emberCore
 
 		// Valid draw call:
 		emberBackendInterface::IMesh* pIMesh = drawData.mesh.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMeshShadow(drawData.localToWorldMatrix, pIMesh, pIMaterial, drawData.instanceCount);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMeshShadow(pIMesh, pIMaterial, drawData.instanceCount);
 		CallProperties callProperties(pICallDescriptorSetBinding);
+		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		return callProperties;
 	}
@@ -412,9 +438,10 @@ namespace emberCore
 		}
 
 		// Valid draw call:
+		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		emberBackendInterface::IMesh* pIMesh = drawData.mesh.GetInterfaceHandle();
-		s_pIRenderer->DrawMeshShadow(drawData.localToWorldMatrix, pIMesh, pIMaterial, pICallDescriptorSetBinding, drawData.instanceCount);
+		s_pIRenderer->DrawMeshShadow(pIMesh, pIMaterial, pICallDescriptorSetBinding, drawData.instanceCount);
 	}
 
 
