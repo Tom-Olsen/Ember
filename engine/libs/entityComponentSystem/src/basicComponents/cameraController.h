@@ -13,7 +13,7 @@ namespace emberEcs
 		bool m_isNavigating;
 		float m_moveSpeed;
 		float m_fastMoveMultiplier;
-		float m_rotationSpeed;
+		Degrees m_rotationSpeed;
 		float m_zoomSpeed;
 		Float2 m_mousePosOnDown;
 		Float3x3 m_rotationMatrixOnDown;

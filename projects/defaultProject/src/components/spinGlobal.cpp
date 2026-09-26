@@ -8,10 +8,10 @@ using namespace emberCommon;
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	SpinGlobal::SpinGlobal(Float3 position, Float3 eulerDegreesPerSecond, Uint3 rotationOrder)
+	SpinGlobal::SpinGlobal(Float3 position, EulerDegrees speed, Uint3 rotationOrder)
 	{
 		m_position = position;
-		m_eulerDegreesPerSecond = eulerDegreesPerSecond;
+		m_speed = speed;
 		m_rotationOrder = rotationOrder;
 	}
 	SpinGlobal::~SpinGlobal()
@@ -30,8 +30,8 @@ namespace emberEngine
 		if (m_spin == false)
 			return;
 
-		Float3 eulerRadians = math::deg2rad * m_eulerDegreesPerSecond * Time::GetDeltaTime();
-		Float4x4 rotation = Float4x4::Rotate(eulerRadians, m_rotationOrder);
+		EulerRadians angles = (m_speed * Time::GetDeltaTime()).ToRadians();
+		Float4x4 rotation = Float4x4::Rotate(angles, m_rotationOrder);
 		Float4x4 translate = Float4x4::Translate(m_position);
 		Float4x4 translateInverse = Float4x4::Translate(-m_position);
 

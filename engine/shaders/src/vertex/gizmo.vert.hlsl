@@ -2,16 +2,6 @@
 
 
 
-cbuffer SelectionState : register(b301, CALL_SET)
-{
-    int selection_state;          // 0 vertexColor, 1 hoverColor, 2 activeColor.
-    float4 selection_stateColor;  // only vertices that have this color are effected by state.
-    float4 selection_hoverColor;
-    float4 selection_activeColor;
-};
-
-
-
 struct VertexInput
 {
     uint instanceID : SV_InstanceID;    // Instance ID: System value => built in variable
@@ -37,11 +27,6 @@ VertexOutput main(VertexInput input)
     VertexOutput output;
     output.clipPosition = mul(localToClipMatrix, pos);
     output.localNormal = input.normal;
-    if (selection_state == 1 && all(input.vertexColor == selection_stateColor))
-        output.vertexColor = selection_hoverColor;
-    else if (selection_state == 2 && all(input.vertexColor == selection_stateColor))
-        output.vertexColor = selection_activeColor;
-    else
-        output.vertexColor = input.vertexColor;
+    output.vertexColor = input.vertexColor;
     return output;
 }

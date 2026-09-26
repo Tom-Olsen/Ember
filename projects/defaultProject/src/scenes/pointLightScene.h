@@ -99,7 +99,7 @@ inline Scene* PointLightScene()
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("frame"));
 		pMeshRenderer->SetMaterial(frameMaterial);
 
-		entity.AddComponent<SpinLocal>(45.0f);
+		entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
 	return pScene;
 }

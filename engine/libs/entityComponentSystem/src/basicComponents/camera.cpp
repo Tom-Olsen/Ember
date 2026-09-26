@@ -12,7 +12,7 @@ namespace emberEcs
 	// Constructor/Destructor:
 	Camera::Camera()
 	{
-		m_fov = math::deg2rad * 60.0f;
+		m_fov = Degrees(60.0f);
 		m_aspectRatio = 16.0f / 9.0f;	// 1920x1080
 		m_nearClip = 0.1f;
 		m_farClip = 1000.0f;
@@ -29,7 +29,7 @@ namespace emberEcs
 
 
 	// Setters:
-	void Camera::SetFov(float fov)
+	void Camera::SetFov(Degrees fov)
 	{
 		if (m_fov != fov)
 		{
@@ -85,7 +85,7 @@ namespace emberEcs
 
 
 	// Getters:
-	float Camera::GetFov() const
+	Degrees Camera::GetFov() const
 	{
 		return m_fov;
 	}
@@ -159,7 +159,7 @@ namespace emberEcs
 	{
 		m_updateProjectionMatrix = false;
 		if (m_projectionType == ProjectionType::perspective)
-			m_projectionMatrix = Float4x4::Perspective(m_fov, m_aspectRatio, m_nearClip, m_farClip);
+			m_projectionMatrix = Float4x4::Perspective(m_fov.ToRadians(), m_aspectRatio, m_nearClip, m_farClip);
 		else if (m_projectionType == ProjectionType::orthographic)
 			m_projectionMatrix = Float4x4::Orthographic(-0.5f * m_orthographicSize * m_aspectRatio, 0.5f * m_orthographicSize * m_aspectRatio, -0.5f * m_orthographicSize, 0.5f * m_orthographicSize, m_nearClip, m_farClip);
 	}

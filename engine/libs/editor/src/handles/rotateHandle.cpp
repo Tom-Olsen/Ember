@@ -19,7 +19,7 @@ namespace emberEditor
 	float RotateHandle::s_arcWidth = s_arcEnd - s_arcStart;
 	float RotateHandle::s_arcCornerCount = 32;
     // Interaction:
-	float RotateHandle::s_rotationSensitivity = 0.01f;
+	Degrees RotateHandle::s_rotationSensitivity(0.5f);
 
 
 
@@ -151,16 +151,16 @@ namespace emberEditor
 
 	// Mesh generation:
 	void RotateHandle::CreateMeshes()
-    {
-        m_arcMesh = emberCore::MeshGenerator::ArcCurvedUv(s_arcStart, s_arcEnd, 90.0f, s_arcCornerCount);
-    }
+	{
+		m_arcMesh = emberCore::MeshGenerator::ArcCurvedUv(s_arcStart, s_arcEnd, Degrees(90.0f), s_arcCornerCount);
+	}
 
 
 
 
 
 	void RotateHandle::TryBeginDrag()
-    {
+	{
 		// Return if no drag:
 		if (m_isDragging || m_hoveredSubHandle == RotateHandle::SubHandle::none)
 			return;
@@ -201,13 +201,13 @@ namespace emberEditor
 
 		// Update entity rotation:
 		Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
-		float angle = s_rotationSensitivity * (mouseDelta.x - mouseDelta.y);
+		Degrees angle = s_rotationSensitivity * (mouseDelta.x - mouseDelta.y);
 		angle = HandleContext::ApplyRotationSnap(angle);
-		m_pHandleTarget->SetRotation(Float3x3::Rotate(m_dragAxisDir, angle) * m_dragStartRotation);
+		m_pHandleTarget->SetRotation(Float3x3::Rotate(m_dragAxisDir, angle.ToRadians()) * m_dragStartRotation);
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
-    }
+	}
 	void RotateHandle::UpdateOctant()
-    {
+	{
 		if (m_isDragging)
 			return;
 
@@ -366,11 +366,11 @@ namespace emberEditor
 
 		Float3 axis = SubHandleDirection(subHandle);
 		if (sign0 < 0.0f && sign1 > 0.0f)
-			return Float4x4::Rotate(axis, math::pi2);
+			return Float4x4::Rotate(axis, Radians(math::pi2));
 		if (sign0 < 0.0f && sign1 < 0.0f)
-			return Float4x4::Rotate(axis, math::pi);
+			return Float4x4::Rotate(axis, Radians(math::pi));
 		if (sign0 > 0.0f && sign1 < 0.0f)
-			return Float4x4::Rotate(axis, -math::pi2);
+			return Float4x4::Rotate(axis, Radians(-math::pi2));
 		return Float4x4::identity;
 	}
     float RotateHandle::OctantRotationSign(uint32_t octantIndex, RotateHandle::SubHandle subHandle)

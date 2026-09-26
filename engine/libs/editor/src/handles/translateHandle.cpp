@@ -189,7 +189,7 @@ namespace emberEditor
 			meshes.reserve(4);
 			meshes.emplace_back(std::move(emberCore::MeshGenerator::Disk(s_arrowBodyRadius, s_arrowCornerCount, "arrowFlat0").Rotate(Float3x3::rot180x)));
 			meshes.emplace_back(std::move(emberCore::MeshGenerator::ZylinderMantleSmooth(s_arrowBodyRadius, s_arrowBodyHeight, s_arrowCornerCount, "arrowFlat1").Translate(0.5f * s_arrowBodyHeight * Float3::up)));
-			meshes.emplace_back(std::move(emberCore::MeshGenerator::ArcFlatUv(s_arrowBodyRadius, s_arrowHeadRadius, 360.0f, s_arrowCornerCount + 1, "arrowFlat2").Translate(-s_arrowBodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(emberCore::MeshGenerator::ArcFlatUv(s_arrowBodyRadius, s_arrowHeadRadius, Degrees(360.0f), s_arrowCornerCount + 1, "arrowFlat2").Translate(-s_arrowBodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
 			meshes.emplace_back(std::move(emberCore::MeshGenerator::ConeMantleSmooth(s_arrowHeadRadius, s_arrowHeadHeight, s_arrowCornerCount, "arrowFlat3").Translate(s_arrowBodyHeight * Float3::up)));
 			m_arrowMesh = emberCore::Mesh::Merge(meshes);
 		}

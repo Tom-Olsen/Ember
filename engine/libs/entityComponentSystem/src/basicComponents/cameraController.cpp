@@ -21,7 +21,7 @@ namespace emberEcs
 		m_isNavigating = false;
 		m_moveSpeed = 6.5f;
 		m_fastMoveMultiplier = 2.0f;
-		m_rotationSpeed = 1.5f;
+		m_rotationSpeed = Degrees(90.0f);
 		m_zoomSpeed = 1.0f;
 	}
 	CameraController::~CameraController()
@@ -94,11 +94,13 @@ namespace emberEcs
 		{
 			EventSystem::ConsumeMouseButton(Input::MouseButton::Right);
 			Float2 mousePos = EventSystem::MousePos();
-			Float2 delta = 0.001f * m_rotationSpeed * (mousePos - m_mousePosOnDown);
+			Float2 mouseDelta = mousePos - m_mousePosOnDown;
+			Degrees deltaX = 0.001f * m_rotationSpeed * mouseDelta.x;
+			Degrees deltaY = 0.001f * m_rotationSpeed * mouseDelta.y;
 
 			// Rotate around global Z-axis and local X-axis (note matrix multiplication order):
-			Float3x3 rotZ = Float3x3::RotateZ(-delta.x);
-			Float3x3 rotX = Float3x3::RotateX(-delta.y);
+			Float3x3 rotZ = Float3x3::RotateZ(-deltaX.ToRadians());
+			Float3x3 rotX = Float3x3::RotateX(-deltaY.ToRadians());
 			GetTransform()->SetRotationMatrix(rotZ * m_rotationMatrixOnDown * rotX);
 		}
 	}
@@ -152,9 +154,10 @@ namespace emberEcs
 			EventSystem::ConsumeControllerAxis(controllerId, Input::ControllerAxis::RightY);
 		if (!rightStick.IsEpsilonZero())
 		{
-			Float2 delta = m_rotationSpeed * Time::GetDeltaTime() * rightStick;
-			Float3x3 rotZ = Float3x3::RotateZ(-delta.x);
-			Float3x3 rotX = Float3x3::RotateX(-delta.y);
+			Degrees deltaX = m_rotationSpeed * Time::GetDeltaTime() * rightStick.x;
+			Degrees deltaY = m_rotationSpeed * Time::GetDeltaTime() * rightStick.y;
+			Float3x3 rotZ = Float3x3::RotateZ(-deltaX.ToRadians());
+			Float3x3 rotX = Float3x3::RotateX(-deltaY.ToRadians());
 			transform->SetRotationMatrix(rotZ * transform->GetRotation3x3() * rotX);
 		}
 	}

@@ -16,7 +16,7 @@ namespace emberEcs
 		float m_intensity;
 		Float3 m_color;
 		emberCommon::ShadowType m_shadowType;
-		float m_fov;
+		Degrees m_fov;
 		float m_nearClip;
 		float m_farClip;
 		float m_blendStart;
@@ -33,7 +33,7 @@ namespace emberEcs
 		void SetIntensity(const float& intensity);
 		void SetColor(const Float3& color);
 		void SetShadowType(emberCommon::ShadowType shadowType);
-		void SetFov(const float& fov);
+		void SetFov(Degrees fov);
 		void SetNearClip(const float& nearClip);
 		void SetFarClip(const float& farClip);
 		void SetBlendStart(const float& blendStart);
@@ -44,7 +44,7 @@ namespace emberEcs
 		float GetIntensity() const;
 		Float3 GetColor() const;
 		emberCommon::ShadowType GetShadowType() const;
-		float GetFov() const;
+		Degrees GetFov() const;
 		float GetNearClip() const;
 		float GetFarClip() const;
 		float GetBlendStart() const;

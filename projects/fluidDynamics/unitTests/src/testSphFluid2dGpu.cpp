@@ -87,11 +87,11 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
 
 	// Data initialization:
 	float initialDistributionRadius = 6.0f;
-	float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
+	Radians phi(math::pi * (math::Sqrt(5.0f) - 1.0f));
 	for (int i = 0; i < particleCount; i++)
 	{
 		float r = i / (particleCount - 1.0f) * initialDistributionRadius;
-		float theta = phi * i;
+		Radians theta = phi * i;
 		positions[i].x = math::Cos(theta) * r;
 		positions[i].y = math::Sin(theta) * r;
 		velocities[i] = Float2::zero;
@@ -296,11 +296,11 @@ TEST_F(TEST_SphFluid2dGpu, WithHashGrid)
 
 	// Data initialization:
 	float initialDistributionRadius = 6.0f;
-	float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
+	Radians phi(math::pi * (math::Sqrt(5.0f) - 1.0f));
 	for (int i = 0; i < particleCount; i++)
 	{
 		float r = i / (particleCount - 1.0f) * initialDistributionRadius;
-		float theta = phi * i;
+		Radians theta = phi * i;
 		positions[i].x = math::Cos(theta) * r;
 		positions[i].y = math::Sin(theta) * r;
 		velocities[i] = Float2::zero;

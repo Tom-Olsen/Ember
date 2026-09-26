@@ -19,7 +19,7 @@ namespace emberEcs
         };
 
 	private: // Members:
-		float m_fov;
+		Degrees m_fov;
 		float m_aspectRatio;
 		float m_nearClip;
 		float m_farClip;
@@ -34,7 +34,7 @@ namespace emberEcs
 		~Camera();
 
 		// Setters:
-		void SetFov(float fov);
+		void SetFov(Degrees fov);
 		void SetAspectRatio(float aspectRatio);
 		void SetNearClip(float nearClip);
 		void SetFarClip(float farClip);
@@ -43,7 +43,7 @@ namespace emberEcs
 		void SetDrawFrustum(bool drawFrustum);
 
 		// Getters:
-		float GetFov() const;
+		Degrees GetFov() const;
 		float GetAspectRatio() const;
 		float GetNearClip() const;
 		float GetFarClip() const;

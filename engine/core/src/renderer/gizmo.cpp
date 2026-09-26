@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "meshManager.h"
 #include "renderer.h"
+#include <cassert>
 
 
 
@@ -39,8 +40,6 @@ namespace emberCore
 	// Public methods:
 	void Gizmo::DrawMesh(const Mesh& mesh, const Float4x4& localToWorldMatrix)
 	{
-		if (s_cullMode == emberCommon::CullMode::count)
-			s_cullMode = s_material.GetCullMode();
 		DrawData drawData(localToWorldMatrix, mesh, s_material, false, false, s_cullMode);
 		CallProperties callProperties = Renderer::DrawGizmo(drawData);
 		callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", s_color);
@@ -251,6 +250,7 @@ namespace emberCore
 	}
 	void Gizmo::SetCullMode(emberCommon::CullMode cullMode)
 	{
+		assert(s_cullMode != emberCommon::CullMode::count);
 		s_cullMode = cullMode;
 	}
 	void Gizmo::SetColor(const Float4& color)

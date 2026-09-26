@@ -8,13 +8,13 @@ namespace emberEngine
 	class SpinLocal : public emberEcs::Component
 	{
 	private: // Members:
-		float m_speed;
+		Degrees m_speed;
 
 	public: // Methods:
-		SpinLocal(float speed = 45.0f);
+		SpinLocal(Degrees speed = Degrees(45.0f));
 		~SpinLocal();
-		void SetSpeed(float speed);
-		float GetSpeed() const;
+		void SetSpeed(Degrees speed);
+		Degrees GetSpeed() const;
 
 		// Overrides:
 		void Update() override;

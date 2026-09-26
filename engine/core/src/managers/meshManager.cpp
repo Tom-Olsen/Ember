@@ -54,10 +54,10 @@ namespace emberCore
 		Mesh disk = MeshGenerator::Disk(0.5f, 16, "disk");
 		AddMesh(std::move(disk));
 		
-		Mesh arcFlatUv = MeshGenerator::ArcFlatUv(0.3f, 0.7f, 135.0f, 16, "arcFlatUv");
+		Mesh arcFlatUv = MeshGenerator::ArcFlatUv(0.3f, 0.7f, Degrees(135.0f), 16, "arcFlatUv");
 		AddMesh(std::move(arcFlatUv));
 		
-		Mesh arcCurvedUv = MeshGenerator::ArcCurvedUv(0.3f, 0.7f, 135.0f, 16, "arcCurvedUv");
+		Mesh arcCurvedUv = MeshGenerator::ArcCurvedUv(0.3f, 0.7f, Degrees(135.0f), 16, "arcCurvedUv");
 		AddMesh(std::move(arcCurvedUv));
 		
 		Mesh coneSmooth = MeshGenerator::ConeSmooth(0.5f, 1.0f, 16, "coneSmooth");

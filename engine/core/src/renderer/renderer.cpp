@@ -46,11 +46,11 @@ namespace emberCore
 			throw std::runtime_error("Renderer::Init(...) failed. pIGpuResourceFactory is nullptr.");
 
 		s_pointLightRotationMatrices[0] = Float4x4::identity;
-		s_pointLightRotationMatrices[1] = Float4x4::RotateY( math::pi2);
-		s_pointLightRotationMatrices[2] = Float4x4::RotateY( math::pi );
-		s_pointLightRotationMatrices[3] = Float4x4::RotateY(-math::pi2);
-		s_pointLightRotationMatrices[4] = Float4x4::RotateX( math::pi2);
-		s_pointLightRotationMatrices[5] = Float4x4::RotateX(-math::pi2);
+		s_pointLightRotationMatrices[1] = Float4x4::RotateY(Radians(math::pi2));
+		s_pointLightRotationMatrices[2] = Float4x4::RotateY(Radians(math::pi));
+		s_pointLightRotationMatrices[3] = Float4x4::RotateY(Radians(-math::pi2));
+		s_pointLightRotationMatrices[4] = Float4x4::RotateX(Radians(math::pi2));
+		s_pointLightRotationMatrices[5] = Float4x4::RotateX(Radians(-math::pi2));
 
 		s_pIRenderer = std::unique_ptr<emberBackendInterface::IRenderer>(pIRenderer);
 		s_pIGpuResourceFactory = std::unique_ptr<emberBackendInterface::IGpuResourceFactory>(pIGpuResourceFactory);

@@ -127,7 +127,7 @@ inline Scene* DefaultScene()
 		pPointLight->SetDrawFrustum(showLightFrustums);
 		pPointLight->SetShadowType(emberCommon::ShadowType::hard);
 
-		SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, Float3(0, 0, 45));
+		SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, EulerDegrees(0.0f, 0.0f, 45.0f));
 	}
 	{// SpotLight0:
 		Entity entity = Entity::Create("light0");
@@ -144,14 +144,14 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
-		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, Float3(0, 45, 0));
+		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, EulerDegrees(0.0f, 45.0f, 0.0f));
 
 		SpotLight* pSpotLight = entity.AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::red);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(math::deg2rad * 30.0f);
+		pSpotLight->SetFov(Degrees(30.0f));
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -172,14 +172,14 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
-		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, Float3(0, -60, 0));
+		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, EulerDegrees(0.0f, -60.0f, 0.0f));
 
 		SpotLight* pSpotLight = entity.AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::green);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(math::deg2rad * 30.0f);
+		pSpotLight->SetFov(Degrees(30.0f));
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -200,14 +200,14 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
-		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, Float3(0, 90, 0));
+		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, EulerDegrees(0.0f, 90.0f, 0.0f));
 
 		SpotLight* pSpotLight = entity.AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::blue);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(math::deg2rad * 30.0f);
+		pSpotLight->SetFov(Degrees(30.0f));
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(showLightFrustums);
@@ -217,7 +217,7 @@ inline Scene* DefaultScene()
 		Entity entity = Entity::Create("skybox");
 
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
+		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
@@ -246,7 +246,7 @@ inline Scene* DefaultScene()
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
 		pTransform->SetScale(scale);
-		pTransform->SetRotationEulerDegrees(90.0f, 0.0f, 0.0f);
+		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
@@ -276,7 +276,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(cube0Material);
 
-		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
+		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
@@ -322,7 +322,7 @@ inline Scene* DefaultScene()
 
 		//DrawMeshData* drawMeshData = entity.AddComponent<DrawMeshData>();
 
-		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
+		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
 	{// Sphere 0:
 		Entity entity = Entity::Create("sphere1");
@@ -335,7 +335,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cubeSphere"));
 		pMeshRenderer->SetMaterial(sphere0Material);
 
-		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
+		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
@@ -345,7 +345,7 @@ inline Scene* DefaultScene()
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
-		pTransform->SetRotationEulerDegrees(60.0f, 0.0f, 0.0f);
+		pTransform->SetRotationEuler(EulerDegrees(60.0f, 0.0f, 0.0f));
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));

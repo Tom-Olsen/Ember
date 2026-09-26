@@ -333,7 +333,7 @@ TEST_F(TEST_GpuSort, BitonicPermutationSortInt)
 //	}
 //	{// Bitonic sort graph:
 //		GameObject* pGameObject = new GameObject("bitonic sort graph");
-//		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateX(math::pi2));
+//		pGameObject->GetTransform()->SetRotationMatrix(Float3x3::RotateX(Radians(math::pi2)));
 //		BitonicSortGraph* pBitonicSortGraph = pGameObject->AddComponent<BitonicSortGraph>();
 //		pScene->AddGameObject(pGameObject);
 //	}

@@ -28,8 +28,8 @@ namespace emberCore
 
 		Mesh EMBER_CORE_API Disk(float radius, int cornerCount, const std::string& name = "");
 
-		Mesh EMBER_CORE_API ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name = "");
-		Mesh EMBER_CORE_API ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name = "");
+		Mesh EMBER_CORE_API ArcFlatUv(float radius0, float radius1, Degrees angle, int cornerCount, const std::string& name = "");
+		Mesh EMBER_CORE_API ArcCurvedUv(float radius0, float radius1, Degrees angle, int cornerCount, const std::string& name = "");
 
 		Mesh EMBER_CORE_API ConeMantleSmooth(float radius, float height, int cornerCount, const std::string& name = "");
 		Mesh EMBER_CORE_API ConeMantleFlat(float radius, float height, int cornerCount, const std::string& name = "");

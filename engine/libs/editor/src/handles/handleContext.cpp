@@ -23,7 +23,7 @@ namespace emberEditor
 	CoordinateSpace HandleContext::s_coordinateSpace;
 	bool HandleContext::s_snapEnabled;
 	float HandleContext::s_translationSnap;
-	float HandleContext::s_rotationSnap;
+	Degrees HandleContext::s_rotationSnap;
 	float HandleContext::s_scaleSnap;
 
 
@@ -49,7 +49,7 @@ namespace emberEditor
 		s_coordinateSpace = CoordinateSpace::world;
 		s_snapEnabled = false;
 		s_translationSnap = 0.25f;
-		s_rotationSnap = 15.0f * math::deg2rad;
+		s_rotationSnap = Degrees(15.0f);
 		s_scaleSnap = 0.1f;
     }
     void HandleContext::Clear()
@@ -72,7 +72,7 @@ namespace emberEditor
 
 		Float3 cameraPos = s_pCamera->GetTransform()->GetPosition();
 		float distance = (worldPos - cameraPos).Length();
-		return 2.0f * distance * math::Tan(0.5f * s_pCamera->GetFov()) * viewportFraction;
+		return 2.0f * distance * math::Tan(0.5f * s_pCamera->GetFov().ToRadians()) * viewportFraction;
 	}
 	float HandleContext::ApplyTranslationSnap(float translation)
 	{
@@ -80,11 +80,11 @@ namespace emberEditor
 			return translation;
 		return SnapToIncrement(translation, s_translationSnap);
 	}
-	float HandleContext::ApplyRotationSnap(float angleRadians)
+	Degrees HandleContext::ApplyRotationSnap(Degrees angle)
 	{
 		if (!SnapIsActive())
-			return angleRadians;
-		return SnapToIncrement(angleRadians, s_rotationSnap);
+			return angle;
+		return Degrees(SnapToIncrement(angle.value, s_rotationSnap.value));
 	}
 	float HandleContext::ApplyScaleSnap(float scale)
 	{
@@ -145,7 +145,7 @@ namespace emberEditor
     {
         s_translationSnap = translationSnap;
     }
-    void HandleContext::SetRotationSnap(float rotationSnap)
+	void HandleContext::SetRotationSnap(Degrees rotationSnap)
     {
         s_rotationSnap = rotationSnap;
     }
@@ -193,7 +193,7 @@ namespace emberEditor
     {
         return s_translationSnap;
     }
-    float HandleContext::GetRotationSnap()
+	Degrees HandleContext::GetRotationSnap()
     {
         return s_rotationSnap;
     }

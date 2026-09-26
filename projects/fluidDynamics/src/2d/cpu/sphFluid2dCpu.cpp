@@ -67,11 +67,11 @@ namespace fluidDynamics
 		m_rungeKutta.Reallocate(m_particleCount);
 
 		// Initial particle positions:
-		float phi = math::pi * (math::Sqrt(5.0f) - 1.0f);
+		Radians phi(math::pi * (math::Sqrt(5.0f) - 1.0f));
 		for (int i = 0; i < m_particleCount; i++)
 		{
 			float r = i / (m_particleCount - 1.0f) * m_initialDistributionRadius;
-			float theta = phi * i;
+			Radians theta = phi * i;
 			m_data.positions[i].x = math::Cos(theta) * r;
 			m_data.positions[i].y = math::Sin(theta) * r;
 		}
@@ -177,7 +177,7 @@ namespace fluidDynamics
 		attractorRadius = math::Max(0.01f, attractorRadius);
 		if (m_forceSetters || m_attractor.radius != attractorRadius)
 		{
-			m_ringMesh = MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, 360.0f, 100, "attractorRing");
+			m_ringMesh = MeshGenerator::ArcFlatUv(attractorRadius - 0.1f, attractorRadius + 0.1f, Degrees(360.0f), 100, "attractorRing");
 			m_attractor.radius = attractorRadius;
 		}
 	}

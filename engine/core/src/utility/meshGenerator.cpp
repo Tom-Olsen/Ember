@@ -456,10 +456,10 @@ namespace emberCore
 			std::vector<Uint3> triangles;	triangles.reserve(cornerCount);
 
 			// Per vertex data:
-			float dAlpha = 2.0f * math::pi / cornerCount;
+			Radians dAlpha(2.0f * math::pi / cornerCount);
 			for (int i = 0; i < cornerCount; i++)
 			{
-				float alpha = i * dAlpha;
+				Radians alpha = i * dAlpha;
 				float x = math::Cos(alpha);
 				float y = math::Sin(alpha);
 				positions.push_back(Float3(radius * x, radius * y, 0.0f));
@@ -484,10 +484,10 @@ namespace emberCore
 			return mesh;
 		}
 
-		Mesh ArcFlatUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
+		Mesh ArcFlatUv(float radius0, float radius1, Degrees angle, int cornerCount, const std::string& name)
 		{
 			// Validate input values:
-			degrees = math::Clamp(degrees, 0.0f, 360.0f);
+			angle = Degrees(math::Clamp(angle.value, 0.0f, 360.0f));
 			cornerCount = std::max(2, cornerCount);
 			radius0 = std::max(1e-8f, radius0);
 			if (radius0 > radius1)
@@ -499,7 +499,7 @@ namespace emberCore
 			std::vector<Uint3> triangles;	triangles.reserve(2 * (cornerCount - 1));
 
 			// Per vertex data:
-			float dAlpha = math::deg2rad * degrees / (cornerCount - 1.0f);
+			Radians dAlpha = angle.ToRadians() / (cornerCount - 1.0f);
 			for (int i = 0; i < cornerCount; i++)
 			{
 				float x = math::Cos(i * dAlpha);
@@ -528,10 +528,10 @@ namespace emberCore
 			mesh.ComputeTangents();
 			return mesh;
 		}
-		Mesh ArcCurvedUv(float radius0, float radius1, float degrees, int cornerCount, const std::string& name)
+		Mesh ArcCurvedUv(float radius0, float radius1, Degrees angle, int cornerCount, const std::string& name)
 		{
 			// Validate input values:
-			degrees = math::Clamp(degrees, 0.0f, 360.0f);
+			angle = Degrees(math::Clamp(angle.value, 0.0f, 360.0f));
 			cornerCount = std::max(2, cornerCount);
 			radius0 = std::max(1e-8f, radius0);
 			if (radius0 > radius1)
@@ -544,7 +544,7 @@ namespace emberCore
 
 			// Per vertex data:
 			float duv = 1.0f / (cornerCount - 1.0f);
-			float dAlpha = math::deg2rad * degrees / (cornerCount - 1.0f);
+			Radians dAlpha = angle.ToRadians() / (cornerCount - 1.0f);
 			for (int i = 0; i < cornerCount; i++)
 			{
 				float x = math::Cos(i * dAlpha);
@@ -585,10 +585,10 @@ namespace emberCore
 			std::vector<Float4> uvs;		uvs.reserve(cornerCount + 2);
 			std::vector<Uint3> triangles;	triangles.reserve(3 * cornerCount);
 
-			float dAlpha = 2.0f * math::pi / cornerCount;
+			Radians dAlpha(2.0f * math::pi / cornerCount);
 			for (int i = 0; i < cornerCount + 1; i++)
 			{
-				float alpha = i * dAlpha;
+				Radians alpha = i * dAlpha;
 				float x = math::Cos(alpha);
 				float y = math::Sin(alpha);
 				positions.push_back(Float3(radius * x, radius * y, 0.0f));
@@ -620,11 +620,11 @@ namespace emberCore
 			faces.reserve(cornerCount);
 			std::vector<Float4> uvs(3);
 
-			float dAlpha = 2.0f * math::pi / cornerCount;
+			Radians dAlpha(2.0f * math::pi / cornerCount);
 			for (int i = 0; i < cornerCount; i++)
 			{
-				float alpha0 = i * dAlpha;
-				float alpha1 = (i + 1) % cornerCount * dAlpha;
+				Radians alpha0 = i * dAlpha;
+				Radians alpha1 = (i + 1) % cornerCount * dAlpha;
 				float x0 = math::Cos(alpha0);
 				float x1 = math::Cos(alpha1);
 				float y0 = math::Sin(alpha0);
@@ -672,10 +672,10 @@ namespace emberCore
 			std::vector<Float4> uvs;		uvs.reserve(2 * (cornerCount + 1));
 			std::vector<Uint3> triangles;	triangles.reserve(2 * cornerCount);
 
-			float dAlpha = 2.0f * math::pi / cornerCount;
+			Radians dAlpha(2.0f * math::pi / cornerCount);
 			for (int i = 0; i < cornerCount + 1; i++)
 			{
-				float alpha = i * dAlpha;
+				Radians alpha = i * dAlpha;
 				float x = math::Cos(alpha);
 				float y = math::Sin(alpha);
 				positions.push_back(Float3(radius * x, radius * y, -0.5f * height));
@@ -713,16 +713,16 @@ namespace emberCore
 			faces.reserve(2 * cornerCount);
 			std::vector<Float4> uvs(4);
 
-			float dAlpha = 2.0f * math::pi / cornerCount;
+			Radians dAlpha(2.0f * math::pi / cornerCount);
 			float dist = radius * math::Cos(0.5f * dAlpha);
 			float width = 2.0f * radius * math::Sin(0.5f * dAlpha);
 			for (int i = 0; i < cornerCount; i++)
 			{
-				float alpha = (i + 0.5f) * dAlpha;
+				Radians alpha = (i + 0.5f) * dAlpha;
 
 				Mesh face = Quad();
 				face.Scale(Float3(width, height, 1.0f));
-				face.Rotate(Float3x3::RotateZ(math::pi2 + alpha) * Float3x3::rot90x);
+				face.Rotate(Float3x3::RotateZ(Radians(math::pi2) + alpha) * Float3x3::rot90x);
 				face.Translate(Float3(dist * math::Cos(alpha), dist * math::Sin(alpha), 0.0f));
 
 				uvs[0] = Float4((i + 0.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
@@ -773,7 +773,7 @@ namespace emberCore
 
 			meshes.emplace_back(std::move(Disk(bodyRadius, cornerCount, "arrowSmooth0").Rotate(Float3x3::rot180x)));
 			meshes.emplace_back(std::move(ZylinderMantleSmooth(bodyRadius, bodyHeight, cornerCount, "arrowSmooth1").Translate(0.5f * bodyHeight * Float3::up)));
-			meshes.emplace_back(std::move(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowSmooth2").Translate(-bodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(ArcFlatUv(bodyRadius, headRadius, Degrees(360.0f), cornerCount + 1, "arrowSmooth2").Translate(-bodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
 			meshes.emplace_back(std::move(ConeMantleSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3").Translate(bodyHeight * Float3::up)));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
@@ -797,7 +797,7 @@ namespace emberCore
 
 			meshes.emplace_back(std::move(Disk(bodyRadius, cornerCount, "arrowFlat0").Rotate(Float3x3::rot180x)));
 			meshes.emplace_back(std::move(ZylinderMantleFlat(bodyRadius, bodyHeight, cornerCount, "arrowFlat1").Translate(0.5f * bodyHeight * Float3::up)));
-			meshes.emplace_back(std::move(ArcFlatUv(bodyRadius, headRadius, 360.0f, cornerCount + 1, "arrowFlat2").Translate(-bodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
+			meshes.emplace_back(std::move(ArcFlatUv(bodyRadius, headRadius, Degrees(360.0f), cornerCount + 1, "arrowFlat2").Translate(-bodyHeight * Float3::up).Rotate(Float3x3::rot180x)));
 			meshes.emplace_back(std::move(ConeMantleFlat(headRadius, headHeight, cornerCount, "arrowFlat3").Translate(bodyHeight * Float3::up)));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
@@ -927,14 +927,14 @@ namespace emberCore
             // None-shared zylinders:
             {
                 Mesh zylinder = MeshGenerator::ZylinderMantleFlat(math::sqrt2Inv * width, length, 4);
-                Float4x4 rotation = Float4x4::RotateX(math::pi2) * Float4x4::RotateZ(math::pi4);
+				Float4x4 rotation = Float4x4::RotateX(Radians(math::pi2)) * Float4x4::RotateZ(Radians(math::pi4));
                 zylinder.Rotate(rotation);
                 zylinder.Translate(Float3(width + length, 0.5f * (width + length), 0.0f));
                 meshes.emplace_back(std::move(zylinder));
             }
             {
                 Mesh zylinder = MeshGenerator::ZylinderMantleFlat(math::sqrt2Inv * width, length, 4);
-                Float4x4 rotation = Float4x4::RotateZ(math::pi2) * Float4x4::RotateX(math::pi2) * Float4x4::RotateZ(math::pi4);
+				Float4x4 rotation = Float4x4::RotateZ(Radians(math::pi2)) * Float4x4::RotateX(Radians(math::pi2)) * Float4x4::RotateZ(Radians(math::pi4));
                 zylinder.Rotate(rotation);
                 zylinder.Translate(Float3(0.5f * (width + length), width + length, 0.0f));
                 meshes.emplace_back(std::move(zylinder));
@@ -942,20 +942,20 @@ namespace emberCore
 
             // Fill open corners cubes with quads:
             meshes.emplace_back(Quad().Scale(width).Translate(Float3(width + length, width + length, 0.5f * width)));
-            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(width + length, width + length, -0.5f * width)));
-            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateY(math::pi2)).Translate(Float3(1.5f * width + length, width + length, 0.0f)));
-            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(-math::pi2)).Translate(Float3(width + length, 1.5f * width + length, 0.0f)));
-            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(0.0f, 0.0f, -0.5f * width)));
-            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(width + length, 0.0f, -0.5f * width)));
-            meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(math::pi)).Translate(Float3(0.0f, width + length, -0.5f * width)));
+			meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(Radians(math::pi))).Translate(Float3(width + length, width + length, -0.5f * width)));
+			meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateY(Radians(math::pi2))).Translate(Float3(1.5f * width + length, width + length, 0.0f)));
+			meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(Radians(-math::pi2))).Translate(Float3(width + length, 1.5f * width + length, 0.0f)));
+			meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(Radians(math::pi))).Translate(Float3(0.0f, 0.0f, -0.5f * width)));
+			meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(Radians(math::pi))).Translate(Float3(width + length, 0.0f, -0.5f * width)));
+			meshes.emplace_back(Quad().Scale(width).Rotate(Float4x4::RotateX(Radians(math::pi))).Translate(Float3(0.0f, width + length, -0.5f * width)));
             meshes.emplace_back(MeshGenerator::Triangle(Float3(1.5f * width + length, -0.5f * width, -0.5f * width), Float3(1.5f * width + length, 0.5f * width, -0.5f * width), Float3(1.5f * width + length, 0.5f * width, 0.5f * width)));
             meshes.emplace_back(MeshGenerator::Triangle(Float3(-0.5f * width, 1.5f * width + length, -0.5f * width), Float3(0.5f * width, 1.5f * width + length, 0.5f * width), Float3(0.5f * width, 1.5f * width + length, -0.5f * width)));
 
             // Merge all meshes together and copy+rotate the entire thing twice:
 			std::vector<Mesh> meshes2;
             meshes2.emplace_back(Mesh::Merge(meshes));
-            meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), 2.0f * math::pi / 3.0f)));
-            meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), 4.0f * math::pi / 3.0f)).GetCopy());
+			meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), Radians(2.0f * math::pi / 3.0f))));
+			meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), Radians(4.0f * math::pi / 3.0f))).GetCopy());
             // Give each copy its own color:
             meshes2[0].SetColor(colorZ);    // orthogonal to z.
             meshes2[1].SetColor(colorX);    // orthogonal to x.

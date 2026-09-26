@@ -15,7 +15,7 @@ namespace emberEcs
 		m_intensity = 1.0f;
 		m_color = Float3::white;
 		m_shadowType = emberCommon::ShadowType::hard;
-		m_fov = math::deg2rad * 45.0f;
+		m_fov = Degrees(45.0f);
 		m_nearClip = 0.1f;
 		m_farClip = 15.0f;
 		m_blendStart = 0.8f;
@@ -43,7 +43,7 @@ namespace emberEcs
 	{
 		m_shadowType = shadowType;
 	}
-	void SpotLight::SetFov(const float& fov)
+	void SpotLight::SetFov(Degrees fov)
 	{
 		m_fov = fov;
 		m_updateProjectionMatrix = true;
@@ -86,7 +86,7 @@ namespace emberEcs
 	{
 		return m_shadowType;
 	}
-	float SpotLight::GetFov() const
+	Degrees SpotLight::GetFov() const
 	{
 		return m_fov;
 	}
@@ -124,7 +124,7 @@ namespace emberEcs
 	{
 		m_updateProjectionMatrix = false;
 		constexpr float aspectRatio = 1.0f;
-		m_projectionMatrix = Float4x4::Perspective(m_fov, aspectRatio, m_nearClip, m_farClip);
+		m_projectionMatrix = Float4x4::Perspective(m_fov.ToRadians(), aspectRatio, m_nearClip, m_farClip);
 	}
 
 

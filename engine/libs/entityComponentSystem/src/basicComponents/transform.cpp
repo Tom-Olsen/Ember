@@ -65,24 +65,21 @@ namespace emberEcs
 		m_rotationMatrix = rotationMatrix;
 		m_updateLocalToWorldMatrix = true;
 	}
-	void Transform::SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder, CoordinateSpace space)
+	void Transform::SetRotationEuler(Degrees x, Degrees y, Degrees z, Uint3 rotationOrder, CoordinateSpace space)
 	{
-		Float3 eulerRadians = math::deg2rad * Float3(degreesX, degreesY, degreesZ);
-		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, space));
+		SetRotationEuler(EulerDegrees(x, y, z), rotationOrder, space);
 	}
-	void Transform::SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder, CoordinateSpace space)
+	void Transform::SetRotationEuler(Radians x, Radians y, Radians z, Uint3 rotationOrder, CoordinateSpace space)
 	{
-		Float3 eulerRadians = Float3(radiansX, radiansY, radiansZ);
-		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, space));
+		SetRotationEuler(EulerRadians(x, y, z), rotationOrder, space);
 	}
-	void Transform::SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder, CoordinateSpace space)
+	void Transform::SetRotationEuler(const EulerDegrees& angles, Uint3 rotationOrder, CoordinateSpace space)
 	{
-		Float3 eulerRadians = math::deg2rad * degrees;
-		SetRotationMatrix(Float3x3::Rotate(eulerRadians, rotationOrder, space));
+		SetRotationEuler(angles.ToRadians(), rotationOrder, space);
 	}
-	void Transform::SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder, CoordinateSpace space)
+	void Transform::SetRotationEuler(const EulerRadians& angles, Uint3 rotationOrder, CoordinateSpace space)
 	{
-		SetRotationMatrix(Float3x3::Rotate(radians, rotationOrder, space));
+		SetRotationMatrix(Float3x3::Rotate(angles, rotationOrder, space));
 	}
 	void Transform::SetScale(float x, float y, float z)
 	{
@@ -126,15 +123,16 @@ namespace emberEcs
     {
         return Float4x4::Translate(m_position);
     }
-    Float3 Transform::GetRotation() const
+	EulerDegrees Transform::GetRotation() const
     {
         // R = RotY(y) * RotX(x) * RotZ(z), column-major: data[col*3 + row]
         // R[1][2] = data[7] = -sin(x)
         float sinX = math::Clamp(-m_rotationMatrix.data[7], -1.0f, 1.0f);
-        float x = math::Asin(sinX);
+		Radians x = math::Asin(sinX);
         float cosX = math::Sqrt(1.0f - sinX * sinX);
 
-        float y, z;
+		Radians y;
+		Radians z;
         if (cosX > math::absEpsilon)
         {
             // R[0][2]=data[6]=sy*cx, R[2][2]=data[8]=cy*cx -> y
@@ -149,10 +147,10 @@ namespace emberEcs
             // sx=-1 (x=-pi/2): y+z = atan2(-data[3], data[0])
             float sign = (sinX >= 0.0f) ? 1.0f : -1.0f;
             y = math::Atan2(sign * m_rotationMatrix.data[3], m_rotationMatrix.data[0]);
-            z = 0.0f;
+			z = Radians();
         }
 
-        return math::rad2deg * Float3(x, y, z);
+		return EulerRadians(x, y, z).ToDegrees();
     }
 	Float3x3 Transform::GetRotation3x3() const
 	{

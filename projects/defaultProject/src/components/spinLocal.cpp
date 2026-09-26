@@ -8,7 +8,7 @@ using namespace emberCommon;
 namespace emberEngine
 {
 	// Constructor/Destructor:
-	SpinLocal::SpinLocal(float speed)
+	SpinLocal::SpinLocal(Degrees speed)
 	{
 		m_speed = speed;
 	}
@@ -16,11 +16,11 @@ namespace emberEngine
 	{
 
 	}
-	void SpinLocal::SetSpeed(float speed)
+	void SpinLocal::SetSpeed(Degrees speed)
 	{
 		m_speed = speed;
 	}
-	float SpinLocal::GetSpeed() const
+	Degrees SpinLocal::GetSpeed() const
 	{
 		return m_speed;
 	}
@@ -34,13 +34,13 @@ namespace emberEngine
 		Float3x3 rotZ = Float3x3::identity;
 
 		if (EventSystem::KeyDownOrHeld(Input::Key::Right))
-			rotZ *= Float3x3::RotateZ(-m_speed * math::deg2rad * Time::GetDeltaTime());
+			rotZ *= Float3x3::RotateZ(-m_speed.ToRadians() * Time::GetDeltaTime());
 		if (EventSystem::KeyDownOrHeld(Input::Key::Left))
-			rotZ *= Float3x3::RotateZ(m_speed * math::deg2rad * Time::GetDeltaTime());
+			rotZ *= Float3x3::RotateZ(m_speed.ToRadians() * Time::GetDeltaTime());
 		if (EventSystem::KeyDownOrHeld(Input::Key::Down))
-			rotX *= Float3x3::RotateX(-m_speed * math::deg2rad * Time::GetDeltaTime());
+			rotX *= Float3x3::RotateX(-m_speed.ToRadians() * Time::GetDeltaTime());
 		if (EventSystem::KeyDownOrHeld(Input::Key::Up))
-			rotX *= Float3x3::RotateX(m_speed * math::deg2rad * Time::GetDeltaTime());
+			rotX *= Float3x3::RotateX(m_speed.ToRadians() * Time::GetDeltaTime());
 
 		GetTransform()->SetRotationMatrix(rotZ * GetTransform()->GetRotation3x3() * rotX);
 	}

@@ -58,14 +58,14 @@ inline Scene* SingleQuadScene()
 		pMeshRenderer->SetCastShadows(false);
 		pMeshRenderer->SetReceiveShadows(false);
 
-		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, Float3(0, 90, 0));
+		//SpinGlobal* pSpinGlobal = entity.AddComponent<SpinGlobal>(Float3::zero, EulerDegrees(0.0f, 90.0f, 0.0f));
 
 		SpotLight* pSpotLight = entity.AddComponent<SpotLight>();
 		pSpotLight->SetColor(Float3::white);
 		pSpotLight->SetIntensity(200.0f);
 		pSpotLight->SetNearClip(1.1f);
 		pSpotLight->SetFarClip(20.0f);
-		pSpotLight->SetFov(math::deg2rad * 30.0f);
+		pSpotLight->SetFov(Degrees(30.0f));
 		pSpotLight->SetBlendStart(0.7f);
 		pSpotLight->SetBlendEnd(0.9f);
 		pSpotLight->SetDrawFrustum(false);
@@ -82,7 +82,7 @@ inline Scene* SingleQuadScene()
 		pMeshRenderer->SetMaterial(quatMaterial);
 		pMeshRenderer->GetCallProperties().SetValue("SurfaceProperties", "surface_scaleOffset", Float4(1, 1, 0, 0));
 
-		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(45.0f);
+		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}

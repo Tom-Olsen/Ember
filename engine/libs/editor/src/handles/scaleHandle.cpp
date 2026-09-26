@@ -341,7 +341,7 @@ namespace emberEditor
 		float factor = AxisLengthFactor(subHandle);
 		Float4x4 scale = Float4x4::Scale(Float3(1.0f, 1.0f, math::Abs(factor)));
 		if (factor < 0.0f)
-			return Float4x4::RotateY(math::pi) * scale;
+			return Float4x4::RotateY(Radians(math::pi)) * scale;
 		return scale;
 	}
 	float ScaleHandle::SetScale(ScaleHandle::SubHandle subHandle, float amount)

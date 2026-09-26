@@ -60,7 +60,7 @@ inline Scene* ShadowCascadeScene()
 	//
 	//	Transform* pTransform = entity.GetTransform();
 	//	pTransform->SetPosition(pos);
-	//	pTransform->SetRotationEulerDegrees(0.0f, 0.0f, 0.0f);
+	//	pTransform->SetRotationEuler(EulerDegrees(0.0f, 0.0f, 0.0f));
 	//
 	//	MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 	//	pMeshRenderer->SetMesh(MeshManager::GetMesh("threeLeg"));
@@ -81,7 +81,7 @@ inline Scene* ShadowCascadeScene()
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetNearClip(0.5f);
 		pCamera->SetFarClip(800.0f);
-		pCamera->SetFov(30.0f * math::deg2rad);
+		pCamera->SetFov(Degrees(30.0f));
 		pCamera->SetDrawFrustum(true);
 		pShadowCascadeCamera = pCamera;
 

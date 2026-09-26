@@ -31,7 +31,7 @@ namespace emberEditor
 		static CoordinateSpace s_coordinateSpace;
 		static bool s_snapEnabled;
 		static float s_translationSnap;
-		static float s_rotationSnap;
+		static Degrees s_rotationSnap;
 		static float s_scaleSnap;
 
     public: // Methods:
@@ -49,7 +49,7 @@ namespace emberEditor
         static void SetCoordinateSpace(CoordinateSpace coordinateSpace);
         static void SetSnap(bool snapEnabled);
         static void SetTranslationSnap(float translationSnap);
-        static void SetRotationSnap(float rotationSnap);
+		static void SetRotationSnap(Degrees rotationSnap);
         static void SetScaleSnap(float scaleSnap);
 
         // Getters:
@@ -62,13 +62,13 @@ namespace emberEditor
         static CoordinateSpace GetCoordinateSpace();
         static bool GetSnap();
         static float GetTranslationSnap();
-        static float GetRotationSnap();
+		static Degrees GetRotationSnap();
         static float GetScaleSnap();
 
         // Helpers:
 		static float ComputeScreenSpaceScale(const Float3& worldPos);
 		static float ApplyTranslationSnap(float translation);
-		static float ApplyRotationSnap(float angleRadians);
+		static Degrees ApplyRotationSnap(Degrees angle);
 		static float ApplyScaleSnap(float scale);
 
     private: // Methods:

@@ -45,10 +45,10 @@ namespace emberEcs
 		void AddToPosition(float x, float y, float z);
 		void AddToPosition(const Float3& translation);
 		void SetRotationMatrix(const Float3x3& rotationMatrix);
-		void SetRotationEulerDegrees(float degreesX, float degreesY, float degreesZ, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
-		void SetRotationEulerRadians(float radiansX, float radiansY, float radiansZ, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
-		void SetRotationEulerDegrees(Float3 degrees, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
-		void SetRotationEulerRadians(Float3 radians, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
+		void SetRotationEuler(Degrees x, Degrees y, Degrees z, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
+		void SetRotationEuler(Radians x, Radians y, Radians z, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
+		void SetRotationEuler(const EulerDegrees& angles, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
+		void SetRotationEuler(const EulerRadians& angles, Uint3 rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
 		void SetScale(float scale);
 		void SetScale(float x, float y, float z);
 		void SetScale(const Float3& scale);
@@ -57,7 +57,7 @@ namespace emberEcs
 		// Getters:
 		Float3 GetPosition() const;
 		Float4x4 GetPosition4x4() const;
-        Float3 GetRotation() const;
+		EulerDegrees GetRotation() const;
 		Float3x3 GetRotation3x3() const;
 		Float4x4 GetRotation4x4() const;
 		Float3 GetScale() const;

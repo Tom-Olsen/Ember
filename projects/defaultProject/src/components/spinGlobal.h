@@ -9,12 +9,12 @@ namespace emberEngine
 	{
 	private: // Members:
 		Float3 m_position;
-		Float3 m_eulerDegreesPerSecond;
+		EulerDegrees m_speed;
 		Uint3 m_rotationOrder;
 		bool m_spin = true;
 
 	public: // Methods:
-		SpinGlobal(Float3 position, Float3 eulerDegreesPerSecond = Float3(), Uint3 rotationOrder = Uint3(1, 0, 2));
+		SpinGlobal(Float3 position, EulerDegrees speed = EulerDegrees(), Uint3 rotationOrder = Uint3(1, 0, 2));
 		~SpinGlobal();
 
 		// Overrides:

@@ -336,7 +336,7 @@ namespace fluidDynamics
 		if (m_forceSetters || m_attractor.radius != attractorRadius)
 		{
 			m_attractor.radius = attractorRadius;
-			m_ringMesh = MeshGenerator::ArcFlatUv(m_attractor.radius - 0.1f, m_attractor.radius + 0.1f, 360.0f, 100, "attractorRing");
+			m_ringMesh = MeshGenerator::ArcFlatUv(m_attractor.radius - 0.1f, m_attractor.radius + 0.1f, Degrees(360.0f), 100, "attractorRing");
 			m_computeShaders.SetAttractorRadius(m_attractor.radius);
 		}
 	}

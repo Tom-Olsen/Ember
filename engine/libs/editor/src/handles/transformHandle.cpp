@@ -15,8 +15,8 @@ namespace emberEditor
 	Float4 TransformHandle::s_hoverColor = Float4(0.9f, 0.9f, 0.0f, 1.0f);
 	Float4 TransformHandle::s_activeColor = Float4::yellow;
     // Rotation matrizes:
-	Float4x4 TransformHandle::s_rotX = Float4x4::RotateFromTo(Float3::up, Float3::right) * Float4x4::RotateZ(math::pi2);
-	Float4x4 TransformHandle::s_rotY = Float4x4::RotateFromTo(Float3::up, Float3::forward) * Float4x4::RotateZ(-math::pi2);
+	Float4x4 TransformHandle::s_rotX = Float4x4::RotateFromTo(Float3::up, Float3::right) * Float4x4::RotateZ(Radians(math::pi2));
+	Float4x4 TransformHandle::s_rotY = Float4x4::RotateFromTo(Float3::up, Float3::forward) * Float4x4::RotateZ(Radians(-math::pi2));
 	Float4x4 TransformHandle::s_rotZ = Float4x4::identity;
 
 	// Public methods:

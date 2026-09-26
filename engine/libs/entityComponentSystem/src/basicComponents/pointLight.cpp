@@ -95,7 +95,7 @@ namespace emberEcs
 	void PointLight::UpdateProjectionMatrix()
 	{
 		m_updateProjectionMatrix = false;
-		constexpr float fov = math::pi2;
+		const Radians fov = Degrees(90.0f).ToRadians();
 		constexpr float aspectRatio = 1.0f;
 		m_projectionMatrix = Float4x4::Perspective(fov, aspectRatio, m_nearClip, m_farClip);
 	}

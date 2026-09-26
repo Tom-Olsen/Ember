@@ -29,7 +29,7 @@ namespace emberEditor
 		static float s_arcWidth;
 		static float s_arcCornerCount;
 		// Interaction:
-		static float s_rotationSensitivity;
+		static Degrees s_rotationSensitivity;
 
 		// State:
 		bool m_isDragging;
