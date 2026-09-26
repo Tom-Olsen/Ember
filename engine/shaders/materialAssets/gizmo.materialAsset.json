@@ -19,7 +19,7 @@
     "accessRights":
     {
         "isAccessible": true,
-        "isDeletable": true,
-        "isMutable": true
+        "isDeletable": false,
+        "isMutable": false
     }
 }

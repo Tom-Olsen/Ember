@@ -1,33 +1,21 @@
 #include "callProperties.h"
 #include "buffer.h"
+#include "commonMaterialPass.h"
 #include "iDescriptorSetBinding.h"
 #include "logger.h"
 #include "material.h"
 #include "renderer.h"
+#include "shadowMaterial.h"
 #include "texture.h"
 #include <stdexcept>
+#include <utility>
 
 
 
 namespace emberCore
 {
-	emberBackendInterface::IDescriptorSetBinding* CallProperties::GetCallInterfaceHandle()
-	{
-		ValidateCallDescriptorSetBinding();
-		return m_pICallDescriptorSetBinding;
-	}
-	emberBackendInterface::IDescriptorSetBinding* CallProperties::GetValidCallInterfaceHandle()
-	{
-		ValidateCallDescriptorSetBinding();
-		if (m_pICallDescriptorSetBinding)
-			return m_pICallDescriptorSetBinding;
-		if (m_callDescriptorSetBindingExpired)
-			throw std::runtime_error("CallProperties: call descriptor set binding has expired.");
-		throw std::runtime_error("CallProperties: call descriptor set binding not available.");
-	}
 
-
-
+	// Public methods:
 	// Constructor/Destructor:
 	CallProperties::CallProperties()
 	{
@@ -36,13 +24,6 @@ namespace emberCore
 		m_callDescriptorSetBindingGeneration = 0;
 		m_pICallDescriptorSetBinding = nullptr;
 	}
-	CallProperties::CallProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding)
-	{
-		m_ownsICallDescriptorSetBinding = false;
-		m_callDescriptorSetBindingExpired = false;
-		m_pICallDescriptorSetBinding = pICallDescriptorSetBinding;
-		m_callDescriptorSetBindingGeneration = m_pICallDescriptorSetBinding ? m_pICallDescriptorSetBinding->GetGeneration() : 0;
-	}
 	CallProperties::CallProperties(const Material& material)
 	{
 		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
@@ -50,6 +31,15 @@ namespace emberCore
 		m_callDescriptorSetBindingExpired = false;
 		m_pICallDescriptorSetBinding = Renderer::CreateDrawCallDescriptorSetBinding(pIMaterial);
 		m_callDescriptorSetBindingGeneration = m_pICallDescriptorSetBinding ? m_pICallDescriptorSetBinding->GetGeneration() : 0;
+
+		// Link shadow callProperties:
+		emberCommon::MaterialPass materialPass = material.GetMaterialPass();
+		if (emberCommon::IsSurfaceMaterialPass(materialPass))
+		{
+			ShadowMaterial shadowMaterial = material.GetShadowMaterial();
+			if (shadowMaterial.IsValid())
+				m_pShadowProperties = std::make_unique<CallProperties>(shadowMaterial);
+		}
 	}
 	CallProperties::~CallProperties()
 	{
@@ -66,6 +56,7 @@ namespace emberCore
 		m_callDescriptorSetBindingExpired = other.m_callDescriptorSetBindingExpired;
 		m_callDescriptorSetBindingGeneration = other.m_callDescriptorSetBindingGeneration;
 		m_pICallDescriptorSetBinding = other.m_pICallDescriptorSetBinding;
+		m_pShadowProperties = std::move(other.m_pShadowProperties);
 
 		other.m_ownsICallDescriptorSetBinding = false;
 		other.m_callDescriptorSetBindingExpired = false;
@@ -83,6 +74,7 @@ namespace emberCore
 			m_callDescriptorSetBindingExpired = other.m_callDescriptorSetBindingExpired;
 			m_callDescriptorSetBindingGeneration = other.m_callDescriptorSetBindingGeneration;
 			m_pICallDescriptorSetBinding = other.m_pICallDescriptorSetBinding;
+			m_pShadowProperties = std::move(other.m_pShadowProperties);
 
 			other.m_ownsICallDescriptorSetBinding = false;
 			other.m_callDescriptorSetBindingExpired = false;
@@ -94,7 +86,6 @@ namespace emberCore
 
 
 
-	// Public methods:
 	// Setters:
 	void CallProperties::SetTexture(const std::string& name, Texture& texture)
 	{
@@ -235,6 +226,16 @@ namespace emberCore
 			return true;
 		return false;
 	}
+	bool CallProperties::HasShadowProperties()
+	{
+		return m_pShadowProperties != nullptr && m_pShadowProperties->GetCallInterfaceHandle() != nullptr;
+	}
+	CallProperties& CallProperties::GetShadowProperties()
+	{
+		if (!HasShadowProperties())
+			throw std::runtime_error("CallProperties::GetShadowProperties() failed. Shadow properties are not available.");
+		return *m_pShadowProperties;
+	}
 
 
 
@@ -253,6 +254,13 @@ namespace emberCore
 
 
 	// Private methods:
+	CallProperties::CallProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding)
+	{
+		m_ownsICallDescriptorSetBinding = false;
+		m_callDescriptorSetBindingExpired = false;
+		m_pICallDescriptorSetBinding = pICallDescriptorSetBinding;
+		m_callDescriptorSetBindingGeneration = m_pICallDescriptorSetBinding ? m_pICallDescriptorSetBinding->GetGeneration() : 0;
+	}
 	void CallProperties::ValidateCallDescriptorSetBinding()
 	{
 		if (!m_pICallDescriptorSetBinding)
@@ -265,5 +273,28 @@ namespace emberCore
 		m_ownsICallDescriptorSetBinding = false;
 		m_callDescriptorSetBindingExpired = true;
 		m_callDescriptorSetBindingGeneration = 0;
+	}
+	void CallProperties::SetShadowProperties(CallProperties&& shadowProperties)
+	{
+		if (shadowProperties.GetCallInterfaceHandle() == nullptr)
+		{
+			m_pShadowProperties.reset();
+			return;
+		}
+		m_pShadowProperties = std::make_unique<CallProperties>(std::move(shadowProperties));
+	}
+	emberBackendInterface::IDescriptorSetBinding* CallProperties::GetCallInterfaceHandle()
+	{
+		ValidateCallDescriptorSetBinding();
+		return m_pICallDescriptorSetBinding;
+	}
+	emberBackendInterface::IDescriptorSetBinding* CallProperties::GetValidCallInterfaceHandle()
+	{
+		ValidateCallDescriptorSetBinding();
+		if (m_pICallDescriptorSetBinding)
+			return m_pICallDescriptorSetBinding;
+		if (m_callDescriptorSetBindingExpired)
+			throw std::runtime_error("CallProperties: call descriptor set binding has expired.");
+		throw std::runtime_error("CallProperties: call descriptor set binding not available.");
 	}
 }

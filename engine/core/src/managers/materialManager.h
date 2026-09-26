@@ -42,6 +42,8 @@ namespace emberCore
 
 	private: // Members:
 		static emberBackendInterface::IMaterialManager* s_pIMaterialManager;
+		static emberBackendInterface::IMaterial* s_pIErrorMaterial;
+		static emberBackendInterface::IMaterial* s_pIErrorGizmoMaterial;
 
 	public: // Methods:
 		// Asset loading:

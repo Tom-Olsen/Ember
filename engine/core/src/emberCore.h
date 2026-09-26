@@ -22,6 +22,7 @@
 
 // Renderer/Compute:
 #include "renderer.h"
+#include "drawData.h"
 #include "gizmo.h"
 #include "compute.h"
 

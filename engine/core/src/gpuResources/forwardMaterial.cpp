@@ -63,19 +63,6 @@ namespace emberCore
 		}
 		return &pIMaterial->GetForwardRenderState();
 	}
-	ShadowMaterial ForwardMaterial::GetShadowMaterial() const
-	{
-		if (TryGetInterfaceHandle() == nullptr)
-		{
-			LOG_WARN("ForwardMaterial::GetShadowMaterial() failed. Material is invalid or expired.");
-			return ShadowMaterial();
-		}
-
-		emberCommon::MaterialId shadowMaterialId = MaterialManager::TryGetShadowMaterialIdOfSurfaceMaterial(m_materialId);
-		if (shadowMaterialId.index == emberCommon::invalidMaterialId.index)
-			return ShadowMaterial();
-		return ShadowMaterial{ shadowMaterialId };
-	}
 	int32_t ForwardMaterial::GetRenderQueue() const
 	{
 		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();

@@ -171,7 +171,9 @@ namespace fluidDynamics
 			{
 				SetAttractorPoint(Float2(hit.GetPoint()));
 				Float4x4 localToWorldMatrix = Float4x4::TRS(hit.GetPoint(), Float3x3::identity, Float3(1.0f));
-				CallProperties callProperties = Renderer::DrawMesh(localToWorldMatrix, m_ringMesh, MaterialManager::TryGetMaterial("simpleUnlitMaterial"), false, false);
+				Material ringMaterial = MaterialManager::TryGetMaterial("simpleUnlitMaterial");
+				DrawData drawData(localToWorldMatrix, m_ringMesh, ringMaterial, false, false);
+				CallProperties callProperties = Renderer::DrawMesh(drawData);
 				callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::red);
 				if (EventSystem::MouseHeld(Input::MouseButton::Left))
 					SetAttractorState(1);
@@ -195,7 +197,8 @@ namespace fluidDynamics
 		m_particleMaterial.SetBuffer("densityBuffer", m_tripleData.densityBuffer.GetBuffer(readDataIndex));
 		m_particleMaterial.SetBuffer("normalBuffer", m_tripleData.normalBuffer.GetBuffer(readDataIndex));
 		m_particleMaterial.SetBuffer("curvatureBuffer", m_tripleData.curvatureBuffer.GetBuffer(readDataIndex));
-		Renderer::DrawMeshInstanced(localToWorldMatrix, m_particleCount, m_particleMesh, m_particleMaterial, m_callProperties, false, false);
+		DrawData drawData(localToWorldMatrix, m_particleMesh, m_particleMaterial, m_particleCount, nullptr, false, false);
+		Renderer::DrawMesh(drawData, m_callProperties);
 	}
 
 

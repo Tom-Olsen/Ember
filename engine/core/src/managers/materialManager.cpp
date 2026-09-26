@@ -17,6 +17,8 @@ namespace emberCore
 {
 	// Static members:
 	emberBackendInterface::IMaterialManager* MaterialManager::s_pIMaterialManager = nullptr;
+	emberBackendInterface::IMaterial* MaterialManager::s_pIErrorMaterial = nullptr;
+	emberBackendInterface::IMaterial* MaterialManager::s_pIErrorGizmoMaterial = nullptr;
 
 
 
@@ -231,9 +233,17 @@ namespace emberCore
 		// Load engines default materials:
 		LoadMaterialAssets(std::filesystem::path(ENGINE_SHADERS_DIR) / "materialAssets");
 		s_pIMaterialManager->InitializeDefaultMaterials();
+		s_pIErrorMaterial = TryGetMaterialInterface(TryGetMaterialId("errorMaterial"));
+		if (s_pIErrorMaterial == nullptr)
+			throw std::runtime_error("MaterialManager::Init() failed. errorMaterial is missing.");
+		s_pIErrorGizmoMaterial = TryGetMaterialInterface(TryGetMaterialId("errorGizmoMaterial"));
+		if (s_pIErrorGizmoMaterial == nullptr || s_pIErrorGizmoMaterial->GetMaterialPass() != emberCommon::MaterialPass::gizmo)
+			throw std::runtime_error("MaterialManager::Init() failed. errorGizmoMaterial is missing or is not a gizmo material.");
 	}
 	void MaterialManager::Clear()
 	{
+		s_pIErrorMaterial = nullptr;
+		s_pIErrorGizmoMaterial = nullptr;
 		s_pIMaterialManager = nullptr;
 	}
 

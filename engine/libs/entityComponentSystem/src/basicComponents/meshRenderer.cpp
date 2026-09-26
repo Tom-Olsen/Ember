@@ -15,6 +15,7 @@ namespace emberEcs
 	{
 		m_castShadows = true;
 		m_receiveShadows = true;
+		m_cullMode = emberCommon::CullMode::materialDefault;
         m_drawLocalBounds = false;
         m_drawWorldBounds = false;
 
@@ -40,6 +41,10 @@ namespace emberEcs
 	void MeshRenderer::SetReceiveShadows(bool receiveShadows)
 	{
 		m_receiveShadows = receiveShadows;
+	}
+	void MeshRenderer::SetCullMode(emberCommon::CullMode cullMode)
+	{
+		m_cullMode = cullMode;
 	}
 	void MeshRenderer::SetMesh(Mesh& mesh)
 	{
@@ -89,6 +94,10 @@ namespace emberEcs
 	{
 		return m_receiveShadows;
 	}
+	emberCommon::CullMode MeshRenderer::GetCullMode() const
+	{
+		return m_cullMode;
+	}
 	Mesh& MeshRenderer::GetMesh()
 	{
 		return *m_pMesh;
@@ -113,12 +122,13 @@ namespace emberEcs
 	{
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
 		if (m_pMesh != nullptr)
-        {
-            Renderer::DrawMesh(localToWorldMatrix, *m_pMesh, m_material, m_callProperties, m_receiveShadows, m_castShadows);
-            if (m_drawLocalBounds)
-                Gizmo::DrawBounds(localToWorldMatrix, GetLocalBounds());
-            if (m_drawWorldBounds)
-                Gizmo::DrawBounds(Float4x4::identity, GetWorldBounds());
-        }
+		{
+			DrawData drawData(localToWorldMatrix, *m_pMesh, m_material, m_receiveShadows, m_castShadows, m_cullMode);
+			Renderer::DrawMesh(drawData, m_callProperties);
+			if (m_drawLocalBounds)
+				Gizmo::DrawBounds(localToWorldMatrix, GetLocalBounds());
+			if (m_drawWorldBounds)
+				Gizmo::DrawBounds(Float4x4::identity, GetWorldBounds());
+		}
 	}
 }

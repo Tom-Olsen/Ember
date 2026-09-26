@@ -1,0 +1,25 @@
+{
+    "materialName": "errorGizmoMaterial",
+    "materialShaderName": "errorGizmoShader",
+    "materialPass": "gizmo",
+    "renderMode": "opaque",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/vertex/errorGizmo.vert.hlsl",
+            "binaryPath": "../bin/errorGizmo.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/fragment/errorGizmo.frag.hlsl",
+            "binaryPath": "../bin/errorGizmo.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": false,
+        "isMutable": false
+    }
+}

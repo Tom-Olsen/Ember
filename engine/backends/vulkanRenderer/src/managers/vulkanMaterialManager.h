@@ -139,7 +139,6 @@ namespace vulkanRendererBackend
 		emberCommon::MaterialId FindMaterialId(const std::string& name) const;
 		Material* GetMaterial(const std::string& name) const;
 		bool IsMaterialShaderInUse(MaterialShaderId materialShaderId) const;
-		bool IsSurfaceMaterialPass(emberCommon::MaterialPass materialPass) const;
 		const MaterialShaderId* TryGetMaterialShaderId(emberCommon::MaterialId materialId) const;
 		void SetAccessRights(emberCommon::MaterialId materialId, const emberCommon::ResourceAccessRights& accessRights);
 	};

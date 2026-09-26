@@ -16,6 +16,4 @@ namespace vulkanRendererBackend
 	public: // Methods:
 		void Record(const FrameContext& frameContext);
 	};
-
-
 }

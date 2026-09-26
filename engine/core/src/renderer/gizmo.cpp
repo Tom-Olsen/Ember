@@ -41,7 +41,8 @@ namespace emberCore
 	{
 		if (s_cullMode == emberCommon::CullMode::count)
 			s_cullMode = s_material.GetCullMode();
-		CallProperties callProperties = Renderer::DrawGizmo(localToWorldMatrix, mesh, s_material, s_cullMode);
+		DrawData drawData(localToWorldMatrix, mesh, s_material, false, false, s_cullMode);
+		CallProperties callProperties = Renderer::DrawGizmo(drawData);
 		callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", s_color);
 		callProperties.SetValue("SurfaceProperties", "surface_isLit", s_isLit);
 	}

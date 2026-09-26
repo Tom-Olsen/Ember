@@ -197,7 +197,9 @@ namespace fluidDynamics
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
-			CallProperties callProperties = Renderer::DrawMesh(attractorLocalToWorld, m_attractorSphereMesh, MaterialManager::TryGetMaterial("transparentMaterial"), false, false);
+			Material attractorMaterial = MaterialManager::TryGetMaterial("transparentMaterial");
+			DrawData drawData(attractorLocalToWorld, m_attractorSphereMesh, attractorMaterial, false, false);
+			CallProperties callProperties = Renderer::DrawMesh(drawData);
 			callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
 		if (m_renderParticles || m_renderVolumetricDensity)
@@ -216,7 +218,8 @@ namespace fluidDynamics
 				ShadowMaterial shadowMaterial = m_particleMaterial.GetShadowMaterial();
 				if (shadowMaterial.IsValid())
 					shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
-				Renderer::DrawMeshInstanced(localToWorld, m_particleCount, m_particleMesh, m_particleMaterial, m_callProperties, true, true);
+				DrawData drawData(localToWorld, m_particleMesh, m_particleMaterial, m_particleCount, nullptr, true, true);
+				Renderer::DrawMesh(drawData, m_callProperties);
 			}
 
 			// Volumetric density rendering:
@@ -256,7 +259,8 @@ namespace fluidDynamics
 					* Float4x4::Translate(fluidBounds.localBounds.center)
 					* fluidBounds.GetRotation4x4()
 					* Float4x4::Scale(fluidBounds.localBounds.GetSize());
-				Renderer::DrawMesh(densityCubeLocalToWorld, m_volumetricDensityCube, m_volumeRaycastMaterial, false, false);
+				DrawData drawData(densityCubeLocalToWorld, m_volumetricDensityCube, m_volumeRaycastMaterial, false, false);
+				Renderer::DrawMesh(drawData);
 			}
 		}
 	}

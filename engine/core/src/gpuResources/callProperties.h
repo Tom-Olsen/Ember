@@ -2,6 +2,7 @@
 #include "emberCoreExport.h"
 #include "emberMath.h"
 #include <cstdint>
+#include <memory>
 #include <string>
 
 
@@ -36,13 +37,7 @@ namespace emberCore
 		bool m_callDescriptorSetBindingExpired;
 		uint64_t m_callDescriptorSetBindingGeneration;
 		emberBackendInterface::IDescriptorSetBinding* m_pICallDescriptorSetBinding; // conditional ownership, depending on usecase.
-		emberBackendInterface::IDescriptorSetBinding* GetCallInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* GetValidCallInterfaceHandle();
-
-	private: // Methods:
-		// Pooling constructor:
-		// Wraps non-owned call descriptor set bindings supplied by Renderer/Compute call pools.
-		CallProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding);
+		std::unique_ptr<CallProperties> m_pShadowProperties;	// callProperties of associated shadow draw call.
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -98,12 +93,20 @@ namespace emberCore
 
 		// Getters
 		bool HasBinding(const std::string& name);
+		bool HasShadowProperties();
+		CallProperties& GetShadowProperties();
 
 		// Debugging:
 		void Print() const;
 		void PrintMaps() const;
 
 	private: // Methods:
+		// Pooling constructor:
+		// Wraps non-owned call descriptor set bindings supplied by Renderer/Compute call pools.
+		CallProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding);
 		void ValidateCallDescriptorSetBinding();
+		void SetShadowProperties(CallProperties&& shadowProperties);
+		emberBackendInterface::IDescriptorSetBinding* GetCallInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* GetValidCallInterfaceHandle();
 	};
 }

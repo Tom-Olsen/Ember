@@ -20,6 +20,7 @@ namespace vulkanRendererBackend
 		assert(pMaterial != nullptr);
 		assert(descriptorSetBindingHandle.IsValid());
 		assert(cullMode != emberCommon::CullMode::count);
+		assert(cullMode != emberCommon::CullMode::materialDefault);
 		assert(pMaterial->GetMaterialPass() == emberCommon::MaterialPass::gizmo);
 	}
 	GizmoDrawCall::~GizmoDrawCall()

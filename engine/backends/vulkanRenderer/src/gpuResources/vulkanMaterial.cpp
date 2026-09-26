@@ -1,6 +1,7 @@
 #include "vulkanMaterial.h"
 #include "descriptorSetMacros.h"
 #include "vulkanDescriptorSetBinding.h"
+#include <cassert>
 #include <stdexcept>
 #include <utility>
 
@@ -190,6 +191,8 @@ namespace vulkanRendererBackend
 	}
 	void Material::SetCullMode(emberCommon::CullMode cullMode)
 	{
+		assert(cullMode != emberCommon::CullMode::count);
+		assert(cullMode != emberCommon::CullMode::materialDefault);
 		switch (GetMaterialPass())
 		{
 			case emberCommon::MaterialPass::gizmo:

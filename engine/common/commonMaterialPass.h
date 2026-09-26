@@ -32,4 +32,8 @@ namespace emberCommon
 			default: return "unknown";
 		}
 	}
+	inline constexpr bool IsSurfaceMaterialPass(MaterialPass materialPass)
+	{
+		return materialPass == MaterialPass::deferredGeometry || materialPass == MaterialPass::forward;
+	}
 }

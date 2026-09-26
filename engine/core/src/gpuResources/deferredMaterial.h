@@ -39,7 +39,6 @@ namespace emberCore
 
 		// Getters:
 		const emberCommon::DeferredGeometryRenderState* GetRenderState() const;
-		ShadowMaterial GetShadowMaterial() const;
 		int32_t GetRenderQueue() const;
 
 		// Setters:

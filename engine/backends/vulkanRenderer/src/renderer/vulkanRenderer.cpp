@@ -309,6 +309,8 @@ namespace vulkanRendererBackend
 	void Renderer::DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
 	{
 		// Record static draw call.
+		assert(cullMode != emberCommon::CullMode::count);
+		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
@@ -336,12 +338,15 @@ namespace vulkanRendererBackend
 				m_frameRenderData[Context::GetFrameIndex()].forwardDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, receiveShadows, instanceCount);
 				return;
 			default:
-				throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMesh(...) failed. Material is not a surface material.");
+				LOG_WARN("vulkanRendererBackend::Renderer::DrawMesh(...) skipped none-surface material.");
+				return;
 		}
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
 	{
 		// Record dynamic draw call.
+		assert(cullMode != emberCommon::CullMode::count);
+		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawMesh(...) failed. pMesh is nullptr.");
@@ -369,7 +374,8 @@ namespace vulkanRendererBackend
 				return descriptorSetBindingHandle.Get();
 			}
 			default:
-				throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMesh(...) failed. Material is not a surface material.");
+				LOG_WARN("vulkanRendererBackend::Renderer::DrawMesh(...) skipped none-surface material.");
+				return nullptr;
 		}
 	}
 	void Renderer::DrawMeshShadow(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, uint32_t instanceCount)
@@ -392,7 +398,10 @@ namespace vulkanRendererBackend
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
-			throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMeshShadow(...) failed. Material is not a shadow material.");
+		{
+			LOG_WARN("vulkanRendererBackend::Renderer::DrawMeshShadow(...) failed. Material is not a shadow material.");
+			return;
+		}
 		DescriptorSetBindingHandle descriptorSetBindingHandle(static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding));
 		m_frameRenderData[Context::GetFrameIndex()].shadowDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
 	}
@@ -411,7 +420,10 @@ namespace vulkanRendererBackend
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
-			throw std::runtime_error("vulkanRendererBackend::Renderer::DrawMeshShadow(...) failed. Material is not a shadow material.");
+		{
+			LOG_WARN("vulkanRendererBackend::Renderer::DrawMeshShadow(...) failed. Material is not a shadow material.");
+			return nullptr;
+		}
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
 		m_frameRenderData[Context::GetFrameIndex()].shadowDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, instanceCount);
 		return descriptorSetBindingHandle.Get();
@@ -419,6 +431,8 @@ namespace vulkanRendererBackend
 	void Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record static gizmo draw call.
+		assert(cullMode != emberCommon::CullMode::count);
+		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawGizmo(...) failed. pMesh is nullptr.");
@@ -436,12 +450,19 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::gizmo)
+		{
+			LOG_WARN("vulkanRendererBackend::Renderer::DrawGizmo(...) skipped non-gizmo material.");
+			return;
+		}
 		DescriptorSetBindingHandle descriptorSetBindingHandle(static_cast<DescriptorSetBinding*>(pICallDescriptorSetBinding));
 		m_frameRenderData[Context::GetFrameIndex()].gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(const Float4x4& localToWorldMatrix, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
 		// Record dynamic gizmo draw call.
+		assert(cullMode != emberCommon::CullMode::count);
+		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
 		{
 			LOG_ERROR("vulkanRendererBackend::Renderer::DrawGizmo(...) failed. pMesh is nullptr.");
@@ -454,6 +475,11 @@ namespace vulkanRendererBackend
 		}
 
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
+		if (pMaterial->GetMaterialPass() != emberCommon::MaterialPass::gizmo)
+		{
+			LOG_WARN("vulkanRendererBackend::Renderer::DrawGizmo(...) skipped non-gizmo material.");
+			return nullptr;
+		}
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
 		m_frameRenderData[Context::GetFrameIndex()].gizmoDrawCalls.emplace_back(localToWorldMatrix, static_cast<Mesh*>(pIMesh), pMaterial, descriptorSetBindingHandle, cullMode, instanceCount);
 		return descriptorSetBindingHandle.Get();

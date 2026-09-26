@@ -66,7 +66,7 @@ namespace vulkanRendererBackend
 		// Link default shadow material to all existing surface materials:
 		for (MaterialSlot& slot : m_materialSlots)
 		{
-			if (slot.managedMaterial.pMaterial != nullptr && IsSurfaceMaterialPass(slot.managedMaterial.pMaterial->GetMaterialPass()) && slot.managedMaterial.shadowMaterialId.index == emberCommon::invalidMaterialId.index)
+			if (slot.managedMaterial.pMaterial != nullptr && emberCommon::IsSurfaceMaterialPass(slot.managedMaterial.pMaterial->GetMaterialPass()) && slot.managedMaterial.shadowMaterialId.index == emberCommon::invalidMaterialId.index)
 				slot.managedMaterial.shadowMaterialId = m_defaultShadowMaterialId;
 		}
 
@@ -393,7 +393,7 @@ namespace vulkanRendererBackend
 	emberCommon::MaterialId MaterialManager::TryGetShadowMaterialId(emberCommon::MaterialId surfaceMaterialId)
 	{
 		Material* pSurfaceMaterial = static_cast<Material*>(TryGetMaterial(surfaceMaterialId));
-		if (pSurfaceMaterial == nullptr || !IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
+		if (pSurfaceMaterial == nullptr || !emberCommon::IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
 			return emberCommon::invalidMaterialId;
 
 		emberCommon::MaterialId& shadowMaterialId = m_materialSlots[surfaceMaterialId.index].managedMaterial.shadowMaterialId;
@@ -435,7 +435,7 @@ namespace vulkanRendererBackend
 		Material* pSurfaceMaterial = static_cast<Material*>(TryGetMaterial(surfaceMaterialId));
 		if (pSurfaceMaterial == nullptr)
 			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Surface material is invalid or expired.");
-		if (!IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
+		if (!emberCommon::IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
 			throw std::runtime_error("MaterialManager::SetShadowMaterial(...) failed. Material is not a deferred or forward material.");
 
 		Material* pShadowMaterial = static_cast<Material*>(TryGetMaterial(shadowMaterialId));
@@ -451,7 +451,7 @@ namespace vulkanRendererBackend
 		Material* pSurfaceMaterial = static_cast<Material*>(TryGetMaterial(surfaceMaterialId));
 		if (pSurfaceMaterial == nullptr)
 			throw std::runtime_error("MaterialManager::ResetShadowMaterial(...) failed. Surface material is invalid or expired.");
-		if (!IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
+		if (!emberCommon::IsSurfaceMaterialPass(pSurfaceMaterial->GetMaterialPass()))
 			throw std::runtime_error("MaterialManager::ResetShadowMaterial(...) failed. Material is not a deferred or forward material.");
 
 		m_materialSlots[surfaceMaterialId.index].managedMaterial.shadowMaterialId = m_defaultShadowMaterialId;
@@ -639,7 +639,7 @@ namespace vulkanRendererBackend
 	{
 		if (pMaterial == nullptr)
 			throw std::runtime_error("MaterialManager::AddMaterial(...) failed. pMaterial is nullptr.");
-		emberCommon::MaterialId shadowMaterialId = IsSurfaceMaterialPass(pMaterial->GetMaterialPass()) ? m_defaultShadowMaterialId : emberCommon::invalidMaterialId;
+		emberCommon::MaterialId shadowMaterialId = emberCommon::IsSurfaceMaterialPass(pMaterial->GetMaterialPass()) ? m_defaultShadowMaterialId : emberCommon::invalidMaterialId;
 
 		emberCommon::MaterialId materialId;
 		if (m_freeMaterialIds.empty())
@@ -698,10 +698,6 @@ namespace vulkanRendererBackend
 			if (slot.managedMaterial.pMaterial != nullptr && slot.managedMaterial.materialShaderId.index == materialShaderId.index && slot.managedMaterial.materialShaderId.generation == materialShaderId.generation)
 				return true;
 		return false;
-	}
-	bool MaterialManager::IsSurfaceMaterialPass(emberCommon::MaterialPass materialPass) const
-	{
-		return materialPass == emberCommon::MaterialPass::deferredGeometry || materialPass == emberCommon::MaterialPass::forward;
 	}
 	const MaterialShaderId* MaterialManager::TryGetMaterialShaderId(emberCommon::MaterialId materialId) const
 	{

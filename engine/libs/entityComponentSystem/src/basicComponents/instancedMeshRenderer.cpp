@@ -14,6 +14,7 @@ namespace emberEcs
 		m_instanceCount = 1;
 		m_castShadows = true;
 		m_receiveShadows = true;
+		m_cullMode = emberCommon::CullMode::materialDefault;
 
 		m_pMesh = nullptr;
 		m_material = MaterialManager::TryGetMaterial("errorMaterial");
@@ -39,6 +40,10 @@ namespace emberEcs
 	void InstancedMeshRenderer::SetReceiveShadows(bool receiveShadows)
 	{
 		m_receiveShadows = receiveShadows;
+	}
+	void InstancedMeshRenderer::SetCullMode(emberCommon::CullMode cullMode)
+	{
+		m_cullMode = cullMode;
 	}
 	void InstancedMeshRenderer::SetMesh(Mesh& mesh)
 	{
@@ -72,6 +77,10 @@ namespace emberEcs
 	{
 		return m_receiveShadows;
 	}
+	emberCommon::CullMode InstancedMeshRenderer::GetCullMode() const
+	{
+		return m_cullMode;
+	}
 	Mesh& InstancedMeshRenderer::GetMesh()
 	{
 		return *m_pMesh;
@@ -88,14 +97,12 @@ namespace emberEcs
 	{
 		return m_callProperties;
 	}
-
-
-
 	// Overrides:
 	void InstancedMeshRenderer::Update()
 	{
 		uint32_t instanceCount = math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-		Renderer::DrawMeshInstanced(localToWorldMatrix, instanceCount, *m_pInstanceBuffer, *m_pMesh, m_material, m_callProperties, m_receiveShadows, m_castShadows);
+		DrawData drawData(localToWorldMatrix, *m_pMesh, m_material, instanceCount, m_pInstanceBuffer, m_receiveShadows, m_castShadows, m_cullMode);
+		Renderer::DrawMesh(drawData, m_callProperties);
 	}
 }

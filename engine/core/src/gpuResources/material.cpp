@@ -2,6 +2,7 @@
 #include "iMaterial.h"
 #include "logger.h"
 #include "materialManager.h"
+#include "shadowMaterial.h"
 #include <stdexcept>
 
 
@@ -52,7 +53,7 @@ namespace emberCore
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("Material::GetMaterialPass() failed. Material is invalid or expired.");
-			return emberCommon::MaterialPass::count;
+			pIMaterial = MaterialManager::s_pIErrorMaterial;
 		}
 		return pIMaterial->GetMaterialPass();
 	}
@@ -62,9 +63,16 @@ namespace emberCore
 		if (pIMaterial == nullptr)
 		{
 			LOG_WARN("Material::GetCullMode() failed. Material is invalid or expired.");
-			return emberCommon::CullMode::count;
+			pIMaterial = MaterialManager::s_pIErrorMaterial;
 		}
 		return pIMaterial->GetCullMode();
+	}
+	ShadowMaterial Material::GetShadowMaterial() const
+	{
+		emberCommon::MaterialId shadowMaterialId = MaterialManager::TryGetShadowMaterialIdOfSurfaceMaterial(m_materialId);
+		if (shadowMaterialId.index == emberCommon::invalidMaterialId.index)
+			return ShadowMaterial();
+		return ShadowMaterial{ shadowMaterialId };
 	}
 	bool Material::IsValid() const
 	{
@@ -78,7 +86,10 @@ namespace emberCore
 	{
 		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr)
-			throw std::runtime_error("Material::Print() failed. Material is invalid or expired.");
+		{
+			LOG_WARN("Material::Print() failed. Material is invalid or expired.");
+			return;
+		}
 		pIMaterial->Print();
 	}
 
@@ -98,7 +109,10 @@ namespace emberCore
 	{
 		emberBackendInterface::IMaterial* pIMaterial = TryGetInterfaceHandle();
 		if (pIMaterial == nullptr || !MaterialManager::IsMaterialMutable(m_materialId))
-			return nullptr;
+		{
+			LOG_WARN("Material::TryGetMutableInterfaceHandle() failed. Material is invalid or expired.");
+			pIMaterial = MaterialManager::s_pIErrorMaterial;
+		}
 		return pIMaterial;
 	}
 	emberBackendInterface::IDescriptorSetBinding* Material::TryGetShaderDescriptorSetBinding() const

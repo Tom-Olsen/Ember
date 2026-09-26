@@ -60,6 +60,7 @@ namespace emberCore
 		const std::string& GetName() const;
 		emberCommon::MaterialPass GetMaterialPass() const;
 		emberCommon::CullMode GetCullMode() const;
+		ShadowMaterial GetShadowMaterial() const;
 		bool IsValid() const;
 
 		// Debugging:

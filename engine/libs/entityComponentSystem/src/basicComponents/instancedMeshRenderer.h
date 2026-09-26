@@ -1,9 +1,10 @@
 #pragma once
 #include "buffer.h"
 #include "callProperties.h"
+#include "commonCullMode.h"
 #include "component.h"
-#include "mesh.h"
 #include "material.h"
+#include "mesh.h"
 #include <cstdint>
 
 
@@ -16,6 +17,7 @@ namespace emberEcs
 		uint32_t m_instanceCount;
 		bool m_castShadows;
 		bool m_receiveShadows;
+		emberCommon::CullMode m_cullMode;
 		emberCore::Mesh* m_pMesh;
 		emberCore::Material m_material;
 		emberCore::Buffer* m_pInstanceBuffer;
@@ -29,6 +31,7 @@ namespace emberEcs
 		void SetInstanceCount(uint32_t instanceCount);
 		void SetCastShadows(bool castShadows);
 		void SetReceiveShadows(bool receiveShadows);
+		void SetCullMode(emberCommon::CullMode cullMode);
 		void SetMesh(emberCore::Mesh& mesh);
 		void SetMaterial(const emberCore::Material& material);
 		void SetInstanceBuffer(emberCore::Buffer& instanceBuffer);
@@ -37,6 +40,7 @@ namespace emberEcs
 		uint32_t GetInstanceCount() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
+		emberCommon::CullMode GetCullMode() const;
 		emberCore::Mesh& GetMesh();
 		emberCore::Material& GetMaterial();
 		emberCore::Buffer& GetInstanceBuffer();
