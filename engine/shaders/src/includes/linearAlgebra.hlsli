@@ -31,7 +31,7 @@ float3 LinAlg_GetOrhtogonalVector(float3 v)
     }
     return result;
 }
-float LinAlg_Angle(float3 a, float3 b)
+float LinAlg_AngleRadians(float3 a, float3 b)
 {
     float epsilon = 1e-4f;
     float lengths = length(a) * length(b);
@@ -86,29 +86,29 @@ float4x4 LinAlg_Translate(float3 translation)
      0.0f, 0.0f, 1.0f, translation.z,
      0.0f, 0.0f, 0.0f,          1.0f);
 }
-float3x3 LinAlg_RotateX3x3(float angle)
+float3x3 LinAlg_RotateX3x3(float angleRadians)
 {
     float s, c;
-    sincos(angle, s, c);
+    sincos(angleRadians, s, c);
     return float3x3
 	(1.0f, 0.0f, 0.0f,
 	 0.0f,    c,   -s,
 	 0.0f,    s,    c);
 }
-float4x4 LinAlg_RotateX4x4(float angle)
+float4x4 LinAlg_RotateX4x4(float angleRadians)
 {
     float s, c;
-    sincos(angle, s, c);
+    sincos(angleRadians, s, c);
     return float4x4
 	(1.0f, 0.0f, 0.0f, 0.0f,
 	 0.0f,    c,   -s, 0.0f,
 	 0.0f,    s,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4x4 LinAlg_Rotate4x4(float3 axis, float angle)
+float4x4 LinAlg_Rotate4x4(float3 axis, float angleRadians)
 {
-    float c = cos(angle);
-    float s = sin(angle);
+    float c = cos(angleRadians);
+    float s = sin(angleRadians);
     float t = 1.0f - c;
     float3 normalizedAxis = normalize(axis);
     float x = normalizedAxis.x;
@@ -131,8 +131,8 @@ float4x4 LinAlg_RotateFromTo(float3 from, float3 to)
     if (LinAlg_IsEpsilonEqual(f, -t))
         return LinAlg_Rotate4x4(LinAlg_GetOrhtogonalVector(f), math_PI);
     float3 axis = cross(from, to); // normalization not needed, as Rotate(...) will normalize it
-    float angle = LinAlg_Angle(from, to);
-    return LinAlg_Rotate4x4(axis, angle);
+    float angleRadians = LinAlg_AngleRadians(from, to);
+    return LinAlg_Rotate4x4(axis, angleRadians);
 }
 float4x4 LinAlg_Scale(float3 scale)
 {

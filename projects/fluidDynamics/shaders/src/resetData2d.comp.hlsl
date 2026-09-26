@@ -31,7 +31,7 @@ RWStructuredBuffer<float2> tempBuffer7 : register(u217, CALL_SET);
 [numthreads(128, 1, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-    float phi = math_PI * (sqrt(5.0f) - 1.0f);
+    float goldenAngleRadians = math_PI * (sqrt(5.0f) - 1.0f);
     
     uint index = threadID.x;
     if (index < pc.threadCount.x)
@@ -44,8 +44,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
         sortPermutationBuffer[index] = -1;
         
         float r = index / (pc.threadCount.x - 1.0f) * initialDistributionRadius;
-        float theta = phi * index;
-        positionBuffer[index] = r * float2(cos(theta), sin(theta));
+        float angleRadians = goldenAngleRadians * index;
+        positionBuffer[index] = r * float2(cos(angleRadians), sin(angleRadians));
         
         velocityBuffer[index] = float2(0, 0);
         densityBuffer[index] = 0.0f;

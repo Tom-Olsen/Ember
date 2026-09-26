@@ -52,8 +52,8 @@ float NearPressure(float nearDensity, float pressureMultiplier, float nearPressu
 }
 float2 OverlapDirection(uint index, uint otherIndex, float time)
 {
-    float phi = 2.0f * math_PI * Random01(index, otherIndex, time);
-    float2 dir = float2(cos(phi), sin(phi));
+    float azimuthRadians = 2.0f * math_PI * Random01(index, otherIndex, time);
+    float2 dir = float2(cos(azimuthRadians), sin(azimuthRadians));
     return (index < otherIndex) ? dir : -dir;
 }
 
