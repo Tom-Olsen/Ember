@@ -5,8 +5,12 @@
 
 // Include all math headers:
 // Basic types:
+#include "degrees.h"
+#include "eulerDegrees.h"
+#include "eulerRadians.h"
 #include "int2.h"
 #include "int3.h"
+#include "radians.h"
 #include "uint2.h"
 #include "uint3.h"
 #include "float2.h"
