@@ -96,21 +96,21 @@ TEST(Float3x3, IsEpsilonZero)
 // Static math operations:
 TEST(Float3x3, RotateX)
 {
-	Float3x3 rotMatrix = Float3x3::RotateX(math::pi2);
+	Float3x3 rotMatrix = Float3x3::RotateX(Radians(math::pi2));
 	Float3 v0 = Float3(0.0f, 1.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float3(0.0f, 0.0f, 1.0f)));
 }
 TEST(Float3x3, RotateY)
 {
-	Float3x3 rotMatrix = Float3x3::RotateY(math::pi2);
+	Float3x3 rotMatrix = Float3x3::RotateY(Radians(math::pi2));
 	Float3 v0 = Float3(1.0f, 0.0f, 0.0f);
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float3(0.0f, 0.0f, -1.0f)));
 }
 TEST(Float3x3, RotateZ)
 {
-	Float3x3 rotMatrix = Float3x3::RotateX(math::pi2);
+	Float3x3 rotMatrix = Float3x3::RotateX(Radians(math::pi2));
 	Float3 v0 = Float3(0.0f, 0.0f, 1.0f);
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float3(0.0f, -1.0f, 0.0f)));
@@ -118,7 +118,7 @@ TEST(Float3x3, RotateZ)
 TEST(Float3x3, RotateAroundAxis)
 {
 	Float3 axis = Float3(1.0f, 1.0f, 0.0f);
-	Float3x3 rotMatrix = Float3x3::Rotate(axis, math::pi);
+	Float3x3 rotMatrix = Float3x3::Rotate(axis, Radians(math::pi));
 	Float3 v0 = Float3::right;
 	Float3 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float3::forward));

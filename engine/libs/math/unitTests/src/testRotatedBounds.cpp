@@ -7,7 +7,7 @@
 TEST(RotatedBounds, Contains)
 {
 	Bounds localBounds(Float3(10.0f, 0.0f, 0.0f), Float3::one);
-	RotatedBounds bounds(localBounds, Float3x3::RotateZ(math::pi2));
+	RotatedBounds bounds(localBounds, Float3x3::RotateZ(Radians(math::pi2)));
 	Float3 inside = Float3(10.0f, 0.5f, 0.0f);
 	Float3 outside = Float3(10.0f, 1.5f, 0.0f);
 	EXPECT_TRUE(bounds.Contains(inside));
@@ -16,7 +16,7 @@ TEST(RotatedBounds, Contains)
 TEST(RotatedBounds, ClosestPoint)
 {
 	Bounds localBounds(Float3(10.0f, 0.0f, 0.0f), Float3::one);
-	RotatedBounds bounds(localBounds, Float3x3::RotateZ(math::pi2));
+	RotatedBounds bounds(localBounds, Float3x3::RotateZ(Radians(math::pi2)));
 	Float3 point = Float3(10.0f, 2.0f, 0.0f);
 	Float3 expected = Float3(10.0f, 1.0f, 0.0f);
 	Float3 closestPoint = bounds.ClosestPoint(point);
@@ -25,7 +25,7 @@ TEST(RotatedBounds, ClosestPoint)
 TEST(RotatedBounds, GetCorners)
 {
 	Bounds localBounds(Float3(10.0f, 0.0f, 0.0f), Float3::one);
-	RotatedBounds bounds(localBounds, Float3x3::RotateZ(math::pi2));
+	RotatedBounds bounds(localBounds, Float3x3::RotateZ(Radians(math::pi2)));
 	std::array<Float3, 8> corners = bounds.GetCorners();
 	for (uint32_t i = 0; i < corners.size(); i++)
 		EXPECT_TRUE(bounds.Contains(corners[i]));
@@ -34,7 +34,7 @@ TEST(RotatedBounds, GetCorners)
 TEST(RotatedBounds, GetWorldBounds)
 {
 	Bounds localBounds(Float3(10.0f, 0.0f, 0.0f), Float3(1.0f, 2.0f, 3.0f));
-	RotatedBounds bounds(localBounds, Float3x3::RotateZ(math::pi2));
+	RotatedBounds bounds(localBounds, Float3x3::RotateZ(Radians(math::pi2)));
 	Bounds worldBounds = bounds.GetWorldBounds();
 	std::array<Float3, 8> corners = bounds.GetCorners();
 	for (const Float3& corner : corners)
@@ -45,7 +45,7 @@ TEST(RotatedBounds, GetWorldBounds)
 TEST(RotatedBounds, IntersectRay)
 {
 	Bounds localBounds(Float3(10.0f, 0.0f, 0.0f), Float3::one);
-	RotatedBounds bounds(localBounds, Float3x3::RotateZ(math::pi2));
+	RotatedBounds bounds(localBounds, Float3x3::RotateZ(Radians(math::pi2)));
 	Ray ray(Float3(10.0f, 2.0f, 0.0f), Float3(0.0f, -1.0f, 0.0f));
 	RayHit hit = bounds.IntersectRay(ray);
 	ASSERT_TRUE(hit.GetHit());

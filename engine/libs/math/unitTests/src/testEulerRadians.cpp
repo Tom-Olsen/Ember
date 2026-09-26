@@ -68,6 +68,21 @@ TEST(EulerRadians, GetComponents)
 
 
 
+// Arithmetic:
+TEST(EulerRadians, OperatorsScalar)
+{
+	EulerRadians angles(0.5f, 1.0f, 1.5f);
+	EXPECT_EQ(angles * 2.0f, EulerRadians(1.0f, 2.0f, 3.0f));
+	EXPECT_EQ(2.0f * angles, EulerRadians(1.0f, 2.0f, 3.0f));
+	EXPECT_EQ(angles / 0.5f, EulerRadians(1.0f, 2.0f, 3.0f));
+	angles *= 2.0f;
+	EXPECT_EQ(angles, EulerRadians(1.0f, 2.0f, 3.0f));
+	angles /= 4.0f;
+	EXPECT_EQ(angles, EulerRadians(0.25f, 0.5f, 0.75f));
+}
+
+
+
 // Comparison:
 TEST(EulerRadians, IsEpsilonEqual)
 {

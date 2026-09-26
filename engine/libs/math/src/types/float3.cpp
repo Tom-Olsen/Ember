@@ -22,7 +22,7 @@ namespace emberMath
 	Float3::Float3(const Int3& xyz) : x((float)xyz.x), y((float)xyz.y), z((float)xyz.z) {}
 	Float3::Float3(const Uint3& xyz) : x((float)xyz.x), y((float)xyz.y), z((float)xyz.z) {}
 	Float3::Float3(const Float4& xyz) : x(xyz.x), y(xyz.y), z(xyz.z) {}
-	Float3 Float3::Direction(float theta, float phi)
+	Float3 Float3::Direction(Radians theta, Radians phi)
 	{
 		float st = math::Sin(theta);
 		float ct = math::Cos(theta);
@@ -42,17 +42,17 @@ namespace emberMath
 	{
 		return math::Sqrt(LengthSq());
 	}
-	float Float3::Theta() const
+	Radians Float3::Theta() const
 	{
 		return math::Atan2(math::Sqrt(x * x + y * y), z);
 	}
-	float Float3::Phi() const
+	Radians Float3::Phi() const
 	{
 		return math::Atan2(y, x);
 	}
-	Float2 Float3::Angles() const
+	std::pair<Radians, Radians> Float3::Angles() const
 	{
-		return Float2(Theta(), Phi());
+		return {Theta(), Phi()};
 	}
 	Float3 Float3::Normalize() const
 	{
@@ -61,14 +61,14 @@ namespace emberMath
 			return Float3(0.0f);
 		return Float3(x / length, y / length, z / length);
 	}
-	Float3 Float3::Rotate(float theta, float phi) const
+	Float3 Float3::Rotate(Radians theta, Radians phi) const
 	{
 		float length = Length();
 		phi += Phi();	// no need for clamping due to periodicity
 		theta += Theta();
-		if (theta > math::pi)
-			theta = 2.0f * math::pi - theta;
-		else if (theta < 0.0f)
+		if (theta > Radians(math::pi))
+			theta = Radians(2.0f * math::pi) - theta;
+		else if (theta < Radians(0.0f))
 			theta = -theta;
 		return length * Float3::Direction(theta, phi);
 	}
@@ -116,11 +116,11 @@ namespace emberMath
 	{
 		return (a - b).Length();
 	}
-	float Float3::Angle(const Float3& a, const Float3& b)
+	Radians Float3::Angle(const Float3& a, const Float3& b)
 	{
 		float lengths = a.Length() * b.Length();
 		if (math::IsEpsilonZero(lengths))
-			return 0.0f;
+			return Radians(0.0f);
 		return math::Acos(math::Clamp(Dot(a, b) / lengths, -1.0f, 1.0f));
 	}
 	Float3 Float3::Min(const Float3& a, const Float3& b)

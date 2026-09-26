@@ -1,5 +1,7 @@
 #pragma once
+#include "eulerRadians.h"
 #include "mathConstants.h"
+#include "radians.h"
 #include "uint3.h"	// needed for default value: rotationOrder = Uint3(1, 0, 2)
 #include <string>
 
@@ -66,11 +68,11 @@ namespace emberMath
 		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
-		static Float4x4 RotateX(float angle);
-		static Float4x4 RotateY(float angle);
-		static Float4x4 RotateZ(float angle);
-		static Float4x4 Rotate(const Float3& axis, float angle);
-		static Float4x4 Rotate(const Float3& eulerAngles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
+		static Float4x4 RotateX(Radians angle);
+		static Float4x4 RotateY(Radians angle);
+		static Float4x4 RotateZ(Radians angle);
+		static Float4x4 Rotate(const Float3& axis, Radians angle);
+		static Float4x4 Rotate(const EulerRadians& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
 		static Float4x4 RotateFromTo(const Float3& from, const Float3& to);
 		static Float4x4 RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New);
 		static Float4x4 Translate(const Float3& translation);
@@ -88,7 +90,7 @@ namespace emberMath
 		static Float4x4 TRS(const Float3& position, const Float3x3& rotationMatrix, float scale);
 		static Float4x4 TRS(const Float3& position, const Float4x4& rotationMatrix, const Float3& scale);
 		static Float4x4 TRS(const Float3& position, const Float4x4& rotationMatrix, float scale);
-		static Float4x4 Perspective(float fov, float aspectRatio, float nearClip, float farClip);
+		static Float4x4 Perspective(Radians fov, float aspectRatio, float nearClip, float farClip);
 		static Float4x4 Orthographic(float left, float right, float bottom, float top, float nearClip, float farClip);
 
 		// Access:

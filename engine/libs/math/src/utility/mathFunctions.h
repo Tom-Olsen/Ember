@@ -1,5 +1,6 @@
 #pragma once
 #include "mathConstants.h"
+#include "radians.h"
 #include <cstddef>
 #include <cstdint>
 #include <stdint.h>
@@ -28,13 +29,13 @@ namespace emberMath
 		float Log10(float value);
 
 		// Trigonometry:
-		float Sin(float angle);
-		float Cos(float angle);
-		float Tan(float angle);
-		float Asin(float value);
-		float Acos(float value);
-		float Atan(float z);
-		float Atan2(float y, float x);
+		float Sin(Radians angle);
+		float Cos(Radians angle);
+		float Tan(Radians angle);
+		Radians Asin(float value);
+		Radians Acos(float value);
+		Radians Atan(float z);
+		Radians Atan2(float y, float x);
 
 		// Templates:
 		template<typename T>

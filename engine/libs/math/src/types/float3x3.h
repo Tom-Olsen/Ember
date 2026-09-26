@@ -1,5 +1,7 @@
 #pragma once
+#include "eulerRadians.h"
 #include "mathConstants.h"
+#include "radians.h"
 #include "uint3.h"	// needed for default value: rotationOrder = Uint3(1, 0, 2)
 #include <string>
 
@@ -62,11 +64,11 @@ namespace emberMath
 		// Static math operations:
         static Float3x3 Scale(Float3 scale);
         static Float3x3 Scale(float scale);
-		static Float3x3 RotateX(float angle);
-		static Float3x3 RotateY(float angle);
-		static Float3x3 RotateZ(float angle);
-		static Float3x3 Rotate(const Float3& axis, float angle);
-		static Float3x3 Rotate(const Float3& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
+		static Float3x3 RotateX(Radians angle);
+		static Float3x3 RotateY(Radians angle);
+		static Float3x3 RotateZ(Radians angle);
+		static Float3x3 Rotate(const Float3& axis, Radians angle);
+		static Float3x3 Rotate(const EulerRadians& angles, const Uint3& rotationOrder = Uint3(1, 0, 2), CoordinateSpace space = CoordinateSpace::local);
 		static Float3x3 RotateFromTo(const Float3& from, const Float3& to);
 		static Float3x3 RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New);
 

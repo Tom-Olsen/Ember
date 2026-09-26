@@ -6,7 +6,7 @@
 // Constructors:
 TEST(Float2, DirectionConstructor)
 {
-	Float2 direction = Float2::Direction(math::pi4);
+	Float2 direction = Float2::Direction(Radians(math::pi4));
 	EXPECT_TRUE(direction.IsEpsilonEqual(math::sqrt2Inv * Float2::one));
 }
 
@@ -26,8 +26,8 @@ TEST(Float2, Length)
 TEST(Float2, Angle)
 {
 	Float2 a(-5.0f, -5.0f);
-	float angle = a.Angle();
-	EXPECT_TRUE(math::IsEpsilonEqual(angle, -3.0f / 4.0f * math::pi));
+	Radians angle = a.Angle();
+	EXPECT_TRUE(angle.IsEpsilonEqual(Radians(-3.0f / 4.0f * math::pi)));
 }
 TEST(Float2, Normalize)
 {
@@ -38,7 +38,7 @@ TEST(Float2, Normalize)
 TEST(Float2, Rotate)
 {
 	Float2 a(1.0f, 0.0f);
-	Float2 rotated = a.Rotate(math::pi4);
+	Float2 rotated = a.Rotate(Radians(math::pi4));
 	EXPECT_TRUE(rotated.IsEpsilonEqual(Float2(math::sqrt2Inv, math::sqrt2Inv)));
 }
 TEST(Float2, IsEpsilonZero)
@@ -86,8 +86,8 @@ TEST(Float2, static_Angle)
 {
 	Float2 a(2.0f, 1.0f);
 	Float2 b(-2.0f, 4.0f);
-	float angle = Float2::Angle(a, b);
-	EXPECT_TRUE(math::IsEpsilonEqual(angle, math::pi2));
+	Radians angle = Float2::Angle(a, b);
+	EXPECT_TRUE(angle.IsEpsilonEqual(Radians(math::pi2)));
 }
 TEST(Float2, Min)
 {

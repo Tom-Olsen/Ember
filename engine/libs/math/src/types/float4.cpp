@@ -15,7 +15,7 @@ namespace emberMath
 	Float4::Float4(const Float2& xy, Float2 zw) : x(xy.x), y(xy.y), z(zw.x), w(zw.y) {}
 	Float4::Float4(const Float3& xyz, float w) : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
 	Float4::Float4(const Float4& xyzw) : x(xyzw.x), y(xyzw.y), z(xyzw.z), w(xyzw.w) {}
-	Float4 Float4::Direction(float theta, float phi)
+	Float4 Float4::Direction(Radians theta, Radians phi)
 	{
 		float st = math::Sin(theta);
 		float ct = math::Cos(theta);

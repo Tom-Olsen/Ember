@@ -123,36 +123,36 @@ namespace emberMath
 
 
 		// Trigonometry:
-		float Sin(float angle)
+		float Sin(Radians angle)
 		{
-			return sinf(angle);
+			return sinf(angle.value);
 		}
-		float Cos(float angle)
+		float Cos(Radians angle)
 		{
-			return cosf(angle);
+			return cosf(angle.value);
 		}
-		float Tan(float angle)
+		float Tan(Radians angle)
 		{
-			return tanf(angle);
+			return tanf(angle.value);
 		}
-		float Asin(float value)
-		{
-            assert(-1.0f <= value && value <= 1.0f);
-			return asinf(value);
-		}
-		float Acos(float value)
+		Radians Asin(float value)
 		{
             assert(-1.0f <= value && value <= 1.0f);
-			return acosf(value);
+			return Radians(asinf(value));
 		}
-		float Atan(float z)
+		Radians Acos(float value)
 		{
-			return atanf(z);
+            assert(-1.0f <= value && value <= 1.0f);
+			return Radians(acosf(value));
 		}
-		float Atan2(float y, float x)
+		Radians Atan(float z)
+		{
+			return Radians(atanf(z));
+		}
+		Radians Atan2(float y, float x)
 		{
             assert(!(x == 0.0f && y == 0.0f));
-			return atan2f(y, x);
+			return Radians(atan2f(y, x));
 		}
 
 

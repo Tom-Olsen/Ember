@@ -1,5 +1,6 @@
 #pragma once
 #include "mathConstants.h"
+#include "radians.h"
 #include <cstdint>
 #include <string>
 
@@ -27,14 +28,14 @@ namespace emberMath
 		Float2(const Float2& xy);
 		explicit Float2(const Float3& xy);
 		explicit Float2(const Float4& xy);
-		static Float2 Direction(float angle);
+		static Float2 Direction(Radians angle);
 
 		// Math operations:
 		float LengthSq() const;
 		float Length() const;
-		float Angle() const;
+		Radians Angle() const;
 		Float2 Normalize() const;
-		Float2 Rotate(float angle) const;
+		Float2 Rotate(Radians angle) const;
 		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
@@ -46,7 +47,7 @@ namespace emberMath
 		static float Cross(const Float2& a, const Float2& b);
 		static float DistanceSq(const Float2& a, const Float2& b);
 		static float Distance(const Float2& a, const Float2& b);
-		static float Angle(const Float2& a, const Float2& b);
+		static Radians Angle(const Float2& a, const Float2& b);
 		static Float2 Min(const Float2& a, const Float2& b);
 		static Float2 Max(const Float2& a, const Float2& b);
 		static Float2 Clamp(const Float2& value, const Float2& min, const Float2& max);

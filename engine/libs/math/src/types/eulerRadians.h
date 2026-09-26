@@ -36,6 +36,17 @@ namespace emberMath
 		Radians GetY() const;
 		Radians GetZ() const;
 
+		// Multiplication:
+		EulerRadians operator*(float scalar) const;
+		EulerRadians& operator*=(float scalar);
+
+		// Division:
+		EulerRadians operator/(float scalar) const;
+		EulerRadians& operator/=(float scalar);
+
+		// Friend functions:
+		friend EulerRadians operator*(float scalar, const EulerRadians& angles);
+
 		// Comparison:
 		bool IsEpsilonEqual(const EulerRadians& other, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon) const;
 		bool operator==(const EulerRadians& other) const;

@@ -116,21 +116,21 @@ TEST(Float4x4, IsEpsilonZero)
 // Static math operations:
 TEST(Float4x4, RotateX)
 {
-	Float4x4 rotMatrix = Float4x4::RotateX(math::pi2);
+	Float4x4 rotMatrix = Float4x4::RotateX(Radians(math::pi2));
 	Float4 v0 = Float4(0.0f, 1.0f, 0.0f, 1.0f);
 	Float4 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(0.0f, 0.0f, 1.0f, 1.0f)));
 }
 TEST(Float4x4, RotateY)
 {
-	Float4x4 rotMatrix = Float4x4::RotateY(math::pi2);
+	Float4x4 rotMatrix = Float4x4::RotateY(Radians(math::pi2));
 	Float4 v0 = Float4(1.0f, 0.0f, 0.0f, 1.0f);
 	Float4 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(0.0f, 0.0f, -1.0f, 1.0f)));
 }
 TEST(Float4x4, RotateZ)
 {
-	Float4x4 rotMatrix = Float4x4::RotateX(math::pi2);
+	Float4x4 rotMatrix = Float4x4::RotateX(Radians(math::pi2));
 	Float4 v0 = Float4(0.0f, 0.0f, 1.0f, 1.0f);
 	Float4 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float4(0.0f, -1.0f, 0.0f, 1.0f)));
@@ -138,7 +138,7 @@ TEST(Float4x4, RotateZ)
 TEST(Float4x4, RotateAroundAxis)
 {
 	Float3 axis = Float3(1.0f, 1.0f, 0.0f);
-	Float4x4 rotMatrix = Float4x4::Rotate(axis, math::pi);
+	Float4x4 rotMatrix = Float4x4::Rotate(axis, Radians(math::pi));
 	Float4 v0 = Float4::right;
 	Float4 v1 = rotMatrix * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(Float4::forward));
@@ -192,28 +192,28 @@ TEST(Float4x4, ScaleByFloat)
 TEST(Float4x4, TRSFloat3x3)
 {
 	Float3 position = Float3(1.0f, 2.0f, 3.0f);
-	Float3x3 rotationMatrix = Float3x3::RotateY(math::pi2);
+	Float3x3 rotationMatrix = Float3x3::RotateY(Radians(math::pi2));
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = trsMatrix * v0;
-	Float4 v2 = Float4x4::Translate(position) * Float4x4::RotateY(math::pi2) * Float4x4::Scale(scale) * v0;
+	Float4 v2 = Float4x4::Translate(position) * Float4x4::RotateY(Radians(math::pi2)) * Float4x4::Scale(scale) * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(v2));
 }
 TEST(Float4x4, TRSFloat4x4)
 {
 	Float3 position = Float3(1.0f, 2.0f, 3.0f);
-	Float4x4 rotationMatrix = Float4x4::RotateY(math::pi2);
+	Float4x4 rotationMatrix = Float4x4::RotateY(Radians(math::pi2));
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float4 v0 = Float4(1.0f, 1.0f, 1.0f, 1.0f);
 	Float4 v1 = trsMatrix * v0;
-	Float4 v2 = Float4x4::Translate(position) * Float4x4::RotateY(math::pi2) * Float4x4::Scale(scale) * v0;
+	Float4 v2 = Float4x4::Translate(position) * Float4x4::RotateY(Radians(math::pi2)) * Float4x4::Scale(scale) * v0;
 	EXPECT_TRUE(v1.IsEpsilonEqual(v2));
 }
 TEST(Float4x4, Perspective)
 {
-	float fov = math::pi2;
+	Radians fov(math::pi2);
 	float aspectRatio = 1920.0f / 1080.0f;
 	float nearClip = 1.0f;
 	float farClip = 10.0f;
@@ -378,7 +378,7 @@ TEST(Float4x4, GetColumn)
 TEST(Float4x4, GetTranslation)
 {
 	Float3 position = Float3(1.0f, 2.0f, 3.0f);
-	Float4x4 rotationMatrix = Float4x4::RotateY(math::pi2);
+	Float4x4 rotationMatrix = Float4x4::RotateY(Radians(math::pi2));
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float3 translationResult = trsMatrix.GetTranslation();
@@ -387,7 +387,7 @@ TEST(Float4x4, GetTranslation)
 TEST(Float4x4, GetScale)
 {
 	Float3 position = Float3(1.0f, 2.0f, 3.0f);
-	Float4x4 rotationMatrix = Float4x4::RotateY(math::pi2);
+	Float4x4 rotationMatrix = Float4x4::RotateY(Radians(math::pi2));
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float3 scaleResult = trsMatrix.GetScale();
@@ -396,7 +396,7 @@ TEST(Float4x4, GetScale)
 TEST(Float4x4, GetRotation3x3)
 {
 	Float3 position = Float3(1.0f, 2.0f, 3.0f);
-	Float4x4 rotationMatrix = Float4x4::RotateY(math::pi2);
+	Float4x4 rotationMatrix = Float4x4::RotateY(Radians(math::pi2));
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float3x3 rotationResult = trsMatrix.GetRotation3x3();
@@ -405,7 +405,7 @@ TEST(Float4x4, GetRotation3x3)
 TEST(Float4x4, GetRotation4x4)
 {
 	Float3 position = Float3(1.0f, 2.0f, 3.0f);
-	Float4x4 rotationMatrix = Float4x4::RotateY(math::pi2);
+	Float4x4 rotationMatrix = Float4x4::RotateY(Radians(math::pi2));
 	Float3 scale = Float3(2.0f, 3.0f, 4.0f);
 	Float4x4 trsMatrix = Float4x4::TRS(position, rotationMatrix, scale);
 	Float4x4 rotationResult = trsMatrix.GetRotation4x4();

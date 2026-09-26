@@ -93,10 +93,10 @@ namespace emberMath
 
 
 	// Static math operations:
-	Float2x2 Float2x2::Rotate(float radians)
+	Float2x2 Float2x2::Rotate(Radians angle)
 	{
-		float c = math::Cos(radians);
-		float s = math::Sin(radians);
+		float c = math::Cos(angle);
+		float s = math::Sin(angle);
 		return Float2x2::Rows
 		(c, -s,
          s, c);

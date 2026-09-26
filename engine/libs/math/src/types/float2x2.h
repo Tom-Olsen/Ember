@@ -1,4 +1,5 @@
 #pragma once
+#include "radians.h"
 #include "emberMath.h"
 #include "mathConstants.h"
 #include <string>
@@ -53,7 +54,7 @@ namespace emberMath
 		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
-		static Float2x2 Rotate(float radians);
+		static Float2x2 Rotate(Radians angle);
 
 		// Access:
 		float& operator[](int index);

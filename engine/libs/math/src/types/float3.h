@@ -1,7 +1,9 @@
 #pragma once
 #include "mathConstants.h"
+#include "radians.h"
 #include <cstdint>
 #include <string>
+#include <utility>
 
 
 
@@ -35,16 +37,16 @@ namespace emberMath
 		Float3(const Int3& xyz);
 		Float3(const Uint3& xyz);
 		explicit Float3(const Float4& xyz);
-		static Float3 Direction(float theta, float phi);
+		static Float3 Direction(Radians theta, Radians phi);
 
 		// Math operations:
 		float LengthSq() const;
 		float Length() const;
-		float Theta() const;
-		float Phi() const;
-		Float2 Angles() const;
+		Radians Theta() const;
+		Radians Phi() const;
+		std::pair<Radians, Radians> Angles() const;
 		Float3 Normalize() const;
-		Float3 Rotate(float theta, float phi) const;
+		Float3 Rotate(Radians theta, Radians phi) const;
 		bool IsEpsilonZero(float absEpsilon = math::absEpsilon) const;
 
 		// Static math operations:
@@ -56,7 +58,7 @@ namespace emberMath
 		static Float3 Cross(const Float3& a, const Float3& b);
 		static float DistanceSq(const Float3& a, const Float3& b);
 		static float Distance(const Float3& a, const Float3& b);
-		static float Angle(const Float3& a, const Float3& b);
+		static Radians Angle(const Float3& a, const Float3& b);
 		static Float3 Min(const Float3& a, const Float3& b);
 		static Float3 Max(const Float3& a, const Float3& b);
 		static Float3 Clamp(const Float3& value, const Float3& min, const Float3& max);

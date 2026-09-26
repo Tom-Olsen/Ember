@@ -1,4 +1,5 @@
 #pragma once
+#include "radians.h"
 #include "mathConstants.h"
 #include <cstdint>
 #include <string>
@@ -28,7 +29,7 @@ namespace emberMath
 		explicit Float4(const Float2& xy, Float2 zw);
 		explicit Float4(const Float3& xyz, float w);
 		Float4(const Float4& xyzw);
-		static Float4 Direction(float theta, float phi);
+		static Float4 Direction(Radians theta, Radians phi);
 
 		// Math operations:
 		float LengthSq() const;

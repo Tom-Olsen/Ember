@@ -14,7 +14,7 @@ namespace emberMath
 	Float2::Float2(const Float2& xy) : x(xy.x), y(xy.y) {}
 	Float2::Float2(const Float3& xy) : x(xy.x), y(xy.y) {}
 	Float2::Float2(const Float4& xy) : x(xy.x), y(xy.y) {}
-	Float2 Float2::Direction(float angle)
+	Float2 Float2::Direction(Radians angle)
 	{
 		return Float2(math::Cos(angle), math::Sin(angle));
 	}
@@ -30,7 +30,7 @@ namespace emberMath
 	{
 		return math::Sqrt(LengthSq());
 	}
-	float Float2::Angle() const
+	Radians Float2::Angle() const
 	{
 		return math::Atan2(y, x);
 	}
@@ -41,7 +41,7 @@ namespace emberMath
 			return Float2(0.0f);
 		return Float2(x / length, y / length);
 	}
-	Float2 Float2::Rotate(float angle) const
+	Float2 Float2::Rotate(Radians angle) const
 	{
 		float c = math::Cos(angle);
 		float s = math::Sin(angle);
@@ -88,13 +88,13 @@ namespace emberMath
 	{
 		return (a - b).Length();
 	}
-	float Float2::Angle(const Float2& a, const Float2& b)
+	Radians Float2::Angle(const Float2& a, const Float2& b)
 	{
 		float lengthA = a.Length();
 		float lengthB = b.Length();
 		float lengths = a.Length() * b.Length();
 		if (math::IsEpsilonZero(lengthA) || math::IsEpsilonZero(lengthB))
-			return 0.0f;
+			return Radians(0.0f);
 		return math::Acos(math::Clamp(Dot(a, b) / lengthA * lengthB, -1.0f, 1.0f));
 	}
 	Float2 Float2::Min(const Float2& a, const Float2& b)

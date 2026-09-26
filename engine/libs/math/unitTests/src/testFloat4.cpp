@@ -6,7 +6,7 @@
 // Constructors:
 TEST(Float4, DirectionConstructor)
 {
-	Float4 direction = Float4::Direction(math::pi4, math::pi4);
+	Float4 direction = Float4::Direction(Radians(math::pi4), Radians(math::pi4));
 	EXPECT_TRUE(direction.IsEpsilonEqual(Float4(0.5f, 0.5f, math::sqrt2Inv, 0.0f)));
 }
 

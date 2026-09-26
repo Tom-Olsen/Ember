@@ -6,7 +6,7 @@
 // Constructors:
 TEST(Float3, DirectionConstructor)
 {
-	Float3 direction = Float3::Direction(math::pi4, math::pi4);
+	Float3 direction = Float3::Direction(Radians(math::pi4), Radians(math::pi4));
 	EXPECT_TRUE(direction.IsEpsilonEqual(Float3(0.5f, 0.5f, math::sqrt2Inv)));
 }
 
@@ -26,20 +26,21 @@ TEST(Float3, Length)
 TEST(Float3, Theta)
 {
 	Float3 a(1.0f, 1.0f, math::sqrt2);
-	float theta = a.Theta();
-	EXPECT_TRUE(math::IsEpsilonEqual(theta, math::pi4));
+	Radians theta = a.Theta();
+	EXPECT_TRUE(theta.IsEpsilonEqual(Radians(math::pi4)));
 }
 TEST(Float3, Phi)
 {
 	Float3 a = Float3::one;
-	float phi = a.Phi();
-	EXPECT_TRUE(math::IsEpsilonEqual(phi, math::pi4));
+	Radians phi = a.Phi();
+	EXPECT_TRUE(phi.IsEpsilonEqual(Radians(math::pi4)));
 }
 TEST(Float3, Angles)
 {
 	Float3 a(1.0f, 1.0f, math::sqrt2);
-	Float2 angles = a.Angles();
-	EXPECT_TRUE(angles.IsEpsilonEqual(math::pi4 * Float2::one));
+	auto [theta, phi] = a.Angles();
+	EXPECT_TRUE(theta.IsEpsilonEqual(Radians(math::pi4)));
+	EXPECT_TRUE(phi.IsEpsilonEqual(Radians(math::pi4)));
 }
 TEST(Float3, Normalize)
 {
@@ -50,7 +51,7 @@ TEST(Float3, Normalize)
 TEST(Float3, Rotate)
 {
 	Float3 a(1.0f, 1.0f, math::sqrt2);
-	Float3 rotated = a.Rotate(math::pi4, math::pi4);
+	Float3 rotated = a.Rotate(Radians(math::pi4), Radians(math::pi4));
 	EXPECT_TRUE(rotated.IsEpsilonEqual(Float3(0.0f, 2.0f, 0.0f)));
 }
 TEST(Float3, IsEpsilonZero)
@@ -98,8 +99,8 @@ TEST(Float3, static_Angle)
 {
 	Float3 a(2.0f, 0.0f, 0.0f);
 	Float3 b(-2.0f, 2.0f, 0.0f);
-	float angle = Float3::Angle(a, b);
-	EXPECT_TRUE(math::IsEpsilonEqual(angle, math::deg2rad * 135.0f));
+	Radians angle = Float3::Angle(a, b);
+	EXPECT_TRUE(angle.IsEpsilonEqual(Degrees(135.0f).ToRadians()));
 }
 TEST(Float3, Min)
 {

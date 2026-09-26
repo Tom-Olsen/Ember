@@ -1,6 +1,7 @@
 #include "eulerRadians.h"
 #include "eulerDegrees.h"
 #include "mathConstants.h"
+#include <cassert>
 #include <sstream>
 
 
@@ -41,6 +42,42 @@ namespace emberMath
 	Radians EulerRadians::GetZ() const
 	{
 		return Radians(value.z);
+	}
+
+
+
+	// Multiplication:
+	EulerRadians EulerRadians::operator*(float scalar) const
+	{
+		return EulerRadians(value * scalar);
+	}
+	EulerRadians& EulerRadians::operator*=(float scalar)
+	{
+		value *= scalar;
+		return *this;
+	}
+
+
+
+	// Division:
+	EulerRadians EulerRadians::operator/(float scalar) const
+	{
+		assert(scalar != 0.0f);
+		return EulerRadians(value / scalar);
+	}
+	EulerRadians& EulerRadians::operator/=(float scalar)
+	{
+		assert(scalar != 0.0f);
+		value /= scalar;
+		return *this;
+	}
+
+
+
+	// Friend functions:
+	EulerRadians operator*(float scalar, const EulerRadians& angles)
+	{
+		return angles * scalar;
 	}
 
 

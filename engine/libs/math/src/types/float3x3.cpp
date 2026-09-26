@@ -132,7 +132,7 @@ namespace emberMath
     {
 		return Scale(Float3(scale));
     }
-	Float3x3 Float3x3::RotateX(float angle)
+	Float3x3 Float3x3::RotateX(Radians angle)
 	{
 		float c = math::Cos(angle);
 		float s = math::Sin(angle);
@@ -141,7 +141,7 @@ namespace emberMath
 		 0.0f, c, -s,
 		 0.0f, s, c);
 	}
-	Float3x3 Float3x3::RotateY(float angle)
+	Float3x3 Float3x3::RotateY(Radians angle)
 	{
 		float c = math::Cos(angle);
 		float s = math::Sin(angle);
@@ -150,7 +150,7 @@ namespace emberMath
 		 0.0f, 1.0f, 0.0f,
 		 -s, 0.0f, c);
 	}
-	Float3x3 Float3x3::RotateZ(float angle)
+	Float3x3 Float3x3::RotateZ(Radians angle)
 	{
 		float c = math::Cos(angle);
 		float s = math::Sin(angle);
@@ -159,7 +159,7 @@ namespace emberMath
 		 s, c, 0.0f,
 		 0.0f, 0.0f, 1.0f);
 	}
-	Float3x3 Float3x3::Rotate(const Float3& axis, float angle)
+	Float3x3 Float3x3::Rotate(const Float3& axis, Radians angle)
 	{
         assert(!axis.IsEpsilonZero());
 
@@ -175,9 +175,9 @@ namespace emberMath
 		 y * x * t + z * s, y * y * t + c, y * z * t - x * s,
 		 z * x * t - y * s, z * y * t + x * s, z * z * t + c);
 	}
-	Float3x3 Float3x3::Rotate(const Float3& angles, const Uint3& rotationOrder, CoordinateSpace space)
+	Float3x3 Float3x3::Rotate(const EulerRadians& angles, const Uint3& rotationOrder, CoordinateSpace space)
 	{
-		Float3x3 rot[3] = { RotateX(angles.x), RotateY(angles.y), RotateZ(angles.z) };
+		Float3x3 rot[3] = { RotateX(angles.GetX()), RotateY(angles.GetY()), RotateZ(angles.GetZ()) };
 		if (space == CoordinateSpace::local)
 			return rot[rotationOrder.x] * rot[rotationOrder.y] * rot[rotationOrder.z];
 		// (space == CoordinateSpace::World)
@@ -196,12 +196,12 @@ namespace emberMath
 		{
 			std::optional<Float3> orthogonal = geometry3d::GetOrhtogonalVector(f);
 			if (orthogonal.has_value())
-    			return Float3x3::Rotate(orthogonal.value(), math::pi);
+				return Float3x3::Rotate(orthogonal.value(), Radians(math::pi));
             else
                 return Float3x3::identity;
 		}
 		Float3 axis = Float3::Cross(f, t); // normalization not needed, as Rotate(...) will normalize it
-		float angle = Float3::Angle(f, t);
+		Radians angle = Float3::Angle(f, t);
 		return Rotate(axis, angle);
 	}
 	Float3x3 Float3x3::RotateThreeLeg(const Float3& direction0Old, const Float3& direction0New, const Float3& direction1Old, const Float3& direction1New)
@@ -213,14 +213,14 @@ namespace emberMath
 
 		// Rotate direction0Old to direction0New:
 		Float3 axis = Float3::Cross(direction0Old, direction0New);
-		float angle0 = Float3::Angle(direction0Old, direction0New);
+		Radians angle0 = Float3::Angle(direction0Old, direction0New);
 		Float3x3 rot0 = Rotate(axis, angle0);
 
 		// Compute missalignment angle between direction1New and direction1Old rotated by rot0:
 		Float3 otherOldRotated = rot0 * direction1Old;
 		Float3 planeNormal = Float3::Cross(direction1New, direction0New);
 		std::optional<Float3> projection = geometry3d::PointToPlaneProjection(otherOldRotated, Float3::zero, planeNormal);
-		float angle1;
+		Radians angle1;
         if (projection.has_value())
         {
             float sign = math::Sign(Float3::Dot(Float3::Cross(otherOldRotated, projection.value()), direction0New));
@@ -229,7 +229,7 @@ namespace emberMath
         else
             return Float3x3::identity;
 		if (Float3::Dot(direction1New, otherOldRotated) < 0)
-			angle1 += math::pi;
+			angle1 += Radians(math::pi);
 
 		// Rotate by angle around direction0New:
 		Float3x3 rot1 = Float3x3::Rotate(direction0New, angle1);

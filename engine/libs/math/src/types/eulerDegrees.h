@@ -36,6 +36,17 @@ namespace emberMath
 		Degrees GetY() const;
 		Degrees GetZ() const;
 
+		// Multiplication:
+		EulerDegrees operator*(float scalar) const;
+		EulerDegrees& operator*=(float scalar);
+		
+		// Division:
+		EulerDegrees operator/(float scalar) const;
+		EulerDegrees& operator/=(float scalar);
+
+		// Friend functions:
+		friend EulerDegrees operator*(float scalar, const EulerDegrees& angles);
+
 		// Comparison:
 		bool IsEpsilonEqual(const EulerDegrees& other, float absEpsilon = math::absEpsilon, float relEpsilon = math::relEpsilon) const;
 		bool operator==(const EulerDegrees& other) const;

@@ -64,54 +64,54 @@ TEST(Mathf, Factorial)
 // Trigonometry:
 TEST(Mathf, Sin)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(0.0f), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(math::pi2), 1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(math::pi), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(3.0f * math::pi2), -1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(2.0f * math::pi), 0.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(Radians(0.0f)), 0.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(Radians(math::pi2)), 1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(Radians(math::pi)), 0.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(Radians(3.0f * math::pi2)), -1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Sin(Radians(2.0f * math::pi)), 0.0f));
 }
 TEST(Mathf, Cos)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(0.0f), 1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(math::pi2), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(math::pi), -1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(3.0f * math::pi2), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(2.0f * math::pi), 1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(Radians(0.0f)), 1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(Radians(math::pi2)), 0.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(Radians(math::pi)), -1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(Radians(3.0f * math::pi2)), 0.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Cos(Radians(2.0f * math::pi)), 1.0f));
 }
 TEST(Mathf, Tan)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(0.0f), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(math::pi4), 1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(-math::pi4), -1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(3.0f * math::pi4), -1.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(-3.0f * math::pi4), 1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(Radians(0.0f)), 0.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(Radians(math::pi4)), 1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(Radians(-math::pi4)), -1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(Radians(3.0f * math::pi4)), -1.0f));
+	EXPECT_TRUE(math::IsEpsilonEqual(math::Tan(Radians(-3.0f * math::pi4)), 1.0f));
 }
 TEST(Mathf, Asin)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Asin(0.0f), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Asin(1.0f), math::pi2));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Asin(-1.0f), -math::pi2));
+	EXPECT_TRUE(math::Asin(0.0f).IsEpsilonEqual(Radians(0.0f)));
+	EXPECT_TRUE(math::Asin(1.0f).IsEpsilonEqual(Radians(math::pi2)));
+	EXPECT_TRUE(math::Asin(-1.0f).IsEpsilonEqual(Radians(-math::pi2)));
 }
 TEST(Mathf, Acos)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Acos(1.0f), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Acos(0.0f), math::pi2));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Acos(-1.0f), math::pi));
+	EXPECT_TRUE(math::Acos(1.0f).IsEpsilonEqual(Radians(0.0f)));
+	EXPECT_TRUE(math::Acos(0.0f).IsEpsilonEqual(Radians(math::pi2)));
+	EXPECT_TRUE(math::Acos(-1.0f).IsEpsilonEqual(Radians(math::pi)));
 }
 TEST(Mathf, Atan)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan(0.0f), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan(1.0f), math::pi4));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan(-1.0f), -math::pi4));
+	EXPECT_TRUE(math::Atan(0.0f).IsEpsilonEqual(Radians(0.0f)));
+	EXPECT_TRUE(math::Atan(1.0f).IsEpsilonEqual(Radians(math::pi4)));
+	EXPECT_TRUE(math::Atan(-1.0f).IsEpsilonEqual(Radians(-math::pi4)));
 }
 TEST(Mathf, Atan2)
 {
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(0.0f, 1.0f), 0.0f));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(1.0f, 1.0f), math::pi4));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(1.0f, 0.0f), math::pi2));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(1.0f, -1.0f), 3.0f * math::pi4));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(0.0f, -1.0f), math::pi));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(-1.0f, -1.0f), -3.0f * math::pi4));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(-1.0f, 0.0f), -math::pi2));
-	EXPECT_TRUE(math::IsEpsilonEqual(math::Atan2(-1.0f, 1.0f), -math::pi4));
+	EXPECT_TRUE(math::Atan2(0.0f, 1.0f).IsEpsilonEqual(Radians(0.0f)));
+	EXPECT_TRUE(math::Atan2(1.0f, 1.0f).IsEpsilonEqual(Radians(math::pi4)));
+	EXPECT_TRUE(math::Atan2(1.0f, 0.0f).IsEpsilonEqual(Radians(math::pi2)));
+	EXPECT_TRUE(math::Atan2(1.0f, -1.0f).IsEpsilonEqual(Radians(3.0f * math::pi4)));
+	EXPECT_TRUE(math::Atan2(0.0f, -1.0f).IsEpsilonEqual(Radians(math::pi)));
+	EXPECT_TRUE(math::Atan2(-1.0f, -1.0f).IsEpsilonEqual(Radians(-3.0f * math::pi4)));
+	EXPECT_TRUE(math::Atan2(-1.0f, 0.0f).IsEpsilonEqual(Radians(-math::pi2)));
+	EXPECT_TRUE(math::Atan2(-1.0f, 1.0f).IsEpsilonEqual(Radians(-math::pi4)));
 }

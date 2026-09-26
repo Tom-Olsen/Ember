@@ -68,6 +68,21 @@ TEST(EulerDegrees, GetComponents)
 
 
 
+// Arithmetic:
+TEST(EulerDegrees, OperatorsScalar)
+{
+	EulerDegrees angles(15.0f, 30.0f, 45.0f);
+	EXPECT_EQ(angles * 2.0f, EulerDegrees(30.0f, 60.0f, 90.0f));
+	EXPECT_EQ(2.0f * angles, EulerDegrees(30.0f, 60.0f, 90.0f));
+	EXPECT_EQ(angles / 3.0f, EulerDegrees(5.0f, 10.0f, 15.0f));
+	angles *= 2.0f;
+	EXPECT_EQ(angles, EulerDegrees(30.0f, 60.0f, 90.0f));
+	angles /= 3.0f;
+	EXPECT_EQ(angles, EulerDegrees(10.0f, 20.0f, 30.0f));
+}
+
+
+
 // Comparison:
 TEST(EulerDegrees, IsEpsilonEqual)
 {
