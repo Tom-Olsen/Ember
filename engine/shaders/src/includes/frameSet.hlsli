@@ -38,6 +38,8 @@ float Camera_GetFarClip()
     return (camera_projMatrix[2][3] - camera_projMatrix[3][3]) / (camera_projMatrix[2][2] - camera_projMatrix[3][2]);
 }
 
+
+
 // Camera directions:
 float3 Camera_GetRight()
 {
@@ -52,6 +54,18 @@ float3 Camera_GetUp()
     return normalize(camera_viewMatrix[1].xyz);
 }
 
+
+
+// Camera worldPosition data:
+float3 Camera_GetRayDirection(float3 worldPosition)
+{
+    bool isPerspective = abs(camera_projMatrix[3][3]) < 0.5f;
+    return isPerspective ? normalize(worldPosition - camera_position.xyz) : Camera_GetForward();
+}
+float Camera_GetDepth(float3 worldPosition)
+{ // 
+    return -mul(camera_viewMatrix, float4(worldPosition, 1.0f)).z;
+}
 
 
 #endif // __INCLUDE_GUARD_frameSet_hlsli__

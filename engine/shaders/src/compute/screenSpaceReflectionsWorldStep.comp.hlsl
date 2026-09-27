@@ -39,17 +39,6 @@ bool TryGetWorldPosition(uint2 pixel, out float3 worldPosition)
     worldPosition = GetWorldPosition(pixel, sceneDepth);
     return true;
 }
-// Depth of worldPosition in view space:
-float GetViewSpaceDepth(float3 worldPosition)
-{
-    return -mul(camera_viewMatrix, float4(worldPosition, 1.0f)).z;
-}
-// Direction of ray from camera to worldPosition:
-float3 GetCameraRayDirection(float3 worldPosition)
-{
-    bool isPerspective = abs(camera_projMatrix[3][3]) < 0.5f;
-    return isPerspective ? normalize(worldPosition - camera_position.xyz) : Camera_GetForward();
-}
 // Environment color in worldDirection:
 float3 GetEnvironmentColor(float3 worldDirection)
 {
@@ -88,7 +77,7 @@ bool TryProjectWorldToScreen(float3 worldPosition, out float2 uv, out uint2 pixe
     uint height;
     sceneDepthTexture.GetDimensions(width, height);
     pixel = uint2(uv * float2(width, height));
-    viewDepth = GetViewSpaceDepth(worldPosition);
+    viewDepth = Camera_GetDepth(worldPosition);
     return true;
 }
 // Depth delta between worldPosition and scene geometry at the same pixel; also returns the scene depth in view space:
@@ -113,7 +102,7 @@ bool TryGetSceneDepthDelta(float3 worldPosition, out float2 uv, out uint2 pixel,
     }
 
 	// Compute depth delta between worldPosition and scene geometry:
-    sceneViewDepth = GetViewSpaceDepth(GetWorldPosition(pixel, sceneDepth));
+    sceneViewDepth = Camera_GetDepth(GetWorldPosition(pixel, sceneDepth));
     depthDelta = viewDepth - sceneViewDepth;
     return true;
 }
@@ -221,9 +210,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
     // Reflect the camera ray at the current opaque surface, then offset the origin to avoid self-hits.
     float3 worldNormal = normalize(2.0f * gbufferNormalTexture.Load(int3(pixel, 0)).xyz - 1.0f);
-    float3 cameraRayDirection = GetCameraRayDirection(worldPosition);
+    float3 cameraRayDirection = Camera_GetRayDirection(worldPosition);
     float3 reflectionDirection = normalize(reflect(cameraRayDirection, worldNormal));
-    float surfaceViewDepth = GetViewSpaceDepth(worldPosition);
+    float surfaceViewDepth = Camera_GetDepth(worldPosition);
     float originBias = max(0.02f, 0.0005f * surfaceViewDepth);
     float3 rayOrigin = worldPosition + originBias * worldNormal;
 
