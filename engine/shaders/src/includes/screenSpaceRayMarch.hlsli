@@ -1,24 +1,29 @@
-#ifndef __INCLUDE_GUARD_mathRay_hlsli__
-#define __INCLUDE_GUARD_mathRay_hlsli__
+#ifndef __INCLUDE_GUARD_screenSpaceRayMarch_hlsli__
+#define __INCLUDE_GUARD_screenSpaceRayMarch_hlsli__
 
 
 
 // Structs:
-struct math_WorldRay
+struct WorldRay
 {
 	float3 origin;
 	float3 direction;
 };
-struct math_ScreenRay
+struct ScreenRay
 {
-    float3 origin;     // xy = pixels, z = NDC depth [0,1]
+    float3 origin;     // xy = pixel position, z = NDC depth [0,1]
     float3 direction;  // xy = pixel delta, z = NDC depth delta
+};
+struct ScreenRaySample
+{
+    float3 screenPosition;	// xy = pixel position, z = NDC depth.
+    float sceneViewDepth;	// scene depth in view space.
+    float depthDelta;		// delta of scene depth and sample depth in view space.
 };
 
 
 
-
-math_ScreenRay math_ProjectRayToScreen(math_WorldRay worldRay, float2 screenSize, float4x4 worldToClipMatrix)
+ScreenRay ProjectRayToScreen(WorldRay worldRay, float2 screenSize, float4x4 worldToClipMatrix)
 {
     // Second point on the same world-space line:
     float3 rayPoint = worldRay.origin + worldRay.direction;
@@ -39,7 +44,7 @@ math_ScreenRay math_ProjectRayToScreen(math_WorldRay worldRay, float2 screenSize
     pointScreen.xy = (pointNdc.xy * 0.5f + 0.5f) * screenSize;
     pointScreen.z  = pointNdc.z;
 
-    math_ScreenRay screenRay;
+    ScreenRay screenRay;
     screenRay.origin = originScreen;
     screenRay.direction = pointScreen - originScreen;
     return screenRay;
@@ -47,4 +52,4 @@ math_ScreenRay math_ProjectRayToScreen(math_WorldRay worldRay, float2 screenSize
 
 
 
-#endif // __INCLUDE_GUARD_mathRay_hlsli__
+#endif // __INCLUDE_GUARD_screenSpaceRayMarch_hlsli__
