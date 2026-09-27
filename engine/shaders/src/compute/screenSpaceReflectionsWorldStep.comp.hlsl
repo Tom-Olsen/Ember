@@ -30,7 +30,7 @@ float3 GetWorldPosition(uint2 pixel, float sceneDepth)
 // Get world position of drawn geometry, or fails:
 bool TryGetWorldPosition(uint2 pixel, out float3 worldPosition)
 {
-    float sceneDepth = GetSceneDepth(pixel);
+    float sceneDepth = GetSceneNdcDepth(pixel);
     if (sceneDepth >= 1.0f)
     {
         worldPosition = 0.0f;
@@ -93,7 +93,7 @@ bool TryGetSceneDepthDelta(float3 worldPosition, out float2 uv, out uint2 pixel,
     }
 
 	// Reject pixels with no geometry:
-    float sceneDepth = GetSceneDepth(pixel);
+    float sceneDepth = GetSceneNdcDepth(pixel);
     if (sceneDepth >= 1.0f)
     {
         depthDelta = 0.0f;

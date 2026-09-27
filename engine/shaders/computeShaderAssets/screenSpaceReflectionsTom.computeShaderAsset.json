@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "screenSpaceReflectionsTom",
+    "sourcePath": "../src/compute/screenSpaceReflectionsTom.comp.hlsl",
+    "binaryPath": "../bin/screenSpaceReflectionsTom.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

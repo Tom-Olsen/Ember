@@ -6,8 +6,8 @@
 
 
 
-float GetSceneDepth(uint2 pixel)
-{
+float GetSceneNdcDepth(uint2 pixel)
+{// ndc depth in [0,1].
 	return sceneDepthTexture[pixel];
 }
 float4 GetSceneColor(uint2 pixel)

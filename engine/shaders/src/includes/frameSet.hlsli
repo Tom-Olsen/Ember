@@ -63,7 +63,7 @@ float3 Camera_GetRayDirection(float3 worldPosition)
     return isPerspective ? normalize(worldPosition - camera_position.xyz) : Camera_GetForward();
 }
 float Camera_GetDepth(float3 worldPosition)
-{ // 
+{ // view space depth: [nearClip,farClip] can exceed bounds if worldPosition outside camera near/far plane.
     return -mul(camera_viewMatrix, float4(worldPosition, 1.0f)).z;
 }
 

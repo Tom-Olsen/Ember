@@ -12,7 +12,9 @@ namespace emberEcs
 	ScreenSpaceEffects::ScreenSpaceEffects(Texture& environmentMap)
 		: m_pEnvironmentMap(&environmentMap)
 	{
-		effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflections"));
+		effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflectionsTom"));
+		//effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflectionsDda"));
+		//effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflectionsWorldStep"));
 	}
 	ScreenSpaceEffects::~ScreenSpaceEffects()
 	{
