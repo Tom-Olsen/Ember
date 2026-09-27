@@ -11,9 +11,12 @@ TextureCube<float4> environmentMap : register(t100, CALL_SET);
 
 
 // Ray march parameters:
+// Keep maxStepCount / 2^maxRefinementStepCount == refinementPixelPrecision so a coarse bracket
+// no larger than maxStepCount pixels can reach the target precision within the refinement budget.
 static const uint maxStepCount = 64;
-static const uint refinementStepCount = 8;
-static const uint pixelStepSize = 10;
+static const uint maxRefinementStepCount = 8;
+static const float minimumPixelStepSize = 1.0f;
+static const float refinementPixelPrecision = 0.25f;
 static const float minimumSurfaceThickness = 0.05f;
 static const float relativeSurfaceThickness = 0.005f;
 // Screen ray sample status:
@@ -51,16 +54,12 @@ float3 ScreenPositionToWorld(float3 screenPosition, float2 screenSize)
     float4 worldPosition = mul(camera_clipToWorldMatrix, clipPosition);
     return worldPosition.xyz / worldPosition.w;
 }
-float3 GetWorldPosition(uint2 pixel, float ndcDepth)
+float3 GetWorldPosition(uint2 pixel, float ndcDepth, float2 screenSize)
 {
-	uint screenWidth;
-    uint screenHeight;
-	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
-	float2 screenSize = float2(screenWidth, screenHeight);
     float3 screenPosition = float3(float2(pixel) + 0.5f, ndcDepth);
     return ScreenPositionToWorld(screenPosition, screenSize);
 }
-bool TryGetGeometryWorldPosition(uint2 pixel, out float3 worldPosition)
+bool TryGetGeometryWorldPosition(uint2 pixel, float2 screenSize, out float3 worldPosition)
 {
     float sceneDepth = GetSceneNdcDepth(pixel);
     if (sceneDepth >= 1.0f)
@@ -68,13 +67,30 @@ bool TryGetGeometryWorldPosition(uint2 pixel, out float3 worldPosition)
         worldPosition = 0.0f;
         return false;
     }
-    worldPosition = GetWorldPosition(pixel, sceneDepth);
+    worldPosition = GetWorldPosition(pixel, sceneDepth, screenSize);
     return true;
 }
 float3 GetEnvironmentColor(float3 worldDirection)
 {
     float3 cubeDirection = mul(mathLinAlg_RotateX3x3(-math_PI_2), worldDirection);
     return environmentMap.SampleLevel(colorSampler, cubeDirection, 0.0f).rgb;
+}
+float GetPixelStepSize(ScreenRay screenRay, float2 screenSize)
+{
+    float2 directionMagnitude = abs(screenRay.direction.xy);
+    float2 distanceToEdge;
+    distanceToEdge.x = screenRay.direction.x < 0.0f ? screenRay.origin.x : screenSize.x - screenRay.origin.x;
+    distanceToEdge.y = screenRay.direction.y < 0.0f ? screenRay.origin.y : screenSize.y - screenRay.origin.y;
+    distanceToEdge = max(distanceToEdge, 0.0f);
+
+    float2 rayDistanceToEdge = 1.0e30f;
+    if (directionMagnitude.x > 1.0e-4f)
+        rayDistanceToEdge.x = distanceToEdge.x / directionMagnitude.x;
+    if (directionMagnitude.y > 1.0e-4f)
+        rayDistanceToEdge.y = distanceToEdge.y / directionMagnitude.y;
+
+    float rayDistance = min(rayDistanceToEdge.x, rayDistanceToEdge.y);
+    return max(minimumPixelStepSize, ceil(rayDistance / float(maxStepCount)));
 }
 
 
@@ -137,8 +153,13 @@ bool TryRefineScreenRayHit(float2 screenSize, ScreenRaySample frontSample, Scree
     hitSample.depthDelta = 0.0f;
 
     // Refine frontSample/backSample:
-    for (uint refinementIndex = 0; refinementIndex < refinementStepCount; refinementIndex++)
+    for (uint refinementIndex = 0; refinementIndex < maxRefinementStepCount; refinementIndex++)
     {
+		// Exit early if refinementPixelPrecision is reached:
+        float2 bracketSize = abs(backSample.screenPosition.xy - frontSample.screenPosition.xy);
+        if (max(bracketSize.x, bracketSize.y) <= refinementPixelPrecision)
+            break;
+
         float3 midpointPosition = 0.5f * (frontSample.screenPosition + backSample.screenPosition);
         ScreenRaySample midpointSample;
         uint sampleStatus = EvaluateScreenRaySample(midpointPosition, screenSize, midpointSample);
@@ -162,17 +183,11 @@ bool TryRefineScreenRayHit(float2 screenSize, ScreenRaySample frontSample, Scree
 
 
 // Screen space ray marching:
-bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, out uint2 hitPixel, out float2 hitUv)
+bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, float2 screenSize, out uint2 hitPixel, out float2 hitUv)
 {
 	// Outputs:
 	hitPixel = 0;
 	hitUv = 0.0f;
-
-	// Screen Size:
-	uint screenWidth;
-    uint screenHeight;
-    sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
-	float2 screenSize = float2(screenWidth, screenHeight);
 
 	// Screen-space ray normalized to one pixel along its dominant axis:
 	ScreenRay screenRay = ProjectRayToScreen(worldRay, screenSize);
@@ -180,6 +195,7 @@ bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, out uint2 hitPixe
 	if (maxDir < 1e-4f)
 		return false;
 	screenRay.direction /= maxDir;
+	float pixelStepSize = GetPixelStepSize(screenRay, screenSize);
 
     ScreenRaySample previousSample;
     bool hasPreviousSample = false;
@@ -233,12 +249,18 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
         return;
 
-    uint2 pixel = threadID.xy;
-    float4 sourceColor = GetSceneColor(pixel);
+	// Screen size:
+	uint screenWidth;
+    uint screenHeight;
+    sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
+	float2 screenSize = float2(screenWidth, screenHeight);
+	uint2 pixel = threadID.xy;
+	float4 sourceColor = GetSceneColor(pixel);
+
     float3 worldPosition;
-    if (!TryGetGeometryWorldPosition(pixel, worldPosition))
+    if (!TryGetGeometryWorldPosition(pixel, screenSize, worldPosition))
     {
-        SetSceneColor(pixel, sourceColor);
+		SetSceneColor(pixel, sourceColor);
         return;
     }
 
@@ -254,7 +276,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     // Screen space ray marching:
     uint2 hitPixel;
     float2 hitUv;
-    bool hasHit = ScreenSpaceRayMarch(pixel, worldRay, hitPixel, hitUv);
+    bool hasHit = ScreenSpaceRayMarch(pixel, worldRay, screenSize, hitPixel, hitUv);
 
     // Reflect skybox when ray hit misses:
     float3 reflectionColor = GetEnvironmentColor(reflectionDirection);
