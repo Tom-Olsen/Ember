@@ -14,6 +14,8 @@ TextureCube<float4> environmentMap : register(t100, CALL_SET);
 static const uint maxStepCount = 64;
 static const uint refinementStepCount = 8;
 static const uint pixelStepSize = 10;
+static const float minimumSurfaceThickness = 0.05f;
+static const float relativeSurfaceThickness = 0.005f;
 // Screen ray sample status:
 static const uint screenRaySampleOutsideScreen = 0;
 static const uint screenRaySampleWithoutGeometry = 1;
@@ -128,12 +130,44 @@ uint EvaluateScreenRaySample(float3 screenPosition, float2 screenSize, out Scree
     raySample.depthDelta = rayViewDepth - raySample.sceneViewDepth;
     return screenRaySampleValid;
 }
+bool TryRefineScreenRayHit(float2 screenSize, ScreenRaySample frontSample, ScreenRaySample backSample, out ScreenRaySample hitSample)
+{
+    hitSample.screenPosition = 0.0f;
+    hitSample.sceneViewDepth = 0.0f;
+    hitSample.depthDelta = 0.0f;
+
+    // Refine frontSample/backSample:
+    for (uint refinementIndex = 0; refinementIndex < refinementStepCount; refinementIndex++)
+    {
+        float3 midpointPosition = 0.5f * (frontSample.screenPosition + backSample.screenPosition);
+        ScreenRaySample midpointSample;
+        uint sampleStatus = EvaluateScreenRaySample(midpointPosition, screenSize, midpointSample);
+        if (sampleStatus != screenRaySampleValid)
+            return false;
+
+        if (midpointSample.depthDelta < 0.0f)
+            frontSample = midpointSample;
+        else
+            backSample = midpointSample;
+    }
+
+    float surfaceThickness = max(minimumSurfaceThickness, relativeSurfaceThickness * backSample.sceneViewDepth);
+    if (backSample.depthDelta < 0.0f || backSample.depthDelta > surfaceThickness)
+        return false;
+
+    hitSample = backSample;
+    return true;
+}
 
 
 
 // Screen space ray marching:
 bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, out uint2 hitPixel, out float2 hitUv)
 {
+	// Outputs:
+	hitPixel = 0;
+	hitUv = 0.0f;
+
 	// Screen Size:
 	uint screenWidth;
     uint screenHeight;
@@ -158,27 +192,36 @@ bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, out uint2 hitPixe
 		if (sampleStatus == screenRaySampleOutsideScreen)
 			break;
 		if (sampleStatus == screenRaySampleWithoutGeometry)
+		{
+			hasPreviousSample = false;
 			continue;
+		}
 
 		// Reject self-reflections around the ray origin:
 		uint2 pixel = uint2(raySample.screenPosition.xy);
         int2 pixelOffset = int2(pixel) - int2(sourcePixel);
         bool isOutsideSourceNeighborhood = any(abs(pixelOffset) > 1);
 
-		// Test:
+		// Refine front-to-back depth crossings:
 		if (isOutsideSourceNeighborhood && hasPreviousSample && previousSample.depthDelta < 0.0f && raySample.depthDelta >= 0.0f)
 		{
-			hitPixel = pixel;
-			hitUv = (float2(hitPixel) + 0.5f) / screenSize;
-			return true;
+			ScreenRaySample hitSample;
+			if (TryRefineScreenRayHit(screenSize, previousSample, raySample, hitSample))
+			{
+				hitPixel = uint2(hitSample.screenPosition.xy);
+				int2 hitPixelOffset = int2(hitPixel) - int2(sourcePixel);
+				if (any(abs(hitPixelOffset) > 1)) // prevents self reflection.
+				{
+					hitUv = (float2(hitPixel) + 0.5f) / screenSize;
+					return true;
+				}
+			}
 		}
 		previousSample = raySample;
 		hasPreviousSample = true;
 	}
 
 	// No hit detected:
-    hitPixel = 0;
-    hitUv = 0.0f;
     return false;
 }
 
