@@ -10,7 +10,6 @@ struct VertexInput
     float3 tangent : TANGENT;           // tangent in local/model space
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;
-    float test[2] : TEST;
 };
 struct VertexOutput
 {
@@ -20,7 +19,6 @@ struct VertexOutput
     float4 vertexColor : COLOR;         // vertex color
     float4 uv : TEXCOORD0;              // texture coordinates
     float3 worldPosition : TEXCOORD1;   // position in world space
-    float test[2] : TEST;
 };
 
 
@@ -43,6 +41,5 @@ VertexOutput main(VertexInput input)
         output.vertexColor *= instanceBuffer[input.instanceID].color;
     output.uv = input.uv;
     output.worldPosition = mul(localToWorldMatrix, pos).xyz;
-    output.test = input.test;
     return output;
 }

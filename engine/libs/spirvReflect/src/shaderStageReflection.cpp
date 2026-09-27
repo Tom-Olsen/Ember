@@ -6,6 +6,7 @@
 #include "vulkanVertexInputRateToString.h"
 #include <spirv_reflect.h>
 #include <sstream>
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
@@ -160,7 +161,7 @@ namespace emberSpirvReflect
             if (pInput->built_in != -1)
                 continue; // built in system values (e.g. SV_InstanceID) are handled automatically by vulkan.
             if (pInput->array.dims_count > 0)
-                continue; // array inputs not supported (yet).
+                throw std::runtime_error("ShaderStageReflection::ExtractVertexStageInfo() failed. Array vertex inputs are not supported. Location: " + std::to_string(pInput->location));
             VertexAttributeInfo vertexAttribute;
 
             // Semantic:
