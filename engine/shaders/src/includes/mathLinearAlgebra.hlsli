@@ -1,25 +1,24 @@
-#ifndef __INCLUDE_GUARD_linearAlgebra_hlsli__
-#define __INCLUDE_GUARD_linearAlgebra_hlsli__
+#ifndef __INCLUDE_GUARD_mathLinearAlgebra_hlsli__
+#define __INCLUDE_GUARD_mathLinearAlgebra_hlsli__
 #include "mathConstants.hlsli"
 
 
 
 // Vector operations:
-float LinAlg_VectorToPlaneDistance(float3 vec, float3 planeNormal)
+float mathLinAlg_VectorToPlaneDistance(float3 vec, float3 planeNormal)
 {
     return dot(vec, planeNormal) / dot(planeNormal, planeNormal);
 }
-float3 LinAlg_VectorToPlaneProjection(float3 vec, float3 planeNormal)
+float3 mathLinAlg_VectorToPlaneProjection(float3 vec, float3 planeNormal)
 {
-    return vec - LinAlg_VectorToPlaneDistance(vec, planeNormal) * planeNormal;
+    return vec - mathLinAlg_VectorToPlaneDistance(vec, planeNormal) * planeNormal;
 }
-bool LinAlg_IsEpsilonEqual(float3 a, float3 b)
+bool mathLinAlg_IsEpsilonEqual(float3 a, float3 b)
 {
     float epsilon = 1e-4f;
     return abs(a.x - b.x) < epsilon && abs(a.y - b.y) < epsilon && abs(a.z - b.z) < epsilon;
 }
-
-float3 LinAlg_GetOrhtogonalVector(float3 v)
+float3 mathLinAlg_GetOrhtogonalVector(float3 v)
 {
     float epsilon = 1e-4f;
     float3 result = cross(v, float3(1.0f, 0.0f, 0.0f));
@@ -31,7 +30,7 @@ float3 LinAlg_GetOrhtogonalVector(float3 v)
     }
     return result;
 }
-float LinAlg_AngleRadians(float3 a, float3 b)
+float mathLinAlg_AngleRadians(float3 a, float3 b)
 {
     float epsilon = 1e-4f;
     float lengths = length(a) * length(b);
@@ -43,7 +42,7 @@ float LinAlg_AngleRadians(float3 a, float3 b)
 
 
 // Matrix inversion:
-float4x4 LinAlg_Invert(float4x4 input)
+float4x4 mathLinAlg_Invert(float4x4 input)
 {
 #define minor(a,b,c) determinant(float3x3(input.a, input.b, input.c))
     float4x4 cofactors = float4x4(
@@ -70,15 +69,15 @@ float4x4 LinAlg_Invert(float4x4 input)
     return cofactors / determinant(input);
 }
 
-float4x4 LinAlg_NormalMatrix(float4x4 localToWorldMatrix)
+float4x4 mathLinAlg_NormalMatrix(float4x4 localToWorldMatrix)
 {
-    return transpose(LinAlg_Invert(localToWorldMatrix));
+    return transpose(mathLinAlg_Invert(localToWorldMatrix));
 }
 
 
 
 // Translation/Rotation/Scale matrices:
-float4x4 LinAlg_Translate(float3 translation)
+float4x4 mathLinAlg_Translate(float3 translation)
 {
     return float4x4
     (1.0f, 0.0f, 0.0f, translation.x,
@@ -86,7 +85,7 @@ float4x4 LinAlg_Translate(float3 translation)
      0.0f, 0.0f, 1.0f, translation.z,
      0.0f, 0.0f, 0.0f,          1.0f);
 }
-float3x3 LinAlg_RotateX3x3(float angleRadians)
+float3x3 mathLinAlg_RotateX3x3(float angleRadians)
 {
     float s, c;
     sincos(angleRadians, s, c);
@@ -95,7 +94,7 @@ float3x3 LinAlg_RotateX3x3(float angleRadians)
 	 0.0f,    c,   -s,
 	 0.0f,    s,    c);
 }
-float4x4 LinAlg_RotateX4x4(float angleRadians)
+float4x4 mathLinAlg_RotateX4x4(float angleRadians)
 {
     float s, c;
     sincos(angleRadians, s, c);
@@ -105,7 +104,7 @@ float4x4 LinAlg_RotateX4x4(float angleRadians)
 	 0.0f,    s,    c, 0.0f,
 	 0.0f, 0.0f, 0.0f, 1.0f);
 }
-float4x4 LinAlg_Rotate4x4(float3 axis, float angleRadians)
+float4x4 mathLinAlg_Rotate4x4(float3 axis, float angleRadians)
 {
     float c = cos(angleRadians);
     float s = sin(angleRadians);
@@ -120,21 +119,21 @@ float4x4 LinAlg_Rotate4x4(float3 axis, float angleRadians)
      z * x * t - y * s, z * y * t + x * s,     z * z * t + c, 0.0f,
                   0.0f,              0.0f,              0.0f, 1.0f);
 }
-float4x4 LinAlg_RotateFromTo(float3 from, float3 to)
+float4x4 mathLinAlg_RotateFromTo(float3 from, float3 to)
 {
     float3 f = normalize(from);
     float3 t = normalize(to);
     float3 diff = abs(t - f);
     float epsilon = 1e-4f;
-    if (LinAlg_IsEpsilonEqual(f, t))
+    if (mathLinAlg_IsEpsilonEqual(f, t))
         return math_identity4x4;
-    if (LinAlg_IsEpsilonEqual(f, -t))
-        return LinAlg_Rotate4x4(LinAlg_GetOrhtogonalVector(f), math_PI);
+    if (mathLinAlg_IsEpsilonEqual(f, -t))
+        return mathLinAlg_Rotate4x4(mathLinAlg_GetOrhtogonalVector(f), math_PI);
     float3 axis = cross(from, to); // normalization not needed, as Rotate(...) will normalize it
-    float angleRadians = LinAlg_AngleRadians(from, to);
-    return LinAlg_Rotate4x4(axis, angleRadians);
+    float angleRadians = mathLinAlg_AngleRadians(from, to);
+    return mathLinAlg_Rotate4x4(axis, angleRadians);
 }
-float4x4 LinAlg_Scale(float3 scale)
+float4x4 mathLinAlg_Scale(float3 scale)
 {
     return float4x4
      (scale.x,    0.0f,    0.0f, 0.0f,
@@ -142,30 +141,30 @@ float4x4 LinAlg_Scale(float3 scale)
          0.0f,    0.0f, scale.z, 0.0f,
          0.0f,    0.0f,    0.0f, 1.0f);
 }
-float4x4 LinAlg_Scale(float scale)
+float4x4 mathLinAlg_Scale(float scale)
 {
-    return LinAlg_Scale(float3(scale, scale, scale));
+    return mathLinAlg_Scale(float3(scale, scale, scale));
 }
 
 
 
 // Get Translation/Rotation/Scale from matrix:
-float3 LinAlg_GetTranslation(float4x4 TRS)
+float3 mathLinAlg_GetTranslation(float4x4 TRS)
 {
     return float3(TRS._12, TRS._13, TRS._14);
 }
-float3 LinAlg_GetScale(float4x4 TRS)
+float3 mathLinAlg_GetScale(float4x4 TRS)
 {
     return float3(length(TRS._11_21_31), length(TRS._12_22_32), length(TRS._13_23_33));
 }
-float3x3 LinAlg_GetRotation3x3(float4x4 TRS)
+float3x3 mathLinAlg_GetRotation3x3(float4x4 TRS)
 {
-    float3 scale = LinAlg_GetScale(TRS);
+    float3 scale = mathLinAlg_GetScale(TRS);
     return float3x3(normalize(TRS._11_21_31 / scale), normalize(TRS._12_22_32 / scale), normalize(TRS._13_23_33 / scale));
 }
-float4x4 LinAlg_GetRotation4x4(float4x4 TRS)
+float4x4 mathLinAlg_GetRotation4x4(float4x4 TRS)
 {
-    float3 scale = LinAlg_GetScale(TRS);
+    float3 scale = mathLinAlg_GetScale(TRS);
     float4 column0 = float4(normalize(TRS._11_21_31 / scale), 0);
     float4 column1 = float4(normalize(TRS._12_22_32 / scale), 0);
     float4 column2 = float4(normalize(TRS._13_23_33 / scale), 0);
@@ -175,4 +174,4 @@ float4x4 LinAlg_GetRotation4x4(float4x4 TRS)
 
 
 
-#endif // __INCLUDE_GUARD_linearAlgebra_hlsli__
+#endif // __INCLUDE_GUARD_mathLinearAlgebra_hlsli__

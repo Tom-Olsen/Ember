@@ -89,7 +89,7 @@ float PercentageCloserFilteredShadow(int arrayIndex, float3 lightUvz)
     //float shadow11 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2(1, 1)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
     //
     //// Perform bilinear interpolation
-    //return Interpolation_Bilinear(texelFraction, shadow00, shadow01, shadow10, shadow11);
+    //return mathInterpolation_Bilinear(texelFraction, shadow00, shadow01, shadow10, shadow11);
     
     // Bicubic:
     float2 texelPos = float2(SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION) * lightUvz.xy;
@@ -115,7 +115,7 @@ float PercentageCloserFilteredShadow(int arrayIndex, float3 lightUvz)
     float shadow_p2p2 = shadowMaps.SampleCmp(shadowSampler, float3((texelFloor + float2( 2, 3)) * SHADOW_MAP_TEXEL_SIZE, arrayIndex), lightUvz.z);
     
     // Perform bilinear interpolation
-    return Interpolation_Bicubic(texelFraction,
+    return mathInterpolation_Bicubic(texelFraction,
     shadow_m1m1, shadow_m1p0, shadow_m1p1, shadow_m1p2,
     shadow_p0m1, shadow_p0p0, shadow_p0p1, shadow_p0p2,
     shadow_p1m1, shadow_p1p0, shadow_p1p1, shadow_p1p2,

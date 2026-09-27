@@ -39,7 +39,7 @@ float4 main(FragmentInput input) : SV_TARGET
     // Mesh data:
     float2 uv = input.uv.xy * surface_scaleOffset.xy + surface_scaleOffset.zw;
     float3 tangentSpaceNormal = normalize(input.worldNormal);
-    float3 tangentSpaceTangent = normalize(LinAlg_VectorToPlaneProjection(input.worldTangent, tangentSpaceNormal));
+    float3 tangentSpaceTangent = normalize(mathLinAlg_VectorToPlaneProjection(input.worldTangent, tangentSpaceNormal));
     float3 tangentSpaceBitangent = cross(tangentSpaceNormal, tangentSpaceTangent);
     float3x3 tangentToWorldMatrix = transpose(float3x3(tangentSpaceTangent, tangentSpaceBitangent, tangentSpaceNormal));
 

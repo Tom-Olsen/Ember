@@ -5,9 +5,11 @@
 
 // Sub libraries:
 #include "mathConstants.hlsli"
-#include "linearAlgebra.hlsli"
-#include "interpolation.hlsli"
-#include "random.hlsli"
+#include "mathInterpolation.hlsli"
+#include "mathLinearAlgebra.hlsli"
+#include "mathRandom.hlsli"
+#include "mathRay.hlsli"
+
 
 
 // Basic functions:

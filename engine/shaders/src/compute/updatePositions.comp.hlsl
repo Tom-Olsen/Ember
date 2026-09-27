@@ -22,9 +22,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
         float3 end = float3(10, 0, 2);
         float3 position = (end - start) * t01 + start;
         position.z += sin(4.0f * math_PI * t01 + pc.time);
-        float4x4 translation = LinAlg_Translate(position);
+        float4x4 translation = mathLinAlg_Translate(position);
         float4x4 rotation = math_identity4x4;
-        float4x4 scale = LinAlg_Scale(1.0f);
+        float4x4 scale = mathLinAlg_Scale(1.0f);
         float4x4 TRS = mul(translation, mul(rotation, scale));
         instanceBuffer[index].localToWorldMatrix = TRS;
         float4 color = instanceBuffer[index].color;

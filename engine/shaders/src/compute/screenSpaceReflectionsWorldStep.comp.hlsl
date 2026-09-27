@@ -42,7 +42,7 @@ bool TryGetWorldPosition(uint2 pixel, out float3 worldPosition)
 // Environment color in worldDirection:
 float3 GetEnvironmentColor(float3 worldDirection)
 {
-    float3 cubeDirection = mul(LinAlg_RotateX3x3(-math_PI_2), worldDirection);
+    float3 cubeDirection = mul(mathLinAlg_RotateX3x3(-math_PI_2), worldDirection);
     return environmentMap.SampleLevel(colorSampler, cubeDirection, 0.0f).rgb;
 }
 

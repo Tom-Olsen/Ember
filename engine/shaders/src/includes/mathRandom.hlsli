@@ -1,11 +1,11 @@
-#ifndef __INCLUDE_GUARD_random_hlsli__
-#define __INCLUDE_GUARD_random_hlsli__
+#ifndef __INCLUDE_GUARD_mathRandom_hlsli__
+#define __INCLUDE_GUARD_mathRandom_hlsli__
 
 
 
 // Pseudo random number generators using indexes and time as seeds.
 // Range: [0,1)
-float Random01(uint index0, uint index1, uint index2, uint index3, float time)
+float mathRandom01(uint index0, uint index1, uint index2, uint index3, float time)
 {
     // Sorting network:
     if(index0>index1){uint t=index0; index0=index1; index1=t;}
@@ -31,23 +31,23 @@ float Random01(uint index0, uint index1, uint index2, uint index3, float time)
     seed ^= seed >> 16;
     return float(seed) * (1.0f / 4294967296.0f); // [0,1)
 }
-float Random01(uint index0, uint index1, uint index2, float time)
+float mathRandom01(uint index0, uint index1, uint index2, float time)
 {
-    return Random01(index0, index1, index2, 0u, time);
+    return mathRandom01(index0, index1, index2, 0u, time);
 }
-float Random01(uint index0, uint index1, float time)
+float mathRandom01(uint index0, uint index1, float time)
 {
-    return Random01(index0, index1, 0u, 0u, time);
+    return mathRandom01(index0, index1, 0u, 0u, time);
 }
-float Random01(uint index0, float time)
+float mathRandom01(uint index0, float time)
 {
-    return Random01(index0, 0u, 0u, 0u, time);
+    return mathRandom01(index0, 0u, 0u, 0u, time);
 }
-float Random01(float time)
+float mathRandom01(float time)
 {
-    return Random01(0u, 0u, 0u, 0u, time);
+    return mathRandom01(0u, 0u, 0u, 0u, time);
 }
 
 
 
-#endif // __INCLUDE_GUARD_random_hlsli__
+#endif // __INCLUDE_GUARD_mathRandom_hlsli__

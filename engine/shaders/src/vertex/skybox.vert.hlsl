@@ -23,6 +23,6 @@ VertexOutput main(VertexInput input)
     
     VertexOutput output;
     output.clipPosition = mul(mat, pos);
-    output.localPos = mul(LinAlg_RotateX3x3(-math_PI_2), input.position);
+    output.localPos = mul(mathLinAlg_RotateX3x3(-math_PI_2), input.position);
     return output;
 }

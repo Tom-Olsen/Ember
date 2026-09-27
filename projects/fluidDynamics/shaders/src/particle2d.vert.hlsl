@@ -48,11 +48,11 @@ VertexOutput main(VertexInput input)
     float4x4 localToWorldMatrix = model_localToWorldMatrix;
     if (pc.instanceCount != 0 && input.instanceID < pc.instanceCount)
     {
-        float4x4 positionMatrix = LinAlg_Translate(float3(positionBuffer[input.instanceID].xy, 0));
+        float4x4 positionMatrix = mathLinAlg_Translate(float3(positionBuffer[input.instanceID].xy, 0));
         localToWorldMatrix = mul(model_localToWorldMatrix, positionMatrix);
     }
     float4x4 localToClipMatrix = mul(camera_worldToClipMatrix, localToWorldMatrix);
-    float4x4 normalMatrix = LinAlg_NormalMatrix(localToWorldMatrix);
+    float4x4 normalMatrix = mathLinAlg_NormalMatrix(localToWorldMatrix);
     
     float4 color = input.vertexColor;
     // Color by density:

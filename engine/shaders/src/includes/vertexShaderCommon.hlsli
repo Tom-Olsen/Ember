@@ -36,12 +36,12 @@ StructuredBuffer<InstanceData> instanceBuffer : register(t199, SHADER_SET);
 // Model world position:
 float3 Model_GetWorldPosition()
 {
-    return LinAlg_GetTranslation(model_localToWorldMatrix);
+    return mathLinAlg_GetTranslation(model_localToWorldMatrix);
 }
 float3 Model_GetWorldPosition(uint instanceID)
 {
     if (pc.instanceCount != 0 && instanceID < pc.instanceCount)
-        return LinAlg_GetTranslation(mul(model_localToWorldMatrix, instanceBuffer[instanceID].localToWorldMatrix));
+        return mathLinAlg_GetTranslation(mul(model_localToWorldMatrix, instanceBuffer[instanceID].localToWorldMatrix));
     return Model_GetWorldPosition();
 }
 
