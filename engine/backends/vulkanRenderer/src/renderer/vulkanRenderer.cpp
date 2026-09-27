@@ -884,7 +884,9 @@ namespace vulkanRendererBackend
 		switch (result)
 		{
 		case VK_SUCCESS:
+			return true;
 		case VK_SUBOPTIMAL_KHR:
+			m_rebuildSwapchain = true;
 			return true;
 		case VK_ERROR_OUT_OF_DATE_KHR:
 			m_rebuildSwapchain = true;
