@@ -26,7 +26,6 @@
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSceneColorTexture2dPair.h"
 #include <algorithm>
-#include <array>
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -86,17 +85,14 @@ namespace vulkanRendererBackend
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			// Render pass info:
-			std::array<VkClearValue, 2> clearValues;
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = framebuffer;
 			renderPassBeginInfo.renderArea.offset = { 0, 0 };
 			renderPassBeginInfo.renderArea.extent.width = viewport.width;
 			renderPassBeginInfo.renderArea.extent.height = viewport.height;
-			renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			renderPassBeginInfo.pClearValues = clearValues.data();
+			renderPassBeginInfo.clearValueCount = 0;
+			renderPassBeginInfo.pClearValues = nullptr;
 
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
