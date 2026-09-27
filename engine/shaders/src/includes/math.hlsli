@@ -8,7 +8,6 @@
 #include "mathInterpolation.hlsli"
 #include "mathLinearAlgebra.hlsli"
 #include "mathRandom.hlsli"
-#include "mathRay.hlsli"
 
 
 

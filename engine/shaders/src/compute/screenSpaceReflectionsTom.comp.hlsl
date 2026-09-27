@@ -5,31 +5,60 @@
 
 
 
+// Bindings:
 TextureCube<float4> environmentMap : register(t100, CALL_SET);
 
 
 
-// Ray march budget and binary-search iterations after a depth crossing:
+// Ray march parameters:
 static const uint maxStepCount = 64;
 static const uint refinementStepCount = 8;
 static const uint pixelStepSize = 10;
+// Screen ray sample status:
+static const uint screenRaySampleOutsideScreen = 0;
+static const uint screenRaySampleWithoutGeometry = 1;
+static const uint screenRaySampleValid = 2;
 
 
 
-// Getters:
-// Converts pixel+ndcDepth to world position:
-float3 GetWorldPosition(uint2 pixel, float ndcDepth)
+// Structs:
+struct WorldRay
 {
-    uint width;
-    uint height;
-    sceneDepthTexture.GetDimensions(width, height);
-    float2 uv = (float2(pixel) + 0.5f) / float2(width, height);
-    float4 clipPosition = float4(2.0f * uv - 1.0f, ndcDepth, 1.0f);
+	float3 origin;
+	float3 direction;
+};
+struct ScreenRay
+{
+    float3 origin;     // xy = pixel position, z = NDC depth [0,1]
+    float3 direction;  // xy = pixel delta, z = NDC depth delta
+};
+struct ScreenRaySample
+{
+    float3 screenPosition;	// xy = pixel position, z = NDC depth.
+    float sceneViewDepth;	// scene depth in view space.
+    float depthDelta;		// sample depth minus scene depth in view space.
+};
+
+
+
+// Small helpers:
+float3 ScreenPositionToWorld(float3 screenPosition, float2 screenSize)
+{
+    float2 uv = screenPosition.xy / screenSize;
+    float4 clipPosition = float4(2.0f * uv - 1.0f, screenPosition.z, 1.0f);
     float4 worldPosition = mul(camera_clipToWorldMatrix, clipPosition);
     return worldPosition.xyz / worldPosition.w;
 }
-// Get world position of drawn geometry, or fails:
-bool TryGetWorldPosition(uint2 pixel, out float3 worldPosition)
+float3 GetWorldPosition(uint2 pixel, float ndcDepth)
+{
+	uint screenWidth;
+    uint screenHeight;
+	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
+	float2 screenSize = float2(screenWidth, screenHeight);
+    float3 screenPosition = float3(float2(pixel) + 0.5f, ndcDepth);
+    return ScreenPositionToWorld(screenPosition, screenSize);
+}
+bool TryGetGeometryWorldPosition(uint2 pixel, out float3 worldPosition)
 {
     float sceneDepth = GetSceneNdcDepth(pixel);
     if (sceneDepth >= 1.0f)
@@ -40,11 +69,64 @@ bool TryGetWorldPosition(uint2 pixel, out float3 worldPosition)
     worldPosition = GetWorldPosition(pixel, sceneDepth);
     return true;
 }
-// Environment color in worldDirection:
 float3 GetEnvironmentColor(float3 worldDirection)
 {
     float3 cubeDirection = mul(mathLinAlg_RotateX3x3(-math_PI_2), worldDirection);
     return environmentMap.SampleLevel(colorSampler, cubeDirection, 0.0f).rgb;
+}
+
+
+
+// Big helpers:
+ScreenRay ProjectRayToScreen(WorldRay worldRay, float2 screenSize)
+{
+    // Second point on the same world-space line:
+    float3 rayPoint = worldRay.origin + worldRay.direction;
+
+    // World -> Clip xy[-w, w], z[0,w]:
+    float4 originClip = mul(camera_worldToClipMatrix, float4(worldRay.origin, 1.0f));
+    float4 pointClip  = mul(camera_worldToClipMatrix, float4(rayPoint,  1.0f));
+
+    // Clip -> NDC xy[-1, 1], z[0,1]:
+    float3 originNdc = originClip.xyz / originClip.w;
+    float3 pointNdc  = pointClip.xyz  / pointClip.w;
+
+    // NDC -> pixels [0, width/height]:
+    float3 originScreen;
+    originScreen.xy = (originNdc.xy * 0.5f + 0.5f) * screenSize;
+    originScreen.z  = originNdc.z;
+    float3 pointScreen;
+    pointScreen.xy = (pointNdc.xy * 0.5f + 0.5f) * screenSize;
+    pointScreen.z  = pointNdc.z;
+
+    ScreenRay screenRay;
+    screenRay.origin = originScreen;
+    screenRay.direction = pointScreen - originScreen;
+    return screenRay;
+}
+uint EvaluateScreenRaySample(float3 screenPosition, float2 screenSize, out ScreenRaySample raySample)
+{
+    raySample.screenPosition = screenPosition;
+    raySample.sceneViewDepth = 0.0f;
+    raySample.depthDelta = 0.0f;
+
+    if (screenPosition.x < 0.0f || screenPosition.x >= screenSize.x ||
+        screenPosition.y < 0.0f || screenPosition.y >= screenSize.y ||
+        screenPosition.z < 0.0f || screenPosition.z >= 1.0f)
+        return screenRaySampleOutsideScreen;
+
+    uint2 pixel = uint2(screenPosition.xy);
+    float sceneNdcDepth = GetSceneNdcDepth(pixel);
+    if (sceneNdcDepth >= 1.0f)
+        return screenRaySampleWithoutGeometry;
+
+    float2 pixelCenter = float2(pixel) + 0.5f;
+    float3 rayWorldPosition   = ScreenPositionToWorld(float3(pixelCenter, screenPosition.z), screenSize);
+    float3 sceneWorldPosition = ScreenPositionToWorld(float3(pixelCenter, sceneNdcDepth), screenSize);
+    float rayViewDepth = Camera_GetDepth(rayWorldPosition);
+    raySample.sceneViewDepth = Camera_GetDepth(sceneWorldPosition);
+    raySample.depthDelta = rayViewDepth - raySample.sceneViewDepth;
+    return screenRaySampleValid;
 }
 
 
@@ -59,7 +141,7 @@ bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, out uint2 hitPixe
 	float2 screenSize = float2(screenWidth, screenHeight);
 
 	// Screen-space ray normalized to one pixel along its dominant axis:
-	ScreenRay screenRay = ProjectRayToScreen(worldRay, screenSize, camera_worldToClipMatrix);
+	ScreenRay screenRay = ProjectRayToScreen(worldRay, screenSize);
 	float maxDir = max(abs(screenRay.direction.x), abs(screenRay.direction.y));
 	if (maxDir < 1e-4f)
 		return false;
@@ -69,40 +151,22 @@ bool ScreenSpaceRayMarch(uint2 sourcePixel, WorldRay worldRay, out uint2 hitPixe
     bool hasPreviousSample = false;
     for (uint step = 1; step <= maxStepCount; step++)
 	{
-		// Screen ray sample:
+		// Create screen ray sample:
+		float3 screenPosition = screenRay.origin + step * pixelStepSize * screenRay.direction;
 		ScreenRaySample raySample;
-		raySample.screenPosition = screenRay.origin + step * pixelStepSize * screenRay.direction;
-
-		// Reject offscreen samples:
-		if (raySample.screenPosition.x < 0 || screenWidth <= raySample.screenPosition.x
-		 || raySample.screenPosition.y < 0 || screenHeight <= raySample.screenPosition.y
-		 || raySample.screenPosition.z < 0 || 1 <= raySample.screenPosition.z)
+		uint sampleStatus = EvaluateScreenRaySample(screenPosition, screenSize, raySample);
+		if (sampleStatus == screenRaySampleOutsideScreen)
 			break;
-
-		// Pixel and ndcDepth after ray marching:
-		uint2 pixel = uint2(raySample.screenPosition.xy);
-		float ndcDepth = raySample.screenPosition.z;
-
-		// Reject pixels without geometry:
-    	float sceneNdcDepth = GetSceneNdcDepth(pixel);
-    	if (sceneNdcDepth >= 1.0f)
+		if (sampleStatus == screenRaySampleWithoutGeometry)
 			continue;
 
-		// Go back to world space:
-		float3 rayWorldPosition   = GetWorldPosition(pixel, ndcDepth);
-		float3 sceneWorldPosition = GetWorldPosition(pixel, sceneNdcDepth);
-
-		// Compute depth delta between worldPosition and scene geometry:
-		float rayViewDepth   = Camera_GetDepth(rayWorldPosition);
-		raySample.sceneViewDepth = Camera_GetDepth(sceneWorldPosition);
-		raySample.depthDelta = rayViewDepth - raySample.sceneViewDepth;
-
 		// Reject self-reflections around the ray origin:
+		uint2 pixel = uint2(raySample.screenPosition.xy);
         int2 pixelOffset = int2(pixel) - int2(sourcePixel);
         bool isOutsideSourceNeighborhood = any(abs(pixelOffset) > 1);
 
 		// Test:
-		if (isOutsideSourceNeighborhood && hasPreviousSample && previousSample.depthDelta < 0.0f && sample.depthDelta >= 0.0f)
+		if (isOutsideSourceNeighborhood && hasPreviousSample && previousSample.depthDelta < 0.0f && raySample.depthDelta >= 0.0f)
 		{
 			hitPixel = pixel;
 			hitUv = (float2(hitPixel) + 0.5f) / screenSize;
@@ -129,7 +193,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint2 pixel = threadID.xy;
     float4 sourceColor = GetSceneColor(pixel);
     float3 worldPosition;
-    if (!TryGetWorldPosition(pixel, worldPosition))
+    if (!TryGetGeometryWorldPosition(pixel, worldPosition))
     {
         SetSceneColor(pixel, sourceColor);
         return;
@@ -144,7 +208,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     float3 reflectionDirection = normalize(reflect(cameraRayDirection, worldNormal));
 	WorldRay worldRay = {rayOrigin, reflectionDirection};
 
-	// Screen space ray marching:
+    // Screen space ray marching:
     uint2 hitPixel;
     float2 hitUv;
     bool hasHit = ScreenSpaceRayMarch(pixel, worldRay, hitPixel, hitUv);
