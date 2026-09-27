@@ -53,13 +53,13 @@ namespace vulkanRendererBackend
 				// Albedo/Normal/Surface properties:
 				if (attachmentIndex < deferredRenderingContract::colorAttachmentCount)
 				{
-					attachments[attachmentIndex].initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+					attachments[attachmentIndex].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 					attachments[attachmentIndex].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 				}
 				// Depth:
 				else
 				{
-					attachments[attachmentIndex].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+					attachments[attachmentIndex].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 					attachments[attachmentIndex].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 				}
 			}

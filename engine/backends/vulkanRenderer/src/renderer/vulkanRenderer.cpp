@@ -861,10 +861,10 @@ namespace vulkanRendererBackend
 		// Deferred lighting:
 		{
 			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", &m_pRenderTargets->GetAlbedoTexture(m_frameExecutionData.frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", &m_pRenderTargets->GetNormalTexture(m_frameExecutionData.frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", &m_pRenderTargets->GetSurfacePropertiesTexture(m_frameExecutionData.frameIndex));
-			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", &m_pRenderTargets->GetSceneDepthTexture(m_frameExecutionData.frameIndex));
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", &m_pRenderTargets->GetAlbedoTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", &m_pRenderTargets->GetNormalTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", &m_pRenderTargets->GetSurfacePropertiesTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferDepth", &m_pRenderTargets->GetSceneDepthTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 			pDeferredLightingDescriptorSetBinding->UpdateShaderData(m_frameExecutionData.frameIndex);
 		}
 

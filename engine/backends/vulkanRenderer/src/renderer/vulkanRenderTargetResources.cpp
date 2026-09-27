@@ -61,10 +61,6 @@ namespace vulkanRendererBackend
 			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 			AccessMask dstAccessMask = AccessMasks::BottomOfPipe::none;
-			m_pSceneDepthTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
-			m_pAlbedoTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
-			m_pNormalTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
-			m_pSurfacePropertiesTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			m_pOutlineTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_GENERAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
 			m_pGizmoTextures[frameIndex]->GetVmaImage()->TransitionLayout(VK_IMAGE_LAYOUT_GENERAL, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
