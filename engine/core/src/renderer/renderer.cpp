@@ -475,21 +475,21 @@ namespace emberCore
 	{
 		return s_pIGpuResourceFactory->CreateBuffer(count, elementSize, usage);
 	}
-	//static emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	//static emberBackendInterface::ITexture* Renderer::CreateTexture1d(const std::string& name, int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	//{
 	//
 	//}
-	emberBackendInterface::ITexture* Renderer::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
-		return s_pIGpuResourceFactory->CreateTexture2d(width, height, format, usage, data);
+		return s_pIGpuResourceFactory->CreateTexture2d(width, height, format, usage, imageCountMode, data);
 	}
-	emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
-		return s_pIGpuResourceFactory->CreateTexture3d(width, height, depth, format, usage, data);
+		return s_pIGpuResourceFactory->CreateTexture3d(width, height, depth, format, usage, imageCountMode, data);
 	}
-	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* Renderer::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
-		return s_pIGpuResourceFactory->CreateTextureCube(width, height, format, usage, data);
+		return s_pIGpuResourceFactory->CreateTextureCube(width, height, format, usage, imageCountMode, data);
 	}
 	emberBackendInterface::IMesh* Renderer::CreateMesh(const std::string& name)
 	{

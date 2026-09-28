@@ -112,7 +112,7 @@ namespace vulkanRendererBackend
 		UploadToBuffer(vkCommandBuffer, pDstBuffer);
 		SingleTimeCommand::EndCommand(queue);
 	}
-	void StagingBuffer::UploadToTexture(VkCommandBuffer vkCommandBuffer, Texture* pDstTexture, uint64_t layerCount)
+	void StagingBuffer::UploadToTexture(VkCommandBuffer vkCommandBuffer, VmaImage* pDstImage)
 	{
 		VkBufferImageCopy region = {};
 		region.bufferOffset = 0;
@@ -121,23 +121,23 @@ namespace vulkanRendererBackend
 		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = layerCount;
+		region.imageSubresource.layerCount = pDstImage->GetImageSubresourceRange().layerCount;
 		region.imageOffset = { 0, 0, 0 };
-		Uint3 extent = pDstTexture->GetVmaImage()->GetExtent();
+		Uint3 extent = pDstImage->GetExtent();
 		region.imageExtent = VkExtent3D{ extent.x, extent.y, extent.z };
 
 		vkCmdCopyBufferToImage(
 			vkCommandBuffer,
 			m_pBuffer->GetVkBuffer(),
-			pDstTexture->GetVmaImage()->GetVkImage(),
+			pDstImage->GetVkImage(),
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 			1,
 			&region);
 	}
-	void StagingBuffer::UploadToTexture(const DeviceQueue& queue, Texture* pDstTexture, uint64_t layerCount)
+	void StagingBuffer::UploadToTexture(const DeviceQueue& queue, VmaImage* pDstImage)
 	{
 		VkCommandBuffer vkCommandBuffer = SingleTimeCommand::BeginCommand(queue);
-		UploadToTexture(vkCommandBuffer, pDstTexture, layerCount);
+		UploadToTexture(vkCommandBuffer, pDstImage);
 		SingleTimeCommand::EndCommand(queue);
 	}
 

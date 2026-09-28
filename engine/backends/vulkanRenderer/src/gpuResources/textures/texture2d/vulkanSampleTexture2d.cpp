@@ -15,7 +15,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	SampleTexture2d::SampleTexture2d(VkFormat format, int width, int height, void* data)
+	SampleTexture2d::SampleTexture2d(VkFormat format, int width, int height, void* data, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture2d(imageCountMode)
 	{
 		Init(format, width, height);
 		if (data)

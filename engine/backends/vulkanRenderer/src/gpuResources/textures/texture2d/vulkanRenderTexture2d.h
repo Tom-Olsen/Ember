@@ -16,7 +16,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		RenderTexture2d(VkFormat format, int width, int height);
+		RenderTexture2d(VkFormat format, int width, int height, emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 		~RenderTexture2d();
 
 		// Non-copyable:

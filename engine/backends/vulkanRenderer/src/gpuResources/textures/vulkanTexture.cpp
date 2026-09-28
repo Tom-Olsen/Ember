@@ -94,8 +94,9 @@ namespace vulkanRendererBackend
 
 	// Protected methods:
 	// Constructor:
-	Texture::Texture()
-		: m_registrationHandle(s_resourceRegistry.Register(this))
+	Texture::Texture(emberCommon::TextureImageCountMode imageCountMode)
+		: m_imageCountMode(imageCountMode)
+		, m_registrationHandle(s_resourceRegistry.Register(this))
 	{
 
 	}
@@ -119,7 +120,8 @@ namespace vulkanRendererBackend
 		, m_channels(other.m_channels)
 		, m_format(other.m_format)
 		, m_vkDescriptorType(other.m_vkDescriptorType)
-		, m_pImage(std::move(other.m_pImage))
+		, m_imageCountMode(other.m_imageCountMode)
+		, m_pImages(std::move(other.m_pImages))
 		, m_registrationHandle(other.m_registrationHandle)
 	{
 		RebindResource();
@@ -136,7 +138,8 @@ namespace vulkanRendererBackend
 			m_channels = other.m_channels;
 			m_format = other.m_format;
 			m_vkDescriptorType = other.m_vkDescriptorType;
-			m_pImage = std::move(other.m_pImage);
+			m_imageCountMode = other.m_imageCountMode;
+			m_pImages = std::move(other.m_pImages);
 			m_registrationHandle = other.m_registrationHandle;
 			RebindResource();
 			other.m_registrationHandle = GpuResourceHandle();
@@ -168,13 +171,27 @@ namespace vulkanRendererBackend
 	{
 		return TextureFormatVulkanToCommon(m_format);
 	}
+	emberCommon::TextureImageCountMode Texture::GetImageCountMode() const
+	{
+		return m_imageCountMode;
+	}
 	VkFormat Texture::GetFormat() const
 	{
 		return m_format;
 	}
 	VmaImage* const Texture::GetVmaImage() const
 	{
-		return m_pImage.get();
+		if (m_imageCountMode != emberCommon::TextureImageCountMode::single)
+			throw std::runtime_error("Texture::GetVmaImage() failed. A frame index is required for per-frame-in-flight textures.");
+		return m_pImages.at(0).get();
+	}
+	VmaImage* const Texture::GetVmaImage(uint32_t frameIndex) const
+	{
+		if (m_imageCountMode == emberCommon::TextureImageCountMode::single)
+			return m_pImages.at(0).get();
+		if (frameIndex >= m_pImages.size())
+			throw std::out_of_range("Texture frame index is out of range.");
+		return m_pImages.at(frameIndex).get();
 	}
 	VkDescriptorType Texture::GetVkDescriptorType() const
 	{
@@ -186,13 +203,11 @@ namespace vulkanRendererBackend
 	}
 	VkImageView Texture::GetVkImageView(uint32_t frameIndex) const
 	{
-		(void)frameIndex;
-		return GetVkImageView();
+		return GetVmaImage(frameIndex)->GetVkImageView();
 	}
 	VkImageLayout Texture::GetVkImageLayout(uint32_t frameIndex) const
 	{
-		(void)frameIndex;
-		return GetVmaImage()->GetImageLayout();
+		return GetVmaImage(frameIndex)->GetImageLayout();
 	}
 
 
@@ -200,8 +215,12 @@ namespace vulkanRendererBackend
     // Debugging:
     void Texture::SetDebugName(const std::string& name)
     {
-        NAME_VK_OBJECT(m_pImage->GetVkImage(), "Image_" + name);
-        NAME_VK_OBJECT(m_pImage->GetVkImageView(), "ImageView_" + name);
+		for (uint32_t imageIndex = 0; imageIndex < m_pImages.size(); imageIndex++)
+		{
+			const std::string suffix = m_imageCountMode == emberCommon::TextureImageCountMode::single ? "" : "_Frame" + std::to_string(imageIndex);
+			NAME_VK_OBJECT(m_pImages[imageIndex]->GetVkImage(), "Image_" + name + suffix);
+			NAME_VK_OBJECT(m_pImages[imageIndex]->GetVkImageView(), "ImageView_" + name + suffix);
+		}
     }
 
 
@@ -333,7 +352,10 @@ namespace vulkanRendererBackend
 		allocInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 		allocInfo.requiredFlags = memoryFlags;
 
-		m_pImage = std::make_unique<VmaImage>(imageInfo, allocInfo, GetImageSize(subresourceRange, format), subresourceRange, viewType, queue);
+		const uint32_t imageCount = m_imageCountMode == emberCommon::TextureImageCountMode::single ? 1 : Context::GetFramesInFlight();
+		m_pImages.reserve(imageCount);
+		for (uint32_t imageIndex = 0; imageIndex < imageCount; imageIndex++)
+			m_pImages.push_back(std::make_unique<VmaImage>(imageInfo, allocInfo, GetImageSize(subresourceRange, format), subresourceRange, viewType, queue));
 	}
 
 
@@ -341,7 +363,7 @@ namespace vulkanRendererBackend
     // Gpu commands:
 	StagingBuffer* Texture::StageData(void* data)
 	{
-		uint64_t layerCount = m_pImage->GetImageSubresourceRange().layerCount;
+		uint64_t layerCount = m_pImages.front()->GetImageSubresourceRange().layerCount;
 		uint64_t bufferSize = layerCount * m_width * m_height * m_depth * BytesPerTexel(m_format);
 		StagingBuffer* pStagingBuffer = new StagingBuffer(bufferSize);
 		pStagingBuffer->SetData(data, bufferSize);
@@ -354,35 +376,39 @@ namespace vulkanRendererBackend
 		VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 		AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 		AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead | AccessMasks::ComputeShader::memoryWrite;
-		m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+		for (const std::unique_ptr<VmaImage>& pImage : m_pImages)
+			pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 	}
 	void Texture::ClearAndPrepareForSampling()
 	{
 		const DeviceQueue& transferQueue = Context::GetLogicalDevice()->GetTransferQueue();
 		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 
-		// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
+		for (const std::unique_ptr<VmaImage>& pImage : m_pImages)
 		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
-			m_pImage->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
+			// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
+			{
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+				VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+				AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+				AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
+				pImage->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			}
 
-        // Clear image:
-		VkClearColorValue clearColor = {};
-		m_pImage->ClearColor(commandBuffer, clearColor);
+			// Clear image:
+			VkClearColorValue clearColor = {};
+			pImage->ClearColor(commandBuffer, clearColor);
 
-		// Transition 1: Layout: transfer->shaderRead
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
-			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
-			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-			m_pImage->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			// Transition 1: Layout: transfer->shaderRead
+			{
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+				VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+				AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
+				AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
+				pImage->TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			}
 		}
 
 		SingleTimeCommand::EndCommand(transferQueue);
@@ -395,42 +421,47 @@ namespace vulkanRendererBackend
 		{
 			VkCommandBuffer transferCommandBuffer = SingleTimeCommand::BeginCommand(transferQueue);
 			VkCommandBuffer graphicsCommandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
-			RecordUploadAndPrepareForSamplingCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer);
+			for (const std::unique_ptr<VmaImage>& pImage : m_pImages)
+				RecordUploadAndPrepareForSamplingCommands(transferCommandBuffer, graphicsCommandBuffer, pStagingBuffer, pImage.get());
 			SingleTimeCommand::EndLinkedCommands(transferQueue, graphicsQueue, VK_PIPELINE_STAGE_2_TRANSFER_BIT);
 		}
 		else
 		{
 			VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(graphicsQueue);
-			RecordUploadAndPrepareForSamplingCommands(commandBuffer, commandBuffer, pStagingBuffer);
+			for (const std::unique_ptr<VmaImage>& pImage : m_pImages)
+				RecordUploadAndPrepareForSamplingCommands(commandBuffer, commandBuffer, pStagingBuffer, pImage.get());
 			SingleTimeCommand::EndCommand(graphicsQueue);
 		}
 	}
 	void Texture::UploadAndPrepareForStorage(StagingBuffer* pStagingBuffer)
 	{
-		// Transition 0: Layout: undefined->transfer, Queue: transfer
+		for (const std::unique_ptr<VmaImage>& pImage : m_pImages)
 		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
-			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
-			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		}
+			// Transition 0: Layout: undefined->transfer, Queue: transfer
+			{
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT;
+				VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+				AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
+				AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
+				pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			}
 
-		// Upload: pStagingBuffer -> texture
-		pStagingBuffer->UploadToTexture(Context::GetLogicalDevice()->GetTransferQueue(), this, m_pImage->GetImageSubresourceRange().layerCount);
+			// Upload: pStagingBuffer -> texture
+			pStagingBuffer->UploadToTexture(Context::GetLogicalDevice()->GetTransferQueue(), pImage.get());
 
-		// Transition 1: Layout: transfer->general, Queue: transfer->compute
-		{
-			VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
-			VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
-			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
-			AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead | AccessMasks::ComputeShader::memoryWrite;
-			m_pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			// Transition 1: Layout: transfer->general, Queue: transfer->compute
+			{
+				VkImageLayout newLayout = VK_IMAGE_LAYOUT_GENERAL;
+				VkPipelineStageFlags2 srcStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
+				VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
+				AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
+				AccessMask dstAccessMask = AccessMasks::ComputeShader::memoryRead | AccessMasks::ComputeShader::memoryWrite;
+				pImage->TransitionLayout(newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			}
 		}
 	}
-	void Texture::RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer)
+	void Texture::RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer, VmaImage* pImage)
 	{
 		// Transition 0: Layout: undefined->dstTransfer, Queue: transfer
 		{
@@ -439,16 +470,16 @@ namespace vulkanRendererBackend
 			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
 			AccessMask srcAccessMask = AccessMasks::TopOfPipe::none;
 			AccessMask dstAccessMask = AccessMasks::Transfer::transferWrite;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 
 		// Upload: pStagingBuffer -> texture
-		pStagingBuffer->UploadToTexture(transferCommandBuffer, this, m_pImage->GetImageSubresourceRange().layerCount);
+		pStagingBuffer->UploadToTexture(transferCommandBuffer, pImage);
 
 		// Transition 1: Layout: transfer->shaderRead
 		// With mipmapping: Queue: graphics
-		if (m_pImage->GetImageSubresourceRange().levelCount > 1)
-			m_pImage->GenerateMipmaps(graphicsCommandBuffer, m_pImage->GetImageSubresourceRange().levelCount);
+		if (pImage->GetImageSubresourceRange().levelCount > 1)
+			pImage->GenerateMipmaps(graphicsCommandBuffer, pImage->GetImageSubresourceRange().levelCount);
         // Without mipmapping: Queue: transfer
 		else
 		{
@@ -457,7 +488,7 @@ namespace vulkanRendererBackend
 			VkPipelineStageFlags2 dstStage = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
 			AccessMask srcAccessMask = AccessMasks::Transfer::transferWrite;
 			AccessMask dstAccessMask = AccessMasks::FragmentShader::shaderRead;
-			m_pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
+			pImage->TransitionLayout(transferCommandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
 		}
 	}
 

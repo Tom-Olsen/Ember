@@ -1,5 +1,6 @@
 #pragma once
 #include "commonTextureFormat.h"
+#include "commonTextureImageCountMode.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
 #include <cstddef>
@@ -59,6 +60,7 @@ namespace emberCore
 		uint32_t GetDepth() const;
 		uint32_t GetChannels() const;
 		const emberCommon::TextureFormat GetFormat() const;
+		emberCommon::TextureImageCountMode GetImageCountMode() const;
 
 		// Setters:
 		void SetData(std::span<const float> data);

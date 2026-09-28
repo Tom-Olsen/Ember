@@ -11,7 +11,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	RenderTexture2d::RenderTexture2d(VkFormat format, int width, int height)
+	RenderTexture2d::RenderTexture2d(VkFormat format, int width, int height, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture2d(imageCountMode)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("RenderTexture2d::RenderTexture2d(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));

@@ -702,8 +702,8 @@ namespace vulkanRendererBackend
 		else if (textureBinding.descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE)
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		else
-			imageInfo.imageLayout = pTexture->GetVmaImage()->GetImageLayout();
-		imageInfo.imageView = pTexture->GetVmaImage()->GetVkImageView();
+			imageInfo.imageLayout = pTexture->GetVmaImage(frameIndex)->GetImageLayout();
+		imageInfo.imageView = pTexture->GetVmaImage(frameIndex)->GetVkImageView();
 
 		VkWriteDescriptorSet descriptorWrite = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
 		descriptorWrite.dstSet = m_descriptorSets[frameIndex];

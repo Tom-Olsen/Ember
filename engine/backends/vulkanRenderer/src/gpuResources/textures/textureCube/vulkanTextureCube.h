@@ -18,7 +18,7 @@ namespace vulkanRendererBackend
 	{
 	protected: // Methods:
 		// Constructor:
-		TextureCube();
+		TextureCube(emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 
 	public: // Methods:
 		// Destructor:

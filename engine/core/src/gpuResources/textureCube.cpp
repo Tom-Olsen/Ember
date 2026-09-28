@@ -7,35 +7,35 @@
 
 namespace emberCore
 {
-	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
+	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode)
 	{
 		m_ownsITexture = true;
         m_name = name;
-		m_pITexture = Renderer::CreateTextureCube(width, height, format, usage, nullptr);
+		m_pITexture = Renderer::CreateTextureCube(width, height, format, usage, imageCountMode, nullptr);
         m_pITexture->SetDebugName(m_name);
 	}
-	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data) : TextureCube(name, width, height, format, usage)
+	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data, emberCommon::TextureImageCountMode imageCountMode) : TextureCube(name, width, height, format, usage, imageCountMode)
 	{
 		SetData(data);
 	}
-	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data) : TextureCube(name, width, height, format, usage)
+	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data, emberCommon::TextureImageCountMode imageCountMode) : TextureCube(name, width, height, format, usage, imageCountMode)
 	{
 		SetData(data);
 	}
-	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float3> data) : TextureCube(name, width, height, format, usage)
+	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float3> data, emberCommon::TextureImageCountMode imageCountMode) : TextureCube(name, width, height, format, usage, imageCountMode)
 	{
 		SetData(data);
 	}
-	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float4> data) : TextureCube(name, width, height, format, usage)
+	TextureCube::TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float4> data, emberCommon::TextureImageCountMode imageCountMode) : TextureCube(name, width, height, format, usage, imageCountMode)
 	{
 		SetData(data);
 	}
-	TextureCube::TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path)
+	TextureCube::TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path, emberCommon::TextureImageCountMode imageCountMode)
 	{
 		emberAssetLoader::ImageAsset imageAsset = emberAssetLoader::ImageAssetLoader::LoadCubeFiles(path, format.channels, false);
 		m_ownsITexture = true;
         m_name = name;
-		m_pITexture = Renderer::CreateTextureCube(imageAsset.width, imageAsset.height, format, usage, nullptr);
+		m_pITexture = Renderer::CreateTextureCube(imageAsset.width, imageAsset.height, format, usage, imageCountMode, nullptr);
         m_pITexture->SetDebugName(m_name);
 		SetRawData(std::as_bytes(std::span(imageAsset.pixels)));
 	}

@@ -6,7 +6,8 @@ namespace vulkanRendererBackend
 {
 	// Protected methods:
 	// Constructor:
-	Texture2d::Texture2d()
+	Texture2d::Texture2d(emberCommon::TextureImageCountMode imageCountMode)
+		: Texture(imageCountMode)
 	{
 		m_depth = 1;
 	}

@@ -2,11 +2,13 @@
 #include "iTexture.h"
 #include "iVulkanTexture.h"
 #include "commonTextureFormat.h"
+#include "commonTextureImageCountMode.h"
 #include "vulkanGpuResourceHandle.h"
 #include "vulkanRendererExport.h"
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -60,12 +62,13 @@ namespace vulkanRendererBackend
 		uint32_t m_channels;
 		VkFormat m_format;
 		VkDescriptorType m_vkDescriptorType;
-		std::unique_ptr<VmaImage> m_pImage;
+		emberCommon::TextureImageCountMode m_imageCountMode;
+		std::vector<std::unique_ptr<VmaImage>> m_pImages;
 		GpuResourceHandle m_registrationHandle;
 
 	protected: // Methods:
 		// Constructor:
-		Texture();
+		Texture(emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 
 	public: // Methods:
 		// Destructor:
@@ -85,8 +88,10 @@ namespace vulkanRendererBackend
 		uint32_t GetDepth() const override;
 		uint32_t GetChannels() const override;
 		const emberCommon::TextureFormat GetTextureFormat() const override;
+		emberCommon::TextureImageCountMode GetImageCountMode() const override;
 		VkFormat GetFormat() const;
 		VmaImage* const GetVmaImage() const;
+		VmaImage* const GetVmaImage(uint32_t frameIndex) const;
 		VkDescriptorType GetVkDescriptorType() const;
 		const VkImageView& GetVkImageView() const;
 		VkImageView GetVkImageView(uint32_t frameIndex) const override;
@@ -109,7 +114,7 @@ namespace vulkanRendererBackend
 		void ClearAndPrepareForSampling();
 		void UploadAndPrepareForSampling(StagingBuffer* pStagingBuffer);
 		void UploadAndPrepareForStorage(StagingBuffer* pStagingBuffer);
-		void RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer);
+		void RecordUploadAndPrepareForSamplingCommands(VkCommandBuffer transferCommandBuffer, VkCommandBuffer graphicsCommandBuffer, StagingBuffer* pStagingBuffer, VmaImage* pImage);
 
 	private: // Methods:
 		void UnregisterResource();

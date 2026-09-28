@@ -99,6 +99,10 @@ namespace emberCore
 	{
 		return m_pITexture->GetTextureFormat();
 	}
+	emberCommon::TextureImageCountMode Texture::GetImageCountMode() const
+	{
+		return m_pITexture->GetImageCountMode();
+	}
 
 
 

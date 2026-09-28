@@ -70,57 +70,57 @@ namespace vulkanRendererBackend
 	//{
 	//
 	//}
-	emberBackendInterface::ITexture* GpuResourceFactory::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* GpuResourceFactory::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
 		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
 		case emberCommon::TextureUsage::sample:
-			pITexture = new SampleTexture2d(vulkanFormat, width, height, data);
+			pITexture = new SampleTexture2d(vulkanFormat, width, height, data, imageCountMode);
 			break;
 		case emberCommon::TextureUsage::storage:
-			pITexture = new StorageTexture2d(vulkanFormat, width, height, data);
+			pITexture = new StorageTexture2d(vulkanFormat, width, height, data, imageCountMode);
 			break;
 		case emberCommon::TextureUsage::storageSample:
-			pITexture = new StorageSampleTexture2d(vulkanFormat, width, height, data);
+			pITexture = new StorageSampleTexture2d(vulkanFormat, width, height, data, imageCountMode);
 			break;
 		case emberCommon::TextureUsage::renderTarget:
-			pITexture = new RenderTexture2d(vulkanFormat, width, height);
+			pITexture = new RenderTexture2d(vulkanFormat, width, height, imageCountMode);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateTexture2d(...) failed. Invalid TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));
 		}
 		return pITexture;
 	}
-	emberBackendInterface::ITexture* GpuResourceFactory::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* GpuResourceFactory::CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
 		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
 		case emberCommon::TextureUsage::sample:
-			pITexture = new SampleTexture3d(vulkanFormat, width, height, depth, data);
+			pITexture = new SampleTexture3d(vulkanFormat, width, height, depth, data, imageCountMode);
 			break;
 		case emberCommon::TextureUsage::storage:
-			pITexture = new StorageTexture3d(vulkanFormat, width, height, depth, data);
+			pITexture = new StorageTexture3d(vulkanFormat, width, height, depth, data, imageCountMode);
 			break;
 		case emberCommon::TextureUsage::storageSample:
-			pITexture = new StorageSampleTexture3d(vulkanFormat, width, height, depth, data);
+			pITexture = new StorageSampleTexture3d(vulkanFormat, width, height, depth, data, imageCountMode);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateTexture3d(...) failed. Unsupported TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));
 		}
 		return pITexture;
 	}
-	emberBackendInterface::ITexture* GpuResourceFactory::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, void* data)
+	emberBackendInterface::ITexture* GpuResourceFactory::CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
 		VkFormat vulkanFormat = TextureFormatCommonToVulkan(format);
 		emberBackendInterface::ITexture* pITexture = nullptr;
 		switch (usage)
 		{
 		case emberCommon::TextureUsage::sample:
-			pITexture = new SampleTextureCube(vulkanFormat, width, height, data);
+			pITexture = new SampleTextureCube(vulkanFormat, width, height, data, imageCountMode);
 			break;
 		default:
 			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateTextureCube(...) failed. Invalid TextureUsage type: " + std::string(emberCommon::TextureUsageToString(usage)));

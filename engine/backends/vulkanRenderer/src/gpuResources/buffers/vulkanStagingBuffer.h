@@ -14,6 +14,7 @@ namespace vulkanRendererBackend
 	class Buffer;
 	struct DeviceQueue;
 	class Texture;
+	class VmaImage;
 
 
 
@@ -52,8 +53,8 @@ namespace vulkanRendererBackend
 		// Upload:
 		void UploadToBuffer(VkCommandBuffer commandBuffer, Buffer* pDstBuffer);
 		void UploadToBuffer(Buffer* pDstBuffer, const DeviceQueue& queue);
-		void UploadToTexture(VkCommandBuffer commandBuffer, Texture* pDstTexture, uint64_t layerCount);
-		void UploadToTexture(const DeviceQueue& queue, Texture* pDstTexture, uint64_t layerCount);
+		void UploadToTexture(VkCommandBuffer commandBuffer, VmaImage* pDstImage);
+		void UploadToTexture(const DeviceQueue& queue, VmaImage* pDstImage);
 
 		// Download:
 		void DownloadFromBuffer(VkCommandBuffer commandBuffer, Buffer* pSrcBuffer);

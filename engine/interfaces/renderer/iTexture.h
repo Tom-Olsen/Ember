@@ -1,5 +1,6 @@
 #pragma once
 #include "commonTextureFormat.h"
+#include "commonTextureImageCountMode.h"
 #include <string>
 
 
@@ -18,6 +19,7 @@ namespace emberBackendInterface
         virtual uint32_t GetDepth() const = 0;
         virtual uint32_t GetChannels() const = 0;
         virtual const emberCommon::TextureFormat GetTextureFormat() const = 0;
+        virtual emberCommon::TextureImageCountMode GetImageCountMode() const = 0;
 
         // Setters:
         virtual void SetData(void* data) = 0;

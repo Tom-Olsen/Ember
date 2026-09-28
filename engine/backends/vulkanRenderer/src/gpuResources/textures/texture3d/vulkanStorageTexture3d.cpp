@@ -12,7 +12,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Desctructor:
-	StorageTexture3d::StorageTexture3d(VkFormat format, int width, int height, int depth, void* data)
+	StorageTexture3d::StorageTexture3d(VkFormat format, int width, int height, int depth, void* data, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture3d(imageCountMode)
 	{
 		Init(format, width, height, depth);
 		if (data)

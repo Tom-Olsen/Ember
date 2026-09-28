@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		SampleTextureCube(VkFormat format, int width, int height, void* data = nullptr);
+		SampleTextureCube(VkFormat format, int width, int height, void* data = nullptr, emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 		~SampleTextureCube();
 
 		// Non-copyable:
