@@ -9,7 +9,7 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include "vulkanStorageTexture2d.h"
 #include <string>
 #include <vulkan/vulkan.h>
@@ -25,7 +25,7 @@ namespace vulkanRendererBackend
 		const uint32_t framesInFlight = Context::GetFramesInFlight();
 		m_shadowMapResolution = shadowMapResolution;
 		m_shadowMapLayerCount = maxLightsCount;
-		m_pSceneColorTexturePair = std::make_unique<SceneColorTexture2dPair>(renderWidth, renderHeight, framesInFlight);
+		m_pSceneColorTexturePair = std::make_unique<SceneColorPair>(renderWidth, renderHeight, framesInFlight);
 		m_pShadowMaps = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, shadowMapResolution, shadowMapResolution, maxLightsCount);
 
 		m_pSceneDepthTextures.reserve(framesInFlight);
@@ -91,11 +91,11 @@ namespace vulkanRendererBackend
 	{
 		return m_shadowMapLayerCount;
 	}
-	SceneColorTexture2dPair& RenderTargetResources::GetSceneColorTexturePair()
+	SceneColorPair& RenderTargetResources::GetSceneColorPair()
 	{
 		return *m_pSceneColorTexturePair;
 	}
-	const SceneColorTexture2dPair& RenderTargetResources::GetSceneColorTexturePair() const
+	const SceneColorPair& RenderTargetResources::GetSceneColorPair() const
 	{
 		return *m_pSceneColorTexturePair;
 	}

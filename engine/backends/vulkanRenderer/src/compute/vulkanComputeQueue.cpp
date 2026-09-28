@@ -7,7 +7,7 @@
 #include "vulkanConvertComputeAccessMask.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanPoolManager.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include <stdexcept>
 #include <vulkan/vulkan.h>
 
@@ -93,7 +93,7 @@ namespace vulkanRendererBackend
 	{
 		m_computeCallQueue.DiscardPending();
 	}
-	void ComputeQueue::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair* pSceneColorTexturePair)
+	void ComputeQueue::UpdateShaderData(uint32_t frameIndex, SceneColorPair* pSceneColorPair)
 	{
 		for (ComputeCall& computeCall : GetComputeCalls())
 		{
@@ -104,22 +104,22 @@ namespace vulkanRendererBackend
 			// Override thread count for compute calls that use render texture size:
 			if (computeCall.useRenderTextureSize)
 			{
-				if (!pSceneColorTexturePair)
+				if (!pSceneColorPair)
 					throw std::runtime_error("ComputeQueue::UpdateShaderData(...) failed. Render texture size was requested, but no scene color texture pair was provided.");
-				computeCall.threadCount = { pSceneColorTexturePair->GetWidth(), pSceneColorTexturePair->GetHeight(), 1 };
+				computeCall.threadCount = { pSceneColorPair->GetWidth(), pSceneColorPair->GetHeight(), 1 };
 			}
 
 			// Error on required but missing scene color texture:
 			ComputeShader* pComputeShader = computeCall.GetComputeShader();
-			if ((pComputeShader->GetFeatures().ReadsSceneColor() || pComputeShader->GetFeatures().WritesSceneColor()) && !pSceneColorTexturePair)
+			if ((pComputeShader->GetFeatures().ReadsSceneColor() || pComputeShader->GetFeatures().WritesSceneColor()) && !pSceneColorPair)
 				throw std::runtime_error("ComputeQueue::UpdateShaderData(...) failed. Shader '" + pComputeShader->GetDebugName() + "' declares scene-color access, but this compute queue has no scene color textures.");
 			
 			// Scene color texture asignment and flipping:
-			if (!pSceneColorTexturePair)
+			if (!pSceneColorPair)
 				continue;
-			computeCall.sceneColorIndex = pSceneColorTexturePair->GetCurrentTextureIndex(frameIndex);
+			computeCall.sceneColorIndex = pSceneColorPair->GetCurrentTextureIndex(frameIndex);
 			if (computeCall.flipSceneColors)
-				pSceneColorTexturePair->Swap(frameIndex);
+				pSceneColorPair->Swap(frameIndex);
 		}
 		m_computeCallQueue.UpdateShaderData(frameIndex);
 	}

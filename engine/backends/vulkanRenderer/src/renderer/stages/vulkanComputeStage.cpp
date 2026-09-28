@@ -12,7 +12,7 @@
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderTargetResources.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include <stdexcept>
 #include <string>
 #include <vulkan/vulkan.h>
@@ -39,7 +39,7 @@ namespace vulkanRendererBackend
 		{
 			// These stages may read or write sceneColor textures and must transition them to general layout first:
 			if constexpr(stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute)
-				frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutForCompute(commandBuffer, frameContext.frameExecutionData.frameIndex);
+				frameContext.renderTargets.GetSceneColorPair().TransitionLayoutForCompute(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			// Pipeline:
 			VkPipeline pipeline = VK_NULL_HANDLE;

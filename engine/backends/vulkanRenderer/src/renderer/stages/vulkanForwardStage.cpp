@@ -24,7 +24,7 @@
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include <algorithm>
 #include <cstdint>
 #include <vector>
@@ -60,7 +60,7 @@ namespace vulkanRendererBackend
 		// Their framebuffer arrays are ordered by frame index, then scene color index.
 		const uint32_t frameIndex = frameContext.frameExecutionData.frameIndex;
 		const uint32_t sceneColorIndex = frameContext.frameExecutionData.forwardSceneColorIndex;
-		RenderTexture2d* pRenderTexture = &frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, sceneColorIndex);
+		RenderTexture2d* pRenderTexture = &frameContext.renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, sceneColorIndex);
 		VkFramebuffer framebuffer = pRenderPass->GetFramebuffer(static_cast<int>(2 * frameIndex + sceneColorIndex));
 
 		// Prepare command recording:

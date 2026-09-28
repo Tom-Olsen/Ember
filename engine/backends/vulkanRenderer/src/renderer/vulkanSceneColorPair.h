@@ -22,25 +22,27 @@ namespace vulkanRendererBackend
 	/// Owns the two stable scene-color textures for every frame in flight and tracks
 	/// which one currently contains the latest result of the screen-space and post-processing chain.
 	/// </summary>
-	class SceneColorTexture2dPair
+	class SceneColorPair
 	{
 	private: // Members:
+		// Keep explicit physical per-frame textures because m_pFinalTexture must identify the exact finalized image for GUI sampling.
+		// Replace these arrays with two perFrameInFlight logical textures once the texture API can reference a fixed physical frame image.
 		std::array<std::vector<std::unique_ptr<RenderTexture2d>>, 2> m_pTextures;
 		std::vector<uint32_t> m_currentTextureIndices;
 		RenderTexture2d* m_pFinalTexture = nullptr;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		SceneColorTexture2dPair(uint32_t width, uint32_t height, uint32_t frameCount);
-		~SceneColorTexture2dPair();
+		SceneColorPair(uint32_t width, uint32_t height, uint32_t frameCount);
+		~SceneColorPair();
 
 		// Non-copyable:
-		SceneColorTexture2dPair(const SceneColorTexture2dPair&) = delete;
-		SceneColorTexture2dPair& operator=(const SceneColorTexture2dPair&) = delete;
+		SceneColorPair(const SceneColorPair&) = delete;
+		SceneColorPair& operator=(const SceneColorPair&) = delete;
 
 		// Movable:
-		SceneColorTexture2dPair(SceneColorTexture2dPair&& other) noexcept = default;
-		SceneColorTexture2dPair& operator=(SceneColorTexture2dPair&& other) noexcept = default;
+		SceneColorPair(SceneColorPair&& other) noexcept = default;
+		SceneColorPair& operator=(SceneColorPair&& other) noexcept = default;
 
 		// Frame state:
 		void BeginFrame(uint32_t frameIndex);
@@ -59,7 +61,7 @@ namespace vulkanRendererBackend
 
 		// Layout transitions:
 		void TransitionLayoutForCompute(VkCommandBuffer commandBuffer, uint32_t frameIndex);
-		void TransitionLayoutOfCurrenForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex);
+		void TransitionLayoutOfCurrentForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex);
 
 	private: // Methods:
 		RenderTexture2d* GetTexture(uint32_t frameIndex, uint32_t textureIndex) const;

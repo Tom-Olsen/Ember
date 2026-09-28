@@ -5,7 +5,7 @@
 #include "vulkanMacros.h"
 #include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include <array>
 #include <string>
 
@@ -35,7 +35,7 @@ namespace vulkanRendererBackend
 		std::array<VkAttachmentDescription, 2> attachments{};
 		{
 			// Color attachment description:
-			attachments[0].format = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(0, 0).GetFormat();
+			attachments[0].format = renderTargets.GetSceneColorPair().GetRenderTargetTexture(0, 0).GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;							// load screen-space compute results.
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// store opaque scene color for forward transparent rendering.
@@ -106,7 +106,7 @@ namespace vulkanRendererBackend
 		{
 			const uint32_t frameIndex = static_cast<uint32_t>(framebufferIndex / 2);
 			const uint32_t sceneColorIndex = static_cast<uint32_t>(framebufferIndex % 2);
-			const RenderTexture2d& renderTexture = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, sceneColorIndex);
+			const RenderTexture2d& renderTexture = renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, sceneColorIndex);
 			std::array<VkImageView, 2> attachments =
 			{
 				renderTexture.GetVkImageView(),

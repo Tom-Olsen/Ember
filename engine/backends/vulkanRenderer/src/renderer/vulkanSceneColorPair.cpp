@@ -1,4 +1,4 @@
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanDeferredRenderingContract.h"
@@ -14,10 +14,10 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SceneColorTexture2dPair::SceneColorTexture2dPair(uint32_t width, uint32_t height, uint32_t frameCount)
+	SceneColorPair::SceneColorPair(uint32_t width, uint32_t height, uint32_t frameCount)
 	{
 		if (frameCount == 0)
-			throw std::invalid_argument("SceneColorTexture2dPair::SceneColorTexture2dPair(...) failed. frameCount must not be zero.");
+			throw std::invalid_argument("SceneColorPair::SceneColorPair(...) failed. frameCount must not be zero.");
 
 		for (std::vector<std::unique_ptr<RenderTexture2d>>& pTextures : m_pTextures)
 			pTextures.reserve(frameCount);
@@ -42,7 +42,7 @@ namespace vulkanRendererBackend
 
 		m_pFinalTexture = GetTexture(0, 0);
 	}
-	SceneColorTexture2dPair::~SceneColorTexture2dPair()
+	SceneColorPair::~SceneColorPair()
 	{
 
 	}
@@ -50,15 +50,15 @@ namespace vulkanRendererBackend
 
 
 	// Frame state:
-	void SceneColorTexture2dPair::BeginFrame(uint32_t frameIndex)
+	void SceneColorPair::BeginFrame(uint32_t frameIndex)
 	{
 		m_currentTextureIndices[frameIndex] = 0;
 	}
-	void SceneColorTexture2dPair::FinalizeFrame(uint32_t frameIndex)
+	void SceneColorPair::FinalizeFrame(uint32_t frameIndex)
 	{
 		m_pFinalTexture = GetCurrentTexture(frameIndex);
 	}
-	void SceneColorTexture2dPair::Swap(uint32_t frameIndex)
+	void SceneColorPair::Swap(uint32_t frameIndex)
 	{
 		m_currentTextureIndices[frameIndex] = 1 - m_currentTextureIndices[frameIndex];
 	}
@@ -66,35 +66,35 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
-	uint32_t SceneColorTexture2dPair::GetCurrentTextureIndex(uint32_t frameIndex) const
+	uint32_t SceneColorPair::GetCurrentTextureIndex(uint32_t frameIndex) const
 	{
 		return m_currentTextureIndices.at(frameIndex);
 	}
-	uint32_t SceneColorTexture2dPair::GetWidth() const
+	uint32_t SceneColorPair::GetWidth() const
 	{
 		return m_pTextures[0][0]->GetWidth();
 	}
-	uint32_t SceneColorTexture2dPair::GetHeight() const
+	uint32_t SceneColorPair::GetHeight() const
 	{
 		return m_pTextures[0][0]->GetHeight();
 	}
-	RenderTexture2d* SceneColorTexture2dPair::GetCurrentTexture(uint32_t frameIndex) const
+	RenderTexture2d* SceneColorPair::GetCurrentTexture(uint32_t frameIndex) const
 	{
 		return GetTexture(frameIndex, m_currentTextureIndices[frameIndex]);
 	}
-	RenderTexture2d* SceneColorTexture2dPair::GetNextTexture(uint32_t frameIndex) const
+	RenderTexture2d* SceneColorPair::GetNextTexture(uint32_t frameIndex) const
 	{
 		return GetTexture(frameIndex, 1 - m_currentTextureIndices[frameIndex]);
 	}
-	RenderTexture2d* SceneColorTexture2dPair::GetFinalTexture() const
+	RenderTexture2d* SceneColorPair::GetFinalTexture() const
 	{
 		return m_pFinalTexture;
 	}
-	RenderTexture2d& SceneColorTexture2dPair::GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex)
+	RenderTexture2d& SceneColorPair::GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex)
 	{
 		return *GetTexture(frameIndex, textureIndex);
 	}
-	const RenderTexture2d& SceneColorTexture2dPair::GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex) const
+	const RenderTexture2d& SceneColorPair::GetRenderTargetTexture(uint32_t frameIndex, uint32_t textureIndex) const
 	{
 		return *GetTexture(frameIndex, textureIndex);
 	}
@@ -102,7 +102,7 @@ namespace vulkanRendererBackend
 
 
 	// Layout transitions:
-	void SceneColorTexture2dPair::TransitionLayoutForCompute(VkCommandBuffer commandBuffer, uint32_t frameIndex)
+	void SceneColorPair::TransitionLayoutForCompute(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 	{
 		for (const std::vector<std::unique_ptr<RenderTexture2d>>& pTextures : m_pTextures)
 		{
@@ -118,7 +118,7 @@ namespace vulkanRendererBackend
 				AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite);
 		}
 	}
-	void SceneColorTexture2dPair::TransitionLayoutOfCurrenForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex)
+	void SceneColorPair::TransitionLayoutOfCurrentForSampling(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 	{
 		VmaImage* pImage = GetCurrentTexture(frameIndex)->GetVmaImage();
 		pImage->TransitionLayout(
@@ -133,12 +133,12 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	RenderTexture2d* SceneColorTexture2dPair::GetTexture(uint32_t frameIndex, uint32_t textureIndex) const
+	RenderTexture2d* SceneColorPair::GetTexture(uint32_t frameIndex, uint32_t textureIndex) const
 	{
 		if (textureIndex >= m_pTextures.size())
-			throw std::out_of_range("SceneColorTexture2dPair::GetTexture(...) failed. Texture index out of range.");
+			throw std::out_of_range("SceneColorPair::GetTexture(...) failed. Texture index out of range.");
 		if (frameIndex >= m_pTextures[textureIndex].size())
-			throw std::out_of_range("SceneColorTexture2dPair::GetTexture(...) failed. Frame index out of range.");
+			throw std::out_of_range("SceneColorPair::GetTexture(...) failed. Frame index out of range.");
 		return m_pTextures[textureIndex][frameIndex].get();
 	}
 }

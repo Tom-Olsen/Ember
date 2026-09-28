@@ -12,7 +12,7 @@ namespace vulkanRendererBackend
 	class DepthTexture2dArray;
 	class GBufferTexture2d;
 	class RenderTexture2d;
-	class SceneColorTexture2dPair;
+	class SceneColorPair;
 	class StorageTexture2d;
 	class VmaImage;
 
@@ -24,7 +24,7 @@ namespace vulkanRendererBackend
 	class RenderTargetResources
 	{
 	private: // Members:
-		std::unique_ptr<SceneColorTexture2dPair> m_pSceneColorTexturePair;
+		std::unique_ptr<SceneColorPair> m_pSceneColorTexturePair;
 		std::vector<std::unique_ptr<DepthTexture2d>> m_pSceneDepthTextures;
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pAlbedoTextures;
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pNormalTextures;
@@ -55,8 +55,8 @@ namespace vulkanRendererBackend
 		uint32_t GetFrameCount() const;
 		uint32_t GetShadowMapResolution() const;
 		uint32_t GetShadowMapLayerCount() const;
-		SceneColorTexture2dPair& GetSceneColorTexturePair();
-		const SceneColorTexture2dPair& GetSceneColorTexturePair() const;
+		SceneColorPair& GetSceneColorPair();
+		const SceneColorPair& GetSceneColorPair() const;
 		DepthTexture2d& GetSceneDepthTexture(uint32_t frameIndex);
 		const DepthTexture2d& GetSceneDepthTexture(uint32_t frameIndex) const;
 		GBufferTexture2d& GetAlbedoTexture(uint32_t frameIndex);

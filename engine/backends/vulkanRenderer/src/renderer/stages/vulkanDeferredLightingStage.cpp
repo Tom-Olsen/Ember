@@ -13,7 +13,7 @@
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include <vulkan/vulkan.h>
 
 
@@ -37,7 +37,7 @@ namespace vulkanRendererBackend
 		{
 			// Viewport and scissor:
 			VkViewport viewport = {};
-			RenderTexture2d& sceneColorTexture = frameContext.renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, 0);
+			RenderTexture2d& sceneColorTexture = frameContext.renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameContext.frameExecutionData.frameIndex, 0);
 			viewport.width = sceneColorTexture.GetWidth();
 			viewport.height = sceneColorTexture.GetHeight();
 			viewport.minDepth = 0.0f;

@@ -1,7 +1,7 @@
 #include "vulkanCompute.h"
 #include "vulkanAsyncCompute.h"
 #include "vulkanComputeQueue.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 
 
 
@@ -76,13 +76,13 @@ namespace vulkanRendererBackend
 
 
 	// Frame lifecycle:
-	uint32_t Compute::UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair)
+	uint32_t Compute::UpdateShaderData(uint32_t frameIndex, SceneColorPair& sceneColorPair)
 	{
 		GetPreRenderCompute()->UpdateShaderData(frameIndex);
 		GetMidRenderCompute()->UpdateShaderData(frameIndex);
-		GetScreenSpaceCompute()->UpdateShaderData(frameIndex, &sceneColorTexturePair);
-		uint32_t sceneColorTextureIndex = sceneColorTexturePair.GetCurrentTextureIndex(frameIndex);
-		GetPostRenderCompute()->UpdateShaderData(frameIndex, &sceneColorTexturePair);
+		GetScreenSpaceCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
+		uint32_t sceneColorTextureIndex = sceneColorPair.GetCurrentTextureIndex(frameIndex);
+		GetPostRenderCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
 		return sceneColorTextureIndex;
 	}
 	void Compute::CommitFrame(uint32_t frameIndex)

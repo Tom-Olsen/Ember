@@ -48,7 +48,7 @@
 #include "vulkanSampleTexture3d.h"
 #include "vulkanSampleTextureCube.h"
 #include "vulkanSampler.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include "vulkanSceneDescriptorSetLayout.h"
 #include "vulkanShadowDrawCall.h"
 #include "vulkanSingleTimeCommand.h"
@@ -220,8 +220,8 @@ namespace vulkanRendererBackend
 		m_pRenderGraph->ResetFrameFence(m_frameExecutionData.frameIndex);
 		m_frameResources[m_frameExecutionData.frameIndex].ResetCommandPools();
 		Context::MarkDeviceBusy();
-		SceneColorTexture2dPair& sceneColorTexturePair = m_pRenderTargets->GetSceneColorTexturePair();
-		sceneColorTexturePair.BeginFrame(m_frameExecutionData.frameIndex);
+		SceneColorPair& sceneColorPair = m_pRenderTargets->GetSceneColorPair();
+		sceneColorPair.BeginFrame(m_frameExecutionData.frameIndex);
 
 		SortDrawCallPointers();
 		QueueRendererOwnedComputeShaders();
@@ -244,7 +244,7 @@ namespace vulkanRendererBackend
 		m_pCompute->CommitFrame(m_frameExecutionData.frameIndex);
 
 		// Finalize frame:
-		sceneColorTexturePair.FinalizeFrame(m_frameExecutionData.frameIndex);
+		sceneColorPair.FinalizeFrame(m_frameExecutionData.frameIndex);
 		ResetFrameCalls();
 
 		// Cancel current frame on failed presentation (e.g. window resize):
@@ -530,7 +530,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::ITexture* Renderer::GetFinalRenderTexture()
 	{
-		RenderTexture2d* pRenderTexture = m_pRenderTargets->GetSceneColorTexturePair().GetFinalTexture();
+		RenderTexture2d* pRenderTexture = m_pRenderTargets->GetSceneColorPair().GetFinalTexture();
 		emberBackendInterface::ITexture* pITexture = static_cast<emberBackendInterface::ITexture*>(pRenderTexture);
 		return pITexture;
 	}
@@ -879,7 +879,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Compute calls:
-		m_frameExecutionData.forwardSceneColorIndex = m_pCompute->UpdateShaderData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorTexturePair());
+		m_frameExecutionData.forwardSceneColorIndex = m_pCompute->UpdateShaderData(m_frameExecutionData.frameIndex, m_pRenderTargets->GetSceneColorPair());
 	}
 	bool Renderer::PresentImage()
 	{

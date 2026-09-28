@@ -7,7 +7,7 @@
 #include "vulkanMacros.h"
 #include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include "vulkanTexture.h"
 #include "vulkanUniformBuffer.h"
 #include <array>
@@ -185,8 +185,8 @@ namespace vulkanRendererBackend
         UpdateTextureDescriptor(frameIndex, 1101, renderTargets.GetNormalTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         UpdateTextureDescriptor(frameIndex, 1102, renderTargets.GetAlbedoTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         UpdateTextureDescriptor(frameIndex, 1103, renderTargets.GetSurfacePropertiesTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        UpdateTextureDescriptor(frameIndex, 1200, renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
-        UpdateTextureDescriptor(frameIndex, 1201, renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+        UpdateTextureDescriptor(frameIndex, 1200, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+        UpdateTextureDescriptor(frameIndex, 1201, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
     }
 
 

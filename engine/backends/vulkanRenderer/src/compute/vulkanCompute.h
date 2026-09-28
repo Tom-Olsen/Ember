@@ -11,7 +11,7 @@ namespace vulkanRendererBackend
 	// Forward declarations:
 	class Async;
 	class ComputeQueue;
-	class SceneColorTexture2dPair;
+	class SceneColorPair;
 
 
 
@@ -50,7 +50,7 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ICompute::IQueue* GetPostRenderComputeInterfaceHandle() override;
 
 		// Frame lifecycle:
-		uint32_t UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair& sceneColorTexturePair);
+		uint32_t UpdateShaderData(uint32_t frameIndex, SceneColorPair& sceneColorPair);
 		void CommitFrame(uint32_t frameIndex);
 		void RetireFrame(uint32_t frameIndex);
 		void RetireAllFrames();

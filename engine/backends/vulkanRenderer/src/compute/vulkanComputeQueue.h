@@ -20,7 +20,7 @@ namespace emberBackendInterface
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class SceneColorTexture2dPair;
+	class SceneColorPair;
 
 
 
@@ -56,7 +56,7 @@ namespace vulkanRendererBackend
 		void RetireAllComputeCalls();
 		std::vector<ComputeCall>& GetComputeCalls();
 		void ResetComputeCalls();
-		void UpdateShaderData(uint32_t frameIndex, SceneColorTexture2dPair* pSceneColorTexturePair = nullptr);
+		void UpdateShaderData(uint32_t frameIndex, SceneColorPair* pSceneColorTexturePair = nullptr);
 
 	protected: // Methods:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeCall(ComputeCall computeCall);

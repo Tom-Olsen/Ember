@@ -16,7 +16,7 @@
 #include "vulkanRenderPassManager.h"
 #include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include "vulkanSwapchain.h"
 #include <vulkan/vulkan.h>
 
@@ -49,11 +49,11 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Publish the final scene color for editor sampling:
-			SceneColorTexture2dPair& sceneColorTexturePair = frameContext.renderTargets.GetSceneColorTexturePair();
-			sceneColorTexturePair.TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
+			SceneColorPair& sceneColorPair = frameContext.renderTargets.GetSceneColorPair();
+			sceneColorPair.TransitionLayoutOfCurrentForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
-			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", sceneColorTexturePair.GetCurrentTexture(frameContext.frameExecutionData.frameIndex));
+			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", sceneColorPair.GetCurrentTexture(frameContext.frameExecutionData.frameIndex));
 			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", &frameContext.renderTargets.GetGizmoTexture(frameContext.frameExecutionData.frameIndex));
 			pPresentShaderDescriptorSetBinding->UpdateShaderData(frameContext.frameExecutionData.frameIndex);
 
@@ -120,7 +120,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// Publish the final scene color for editor sampling:
-			frameContext.renderTargets.GetSceneColorTexturePair().TransitionLayoutOfCurrenForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
+			frameContext.renderTargets.GetSceneColorPair().TransitionLayoutOfCurrentForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			// Render pass info:
 			Uint2 swapchainExtent = Context::GetSwapchain()->GetExtent();

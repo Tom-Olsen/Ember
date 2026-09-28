@@ -5,7 +5,7 @@
 #include "vulkanMacros.h"
 #include "vulkanRenderTargetResources.h"
 #include "vulkanRenderTexture2d.h"
-#include "vulkanSceneColorTexture2dPair.h"
+#include "vulkanSceneColorPair.h"
 #include <array>
 #include <stdexcept>
 #include <string>
@@ -48,7 +48,7 @@ namespace vulkanRendererBackend
 		std::array<VkAttachmentDescription, 2> attachments{};
 		{
 			// Color attachment description:
-			attachments[0].format = renderTargets.GetSceneColorTexturePair().GetRenderTargetTexture(0, 0).GetFormat();
+			attachments[0].format = renderTargets.GetSceneColorPair().GetRenderTargetTexture(0, 0).GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
 			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;						// load results after screen space compute.
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store final image for post processing + presenting.
@@ -106,13 +106,13 @@ namespace vulkanRendererBackend
 	}
 	void ForwardTransparentRenderPass::CreateFrameBuffers(const RenderTargetResources& renderTargets)
 	{
-		const SceneColorTexture2dPair& sceneColorTexturePair = renderTargets.GetSceneColorTexturePair();
+		const SceneColorPair& sceneColorPair = renderTargets.GetSceneColorPair();
 		m_framebuffers.resize(2 * m_frameCount);
 		for (size_t framebufferIndex = 0; framebufferIndex < m_framebuffers.size(); framebufferIndex++)
 		{
 			const uint32_t frameIndex = static_cast<uint32_t>(framebufferIndex / 2);
 			const uint32_t sceneColorIndex = static_cast<uint32_t>(framebufferIndex % 2);
-			const RenderTexture2d& renderTexture = sceneColorTexturePair.GetRenderTargetTexture(frameIndex, sceneColorIndex);
+			const RenderTexture2d& renderTexture = sceneColorPair.GetRenderTargetTexture(frameIndex, sceneColorIndex);
 			std::array<VkImageView, 2> attachments =
 			{
 				renderTexture.GetVkImageView(),
