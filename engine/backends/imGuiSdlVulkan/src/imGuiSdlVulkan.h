@@ -1,23 +1,23 @@
 #pragma once
+#include "iGui.h"
+#include "iVulkanGui.h"
 #include "commonGuiFlags.h"
 #include "commonGuiStyle.h"
 #include "emberMath.h"
-#include "iGui.h"
 #include "imGuiSdlVulkanExport.h"
+#include <cstdint>
 #include <unordered_map>
+#include <vulkan/vulkan.h>
 
 
 
 // Forward declarations:
 struct ImGuiIO;
 struct SDL_Window;
-typedef struct VkDevice_T* VkDevice;
-typedef struct VkCommandBuffer_T* VkCommandBuffer;
-typedef struct VkImageView_T* VkImageView;
-typedef struct VkDescriptorSet_T* VkDescriptorSet;
 namespace emberBackendInterface
 {
 	class IRenderer;
+	class IVulkanRenderer;
 	class ITexture;
 	class IWindow;
 }
@@ -26,9 +26,11 @@ namespace emberBackendInterface
 
 namespace imGuiSdlVulkanBackend
 {
-	class IMGUI_SDL_VULKAN_API Gui : public emberBackendInterface::IGui
+	class IMGUI_SDL_VULKAN_API Gui : public emberBackendInterface::IGui, public emberBackendInterface::IVulkanGui
 	{
-	private: // Members
+	private: // Members:
+		emberBackendInterface::IRenderer* m_pIRenderer;
+		emberBackendInterface::IVulkanRenderer* m_pIVulkanRenderer;
 		VkDevice m_vkDevice;
 		SDL_Window* m_pSdlWindow;
 		ImGuiIO* m_pIo;
@@ -62,7 +64,6 @@ namespace imGuiSdlVulkanBackend
 		// Getters:
 		bool WantCaptureKeyboard() override;
 		bool WantCaptureMouse() override;
-		uintptr_t GetTextureID(emberBackendInterface::ITexture* pITexture) override;
 		Float2 GetWindowSize() override;
 		Float2 GetContentRegionAvail() override;
         Float2 GetCursorPos() override;         // layout cursor for widgets, relative window space.
@@ -109,9 +110,10 @@ namespace imGuiSdlVulkanBackend
 		bool Button(const char* label, const Float2& size = Float2::zero) override;
 		bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) override;
 		bool Selectable(const char* label, bool selected) override;
-		void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
+		void Image(emberBackendInterface::ITexture* pTexture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
 
 	private: // Methods:
+		uintptr_t GetTextureID(emberBackendInterface::ITexture* pTexture);
 		void ReleaseStaleMouseButtons();
 		void ShowDockSpace();
 	};

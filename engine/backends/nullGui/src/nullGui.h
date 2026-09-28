@@ -1,8 +1,9 @@
 #pragma once
+#include "iGui.h"
+#include "iVulkanGui.h"
 #include "commonGuiFlags.h"
 #include "commonGuiStyle.h"
 #include "emberMath.h"
-#include "iGui.h"
 #include "nullGuiExport.h"
 
 
@@ -18,7 +19,7 @@ namespace emberBackendInterface
 
 namespace nullGuiBackend
 {
-	class NULL_GUI_API Gui : public emberBackendInterface::IGui
+	class NULL_GUI_API Gui : public emberBackendInterface::IGui, public emberBackendInterface::IVulkanGui
 	{
 	public: // Methods
 		// Constructor/Destructor:
@@ -41,7 +42,6 @@ namespace nullGuiBackend
 		// Getters:
 		bool WantCaptureKeyboard() override;
 		bool WantCaptureMouse() override;
-		uintptr_t GetTextureID(emberBackendInterface::ITexture* pITexture) override;
 		Float2 GetWindowSize() override;
 		Float2 GetContentRegionAvail() override;
 		Float2 GetCursorPos() override;         // layout cursor for widgets, relative window space.
@@ -88,6 +88,6 @@ namespace nullGuiBackend
 		bool Button(const char* label, const Float2& size = Float2::zero) override;
 		bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) override;
 		bool Selectable(const char* label, bool selected) override;
-		void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
+		void Image(emberBackendInterface::ITexture* pTexture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) override;
 	};
 }

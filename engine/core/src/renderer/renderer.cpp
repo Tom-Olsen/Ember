@@ -350,13 +350,13 @@ namespace emberCore
 
 
     // Debugging:
-	void Renderer::DumpVmaBufferAllocations()
+	void Renderer::DumpBufferAllocations()
     {
-        s_pIRenderer->DumpVmaBufferAllocations();
+        s_pIRenderer->DumpBufferAllocations();
     }
-	void Renderer::DumpVmaImageAllocations()
+	void Renderer::DumpImageAllocations()
     {
-        s_pIRenderer->DumpVmaImageAllocations();
+        s_pIRenderer->DumpImageAllocations();
     }
 
 

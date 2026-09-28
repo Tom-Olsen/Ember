@@ -29,9 +29,9 @@ namespace emberEditor
 		void Render() override
 		{
             if (Gui::Button("Dumb Buffer Allocation Info"))
-                Renderer::DumpVmaBufferAllocations();
+                Renderer::DumpBufferAllocations();
             if (Gui::Button("Dumb Image Allocation Info"))
-                Renderer::DumpVmaImageAllocations();
+                Renderer::DumpImageAllocations();
 		}
 	};
 }

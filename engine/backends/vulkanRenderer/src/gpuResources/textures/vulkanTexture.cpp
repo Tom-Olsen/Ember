@@ -168,10 +168,6 @@ namespace vulkanRendererBackend
 	{
 		return TextureFormatVulkanToCommon(m_format);
 	}
-	const VkImageView& Texture::GetVkImageView() const
-	{
-		return GetVmaImage()->GetVkImageView();
-	}
 	VkFormat Texture::GetFormat() const
 	{
 		return m_format;
@@ -183,6 +179,20 @@ namespace vulkanRendererBackend
 	VkDescriptorType Texture::GetVkDescriptorType() const
 	{
 		return m_vkDescriptorType;
+	}
+	const VkImageView& Texture::GetVkImageView() const
+	{
+		return GetVmaImage()->GetVkImageView();
+	}
+	VkImageView Texture::GetVkImageView(uint32_t frameIndex) const
+	{
+		(void)frameIndex;
+		return GetVkImageView();
+	}
+	VkImageLayout Texture::GetVkImageLayout(uint32_t frameIndex) const
+	{
+		(void)frameIndex;
+		return GetVmaImage()->GetImageLayout();
 	}
 
 

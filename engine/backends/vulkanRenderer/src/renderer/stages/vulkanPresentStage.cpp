@@ -1,6 +1,6 @@
 #include "vulkanPresentStage.h"
 #include "emberMath.h"
-#include "iGui.h"
+#include "iVulkanGui.h"
 #include "logger.h"
 #include "profiler.h"
 #include "vulkanCommandPool.h"
@@ -97,8 +97,8 @@ namespace vulkanRendererBackend
 
 				// Dispatch:
 				vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-				if (frameContext.pGui)
-					frameContext.pGui->Render(commandBuffer);
+				if (frameContext.pVulkanGui)
+					frameContext.pVulkanGui->Render(commandBuffer);
 				DEBUG_LOG_INFO("Render renderTexture with fullscreen triangle, material = {}", pMaterial->GetDebugName());
 			}
 			vkCmdEndRenderPass(commandBuffer);
@@ -134,8 +134,8 @@ namespace vulkanRendererBackend
 			// Begin render pass:
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
-				if (frameContext.pGui)
-					frameContext.pGui->Render(commandBuffer);
+				if (frameContext.pVulkanGui)
+					frameContext.pVulkanGui->Render(commandBuffer);
 			}
 			vkCmdEndRenderPass(commandBuffer);
 

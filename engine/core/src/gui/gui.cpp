@@ -3,7 +3,6 @@
 #include "emberMath.h"
 #include "editor.h"
 #include "iGui.h"
-#include "iTexture.h"
 #include "texture2d.h"
 #include <algorithm>
 #include <limits>
@@ -54,10 +53,6 @@ namespace emberCore
 	{
 		s_pIGui->ProcessEvent(pEvent);
 	}
-	void Gui::Render(VkCommandBuffer vkCommandBuffer)
-	{
-		s_pIGui->Render(vkCommandBuffer);
-	}
 
 
 
@@ -69,11 +64,6 @@ namespace emberCore
 	bool Gui::WantCaptureMouse()
 	{
 		return s_pIGui->WantCaptureMouse();
-	}
-	uintptr_t Gui::GetTextureID(Texture& texture)
-	{
-		emberBackendInterface::ITexture* pITexture = texture.GetInterfaceHandle();
-		return s_pIGui->GetTextureID(pITexture);
 	}
 	Float2 Gui::GetWindowSize()
 	{
@@ -219,9 +209,9 @@ namespace emberCore
 	{
 		return s_pIGui->Selectable(label, selected);
 	}
-	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
+	void Gui::Image(Texture& texture, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
-		s_pIGui->Image(textureID, imageSize, uv0, uv1);
+		s_pIGui->Image(texture.GetInterfaceHandle(), imageSize, uv0, uv1);
 	}
 
 

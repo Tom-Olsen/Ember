@@ -1,5 +1,6 @@
 #pragma once
 #include "iRenderer.h"
+#include "iVulkanRenderer.h"
 #include "commonCamera.h"
 #include "commonLighting.h"
 #include "commonRendererCreateInfo.h"
@@ -18,13 +19,14 @@
 namespace emberBackendInterface
 {
 	class IBuffer;
-	class IGui;
 	class ICompute;
+	class IDescriptorSetBinding;
+	class IGui;
 	class IMaterial;
 	class IMaterialManager;
 	class IMesh;
-	class IDescriptorSetBinding;
 	class ITexture;
+	class IVulkanGui;
 	class IWindow;
 }
 
@@ -46,11 +48,11 @@ namespace vulkanRendererBackend
 
 
 
-	class VULKAN_RENDERER_API Renderer : public emberBackendInterface::IRenderer
+	class VULKAN_RENDERER_API Renderer : public emberBackendInterface::IRenderer, public emberBackendInterface::IVulkanRenderer
 	{
 	private: // Members:
 		// Backend hooks:
-		emberBackendInterface::IGui* m_pIGui = nullptr;
+		emberBackendInterface::IVulkanGui* m_pIVulkanGui = nullptr;
 		emberBackendInterface::IWindow* m_pIWindow = nullptr;
 		Compute* m_pCompute = nullptr;
 
@@ -146,20 +148,20 @@ namespace vulkanRendererBackend
 		void WaitDeviceIdle() override; // needed so core can wait before destroying resource managers and then renderer.
 		void WaitForFrameFinished(uint32_t frameIndex) override;
 
-		// Vulkan handle passthrough for API coupling:
-		void* GetVkInstance() const override;
-		void* GetVkPhysicalDevice() const override;
-		void* GetVkDevice() const override;
-		void* GetPresentVkRenderPass() const override;
-		void* GetGraphicsVkQueue() const override;
-		void* GetColorSampler() const override;
+		// Vulkan coupling:
+		VkInstance GetVkInstance() const override;
+		VkPhysicalDevice GetVkPhysicalDevice() const override;
+		VkDevice GetVkDevice() const override;
+		VkRenderPass GetPresentVkRenderPass() const override;
+		VkQueue GetGraphicsVkQueue() const override;
 		uint32_t GetGraphicsVkQueueFamilyIndex() const override;
 		uint32_t GetSwapchainImageCount() const override;
 		uint32_t GetFramesInFlight() const override;
+		uint64_t GetAbsoluteFrameIndex() const override;
 
         // Debugging:
-		void DumpVmaBufferAllocations() const;
-		void DumpVmaImageAllocations() const;
+		void DumpBufferAllocations() const override;
+		void DumpImageAllocations() const override;
 
 		// Backend only:
 		void QueueMeshForUpdate(Mesh* pMesh);

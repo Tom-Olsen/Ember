@@ -108,8 +108,8 @@ namespace emberCore
 		static void WaitForFrameFinished(uint32_t frameIndex);
 
 		// Debugging:
-		static void DumpVmaBufferAllocations();
-		static void DumpVmaImageAllocations();
+		static void DumpBufferAllocations();
+		static void DumpImageAllocations();
 
 	private: // Methods:
 		// Draw mesh helpers:

@@ -8,8 +8,6 @@
 
 
 // Forward decleration:
-struct SDL_Window;
-typedef struct VkCommandBuffer_T* VkCommandBuffer;
 namespace emberCore
 {
 	class Texture;
@@ -46,12 +44,10 @@ namespace emberCore
 		// Render Logic:
 		static void Update();									// must be called in main update loop of the engine.
 		static void ProcessEvent(const void* pWindowEvent);		// must be called in from sdl window.
-		static void Render(VkCommandBuffer vkCommandBuffer);	// must be called in a render pass.
 
 		// Getters:
 		static bool WantCaptureKeyboard();
 		static bool WantCaptureMouse();
-		static uintptr_t GetTextureID(Texture& texture);
 		static Float2 GetWindowSize();
 		static Float2 GetContentRegionAvail();
 		static Float2 GetCursorPos();       // layout cursor for widgets, relative window space.
@@ -93,7 +89,7 @@ namespace emberCore
 		[[nodiscard]] static bool Button(const char* label, const Float2& size = Float2::zero);
 		[[nodiscard]] static bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none);
 		[[nodiscard]] static bool Selectable(const char* label, bool selected);
-		static void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
+		static void Image(Texture& texture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
 
 		// Custom Widgets:
 		static bool Checkbox(const std::string& label, bool* value);

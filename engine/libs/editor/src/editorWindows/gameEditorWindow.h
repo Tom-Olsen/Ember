@@ -30,9 +30,7 @@ namespace emberEditor
         {
             // Prepare render texture:
             emberCore::Texture2d finalRenderTexture = emberCore::Renderer::GetFinalRenderTexture();
-            uintptr_t finalRenderTextureID = Gui::GetTextureID(finalRenderTexture);
             emberCore::Texture2d gizmoTexture = emberCore::Renderer::GetGizmoTexture();
-            uintptr_t gizmoTextureID = Gui::GetTextureID(gizmoTexture);
 
             // Get imgui window:
             const Float2 windowSize = Gui::GetContentRegionAvail();
@@ -61,9 +59,9 @@ namespace emberEditor
             Gui::SetCursorPos(cursorPos + offset);
 
             // Composit render and gizmo textures:
-            Gui::Image(finalRenderTextureID, imageSize); // draw final render texture.
+            Gui::Image(finalRenderTexture, imageSize); // draw final render texture.
             Gui::SetCursorPos(cursorPos + offset);   // recenter cursor.
-            Gui::Image(gizmoTextureID, imageSize);  // draw gizmo texture on top (alpha blended).
+            Gui::Image(gizmoTexture, imageSize);  // draw gizmo texture on top (alpha blended).
         }
     };
 }

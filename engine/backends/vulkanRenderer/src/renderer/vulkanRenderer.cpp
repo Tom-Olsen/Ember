@@ -2,6 +2,7 @@
 #include "descriptorSetMacros.h"
 #include "emberMath.h"
 #include "iGui.h"
+#include "iVulkanGui.h"
 #include "iWindow.h"
 #include "logger.h"
 #include "parallelThreadPool.h"
@@ -234,7 +235,7 @@ namespace vulkanRendererBackend
 			m_frameResources[m_frameExecutionData.frameIndex],
 			m_frameRenderData[m_frameExecutionData.frameIndex],
 			*m_pRenderTargets,
-			m_pIGui,
+			m_pIVulkanGui,
 			m_pCompute->GetPreRenderCompute()->GetComputeCalls(),
 			m_pCompute->GetMidRenderCompute()->GetComputeCalls(),
 			m_pCompute->GetScreenSpaceCompute()->GetComputeCalls(),
@@ -577,7 +578,9 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::LinkIGuiHandle(emberBackendInterface::IGui* pIGui)
 	{
-		m_pIGui = pIGui;
+		m_pIVulkanGui = dynamic_cast<emberBackendInterface::IVulkanGui*>(pIGui);
+		if (m_pIVulkanGui == nullptr)
+			throw std::runtime_error("vulkanRendererBackend::Renderer::LinkIGuiHandle(...) failed. GUI backend does not implement IVulkanGui.");
 	}
 	void Renderer::SetActiveCamera(const Float3& position, const Float4x4& viewMatrix, const Float4x4& projectionMatrix)
 	{
@@ -626,30 +629,26 @@ namespace vulkanRendererBackend
 
 
 
-	// Vulkan handle passthrough for API coupling:
-	void* Renderer::GetVkInstance() const
+	// Vulkan coupling:
+	VkInstance Renderer::GetVkInstance() const
 	{
-		return static_cast<void*>(Context::GetVkInstance());
+		return Context::GetVkInstance();
 	}
-	void* Renderer::GetVkPhysicalDevice() const
+	VkPhysicalDevice Renderer::GetVkPhysicalDevice() const
 	{
-		return static_cast<void*>(Context::GetVkPhysicalDevice());
+		return Context::GetVkPhysicalDevice();
 	}
-	void* Renderer::GetVkDevice() const
+	VkDevice Renderer::GetVkDevice() const
 	{
-		return static_cast<void*>(Context::GetVkDevice());
+		return Context::GetVkDevice();
 	}
-	void* Renderer::GetPresentVkRenderPass() const
+	VkRenderPass Renderer::GetPresentVkRenderPass() const
 	{
-		return static_cast<void*>(RenderPassManager::GetPresentRenderPass()->GetVkRenderPass());
+		return RenderPassManager::GetPresentRenderPass()->GetVkRenderPass();
 	}
-	void* Renderer::GetGraphicsVkQueue() const
+	VkQueue Renderer::GetGraphicsVkQueue() const
 	{
-		return static_cast<void*>(Context::GetLogicalDevice()->GetGraphicsQueue().queue);
-	}
-	void* Renderer::GetColorSampler() const
-	{
-		return static_cast<void*>(DefaultGpuResources::GetColorSampler()->GetVkSampler());
+		return Context::GetLogicalDevice()->GetGraphicsQueue().queue;
 	}
 	uint32_t Renderer::GetGraphicsVkQueueFamilyIndex() const
 	{
@@ -663,15 +662,19 @@ namespace vulkanRendererBackend
 	{
 		return Context::GetFramesInFlight();
 	}
+	uint64_t Renderer::GetAbsoluteFrameIndex() const
+	{
+		return Context::GetAbsoluteFrameIndex();
+	}
 
 
 
 	// Debugging:
-	void Renderer::DumpVmaBufferAllocations() const
+	void Renderer::DumpBufferAllocations() const
 	{
 		Context::GetAllocationTracker()->DumpVmaBufferAllocations();
 	}
-	void Renderer::DumpVmaImageAllocations() const
+	void Renderer::DumpImageAllocations() const
 	{
 		Context::GetAllocationTracker()->DumpVmaImageAllocations();
 	}

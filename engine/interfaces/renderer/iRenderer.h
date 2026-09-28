@@ -71,19 +71,8 @@ namespace emberBackendInterface
         virtual void WaitDeviceIdle() = 0;
         virtual void WaitForFrameFinished(uint32_t frameIndex) = 0;
 
-        // Vulkan handle passthrough for API coupling:
-        virtual void* GetVkInstance() const = 0;
-        virtual void* GetVkPhysicalDevice() const = 0;
-        virtual void* GetVkDevice() const = 0;
-        virtual void* GetPresentVkRenderPass() const = 0;
-        virtual void* GetGraphicsVkQueue() const = 0;
-        virtual void* GetColorSampler() const = 0;
-        virtual uint32_t GetGraphicsVkQueueFamilyIndex() const = 0;
-        virtual uint32_t GetSwapchainImageCount() const = 0;
-        virtual uint32_t GetFramesInFlight() const = 0;
-
         // Debugging:
-		virtual void DumpVmaBufferAllocations() const = 0;
-		virtual void DumpVmaImageAllocations() const = 0;
+		virtual void DumpBufferAllocations() const = 0;
+		virtual void DumpImageAllocations() const = 0;
     };
 }

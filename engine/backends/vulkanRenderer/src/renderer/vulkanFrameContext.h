@@ -1,14 +1,14 @@
 #pragma once
-// #include "commonCamera.h"
 #include "vulkanFrameExecutionData.h"
 #include <cstdint>
 #include <span>
 
 
 
+// Forward decleration:
 namespace emberBackendInterface
 {
-	class IGui;
+	class IVulkanGui;
 }
 
 
@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
 		FrameResources& resources;
 		FrameRenderData& frameRenderData;
 		RenderTargetResources& renderTargets;
-		emberBackendInterface::IGui* pGui;
+		emberBackendInterface::IVulkanGui* pVulkanGui;
 		// Frame compute calls:
 		std::span<const ComputeCall> preRenderComputeCalls;
 		std::span<const ComputeCall> midRenderComputeCalls;
@@ -49,6 +49,6 @@ namespace vulkanRendererBackend
 		std::span<const ComputeCall> postRenderComputeCalls;
 
 	public: // Methods:
-		FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IGui* pGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
+		FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IVulkanGui* pVulkanGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> midRenderComputeCalls, std::span<const ComputeCall> screenSpaceComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
 	};
 }

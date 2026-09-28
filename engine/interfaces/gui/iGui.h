@@ -4,16 +4,9 @@
 #include "emberMath.h"
 #include <array>
 #include <cstdarg>
-#include <cstdint>
 #include <functional>
 #include <vector>
 
-
-
-// Forward decleration:
-typedef struct VkCommandBuffer_T* VkCommandBuffer;
-typedef struct VkImageView_T* VkImageView;
-typedef struct VkSampler_T* VkSampler;
 
 
 
@@ -40,12 +33,10 @@ namespace emberBackendInterface
 		// Render Logic:
 		virtual void Update() = 0;									// must be called in main update loop of the engine.
 		virtual void ProcessEvent(const void* pWindowEvent) = 0;	// must be called in from window.
-		virtual void Render(VkCommandBuffer vkCommandBuffer) = 0;	// must be called in a render pass.
 
 		// Getters:
 		virtual bool WantCaptureKeyboard() = 0;
 		virtual bool WantCaptureMouse() = 0;
-		virtual uintptr_t GetTextureID(ITexture* pITexture) = 0;
 		virtual Float2 GetWindowSize() = 0;
 		virtual Float2 GetContentRegionAvail() = 0;
 		virtual Float2 GetCursorPos() = 0;          // layout cursor for widgets, relative window space.
@@ -99,6 +90,6 @@ namespace emberBackendInterface
 		virtual bool Button(const char* label, const Float2& size = Float2::zero) = 0;
 		virtual bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none) = 0;
 		virtual bool Selectable(const char* label, bool selected) = 0;
-		virtual void Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) = 0;
+		virtual void Image(ITexture* pTexture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one) = 0;
     };
 }

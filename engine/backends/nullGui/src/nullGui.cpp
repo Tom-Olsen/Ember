@@ -42,10 +42,6 @@ namespace nullGuiBackend
 	{
 		return false;
 	}
-	uintptr_t Gui::GetTextureID(emberBackendInterface::ITexture* pITexture)
-	{
-		return 0;
-	}
 	Float2 Gui::GetWindowSize()
 	{
 		return Float2::zero;
@@ -210,7 +206,7 @@ namespace nullGuiBackend
 	{
 		return false;
 	}
-	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
+	void Gui::Image(emberBackendInterface::ITexture* pTexture, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
 
 	}

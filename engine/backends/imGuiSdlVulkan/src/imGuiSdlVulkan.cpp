@@ -1,9 +1,13 @@
 #include "imGuiSdlVulkan.h"
 #include "iRenderer.h"
 #include "iTexture.h"
+#include "iVulkanRenderer.h"
+#include "iVulkanTexture.h"
 #include "iWindow.h"
 #include "imGuiConvertGuiFlags.h"
 #include "imGuiConvertGuiStyle.h"
+#include <stdexcept>
+#include <utility>
 #include <SDL3/SDL.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
@@ -18,8 +22,20 @@ namespace imGuiSdlVulkanBackend
 	// Constructor/Destructor:
 	Gui::Gui(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, bool enableDockSpace)
 	{
+		// Invalid input:
+		if (pIWindow == nullptr)
+			throw std::invalid_argument("imGuiSdlVulkanBackend::Gui::Gui(...) failed. pIWindow is nullptr.");
+		if (pIRenderer == nullptr)
+			throw std::invalid_argument("imGuiSdlVulkanBackend::Gui::Gui(...) failed. pIRenderer is nullptr.");
+
+		// Check if renderer is vulkan renderer:
+		m_pIRenderer = pIRenderer;
+		m_pIVulkanRenderer = dynamic_cast<emberBackendInterface::IVulkanRenderer*>(pIRenderer);
+		if (m_pIVulkanRenderer == nullptr)
+			throw std::runtime_error("imGuiSdlVulkanBackend::Gui::Gui(...) failed. Renderer backend does not implement IVulkanRenderer.");
+
 		m_pSdlWindow = static_cast<SDL_Window*>(pIWindow->GetNativeHandle());
-		m_vkDevice = static_cast<VkDevice>(pIRenderer->GetVkDevice());
+		m_vkDevice = m_pIVulkanRenderer->GetVkDevice();
 		m_wantCaptureKeyboard = false;
 		m_wantCaptureMouse = false;
 		m_enableDockSpace = enableDockSpace;
@@ -37,17 +53,18 @@ namespace imGuiSdlVulkanBackend
 		ImGui_ImplSDL3_InitForVulkan(m_pSdlWindow);
 		ImGui_ImplSDL3_SetMouseCaptureMode(ImGui_ImplSDL3_MouseCaptureMode_Enabled);
 
+		// Init ImGui vulkan implementation:
 		ImGui_ImplVulkan_InitInfo initInfo = {};
-		initInfo.Instance = static_cast<VkInstance>(pIRenderer->GetVkInstance());
-		initInfo.PhysicalDevice = static_cast<VkPhysicalDevice>(pIRenderer->GetVkPhysicalDevice());
+		initInfo.Instance = m_pIVulkanRenderer->GetVkInstance();
+		initInfo.PhysicalDevice = m_pIVulkanRenderer->GetVkPhysicalDevice();
 		initInfo.Device = m_vkDevice;
-		initInfo.Queue = static_cast<VkQueue>(pIRenderer->GetGraphicsVkQueue());
-		initInfo.QueueFamily = pIRenderer->GetGraphicsVkQueueFamilyIndex();
-		initInfo.PipelineInfoMain.RenderPass = static_cast<VkRenderPass>(pIRenderer->GetPresentVkRenderPass());
-		initInfo.DescriptorPoolSize = 8 * pIRenderer->GetFramesInFlight();	// ImGui needs at least 8 descriptor sets per frame. If you use more than 8 textures in a single frame, increase this value.
+		initInfo.Queue = m_pIVulkanRenderer->GetGraphicsVkQueue();
+		initInfo.QueueFamily = m_pIVulkanRenderer->GetGraphicsVkQueueFamilyIndex();
+		initInfo.PipelineInfoMain.RenderPass = m_pIVulkanRenderer->GetPresentVkRenderPass();
+		initInfo.DescriptorPoolSize = 8 * m_pIVulkanRenderer->GetFramesInFlight();	// ImGui needs at least 8 descriptor sets per frame. If you use more than 8 textures in a single frame, increase this value.
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = pIRenderer->GetSwapchainImageCount();
-		initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;      // same as renderer present pass, which is hardcoded to 1.
+		initInfo.ImageCount = m_pIVulkanRenderer->GetSwapchainImageCount();
+		initInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;      		// same as renderer present pass, which is hardcoded to 1.
 		#ifdef VALIDATION_LAYERS_ACTIVE
 		initInfo.MinAllocationSize = 1024 * 1024;
 		#endif
@@ -55,11 +72,14 @@ namespace imGuiSdlVulkanBackend
 	}
 	Gui::~Gui()
 	{
-		for (auto& [_, descriptorSet] : m_vkImageViewToDescriptorMap)
-			ImGui_ImplVulkan_RemoveTexture(descriptorSet);
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplSDL3_Shutdown();
-		ImGui::DestroyContext();
+		if (m_pIo)
+		{
+			for (const auto& [_, descriptorSet] : m_vkImageViewToDescriptorMap)
+				ImGui_ImplVulkan_RemoveTexture(descriptorSet);
+			ImGui_ImplVulkan_Shutdown();
+			ImGui_ImplSDL3_Shutdown();
+			ImGui::DestroyContext();
+		}
 		m_vkImageViewToDescriptorMap.clear();
 	}
 
@@ -69,17 +89,22 @@ namespace imGuiSdlVulkanBackend
 	Gui::Gui(Gui&& other) noexcept
 	{
 		// Transfer resources: other->this
+		m_pIRenderer = other.m_pIRenderer;
+		m_pIVulkanRenderer = other.m_pIVulkanRenderer;
 		m_vkDevice = other.m_vkDevice;
 		m_pIo = other.m_pIo;
 		m_pSdlWindow = other.m_pSdlWindow;
 		m_wantCaptureKeyboard = other.m_wantCaptureKeyboard;
 		m_wantCaptureMouse = other.m_wantCaptureMouse;
 		m_enableDockSpace = other.m_enableDockSpace;
-		m_vkImageViewToDescriptorMap = other.m_vkImageViewToDescriptorMap;
-		m_focusedWindowWantCaptureEventsCallback = other.m_focusedWindowWantCaptureEventsCallback;
-		m_hoveredWindowWantCaptureEventsCallback = other.m_hoveredWindowWantCaptureEventsCallback;
+		m_vkImageViewToDescriptorMap = std::move(other.m_vkImageViewToDescriptorMap);
+		m_renderEditorCallback = std::move(other.m_renderEditorCallback);
+		m_focusedWindowWantCaptureEventsCallback = std::move(other.m_focusedWindowWantCaptureEventsCallback);
+		m_hoveredWindowWantCaptureEventsCallback = std::move(other.m_hoveredWindowWantCaptureEventsCallback);
 
 		// Invalidate other:
+		other.m_pIRenderer = nullptr;
+		other.m_pIVulkanRenderer = nullptr;
 		other.m_vkDevice = VK_NULL_HANDLE;
 		other.m_pIo = nullptr;
 		other.m_pSdlWindow = nullptr;
@@ -87,33 +112,39 @@ namespace imGuiSdlVulkanBackend
 		other.m_wantCaptureMouse = false;
 		other.m_enableDockSpace = false;
 		other.m_vkImageViewToDescriptorMap.clear();
-		other.m_focusedWindowWantCaptureEventsCallback = nullptr;
-		other.m_hoveredWindowWantCaptureEventsCallback = nullptr;
 	}
 	Gui& Gui::operator=(Gui&& other) noexcept
 	{
 		if (this != &other)
 		{
 			// Release own resources:
-			for (auto& [_, descriptorSet] : m_vkImageViewToDescriptorMap)
-				ImGui_ImplVulkan_RemoveTexture(descriptorSet);
-			ImGui_ImplVulkan_Shutdown();
-			ImGui_ImplSDL3_Shutdown();
-			ImGui::DestroyContext();
+			if (m_pIo)
+			{
+				for (const auto& [_, descriptorSet] : m_vkImageViewToDescriptorMap)
+					ImGui_ImplVulkan_RemoveTexture(descriptorSet);
+				ImGui_ImplVulkan_Shutdown();
+				ImGui_ImplSDL3_Shutdown();
+				ImGui::DestroyContext();
+			}
 			m_vkImageViewToDescriptorMap.clear();
 
 			// Transfer resources: other->this
+			m_pIRenderer = other.m_pIRenderer;
+			m_pIVulkanRenderer = other.m_pIVulkanRenderer;
 			m_vkDevice = other.m_vkDevice;
 			m_pIo = other.m_pIo;
 			m_pSdlWindow = other.m_pSdlWindow;
 			m_wantCaptureKeyboard = other.m_wantCaptureKeyboard;
 			m_wantCaptureMouse = other.m_wantCaptureMouse;
 			m_enableDockSpace = other.m_enableDockSpace;
-			m_vkImageViewToDescriptorMap = other.m_vkImageViewToDescriptorMap;
-			m_focusedWindowWantCaptureEventsCallback = other.m_focusedWindowWantCaptureEventsCallback;
-			m_hoveredWindowWantCaptureEventsCallback = other.m_hoveredWindowWantCaptureEventsCallback;
+			m_vkImageViewToDescriptorMap = std::move(other.m_vkImageViewToDescriptorMap);
+			m_renderEditorCallback = std::move(other.m_renderEditorCallback);
+			m_focusedWindowWantCaptureEventsCallback = std::move(other.m_focusedWindowWantCaptureEventsCallback);
+			m_hoveredWindowWantCaptureEventsCallback = std::move(other.m_hoveredWindowWantCaptureEventsCallback);
 
 			// Invalidate other:
+			other.m_pIRenderer = nullptr;
+			other.m_pIVulkanRenderer = nullptr;
 			other.m_vkDevice = VK_NULL_HANDLE;
 			other.m_pIo = nullptr;
 			other.m_pSdlWindow = nullptr;
@@ -121,8 +152,6 @@ namespace imGuiSdlVulkanBackend
 			other.m_wantCaptureMouse = false;
 			other.m_enableDockSpace = false;
 			other.m_vkImageViewToDescriptorMap.clear();
-			other.m_focusedWindowWantCaptureEventsCallback = nullptr;
-			other.m_hoveredWindowWantCaptureEventsCallback = nullptr;
 		}
 		return *this;
 	}
@@ -185,25 +214,6 @@ namespace imGuiSdlVulkanBackend
 	bool Gui::WantCaptureMouse()
 	{
 		return m_wantCaptureMouse;
-	}
-	uintptr_t Gui::GetTextureID(emberBackendInterface::ITexture* pITexture)
-	{
-		if (!pITexture)
-			return 0;
-
-		VkImageView imageView = pITexture->GetVkImageView();
-
-		// Return cached descriptor set if it exists:
-		auto it = m_vkImageViewToDescriptorMap.find(imageView);
-		if (it != m_vkImageViewToDescriptorMap.end())
-			return reinterpret_cast<ImTextureID>(it->second);
-
-		// Create descriptor set for this vkImageView:
-		VkDescriptorSet vkDescriptorSet = ImGui_ImplVulkan_AddTexture(imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-		// Cache and return:
-		m_vkImageViewToDescriptorMap[imageView] = vkDescriptorSet;
-		return reinterpret_cast<uintptr_t>(vkDescriptorSet);
 	}
 	Float2 Gui::GetWindowSize()
 	{
@@ -380,14 +390,47 @@ namespace imGuiSdlVulkanBackend
 	{
 		return ImGui::Selectable(label, selected);
 	}
-	void Gui::Image(uintptr_t textureID, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
+	void Gui::Image(emberBackendInterface::ITexture* pTexture, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
+		uintptr_t textureID = GetTextureID(pTexture);
+		if (textureID == 0)
+			return;
 		ImGui::Image(static_cast<ImTextureID>(textureID), ImVec2{ imageSize.x, imageSize.y }, ImVec2{ uv0.x, uv0.y }, ImVec2{ uv1.x, uv1.y });
 	}
 
 
 
 	// Private methods:
+	uintptr_t Gui::GetTextureID(emberBackendInterface::ITexture* pTexture)
+	{
+		// Invalid input:
+		if (!pTexture)
+			return 0;
+		emberBackendInterface::IVulkanTexture* pVulkanTexture = dynamic_cast<emberBackendInterface::IVulkanTexture*>(pTexture);
+		if (!pVulkanTexture)
+			throw std::runtime_error("imGuiSdlVulkanBackend::Gui::GetTextureID(...) failed. Texture backend does not implement IVulkanTexture.");
+
+		// Get bulkan imageView/Layout:
+		const uint32_t frameIndex = m_pIRenderer->GetFrameIndex();
+		VkImageView imageView = pVulkanTexture->GetVkImageView(frameIndex);
+		VkImageLayout imageLayout = pVulkanTexture->GetVkImageLayout(frameIndex);
+		if (imageView == VK_NULL_HANDLE)
+			throw std::runtime_error("imGuiSdlVulkanBackend::Gui::GetTextureID(...) failed. Texture image view is null.");
+		if (imageLayout != VK_IMAGE_LAYOUT_GENERAL && imageLayout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+			throw std::runtime_error("imGuiSdlVulkanBackend::Gui::GetTextureID(...) failed. Texture is not in a shader-readable image layout.");
+
+		// Return cached descriptor set if it exists:
+		auto it = m_vkImageViewToDescriptorMap.find(imageView);
+		if (it != m_vkImageViewToDescriptorMap.end())
+			return reinterpret_cast<uintptr_t>(it->second);
+
+		// Create descriptor set for this vkImageView:
+		VkDescriptorSet descriptorSet = ImGui_ImplVulkan_AddTexture(imageView, imageLayout);
+
+		// Cache and return:
+		m_vkImageViewToDescriptorMap[imageView] = descriptorSet;
+		return reinterpret_cast<uintptr_t>(descriptorSet);
+	}
 	void Gui::ReleaseStaleMouseButtons()
 	{
 		if (m_pIo == nullptr || m_pSdlWindow == nullptr)

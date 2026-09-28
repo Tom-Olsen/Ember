@@ -1,5 +1,6 @@
 #pragma once
 #include "iTexture.h"
+#include "iVulkanTexture.h"
 #include "commonTextureFormat.h"
 #include "vulkanGpuResourceHandle.h"
 #include "vulkanRendererExport.h"
@@ -31,7 +32,7 @@ namespace vulkanRendererBackend
 	/// <summary>
 	/// Base class for different kinds of textures: 1d, 2d, 3d, cube.
 	/// </summary>
-	class VULKAN_RENDERER_API Texture : public emberBackendInterface::ITexture
+	class VULKAN_RENDERER_API Texture : public emberBackendInterface::ITexture, public emberBackendInterface::IVulkanTexture
 	{
 		// Friends:
 		friend class TextureHandle;
@@ -84,10 +85,12 @@ namespace vulkanRendererBackend
 		uint32_t GetDepth() const override;
 		uint32_t GetChannels() const override;
 		const emberCommon::TextureFormat GetTextureFormat() const override;
-		const VkImageView& GetVkImageView() const override;
 		VkFormat GetFormat() const;
 		VmaImage* const GetVmaImage() const;
 		VkDescriptorType GetVkDescriptorType() const;
+		const VkImageView& GetVkImageView() const;
+		VkImageView GetVkImageView(uint32_t frameIndex) const override;
+		VkImageLayout GetVkImageLayout(uint32_t frameIndex) const override;
 
         // Debugging:
         void SetDebugName(const std::string& name) override;
