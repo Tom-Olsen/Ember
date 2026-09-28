@@ -17,7 +17,7 @@ namespace emberEcs
 	class ScreenSpaceEffects : public Component
 	{
 	private: // Members:
-		std::vector<emberCore::ComputeShader> effects;
+		std::vector<emberCore::ComputeShader> m_effects;
 		emberCore::Texture* m_pEnvironmentMap;
 
 	public: // Methods:

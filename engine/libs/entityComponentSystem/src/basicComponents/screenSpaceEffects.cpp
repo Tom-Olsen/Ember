@@ -12,11 +12,11 @@ namespace emberEcs
 	ScreenSpaceEffects::ScreenSpaceEffects(Texture& environmentMap)
 		: m_pEnvironmentMap(&environmentMap)
 	{
-		effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflections"));
+		m_effects.push_back(ComputeShaderManager::TryGetComputeShader("screenSpaceReflections"));
 	}
 	ScreenSpaceEffects::~ScreenSpaceEffects()
 	{
-		effects.clear();
+		m_effects.clear();
 	}
 
 
@@ -24,7 +24,7 @@ namespace emberEcs
 	// Overrides:
 	void ScreenSpaceEffects::LateUpdate()
 	{
-		for (ComputeShader& computeShader : effects)
+		for (ComputeShader& computeShader : m_effects)
 		{
 			CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(computeShader);
 			callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
