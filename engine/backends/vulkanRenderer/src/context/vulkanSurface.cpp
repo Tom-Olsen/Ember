@@ -1,11 +1,13 @@
 #include "vulkanSurface.h"
 #include "iWindow.h"
+#include "iVulkanWindow.h"
 #include "logger.h"
 #include "vulkanInstance.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include <assert.h>
 #include <stdint.h>
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
@@ -31,7 +33,10 @@ namespace vulkanRendererBackend
 		m_pIWindow = pIWindow;
 
 		// Create surface:
-		m_pIWindow->CreateSurface(m_pInstance->GetVkInstance(), nullptr, &m_surface);
+		emberBackendInterface::IVulkanWindow* pIVulkanWindow = dynamic_cast<emberBackendInterface::IVulkanWindow*>(m_pIWindow);
+		if (!pIVulkanWindow)
+			throw std::runtime_error("vulkanRendererBackend::Surface::Surface(...) failed. Window backend does not implement IVulkanWindow.");
+		pIVulkanWindow->CreateSurface(m_pInstance->GetVkInstance(), nullptr, &m_surface);
 
 		// Available surfaceFormats:
 		uint32_t formatCount;

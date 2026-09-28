@@ -1,8 +1,9 @@
 #pragma once
+#include "iWindow.h"
+#include "iVulkanWindow.h"
 #include "commonEvent.h"
 #include "emberMath.h"
 #include "nullWindowExport.h"
-#include "iWindow.h"
 #include <vector>
 
 
@@ -17,7 +18,7 @@ namespace emberBackendInterface
 
 namespace nullWindowBackend
 {
-	class NULL_WINDOW_API Window : public emberBackendInterface::IWindow
+	class NULL_WINDOW_API Window : public emberBackendInterface::IWindow, public emberBackendInterface::IVulkanWindow
 	{
 	public: // Methods:
 		// Constructor/Destructor:

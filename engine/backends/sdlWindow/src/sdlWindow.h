@@ -1,5 +1,6 @@
 #pragma once
 #include "iWindow.h"
+#include "iVulkanWindow.h"
 #include "commonEvent.h"
 #include "emberMath.h"
 #include "sdlWindowExport.h"
@@ -25,7 +26,7 @@ namespace emberBackendInterface
 
 namespace sdlWindowBackend
 {
-	class SDL_WINDOW_API Window : public emberBackendInterface::IWindow
+	class SDL_WINDOW_API Window : public emberBackendInterface::IWindow, public emberBackendInterface::IVulkanWindow
 	{
 	private: // Members:
 		SDL_Window* m_pSdlWindow = nullptr;

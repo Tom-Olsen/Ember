@@ -1,5 +1,6 @@
 #include "vulkanContext.h"
 #include "iWindow.h"
+#include "iVulkanWindow.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
@@ -64,7 +65,10 @@ namespace vulkanRendererBackend
 			instanceExtensions.push_back(VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME);
 		#endif
 
-		pIWindow->AddWindowInstanceExtensions(instanceExtensions);
+		emberBackendInterface::IVulkanWindow* pIVulkanWindow = dynamic_cast<emberBackendInterface::IVulkanWindow*>(pIWindow);
+		if (!pIVulkanWindow)
+			throw std::runtime_error("vulkanRendererBackend::Context::Init(...) failed. Window backend does not implement IVulkanWindow.");
+		pIVulkanWindow->AddWindowInstanceExtensions(instanceExtensions);
 		m_pRenderer = pRenderer;
 
 		if (createInfo.enableGui)

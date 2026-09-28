@@ -33,14 +33,6 @@ namespace emberCore
 	{
 		return s_pIWindow->PollEvents();
 	}
-	void Window::AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions)
-	{
-		s_pIWindow->AddWindowInstanceExtensions(instanceExtensions);
-	}
-	void Window::CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR)
-	{
-		s_pIWindow->CreateSurface(vkInstance, pAllocator, pVkSurfaceKHR);
-	}
 
 
 

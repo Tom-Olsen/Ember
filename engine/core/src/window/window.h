@@ -6,11 +6,6 @@
 #include <vector>
 
 
-
-// Forward decleration:
-typedef struct VkInstance_T* VkInstance;
-struct VkAllocationCallbacks;
-typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 namespace emberBackendInterface
 {
 	class IWindow;
@@ -33,8 +28,6 @@ namespace emberCore
 
 		// Window Methods:
 		static std::vector<emberCommon::Event> PollEvents();
-		static void AddWindowInstanceExtensions(std::vector<const char*>& instanceExtensions);
-		static void CreateSurface(VkInstance vkInstance, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pVkSurfaceKHR);
 
 		// Getters:
 		static bool GetIsMinimized();
