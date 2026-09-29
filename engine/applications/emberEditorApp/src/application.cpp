@@ -30,6 +30,7 @@
 #include "outlineEditorWindow.h"
 #include "projectEditorWindow.h"
 #include "sceneEditorWindow.h"
+#include "screenSpaceReflectionDispatcherEditorWindow.h"
 // System:
 #include <exception>
 #include <memory>
@@ -54,6 +55,7 @@ namespace emberApplication
 	std::unique_ptr<emberEditor::OutlineEditorWindow> Application::m_pOutlineEditorWindow;
 	std::unique_ptr<emberEditor::ProjectEditorWindow> Application::m_pProjectEditorWindow;
 	std::unique_ptr<emberEditor::SceneEditorWindow> Application::m_pSceneEditorWindow;
+	std::unique_ptr<emberEditor::ScreenSpaceReflectionDispatcherEditorWindow> Application::m_pScreenSpaceReflectionDispatcherEditorWindow;
 
 
 
@@ -118,6 +120,7 @@ namespace emberApplication
 			m_pOutlineEditorWindow = std::make_unique<emberEditor::OutlineEditorWindow>();
 			m_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
 			m_pSceneEditorWindow = std::make_unique<emberEditor::SceneEditorWindow>();
+			m_pScreenSpaceReflectionDispatcherEditorWindow = std::make_unique<emberEditor::ScreenSpaceReflectionDispatcherEditorWindow>();
 
 			// Other systems:
 			EventSystem::Init();
@@ -131,6 +134,7 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
+		m_pScreenSpaceReflectionDispatcherEditorWindow.reset();
 		m_pSceneEditorWindow.reset();
 		m_pProjectEditorWindow.reset();
 		m_pOutlineEditorWindow.reset();
@@ -226,6 +230,7 @@ namespace emberApplication
 	{
 		m_pActiveScene = pScene;
 		m_pHierarchyEditorWindow->SetScene(pScene);
+		m_pScreenSpaceReflectionDispatcherEditorWindow->SetScene(pScene);
 	}
 
 
@@ -274,5 +279,9 @@ namespace emberApplication
 	emberEditor::SceneEditorWindow* Application::GetSceneEditorWindow()
 	{
 		return m_pSceneEditorWindow.get();
+	}
+	emberEditor::ScreenSpaceReflectionDispatcherEditorWindow* Application::GetScreenSpaceReflectionDispatcherEditorWindow()
+	{
+		return m_pScreenSpaceReflectionDispatcherEditorWindow.get();
 	}
 }

@@ -3,6 +3,8 @@
 #include "descriptorSetMacros.h"
 #include "defaultPushConstant.hlsli"
 #include "math.hlsli"
+#include "globalSet.hlsli"
+#include "sceneSet.hlsli"
 #include "frameSet.hlsli"
 
 

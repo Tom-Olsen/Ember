@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "screenSpaceReflectionComposit",
+    "sourcePath": "../src/compute/screenSpaceReflectionComposit.comp.hlsl",
+    "binaryPath": "../bin/screenSpaceReflectionComposit.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

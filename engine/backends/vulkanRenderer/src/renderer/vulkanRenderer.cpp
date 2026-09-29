@@ -75,6 +75,7 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
+		m_createInfo = createInfo;
 		m_pIWindow = pIWindow;
 		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
 		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
@@ -490,6 +491,14 @@ namespace vulkanRendererBackend
 
 
 	// Getters:
+	uint32_t Renderer::GetRenderWidth() const
+	{
+		return m_createInfo.renderWidth;
+	}
+	uint32_t Renderer::GetRenderHeight() const
+	{
+		return m_createInfo.renderHeight;
+	}
 	bool Renderer::TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const
 	{
 		if (m_directionalLightsCount > 0)

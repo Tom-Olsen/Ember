@@ -10,6 +10,7 @@
 
 namespace vulkanRendererBackend
 {
+	// Public methdos:
 	// Constructor/Destructor:
 	PhysicalDevice::PhysicalDevice(Instance* pInstance)
 	{
@@ -85,7 +86,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Public methdos:
+	// Getters:
 	const VkPhysicalDevice& PhysicalDevice::GetVkPhysicalDevice() const
 	{
 		return m_physicalDevice;
@@ -106,6 +107,10 @@ namespace vulkanRendererBackend
 	{
 		return m_maxImageDimension3d;
 	}
+
+
+
+	// Feature support queries:
 	bool PhysicalDevice::SupportsDepthClamp() const
 	{
 		return true;
@@ -124,7 +129,16 @@ namespace vulkanRendererBackend
 		vkGetPhysicalDeviceFeatures(m_physicalDevice, &deviceFeatures);
 		return deviceFeatures.multiViewport;
 	}
-	// Private:
+	bool PhysicalDevice::SupportsStorageImageExtendedFormats() const
+	{
+		VkPhysicalDeviceFeatures deviceFeatures;
+		vkGetPhysicalDeviceFeatures(m_physicalDevice, &deviceFeatures);
+		return deviceFeatures.shaderStorageImageExtendedFormats;
+	}
+
+
+
+	// Private methods:
 	void PhysicalDevice::Cleanup()
 	{
 
@@ -160,7 +174,9 @@ namespace vulkanRendererBackend
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.depthClamp);
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.depthBiasClamp);
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.fillModeNonSolid);
+		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.shaderStorageImageExtendedFormats);
 		supportsRequiredFeatures &= DeviceSupportsScalarBlockLayout(device);
+		supportsRequiredFeatures &= DeviceSupportsStorageImageFormat(device, VK_FORMAT_R16G16B16A16_UNORM);
 		if (supportsRequiredFeatures == false)
 			return -1; // negative score = invalid device.
 
@@ -184,7 +200,6 @@ namespace vulkanRendererBackend
 		// score +=  1 * deviceFeatures.shaderFloat64;
 		// score +=  1 * deviceFeatures.shaderInt64;
 		// score +=  1 * deviceFeatures.imageCubeArray;
-		// score +=  1 * deviceFeatures.shaderStorageImageExtendedFormats;
 		// score +=  1 * deviceFeatures.sparseBinding;
 		// score +=  1 * deviceFeatures.drawIndirectFirstInstance;
 		// score +=  1 * deviceFeatures.shaderStorageBufferArrayDynamicIndexing;
@@ -198,6 +213,12 @@ namespace vulkanRendererBackend
 		deviceFeatures2.pNext = &scalarBlockLayoutFeatures;
 		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
 		return scalarBlockLayoutFeatures.scalarBlockLayout;
+	}
+	bool PhysicalDevice::DeviceSupportsStorageImageFormat(VkPhysicalDevice device, VkFormat format) const
+	{
+		VkFormatProperties formatProperties;
+		vkGetPhysicalDeviceFormatProperties(device, format, &formatProperties);
+		return (formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT) != 0;
 	}
 	bool PhysicalDevice::HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const
 	{

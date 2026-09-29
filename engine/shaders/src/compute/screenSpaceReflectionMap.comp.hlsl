@@ -1,12 +1,12 @@
-#define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_OUT_OF_PLACE
+#define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_READ
 #include "computeShaderCommon.hlsli"
-#include "deferredRenderingConstants.h"
 #include "screenSpaceReflectionUtility.hlsli"
 
 
 
 // Bindings:
 TextureCube<float4> environmentMap : register(t100, CALL_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> reflectionMap : register(u200, CALL_SET);
 
 
 
@@ -25,21 +25,28 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
 		return;
 
+	// Reflection map size:
+	uint reflectionWidth;
+	uint reflectionHeight;
+	reflectionMap.GetDimensions(reflectionWidth, reflectionHeight);
+	float2 reflectionSize = float2(reflectionWidth, reflectionHeight);
+
 	// Screen size:
 	uint screenWidth;
 	uint screenHeight;
 	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
 	float2 screenSize = float2(screenWidth, screenHeight);
 
-	// Source pixel/color:
-	uint2 sourcePixel = threadID.xy;
-	float4 sourceColor = GetSceneColor(sourcePixel);
+	// Reflection texel mapped to full resolution source pixel:
+	uint2 maxScenePixel = uint2(screenWidth - 1, screenHeight - 1);
+	float2 sourcePosition = (float2(threadID.xy) + 0.5f) * screenSize / reflectionSize;
+	uint2 sourcePixel = min(uint2(sourcePosition), maxScenePixel);
 
 	// Sky rays:
 	float3 worldPosition;
 	if (TryGetGeometryWorldPosition(sourcePixel, screenSize, worldPosition) == false)
 	{
-		SetSceneColor(sourcePixel, sourceColor);
+		reflectionMap[threadID.xy] = 0.0f;	// miss.
 		return;
 	}
 
@@ -68,12 +75,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		reflectionColor = lerp(reflectionColor, GetSceneColor(hitPixel).rgb, edgeFade);
 	}
 
-	// Physically based reflections:
-	float3 albedo = gbufferAlbedoTexture.Load(int3(sourcePixel, 0)).rgb;
-	float4 surfaceProperties = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0));
-	float metallicity = surfaceProperties[DEFERRED_SURFACE_PROPERTIES_METALLICITY_CHANNEL];
-	float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), saturate(albedo), saturate(metallicity));
-	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
-	float3 fresnel = reflectivity + (1.0f - reflectivity) * pow(1.0f - nDotV, 5.0f);
-	SetSceneColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, fresnel), sourceColor.a));
+	// Store reflection color and has hit (alpha=1) for composit pass:
+	reflectionMap[threadID.xy] = float4(reflectionColor, 1.0f);
 }

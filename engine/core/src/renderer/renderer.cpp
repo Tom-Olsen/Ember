@@ -246,6 +246,14 @@ namespace emberCore
 
 
 	// Getters:
+	uint32_t Renderer::GetRenderWidth()
+	{
+		return s_pIRenderer->GetRenderWidth();
+	}
+	uint32_t Renderer::GetRenderHeight()
+	{
+		return s_pIRenderer->GetRenderHeight();
+	}
 	bool Renderer::TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index)
 	{
 		return s_pIRenderer->TryGetDirectionalLight(directionalLight, index);

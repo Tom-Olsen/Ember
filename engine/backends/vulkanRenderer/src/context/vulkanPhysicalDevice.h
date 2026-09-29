@@ -35,6 +35,7 @@ namespace vulkanRendererBackend
 		uint32_t m_maxImageDimension3d;
 
 	public: // Methods:
+		// Constructor/Destructor:
 		PhysicalDevice(Instance* pInstance);
 		~PhysicalDevice();
 
@@ -45,21 +46,27 @@ namespace vulkanRendererBackend
 		// Movable:
 		PhysicalDevice(PhysicalDevice&& other) noexcept;
 		PhysicalDevice& operator=(PhysicalDevice&& other) noexcept;
+
+		// Getters:
 		const VkPhysicalDevice& GetVkPhysicalDevice() const;
 		VkSampleCountFlagBits GetMaxMsaaSamples() const;
 		uint32_t GetMaxImageDimension1d() const;
 		uint32_t GetMaxImageDimension2d() const;
 		uint32_t GetMaxImageDimension3d() const;
+
+		// Feature support queries:
 		bool SupportsDepthClamp() const;
 		bool SupportsDepthBiasClamp() const;
 		bool SupportsFillModeNonSolid() const;
 		bool SupportsMultiViewport() const;
+		bool SupportsStorageImageExtendedFormats() const;
 
 	private: // Methods:
 		void Cleanup();
 		void MoveFrom(PhysicalDevice& other) noexcept;
 		int DeviceScore(VkPhysicalDevice device);
 		bool DeviceSupportsScalarBlockLayout(VkPhysicalDevice device) const;
+		bool DeviceSupportsStorageImageFormat(VkPhysicalDevice device, VkFormat format) const;
 		bool HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
 		bool HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;
 		VkSampleCountFlagBits MaxUsableMsaaSampleCount() const;

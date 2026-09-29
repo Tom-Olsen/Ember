@@ -80,6 +80,8 @@ namespace emberCore
 		static void DrawGizmo(const DrawData& drawData, CallProperties& callProperties);
 
 		// Getters:
+		static uint32_t GetRenderWidth();
+		static uint32_t GetRenderHeight();
 		static bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index);
 		static bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index);
 		static const uint32_t GetShadowMapResolution();

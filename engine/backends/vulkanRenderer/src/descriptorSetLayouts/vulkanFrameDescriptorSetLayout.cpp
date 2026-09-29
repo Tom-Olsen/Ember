@@ -59,6 +59,20 @@ namespace vulkanRendererBackend
             gbufferSurfacePropertiesBinding.descriptorCount = 1;
             gbufferSurfacePropertiesBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
+			// Texture2D<float4> sceneColorSampleTexture0 : register(t1104, FRAME_SET);
+            VkDescriptorSetLayoutBinding sceneColorSampleBinding0{};
+            sceneColorSampleBinding0.binding = 1104;
+            sceneColorSampleBinding0.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            sceneColorSampleBinding0.descriptorCount = 1;
+            sceneColorSampleBinding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+			// Texture2D<float4> sceneColorSampleTexture1 : register(t1105, FRAME_SET);
+            VkDescriptorSetLayoutBinding sceneColorSampleBinding1{};
+            sceneColorSampleBinding1.binding = 1105;
+            sceneColorSampleBinding1.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            sceneColorSampleBinding1.descriptorCount = 1;
+            sceneColorSampleBinding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
 			// [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorTexture0 : register(u1200, FRAME_SET);
             VkDescriptorSetLayoutBinding sceneColorBinding0{};
             sceneColorBinding0.binding = 1200;
@@ -83,7 +97,18 @@ namespace vulkanRendererBackend
             cameraBinding.stageFlags = VK_SHADER_STAGE_ALL;
             cameraBinding.pImmutableSamplers = nullptr;
 
-            std::array<VkDescriptorSetLayoutBinding, 7> bindings = { sceneDepthBinding, gbufferNormalBinding, gbufferAlbedoBinding, gbufferSurfacePropertiesBinding, sceneColorBinding0, sceneColorBinding1, cameraBinding };
+            std::array<VkDescriptorSetLayoutBinding, 9> bindings =
+			{
+				sceneDepthBinding,
+				gbufferNormalBinding,
+				gbufferAlbedoBinding,
+				gbufferSurfacePropertiesBinding,
+				sceneColorSampleBinding0,
+				sceneColorSampleBinding1,
+				sceneColorBinding0,
+				sceneColorBinding1,
+				cameraBinding
+			};
             VkDescriptorSetLayoutCreateInfo createInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
             createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
             createInfo.pBindings = bindings.data();
@@ -185,6 +210,8 @@ namespace vulkanRendererBackend
         UpdateTextureDescriptor(frameIndex, 1101, renderTargets.GetNormalTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         UpdateTextureDescriptor(frameIndex, 1102, renderTargets.GetAlbedoTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         UpdateTextureDescriptor(frameIndex, 1103, renderTargets.GetSurfacePropertiesTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        UpdateTextureDescriptor(frameIndex, 1104, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+        UpdateTextureDescriptor(frameIndex, 1105, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
         UpdateTextureDescriptor(frameIndex, 1200, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
         UpdateTextureDescriptor(frameIndex, 1201, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
     }

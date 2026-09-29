@@ -80,6 +80,7 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
 		// Render management:
+		emberCommon::RendererCreateInfo m_createInfo;
 		FrameExecutionData m_frameExecutionData;
 		DescriptorSetBinding* m_pSceneDescriptorSetBinding;
 		bool m_rebuildSwapchain;
@@ -119,6 +120,8 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IDescriptorSetBinding* DrawGizmo(const Float3& worldPosition, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, uint32_t instanceCount) override;
 
 		// Getters:
+		uint32_t GetRenderWidth() const override;
+		uint32_t GetRenderHeight() const override;
 		bool TryGetDirectionalLight(emberCommon::DirectionalLight& directionalLight, uint32_t index) const override;
 		bool TryGetPositionalLight(emberCommon::PositionalLight& positionalLight, uint32_t index) const override;
 		uint32_t GetShadowMapResolution() override;

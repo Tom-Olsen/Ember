@@ -71,6 +71,7 @@ namespace vulkanRendererBackend
 		deviceFeatures2.features.depthClamp = pPhysicalDevice->SupportsDepthClamp();
 		deviceFeatures2.features.depthBiasClamp = pPhysicalDevice->SupportsDepthBiasClamp();
 		deviceFeatures2.features.fillModeNonSolid = pPhysicalDevice->SupportsFillModeNonSolid();
+		deviceFeatures2.features.shaderStorageImageExtendedFormats = pPhysicalDevice->SupportsStorageImageExtendedFormats();
 
 		// Device create info:
 		VkDeviceCreateInfo deviceCreateInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
