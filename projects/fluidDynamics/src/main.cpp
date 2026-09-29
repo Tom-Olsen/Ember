@@ -65,6 +65,9 @@ Scene* Fluid3dScene()
 
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
+	Texture& skyboxTexture = TextureManager::GetTexture("skybox0");
+	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
+	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
 	floorMaterial.SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
 	floorMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
@@ -86,6 +89,19 @@ Scene* Fluid3dScene()
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);
+	}
+	{// Skybox:
+		Entity entity = Entity::Create("skybox");
+
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
+		pMeshRenderer->SetMaterial(skyboxMaterial);
+		pMeshRenderer->SetCastShadows(false);
+		pMeshRenderer->SetReceiveShadows(false);
+		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	{ // Floor:
 		Entity entity = Entity::Create("floor");
