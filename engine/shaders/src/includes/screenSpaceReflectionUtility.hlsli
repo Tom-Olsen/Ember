@@ -8,9 +8,9 @@
 // no larger than maxStepCount pixels can reach the target precision within the refinement budget.
 static const uint maxStepCount = 64;
 static const uint maxRefinementStepCount = 8;
-static const float minimumPixelStepSize = 1.0f;
+static const float minPixelStepSize = 1.0f;
 static const float refinementPixelPrecision = 0.25f;
-static const float minimumSurfaceThickness = 0.05f;
+static const float minSurfaceThickness = 0.05f;
 static const float relativeSurfaceThickness = 0.005f;
 // Screen ray sample status:
 static const uint screenRaySampleOutsideScreen = 0;
@@ -78,7 +78,7 @@ float GetPixelStepSize(ScreenRay screenRay, float2 screenSize)
 		rayDistanceToEdge.y = distanceToEdge.y / directionMagnitude.y;
 
 	float rayDistance = min(rayDistanceToEdge.x, rayDistanceToEdge.y);
-	return max(minimumPixelStepSize, ceil(rayDistance / float(maxStepCount)));
+	return max(minPixelStepSize, ceil(rayDistance / float(maxStepCount)));
 }
 
 
@@ -160,7 +160,7 @@ bool TryRefineScreenRayHit(float2 screenSize, ScreenRaySample frontSample, Scree
 			backSample = midpointSample;
 	}
 
-	float surfaceThickness = max(minimumSurfaceThickness, relativeSurfaceThickness * backSample.sceneViewDepth);
+	float surfaceThickness = max(minSurfaceThickness, relativeSurfaceThickness * backSample.sceneViewDepth);
 	if (backSample.depthDelta < 0.0f || backSample.depthDelta > surfaceThickness)
 		return false;
 
