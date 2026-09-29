@@ -1,0 +1,566 @@
+GPU Resource Manager Refactor
+=============================
+
+
+Purpose
+-------
+
+Refactor Ember's public GPU-resource ownership so materials, compute shaders, textures, and buffers use a consistent core-owned generational-ID model.
+
+The generic management policy should live in engine/core rather than being reimplemented by every renderer backend. Renderer backends should remain responsible for constructing their concrete resources, managing backend-specific caches and allocations, and retiring resources safely after queued CPU work and submitted GPU work have finished.
+
+This document records the current architecture, the lifetime problem that motivated the change, the intended ownership split, important safety requirements, likely implementation stages, and open design decisions. It is intended to be usable as the starting prompt for a new Codex session. Before implementing, inspect the referenced files and verify that the architecture has not changed.
+
+
+Goals
+-----
+
+- Move the backend-independent parts of MaterialManager and ComputeShaderManager into engine/core.
+- Replace the current core BufferManager and TextureManager object-address model with manager-owned slots and copyable generational handles.
+- Make Material, ComputeShader, Texture, and Buffer cheap copyable references rather than conditional owners of backend resources.
+- Keep resource creation, Vulkan pipeline/shader/descriptor management, and safe deferred destruction in the Vulkan backend.
+- Avoid duplicating slot allocation, generations, name lookup, access rights, and public deletion policy in every future renderer backend.
+- Make stale public handles detectably invalid instead of allowing dangling core pointers or accidentally resolving a newly allocated resource in a reused slot.
+- Preserve correct lifetimes for resources referenced by pending render-graph work, command recording, frames in flight, and submitted GPU work.
+- Define initialization and shutdown ordering explicitly.
+
+
+Non-goals
+---------
+
+- Do not move Vulkan pipelines, shader modules, descriptor pools, Vulkan allocation, or Vulkan synchronization into core.
+- Do not make copying a public handle duplicate the underlying GPU resource.
+- Do not assume that copying a handle extends resource lifetime. The intended semantics match Material today: the manager owns the resource, copies are non-owning references, and deletion invalidates all copies.
+- Do not solve lifetime safety with undocumented raw-pointer assumptions.
+- Do not turn the existing backend GpuResourceRegistry into the public cross-backend manager without first separating backend-independent identity from Vulkan implementation details.
+
+
+Current architecture
+--------------------
+
+Materials
+
+- emberCore::Material is already a cheap copyable wrapper around emberCommon::MaterialId.
+- MaterialId contains an index and generation. Copies do not own or extend the lifetime of the backend material.
+- engine/core/src/managers/materialManager.* is a static facade. It stores an IMaterialManager pointer obtained from IGpuResourceFactory and delegates creation, cloning, lookup, mutation checks, relationships, and deletion to the backend manager.
+- engine/interfaces/renderer/iMaterialManager.h exposes the complete manager policy as a backend interface.
+- engine/backends/vulkanRenderer/src/managers/vulkanMaterialManager.* implements:
+  - generational slots;
+  - name-to-slot lookup;
+  - access rights;
+  - shadow-material relationships;
+  - creation and cloning policy;
+  - ownership through unique_ptr<vulkanRendererBackend::Material>;
+  - logical deletion and deferred physical destruction.
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanGpuResourceFactory.* owns Vulkan MaterialManager, MaterialShaderManager, and ComputeShaderManager instances and exposes the first and third through IGpuResourceFactory.
+- The current arrangement lets core and Vulkan use the same MaterialId and makes backend lookup convenient, but a second renderer backend would have to reproduce generic manager behavior.
+
+Compute shaders
+
+- emberCore::ComputeShader is a generational, non-owning wrapper around emberCommon::ComputeShaderId.
+- engine/core/src/managers/computeShaderManager.* is a facade over IComputeShaderManager.
+- engine/backends/vulkanRenderer/src/managers/vulkanComputeShaderManager.* owns the concrete Vulkan compute shaders and repeats the same general slot/name/access-right machinery as MaterialManager.
+- Vulkan compute calls use backend handles and pending-use tracking. ComputeShaderManager::DestroyComputeShader transfers removed shaders to GarbageCollector::RecordPendingGarbage and waits until HasPendingUse() becomes false before deleting them.
+
+Material shaders
+
+- engine/backends/vulkanRenderer/src/managers/vulkanMaterialShaderManager.* manages Vulkan MaterialShader objects and their pipelines.
+- Vulkan MaterialShader objects contain backend-specific shader and pipeline state. This manager/cache is fundamentally backend-specific and should remain in the backend, even if public material IDs and material ownership policy move to core.
+- The core manager may refer to backend shader resources only through backend-neutral creation information or interfaces. It must not learn Vulkan pipeline details.
+
+Textures
+
+- emberCore::Texture currently contains:
+  - bool m_ownsITexture;
+  - ITexture* m_pITexture;
+  - a name.
+- Texture is non-copyable and movable. Its destructor conditionally deletes m_pITexture.
+- Texture2d, Texture3d, and TextureCube construct backend resources through Renderer/IGpuResourceFactory and normally own the returned interface pointer.
+- Some renderer-provided textures are wrapped non-owningly, such as final-render and gizmo textures.
+- engine/core/src/managers/textureManager.* already exists, but it is a name-to-unique_ptr<Texture> container. It owns core wrapper objects rather than owning backend resources in generational slots.
+- TextureManager::GetTexture returns Texture& and TryGetTexture returns Texture*. DeleteTexture and Clear destroy those wrapper objects, so retained references and pointers can dangle.
+- The Vulkan backend has GpuResourceRegistry<Texture> and a copyable Vulkan TextureHandle. This registry only tracks whether a concrete backend object remains registered; it does not own it.
+- The Vulkan registry is useful for backend-internal references such as descriptor bindings, but it cannot protect a raw pointer to an emberCore::Texture wrapper.
+
+Buffers
+
+- emberCore::Buffer currently owns unique_ptr<IBuffer>, is non-copyable, and is movable.
+- engine/core/src/managers/bufferManager.* already exists, but like TextureManager it stores name-to-unique_ptr<Buffer> and returns references/pointers to core wrapper objects.
+- The Vulkan backend has GpuResourceRegistry<Buffer> and a copyable Vulkan BufferHandle. Like TextureHandle, it detects expired backend resources but does not own them and is backend-specific.
+
+Backend registry
+
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanGpuResourceRegistry.* stores raw backend pointers in index-plus-generation slots.
+- It explicitly does not own resources.
+- Vulkan TextureHandle, BufferHandle, and ShaderHandle copy the registry handle and resolve it through TryGet/Get.
+- These handles prevent a stale backend reference from silently resolving a new object after slot reuse, but they do not extend lifetime.
+- They should remain an implementation detail unless a backend-neutral equivalent is deliberately introduced.
+
+
+Motivating lifetime problem
+---------------------------
+
+ScreenSpaceReflectionDispatcher currently stores:
+
+    emberCore::Texture* m_pEnvironmentMap;
+
+See:
+
+- engine/libs/entityComponentSystem/src/basicComponents/screenSpaceReflectionDispatcher.h
+- engine/libs/entityComponentSystem/src/basicComponents/screenSpaceReflectionDispatcher.cpp
+
+The dispatcher receives Texture& and saves its address. LateUpdate dereferences that pointer when binding environmentMap.
+
+In the current default scene, the environment map comes from TextureManager::GetTexture("skybox0"). Because TextureManager owns the wrapper through unique_ptr, its address remains stable across unordered_map rehashes. This specific use works only under the implicit rules that the texture is not deleted or moved and TextureManager::Clear happens after the dispatcher is destroyed.
+
+It is not generally safe:
+
+- Deleting or clearing the managed texture leaves the dispatcher with a dangling pointer.
+- Moving or destroying a non-managed wrapper can leave a dangling pointer or a moved-from wrapper.
+- A pointer does not become null when its object is deleted; it remains non-null and dangling.
+- The Vulkan TextureHandle cannot help because the dispatcher first dereferences the core Texture pointer before the backend registry participates.
+
+The desired result is for the dispatcher to store a Texture value containing TextureId. Copying the value copies only the handle. If the manager deletes the texture, later resolution detects an expired generation instead of dereferencing freed memory.
+
+Note that converting the environment-map member alone would not make ScreenSpaceReflectionDispatcher copyable. It also owns m_ssrReflectionTexture, which is currently a non-copyable Texture2d. Decide separately whether that render target remains exclusive or also becomes a managed handle.
+
+
+Target architecture
+-------------------
+
+Use four distinct responsibilities.
+
+1. Core public handle
+
+Material, ComputeShader, Texture, and Buffer should be small copyable wrappers containing backend-independent IDs:
+
+    Material        -> MaterialId
+    ComputeShader   -> ComputeShaderId
+    Texture         -> TextureId
+    Buffer          -> BufferId
+
+Each ID should contain at least an index and generation and have an invalid value. GetX operations must return a valid result or throw. TryGetX operations must return an invalid value/nullptr and log a warning on failure, following repository conventions.
+
+Copying a handle must not clone the resource and must not keep it alive. Explicit manager deletion invalidates all copies.
+
+2. Core manager
+
+Core managers own active logical resources and generic metadata. A slot will likely resemble:
+
+    struct TextureSlot
+    {
+        uint32_t generation;
+        ManagedTexture managedTexture;
+    };
+
+    struct ManagedTexture
+    {
+        std::string name;
+        ResourceAccessRights accessRights;
+        std::unique_ptr<emberBackendInterface::ITexture> pTexture;
+    };
+
+Exact structures should be designed consistently for each resource rather than copied blindly. Manager responsibilities include:
+
+- slot allocation and reuse;
+- generation advancement;
+- name lookup;
+- access rights and mutability policy where applicable;
+- active ownership of backend interface objects;
+- public Get/TryGet behavior;
+- logical relationships, such as surface material to shadow material;
+- immediate logical invalidation on deletion;
+- transferring retired backend objects to the backend retirement system.
+
+Core managers should load assets and create public handles. They should ask the active backend factory to construct the corresponding interface implementation.
+
+3. Backend factory and backend caches
+
+Every renderer backend must implement actual resource construction. A narrow factory interface is expected and is not unwanted duplication. Potential operations include:
+
+    std::unique_ptr<IMaterial> CreateMaterial(const MaterialCreateInfo& createInfo);
+    std::unique_ptr<IComputeShader> CreateComputeShader(const ComputeShaderCreateInfo& createInfo);
+    std::unique_ptr<ITexture> CreateTexture(const TextureCreateInfo& createInfo);
+    std::unique_ptr<IBuffer> CreateBuffer(const BufferCreateInfo& createInfo);
+
+The exact ownership ABI may use unique_ptr returns or the project's existing raw-pointer convention, but ownership transfer must be unambiguous.
+
+Backend responsibilities that remain backend-specific:
+
+- Vulkan shader modules and pipelines;
+- MaterialShader/pipeline caches;
+- descriptor pools, descriptor-set allocation, and backend descriptor bindings;
+- Vulkan memory allocation and uploads;
+- backend resource construction from backend-neutral descriptions;
+- submission-aware retirement and GPU destruction;
+- backend-internal handles needed by queued or persistent backend structures.
+
+4. Backend retirement system
+
+Logical deletion and physical destruction must be separate.
+
+On deletion:
+
+1. Validate the public ID.
+2. Remove the resource from the core manager's active slot.
+3. Increment the slot generation and make it available for reuse.
+4. Remove its name mapping and logical relationships.
+5. Transfer the concrete backend object to the backend retirement system.
+6. Keep the complete backend object alive until no pending CPU-side render work can dereference it.
+7. Destroy its Vulkan handles only after submitted GPU work using them has completed.
+
+A possible shape is:
+
+    void MaterialManager::DeleteMaterial(MaterialId materialId)
+    {
+        std::unique_ptr<IMaterial> pMaterial = RemoveAndInvalidate(materialId);
+        Renderer::RetireMaterial(std::move(pMaterial));
+    }
+
+Do not adopt this exact API without reviewing DLL/export ownership, interface destruction, and whether a generic retirement API or typed retirement operations fit the project better.
+
+
+Critical lifetime distinction
+-----------------------------
+
+There are two relevant post-deletion lifetimes.
+
+CPU object lifetime
+
+- Queued draw calls currently store raw vulkanRendererBackend::Material* values.
+- The Vulkan renderer reads those pointers later while sorting and recording the frame.
+- Therefore, the complete C++ material object must stay alive until all pending render-graph/draw-call consumers have either recorded or discarded their work.
+- Generational handles detect invalidity but do not by themselves keep an object alive.
+- An alternative is for queued work to store a backend handle and resolve it later, but then invalid-resource behavior must be defined. Pinning or explicit pending-use tracking is safer when work is already accepted.
+
+GPU object lifetime
+
+- Once command recording and submission are complete, the GPU never dereferences the C++ pointer.
+- Vulkan pipelines, descriptor sets, buffers, images, image views, allocations, and other Vulkan handles must nevertheless remain alive until the relevant submission completes.
+- Their destruction should be tied to completion fences/timeline values or another guarantee that implies completion.
+
+Keeping the whole backend object in a retirement queue can satisfy both phases, but the retirement condition must account for both pending CPU work and submitted GPU work.
+
+
+Current queue behavior that must be preserved or improved
+---------------------------------------------------------
+
+- Vulkan draw-call structs store raw Material* pointers. Relevant files are under engine/backends/vulkanRenderer/src/drawCalls/ and engine/backends/vulkanRenderer/src/renderer/.
+- Vulkan frame render data sorts and consumes those pointers during rendering.
+- ComputeCall stores a backend shader handle and ComputeCallQueue maintains pending/submitted calls.
+- Compute shaders increment/decrement pending-use state; deletion uses GarbageCollector::RecordPendingGarbage until HasPendingUse() becomes false.
+- Vulkan MaterialManager currently moves deleted Material objects into GarbageCollector::RecordFrameGarbage.
+- Vulkan MaterialShaderManager similarly defers deleted MaterialShader objects.
+- Vulkan VmaImage, VmaBuffer, descriptor allocations, and other resources already schedule deferred cleanup.
+- GarbageCollector::CollectFrameGarbage currently uses absoluteFrameIndex >= deletionFrame + framesInFlight + 1.
+
+Do not assume that merely observing framesInFlight + 1 numerical frame advances is universally sufficient. It is correct only if frame advancement/reuse is synchronized such that the relevant submissions have completed. Prefer retirement tied directly to frame fences or timeline semaphore completion where practical. At minimum, document and assert the synchronization invariant supporting frame-count retirement.
+
+
+Internal/default resources
+--------------------------
+
+The Vulkan backend retains raw pointers to default materials and compute shaders in DefaultGpuResources. Examples include default outline, shadow, deferred-lighting, and present materials and internal compute shaders.
+
+It is reasonable for these backend-required resources to remain alive until backend shutdown, but make that an explicit policy:
+
+- Mark internal/default resources inaccessible or undeletable through public APIs.
+- Install them through an explicit initialization step rather than relying only on incidental construction order.
+- Ensure the backend clears its cached pointers before core manager storage is cleared.
+- Stop accepting/recording work before resource teardown.
+- Retire or flush all resources while the Vulkan device, descriptor pools, garbage collector, and required parent objects are still alive.
+- Destroy the Vulkan context/device only after core-managed backend resources and retirement queues are cleared.
+
+The intended contract should be encoded in APIs and shutdown order. Comments alone are not sufficient.
+
+
+Recommended interface direction
+-------------------------------
+
+- Remove GetMaterialManager() and GetComputeShaderManager() from IGpuResourceFactory once core managers own the generic systems.
+- Remove IComputeShaderManager and IMaterialManager if no backend-owned manager responsibility remains.
+- Replace them with focused creation and retirement interfaces.
+- Keep IMaterial, IComputeShader, ITexture, and IBuffer as backend-resource boundaries unless a later design provides a better backend-neutral representation.
+- Prefer backend-neutral CreateInfo structures over passing full asset-loader types deep into backends when this produces a clearer boundary.
+- Keep logical metadata in core. Do not duplicate names, access rights, or cross-resource IDs in the backend unless they are required for debug labels or execution.
+- Consider a reusable internal generational-slot utility to avoid four nearly identical implementations, while retaining resource-specific managers and APIs.
+- Do not expose Vulkan TextureHandle/BufferHandle/ShaderHandle through core. Add common TextureId and BufferId types instead.
+
+
+Material and shader boundary
+----------------------------
+
+MaterialManager can move to core without moving Vulkan material implementation into core.
+
+Core-worthy material state includes:
+
+- MaterialId allocation and validation;
+- name and access rights;
+- material pass and public render settings where those concepts are backend-independent;
+- shadow-material relationships;
+- public cloning policy;
+- public default/error material selection.
+
+Backend-specific state includes:
+
+- concrete descriptor-set bindings;
+- compiled shaders and shader modules;
+- pipeline layouts and pipelines;
+- mesh/pipeline compatibility caches;
+- Vulkan render-stage implementation details.
+
+Cloning needs deliberate design. Current Vulkan Material cloning copies or resets backend descriptor bindings and uses Vulkan MaterialShader objects. Possible approaches include:
+
+- Core copies a complete backend-neutral MaterialDescription and asks the factory to create a new backend material.
+- Core asks IMaterial or the backend factory to clone a concrete implementation using an explicit clone mode.
+- Core owns logical parameter/binding state and rebuilds the backend representation from that state.
+
+Choose one coherent source of truth. Avoid splitting mutable material state between core and backend without synchronization rules.
+
+MaterialShaderManager should probably remain backend-side because it manages concrete shaders and pipelines. The public manager refactor should not force pipeline caches into core.
+
+
+Texture and buffer special cases
+--------------------------------
+
+Not every texture or buffer necessarily has the same provenance:
+
+- user/asset-created sampled textures;
+- transient or persistent storage resources;
+- renderer-owned render targets;
+- swapchain-related images;
+- final-render and GUI-facing textures;
+- per-frame/ring buffers;
+- staging buffers and backend-internal buffers.
+
+Decide which categories receive public TextureId/BufferId handles and which stay private to the backend.
+
+For renderer-owned textures currently returned as non-owning Texture wrappers, prefer an explicit manager registration or an explicit borrowed/external resource category. Do not preserve bool m_ownsITexture conditional ownership in the final public handle unless there is a well-defined need.
+
+If externally owned backend resources are registered in a core manager:
+
+- the slot must record the ownership category;
+- deletion behavior must be explicit;
+- invalidation must occur before the external owner destroys the resource;
+- shutdown ordering must prevent manager resolution after backend teardown.
+
+Texture and Buffer methods such as SetData, Upload, Download, GetWidth, and GetSize should resolve their IDs through the appropriate core manager on each operation. Get methods should throw on invalid/expired handles. TryGet-style paths should return invalid/null and log warnings.
+
+
+Suggested implementation sequence
+---------------------------------
+
+Do not attempt all resources in one unverified rewrite. Preserve working behavior after each stage.
+
+1. Specify common identity and retirement semantics
+
+- Add backend-neutral TextureId and BufferId types analogous to MaterialId and ComputeShaderId.
+- Decide generation initialization, overflow policy, invalid values, equality/hash support, and slot reuse.
+- Specify what copying, Destroy/Delete, IsValid, Get, and TryGet mean for every public wrapper.
+- Specify active ownership, logical invalidation, CPU retirement, GPU retirement, and shutdown ordering.
+
+2. Extract reusable manager storage if appropriate
+
+- Identify the common slot allocator/name map/generation/free-list behavior in Vulkan MaterialManager and ComputeShaderManager.
+- Implement a well-tested core utility only if it reduces duplication without hiding resource-specific invariants.
+- Do not force all resource types into an overly generic abstraction if their creation/deletion semantics materially differ.
+
+3. Move ComputeShaderManager policy to core
+
+- It is smaller than MaterialManager and already uses clear IDs and pending-use tracking.
+- Core should own ComputeShaderId slots and unique_ptr<IComputeShader> active resources.
+- Vulkan should provide creation plus safe retirement.
+- Preserve pending compute call safety and default compute shader setup.
+
+4. Move MaterialManager policy to core
+
+- Move slots, generations, names, access rights, public relationships, and default/error selection.
+- Keep MaterialShader/pipeline creation and caches in Vulkan.
+- Resolve cloning ownership and the source of truth for bindings/settings before implementation.
+- Replace queued raw-pointer assumptions with explicit retirement/pinning or safe backend handles.
+
+5. Refactor TextureManager and Texture
+
+- Replace name-to-unique_ptr<Texture> wrapper ownership with generational slots owning ITexture implementations.
+- Make Texture a copyable TextureId wrapper.
+- Remove conditional public-wrapper ownership once all ownership categories have explicit representations.
+- Update texture subclasses/creation APIs as needed. Decide whether Texture2d/3d/Cube remain public typed handles or become creation helpers returning Texture.
+- Update ScreenSpaceReflectionDispatcher to store a Texture handle instead of Texture*.
+- Account for renderer-owned render targets and other borrowed textures explicitly.
+
+6. Refactor BufferManager and Buffer
+
+- Replace name-to-unique_ptr<Buffer> wrapper ownership with generational slots owning IBuffer implementations.
+- Make Buffer a copyable BufferId wrapper.
+- Update shader/call-property bindings and uploads/downloads to resolve through the manager.
+- Distinguish public buffers from staging, uniform-ring, and other backend-private buffers.
+
+7. Consolidate backend registries
+
+- Re-evaluate whether Vulkan GpuResourceRegistry is still needed for descriptor bindings and queued backend work.
+- It may remain useful as a backend safety layer even after public core IDs exist.
+- Avoid maintaining two independent identity systems for the same purpose unless their scopes and transitions are explicit.
+
+8. Harden initialization and shutdown
+
+- Define manager/backend construction order.
+- Define installation of default/internal resources.
+- Stop work submission before teardown.
+- Clear backend cached pointers.
+- Invalidate core IDs.
+- drain pending CPU queues;
+- wait for or verify GPU completion;
+- flush backend retirement;
+- destroy resources before their parent pools/device/context.
+
+
+Required tests
+--------------
+
+Add focused unit/integration coverage where the project test structure permits.
+
+Generational identity
+
+- A newly created resource returns a valid handle.
+- Copies compare equal and resolve the same resource.
+- Deletion invalidates every copy.
+- Reusing a slot increments its generation.
+- A stale handle never resolves the new resource in the reused slot.
+- Invalid and expired Get calls throw where required.
+- Invalid and expired TryGet calls return the documented invalid value/null and warn.
+
+Ownership and deletion
+
+- Copying a handle does not duplicate the backend resource.
+- Destroying a handle value does not delete the resource.
+- Explicit manager deletion removes it from name lookup immediately.
+- Duplicate names follow one documented policy without leaking the newly created backend object.
+- Manager Clear invalidates all handles and retires all backend resources safely.
+
+Queued-use safety
+
+- Deleting a material after accepting a draw call does not leave a dangling pointer during sorting or command recording.
+- Deleting a compute shader with pending calls keeps it alive until those calls are retired/discarded.
+- Deleting textures/buffers referenced by descriptor bindings or queued calls has defined behavior and no use-after-free.
+- Slot reuse during retirement cannot make old queued work access a new resource.
+
+GPU retirement
+
+- Resources are not physically destroyed before the submission completion guarantee.
+- Retirement works for each frames-in-flight configuration.
+- Forced shutdown waits for idle or otherwise proves completion before flushing.
+- Descriptor sets are destroyed before parent descriptor pools.
+- Images/buffers and allocations are destroyed in valid Vulkan order.
+
+Backend replacement
+
+- A minimal/null or test backend can create resources without reimplementing slot/name/generation management.
+- Core code does not include Vulkan headers or depend on Vulkan concrete handle types.
+- Backend-private resources do not leak into public manager APIs.
+
+
+Important open decisions
+------------------------
+
+Resolve these from current code and intended engine behavior before committing to an implementation:
+
+- Should core managers directly own unique_ptr<IResource>, or should an ownership-erased backend object/token be used across shared-library boundaries?
+- Should deletion transfer the complete object to a typed backend retirement API or a generic backend retirement service?
+- Should queued draw calls retain/pin resource ownership, increment explicit pending-use counts, or store resolvable backend handles?
+- Should all dynamic GPU objects use the same fence/timeline retirement mechanism rather than a mixture of frame-delay and pending-use polling?
+- Which texture/buffer categories are public managed resources versus backend-private resources?
+- How should renderer-owned/external textures be registered and invalidated?
+- Where is mutable material binding/value state authoritative: core description, backend object, or a synchronized split?
+- Should clone operations reconstruct from backend-neutral descriptions or call backend clone operations?
+- Are default/error resources represented by ordinary undeletable slots, reserved IDs, or a distinct internal registry?
+- Should Texture2d/Texture3d/TextureCube remain distinct public handle types?
+- Should IDs use a common template internally while retaining distinct public types to prevent accidental cross-resource use?
+- How are generation overflow and manager reinitialization handled?
+
+
+Repository files to inspect first
+---------------------------------
+
+Core handles and managers:
+
+- engine/core/src/gpuResources/material.*
+- engine/core/src/gpuResources/computeShader.*
+- engine/core/src/gpuResources/texture.*
+- engine/core/src/gpuResources/texture2d.*
+- engine/core/src/gpuResources/texture3d.*
+- engine/core/src/gpuResources/textureCube.*
+- engine/core/src/gpuResources/buffer.*
+- engine/core/src/managers/materialManager.*
+- engine/core/src/managers/computeShaderManager.*
+- engine/core/src/managers/textureManager.*
+- engine/core/src/managers/bufferManager.*
+- engine/core/src/renderer/renderer.*
+- engine/core/src/core.cpp
+
+Common IDs and descriptions:
+
+- engine/common/commonMaterialId.h
+- engine/common/commonComputeShaderId.h
+- engine/common/commonResourceAccessRights.h
+- related texture/buffer/material common descriptions and enums
+
+Backend interfaces:
+
+- engine/interfaces/renderer/iGpuResourceFactory.h
+- engine/interfaces/renderer/iMaterialManager.h
+- engine/interfaces/renderer/iComputeShaderManager.h
+- engine/interfaces/renderer/iMaterial.h
+- engine/interfaces/renderer/iComputeShader.h
+- engine/interfaces/renderer/iTexture.h
+- engine/interfaces/renderer/iBuffer.h
+- engine/interfaces/renderer/iDescriptorSetBinding.h
+- engine/interfaces/renderer/iRenderer.h
+- engine/interfaces/renderer/iCompute.h
+
+Vulkan creation and management:
+
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanGpuResourceFactory.*
+- engine/backends/vulkanRenderer/src/managers/vulkanMaterialManager.*
+- engine/backends/vulkanRenderer/src/managers/vulkanComputeShaderManager.*
+- engine/backends/vulkanRenderer/src/managers/vulkanMaterialShaderManager.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanMaterial.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanMaterialShader.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanComputeShader.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanGpuResourceRegistry.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanTextureHandle.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanBufferHandle.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanShaderHandle.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanDescriptorSetBinding.*
+- engine/backends/vulkanRenderer/src/gpuResources/vulkanDefaultGpuResources.*
+
+Queued work and retirement:
+
+- engine/backends/vulkanRenderer/src/drawCalls/
+- engine/backends/vulkanRenderer/src/renderer/vulkanFrameRenderData.*
+- engine/backends/vulkanRenderer/src/renderer/vulkanRenderer.*
+- engine/backends/vulkanRenderer/src/renderer/vulkanRenderGraph.*
+- engine/backends/vulkanRenderer/src/compute/vulkanComputeCall.*
+- engine/backends/vulkanRenderer/src/compute/vulkanComputeCallQueue.*
+- engine/backends/vulkanRenderer/src/compute/vulkanComputeQueue.*
+- engine/backends/vulkanRenderer/src/compute/vulkanAsyncCompute.*
+- engine/backends/vulkanRenderer/src/utility/vulkanGarbageCollector.*
+
+Original motivating consumer:
+
+- engine/libs/entityComponentSystem/src/basicComponents/screenSpaceReflectionDispatcher.*
+- projects/defaultProject/src/scenes/defaultScene.h
+
+
+Expected final invariants
+-------------------------
+
+- Public GPU-resource values are cheap copyable handles.
+- The core is the sole authority for public resource IDs, generations, names, access rights, and logical deletion.
+- Renderer backends implement resource creation and safe physical retirement, not duplicate public manager policy.
+- No persistent core or ECS object needs to retain a raw pointer to a movable/destroyable core resource wrapper.
+- Accepted queued work cannot observe a freed backend C++ object.
+- Submitted GPU work cannot observe destroyed Vulkan resources.
+- Deleting a resource invalidates public lookup immediately while allowing its physical storage to retire later.
+- Internal/default backend resources have explicit undeletable lifetime and teardown rules.
+- Shutdown order is deterministic and keeps parent Vulkan objects alive until all children and deferred garbage are destroyed.
+- Adding another renderer backend requires implementing resource construction/execution/retirement, but not rebuilding generic ID, name, generation, access-right, and ownership systems.
