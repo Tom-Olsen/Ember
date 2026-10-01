@@ -450,7 +450,7 @@ namespace emberCore
 	// Compute class:
 	// Static members:
 	bool Compute::s_isInitialized = false;
-	std::unique_ptr<emberBackendInterface::ICompute> Compute::s_pICompute;
+	emberBackendInterface::ICompute* Compute::s_pICompute = nullptr;
 
 
 
@@ -462,7 +462,7 @@ namespace emberCore
 			return;
 		s_isInitialized = true;
 
-		s_pICompute = std::unique_ptr<emberBackendInterface::ICompute>(pICompute);
+		s_pICompute = pICompute;
 		Compute::Async::Init(s_pICompute->GetAsyncComputeInterfaceHandle());
 		Compute::PreRender::Init(s_pICompute->GetPreRenderComputeInterfaceHandle());
 		Compute::MidRender::Init(s_pICompute->GetMidRenderComputeInterfaceHandle());
@@ -478,7 +478,7 @@ namespace emberCore
 		Compute::MidRender::Clear();
 		Compute::PreRender::Clear();
 		Compute::Async::Clear();
-		s_pICompute.reset();
+		s_pICompute = nullptr;
 		s_isInitialized = false;
 	}
 

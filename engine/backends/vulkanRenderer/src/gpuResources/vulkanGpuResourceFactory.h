@@ -10,7 +10,7 @@
 namespace emberBackendInterface
 {
 	class IBuffer;
-	class IComputeShaderManager;
+	class IComputeShader;
 	class IDescriptorSetBinding;
 	class IMaterial;
 	class IMaterialManager;
@@ -23,7 +23,6 @@ namespace emberBackendInterface
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class ComputeShaderManager;
 	class MaterialManager;
 	class MaterialShaderManager;
 
@@ -34,18 +33,15 @@ namespace vulkanRendererBackend
 	private: // Members:
 		std::unique_ptr<MaterialShaderManager> m_pMaterialShaderManager;
 		std::unique_ptr<MaterialManager> m_pMaterialManager;
-		std::unique_ptr<ComputeShaderManager> m_pComputeShaderManager;
-
-
 
 	public: // Methods:
 		// Constructor/Destructor:
 		GpuResourceFactory(uint32_t shadowMapResolution);
 		~GpuResourceFactory();
 
-		// Gpu resource factories:
+		// Creation:
 		emberBackendInterface::IMaterialManager* GetMaterialManager() override;
-		emberBackendInterface::IComputeShaderManager* GetComputeShaderManager() override;
+		emberBackendInterface::IComputeShader* CreateComputeShader(const emberCommon::ComputeShaderCreateInfo& createInfo) override;
 		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) override;
 		//emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
@@ -53,5 +49,8 @@ namespace vulkanRendererBackend
 		emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
 		emberBackendInterface::IMesh* CreateMesh() override;
 		emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial) override;
+
+		// Retirement:
+		void RetireComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
 	};
 }

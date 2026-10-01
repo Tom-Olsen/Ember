@@ -11,7 +11,6 @@
 #include "texture2d.h"
 #include <array>
 #include <filesystem>
-#include <memory>
 
 
 
@@ -21,7 +20,6 @@ namespace emberBackendInterface
 	class IBuffer;
 	class IComputeShader;
 	class IDescriptorSetBinding;
-	class IGpuResourceFactory;
 	class IMaterial;
 	class IMesh;
 	class IRenderer;
@@ -55,14 +53,13 @@ namespace emberCore
 
 	private: // Members:
 		static bool s_isInitialized;
-		static std::unique_ptr<emberBackendInterface::IGpuResourceFactory> s_pIGpuResourceFactory;
-		static std::unique_ptr<emberBackendInterface::IRenderer> s_pIRenderer;
+		static emberBackendInterface::IRenderer* s_pIRenderer;
 		static std::array<Float4x4, 6> s_pointLightRotationMatrices;
 		static emberBackendInterface::IRenderer* GetInterfaceHandle();
 
 	public: // Methods:
 		// Initialization/Clear:
-		static void Init(emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory);
+		static void Init(emberBackendInterface::IRenderer* pIRenderer);
 		static void Clear();
 
 		// Main render loop:
@@ -131,15 +128,6 @@ namespace emberCore
 		static emberBackendInterface::IMaterial* ResolveSurfaceMaterial(const Material& material);
 		static emberBackendInterface::IMaterial* ResolveGizmoMaterial(const Material& material);
 
-		// Gpu resource factories:
-		static emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage);
-		//static emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);
-		static emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);
-		static emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);
-		static emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);
-		static emberBackendInterface::IMesh* CreateMesh(const std::string& name);
-		static emberBackendInterface::IDescriptorSetBinding* CreateDrawCallDescriptorSetBinding(emberBackendInterface::IMaterial* pIMaterial);
-		
 		// Delete all constructors:
 		Renderer() = delete;
 		Renderer(const Renderer&) = delete;

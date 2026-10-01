@@ -1,16 +1,20 @@
 #include "core.h"
 #include "bufferManager.h"
 #include "compute.h"
+#include "computeShaderManager.h"
+#include "defaultGpuResources.h"
 #include "editor.h"
 #include "emberMath.h"
 #include "eventSystem.h"
 #include "gizmo.h"
+#include "gpuBackend.h"
+#include "gpuResourceFactory.h"
 #include "gpuSort.h"
 #include "gui.h"
 #include "iGui.h"
 #include "iRenderer.h"
 #include "iWindow.h"
-#include "logger.h"
+#include "materialManager.h"
 #include "meshManager.h"
 #include "renderer.h"
 #include "textureManager.h"
@@ -20,14 +24,34 @@
 
 namespace emberCore
 {
-	// Initialization:
-	void Core::InitBasics()
+	// Public methods:
+	// Initialization/Cleanup:
+	void Core::Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IGpuBackend* pIGpuBackend, emberBackendInterface::IGui* pIGui)
 	{
-		emberLogger::Logger::Init();
 		math::Random::Init();
+		InitBackends(pIWindow, pIGpuBackend, pIGui);
+		InitManagers();
+		InitOther();
 	}
-	void Core::InitBackends(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory, emberBackendInterface::ICompute* pICompute, emberBackendInterface::IGui* pIGui)
+	void Core::Clear()
 	{
+		Renderer::WaitDeviceIdle();
+		ClearOther();
+		ClearManagers();
+		ClearBackends();
+		math::Random::Clear();
+	}
+
+
+
+	// Private methods:
+	// Initialization:
+	void Core::InitBackends(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IGpuBackend* pIGpuBackend, emberBackendInterface::IGui* pIGui)
+	{
+		GpuBackend::Init(pIGpuBackend);
+		emberBackendInterface::IRenderer* pIRenderer = GpuBackend::GetRendererInterface();
+		emberBackendInterface::ICompute* pICompute = GpuBackend::GetComputeInterface();
+
 		// Link backends together:
 		pIRenderer->LinkIGuiHandle(pIGui);			// needed so renderer can inject gui draw calls in present renderpass.
 		pIRenderer->LinkIComputeHandle(pICompute);	// needed for pre- and post-render compute shaders.
@@ -36,7 +60,11 @@ namespace emberCore
 
 		// Backend wrappers:
 		Window::Init(pIWindow);
-		Renderer::Init(pIRenderer, pIGpuResourceFactory);
+		GpuResourceFactory::Init(GpuBackend::GetGpuResourceFactoryInterface());
+		DefaultGpuResources::Init(GpuBackend::GetDefaultGpuResourcesInterface());
+		Renderer::Init(pIRenderer);
+		MaterialManager::Init();
+		ComputeShaderManager::Init();
 		Compute::Init(pICompute);
 		Gui::Init(pIGui);
 	}
@@ -60,16 +88,16 @@ namespace emberCore
 
 
 	// Cleanup:
-	void Core::ClearBasics()
-	{
-		math::Random::Clear();
-		emberLogger::Logger::Clear();
-	}
 	void Core::ClearBackends()
 	{
 		Gui::Clear();
 		Compute::Clear();
+		ComputeShaderManager::Clear();
+		MaterialManager::Clear();
+		GpuResourceFactory::Clear();
 		Renderer::Clear();
+		DefaultGpuResources::Clear();
+		GpuBackend::Clear();
 		Window::Clear();
 	}
 	void Core::ClearManagers()

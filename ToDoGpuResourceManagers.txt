@@ -564,3 +564,19 @@ Expected final invariants
 - Internal/default backend resources have explicit undeletable lifetime and teardown rules.
 - Shutdown order is deterministic and keeps parent Vulkan objects alive until all children and deferred garbage are destroyed.
 - Adding another renderer backend requires implementing resource construction/execution/retirement, but not rebuilding generic ID, name, generation, access-right, and ownership systems.
+
+
+Resource lifetime vocabulary
+----------------------------
+
+Use the following terms consistently when migrating the remaining GPU resource systems:
+
+- DeleteX is the public/core-manager operation for logical deletion. It validates the request, removes public lookup and relationships, invalidates the generational ID immediately, and hands the backend resource off for retirement.
+- RetireX is the backend operation that transfers a logically deleted resource into deferred destruction. The complete backend object remains alive until pending CPU-side work and submitted GPU work can no longer use it.
+- DestroyX is reserved for actual immediate physical destruction after safety has been proven. Do not use DestroyX for merely recording a resource in a garbage collector.
+
+The intended sequence is:
+
+    DeleteX -> RetireX -> DestroyX
+
+For example, ComputeShaderManager::DeleteComputeShader logically invalidates the shader and IGpuResourceFactory::RetireComputeShader queues its backend object for safe deferred destruction.

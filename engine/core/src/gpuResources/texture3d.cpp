@@ -1,7 +1,7 @@
 #include "texture3d.h"
 #include "iTexture.h"
+#include "gpuResourceFactory.h"
 #include "logger.h"
-#include "renderer.h"
 
 
 
@@ -17,31 +17,35 @@ namespace emberCore
 	{
 		m_ownsITexture = true;
         m_name = name;
-		m_pITexture = Renderer::CreateTexture3d(width, height, depth, format, usage, imageCountMode, nullptr);
+		m_pITexture = GpuResourceFactory::CreateTexture3d(width, height, depth, format, usage, imageCountMode, nullptr);
         m_pITexture->SetDebugName(m_name);
 	}
-	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data, emberCommon::TextureImageCountMode imageCountMode) : Texture3d(name, width, height, depth, format, usage, imageCountMode)
+	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture3d(name, width, height, depth, format, usage, imageCountMode)
 	{
 		if (usage == emberCommon::TextureUsage::renderTarget)
 			LOG_WARN("Texture3d: TextureUsage = 'renderTarget' does not support loading from float data. Ignoring data.");
 		else
 			SetData(data);
 	}
-	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data, emberCommon::TextureImageCountMode imageCountMode) : Texture3d(name, width, height, depth, format, usage, imageCountMode)
+	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture3d(name, width, height, depth, format, usage, imageCountMode)
 	{
 		if (usage == emberCommon::TextureUsage::renderTarget)
 			LOG_WARN("Texture3d: TextureUsage = 'renderTarget' does not support loading from Float2 data. Ignoring data.");
 		else
 			SetData(data);
 	}
-	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float3> data, emberCommon::TextureImageCountMode imageCountMode) : Texture3d(name, width, height, depth, format, usage, imageCountMode)
+	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float3> data, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture3d(name, width, height, depth, format, usage, imageCountMode)
 	{
 		if (usage == emberCommon::TextureUsage::renderTarget)
 			LOG_WARN("Texture3d: TextureUsage = 'renderTarget' does not support loading from Float3 data. Ignoring data.");
 		else
 			SetData(data);
 	}
-	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float4> data, emberCommon::TextureImageCountMode imageCountMode) : Texture3d(name, width, height, depth, format, usage, imageCountMode)
+	Texture3d::Texture3d(const std::string& name, int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float4> data, emberCommon::TextureImageCountMode imageCountMode)
+		: Texture3d(name, width, height, depth, format, usage, imageCountMode)
 	{
 		if (usage == emberCommon::TextureUsage::renderTarget)
 			LOG_WARN("Texture3d: TextureUsage = 'renderTarget' does not support loading from Float4 data. Ignoring data.");

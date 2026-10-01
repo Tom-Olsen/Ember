@@ -24,102 +24,200 @@
 namespace vulkanRendererBackend
 {
 	// Static members:
-	bool DefaultGpuResources::s_isInitialized = false;
-	// Samplers:
-	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSampler = nullptr;
-	std::unique_ptr<Sampler> DefaultGpuResources::s_pColorSamplerClampEdge = nullptr;
-	std::unique_ptr<Sampler> DefaultGpuResources::s_pShadowSampler = nullptr;
-	// Materials:
-	Material* DefaultGpuResources::s_pDefaultOutlineMaterial = nullptr;
-	Material* DefaultGpuResources::s_pDefaultShadowMaterial = nullptr;
-	Material* DefaultGpuResources::s_pDefaultDeferredLightingMaterial = nullptr;
-	Material* DefaultGpuResources::s_pDefaultPresentMaterial = nullptr;
-	// Compute shaders:
-	ComputeShader* DefaultGpuResources::s_pGammaCorrectionComputeShader = nullptr;
-	ComputeShader* DefaultGpuResources::s_pOutlineCompositeComputeShader = nullptr;
-	ComputeShader* DefaultGpuResources::s_pOutlineHorizontalMaskExpansionComputeShader = nullptr;
-	ComputeShader* DefaultGpuResources::s_pOutlineVerticalMaskExpansionComputeShader = nullptr;
-	// Buffers:
-	std::unique_ptr<StorageBuffer> DefaultGpuResources::s_pDefaultStorageBuffer = nullptr;
-	// Textures:
-	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultSampleTexture2d = nullptr;
-	std::unique_ptr<SampleTexture2d> DefaultGpuResources::s_pDefaultNormalMap = nullptr;
-	std::unique_ptr<SampleTexture3d> DefaultGpuResources::s_pDefaultSampleTexture3d = nullptr;
-	std::unique_ptr<SampleTextureCube> DefaultGpuResources::s_pDefaultSampleTextureCube = nullptr;
-	std::unique_ptr<DepthTexture2dArray> DefaultGpuResources::s_pDefaultDepthTexture2dArray = nullptr;
-	std::unique_ptr<StorageTexture2d> DefaultGpuResources::s_pDefaultStorageTexture2d = nullptr;
-	std::unique_ptr<StorageTexture3d> DefaultGpuResources::s_pDefaultStorageTexture3d = nullptr;
-
-
-
-	// Initialization/Cleanup:
-	void DefaultGpuResources::InitSamplers()
-	{
-		if (!s_pColorSampler)
-        {
-			ColorSampler::Settings settings;
-			settings.name = "Sampler_Color";
-            s_pColorSampler = std::make_unique<ColorSampler>(ColorSampler::Settings{});
-        }
-		if (!s_pColorSamplerClampEdge)
-		{
-			ColorSampler::Settings settings;
-			settings.name = "Sampler_ColorClampEdge";
-			settings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-			s_pColorSamplerClampEdge = std::make_unique<ColorSampler>(settings);
-		}
-		if (!s_pShadowSampler)
-			s_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
-	}
-	void DefaultGpuResources::Init()
-	{
-		if (s_isInitialized)
-			return;
-		s_isInitialized = true;
-
-		// Samplers:
-		InitSamplers();
-		// Buffers:
-		s_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int));
-		// Textures:
-		std::array<unsigned char, 4> whitePixel = { 255, 255, 255, 255 };
-		std::array<unsigned char, 4> normalPixel = { 128, 128, 255, 255 };
-		s_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, whitePixel.data());
-		s_pDefaultNormalMap = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, normalPixel.data());
-		s_pDefaultSampleTexture3d = std::make_unique<SampleTexture3d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, whitePixel.data());
-		std::array<Float4, 6> whiteFaces = { Float4::white, Float4::white, Float4::white, Float4::white, Float4::white, Float4::white };
-		s_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, whiteFaces.data());
-		s_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
-		s_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
-		s_pDefaultStorageTexture3d = std::make_unique<StorageTexture3d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, 1, (void*)&Float4::one);
-	}
-	void DefaultGpuResources::Clear()
-	{
-		// Samplers:
-		s_pColorSampler.reset();
-		s_pColorSamplerClampEdge.reset();
-		s_pShadowSampler.reset();
-		// Materials:
-		ClearDefaultMaterials();
-		// Compute shaders:
-		ClearDefaultComputeShaders();
-		// Buffers:
-		s_pDefaultStorageBuffer.reset();
-		// Textures:
-		s_pDefaultSampleTexture2d.reset();
-		s_pDefaultNormalMap.reset();
-		s_pDefaultSampleTexture3d.reset();
-		s_pDefaultSampleTextureCube.reset();
-		s_pDefaultDepthTexture2dArray.reset();
-		s_pDefaultStorageTexture2d.reset();
-		s_pDefaultStorageTexture3d.reset();
-		s_isInitialized = false;
-	}
+	DefaultGpuResources* DefaultGpuResources::s_pActiveInstance = nullptr;
 
 
 
 	// Public methods:
-	// Set/Clear default materials:
+	// Constructor/Destructor:
+	DefaultGpuResources::DefaultGpuResources()
+		: m_pDefaultOutlineMaterial(nullptr)
+		, m_pDefaultShadowMaterial(nullptr)
+		, m_pDefaultDeferredLightingMaterial(nullptr)
+		, m_pDefaultPresentMaterial(nullptr)
+	{
+		if (s_pActiveInstance != nullptr)
+			throw std::runtime_error("DefaultGpuResources constructor failed. An active instance already exists.");
+
+		s_pActiveInstance = this;
+		try
+		{
+			// Samplers:
+			ColorSampler::Settings colorSamplerSettings;
+			colorSamplerSettings.name = "Sampler_Color";
+			m_pColorSampler = std::make_unique<ColorSampler>(colorSamplerSettings);
+
+			ColorSampler::Settings colorSamplerClampEdgeSettings;
+			colorSamplerClampEdgeSettings.name = "Sampler_ColorClampEdge";
+			colorSamplerClampEdgeSettings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			m_pColorSamplerClampEdge = std::make_unique<ColorSampler>(colorSamplerClampEdgeSettings);
+			m_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
+
+			// Buffers:
+			m_pDefaultStorageBuffer = std::make_unique<StorageBuffer>(1, sizeof(int));
+
+			// Textures:
+			std::array<unsigned char, 4> whitePixel = { 255, 255, 255, 255 };
+			std::array<unsigned char, 4> normalPixel = { 128, 128, 255, 255 };
+			m_pDefaultSampleTexture2d = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, whitePixel.data());
+			m_pDefaultNormalMap = std::make_unique<SampleTexture2d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, normalPixel.data());
+			m_pDefaultSampleTexture3d = std::make_unique<SampleTexture3d>(VK_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, whitePixel.data());
+			std::array<Float4, 6> whiteFaces = { Float4::white, Float4::white, Float4::white, Float4::white, Float4::white, Float4::white };
+			m_pDefaultSampleTextureCube = std::make_unique<SampleTextureCube>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, whiteFaces.data());
+			m_pDefaultDepthTexture2dArray = std::make_unique<DepthTexture2dArray>(VK_FORMAT_D32_SFLOAT, 2, 1, 1);
+			m_pDefaultStorageTexture2d = std::make_unique<StorageTexture2d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, (void*)&Float4::one);
+			m_pDefaultStorageTexture3d = std::make_unique<StorageTexture3d>(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1, 1, (void*)&Float4::one);
+		}
+		catch (...)
+		{
+			s_pActiveInstance = nullptr;
+			throw;
+		}
+	}
+	DefaultGpuResources::~DefaultGpuResources()
+	{
+		// Textures:
+		m_pDefaultStorageTexture3d.reset();
+		m_pDefaultStorageTexture2d.reset();
+		m_pDefaultDepthTexture2dArray.reset();
+		m_pDefaultSampleTextureCube.reset();
+		m_pDefaultSampleTexture3d.reset();
+		m_pDefaultNormalMap.reset();
+		m_pDefaultSampleTexture2d.reset();
+		
+		// Buffers:
+		m_pDefaultStorageBuffer.reset();
+
+		// Compute shaders:
+		m_pOutlineVerticalMaskExpansionComputeShader.reset();
+		m_pOutlineHorizontalMaskExpansionComputeShader.reset();
+		m_pOutlineCompositeComputeShader.reset();
+		m_pGammaCorrectionComputeShader.reset();
+
+		// Materials:
+		ClearDefaultMaterials();
+
+		// Samplers:
+		m_pShadowSampler.reset();
+		m_pColorSamplerClampEdge.reset();
+		m_pColorSampler.reset();
+
+		if (s_pActiveInstance == this)
+			s_pActiveInstance = nullptr;
+	}
+
+
+
+	// Getters:
+	// Singleton:
+	DefaultGpuResources& DefaultGpuResources::Get()
+	{
+		if (s_pActiveInstance == nullptr)
+			throw std::runtime_error("DefaultGpuResources::Get() failed. No active instance exists.");
+		return *s_pActiveInstance;
+	}
+	// Samplers:
+	Sampler* DefaultGpuResources::GetColorSampler()
+	{
+		return m_pColorSampler.get();
+	}
+	Sampler* DefaultGpuResources::GetColorSamplerClampEdge()
+	{
+		return m_pColorSamplerClampEdge.get();
+	}
+	Sampler* DefaultGpuResources::GetShadowSampler()
+	{
+		return m_pShadowSampler.get();
+	}
+	// Materials:
+	Material* DefaultGpuResources::GetDefaultOutlineMaterial()
+	{
+		if (m_pDefaultOutlineMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultOutlineMaterial() failed. Default outline material is not set.");
+		return m_pDefaultOutlineMaterial;
+	}
+	Material* DefaultGpuResources::GetDefaultShadowMaterial()
+	{
+		if (m_pDefaultShadowMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultShadowMaterial() failed. Default shadow material is not set.");
+		return m_pDefaultShadowMaterial;
+	}
+	Material* DefaultGpuResources::GetDefaultDeferredLightingMaterial()
+	{
+		if (m_pDefaultDeferredLightingMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultDeferredLightingMaterial() failed. Default deferred lighting material is not set.");
+		return m_pDefaultDeferredLightingMaterial;
+	}
+	Material* DefaultGpuResources::GetDefaultPresentMaterial()
+	{
+		if (m_pDefaultPresentMaterial == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetDefaultPresentMaterial() failed. Default present material is not set.");
+		return m_pDefaultPresentMaterial;
+	}
+	// Compute shaders:
+	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()
+	{
+		if (m_pGammaCorrectionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetGammaCorrectionComputeShader() failed. Built-in gamma correction compute shader is not initialized.");
+		return m_pGammaCorrectionComputeShader.get();
+	}
+	ComputeShader* DefaultGpuResources::GetOutlineCompositeComputeShader()
+	{
+		if (m_pOutlineCompositeComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetOutlineCompositeComputeShader() failed. Built-in outline composite compute shader is not initialized.");
+		return m_pOutlineCompositeComputeShader.get();
+	}
+	ComputeShader* DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader()
+	{
+		if (m_pOutlineHorizontalMaskExpansionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader() failed. Built-in outline horizontal mask expansion compute shader is not initialized.");
+		return m_pOutlineHorizontalMaskExpansionComputeShader.get();
+	}
+	ComputeShader* DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader()
+	{
+		if (m_pOutlineVerticalMaskExpansionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader() failed. Built-in outline vertical mask expansion compute shader is not initialized.");
+		return m_pOutlineVerticalMaskExpansionComputeShader.get();
+	}
+	// Buffers:
+	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()
+	{
+		return m_pDefaultStorageBuffer.get();
+	}
+	// Textures:
+	SampleTexture2d* DefaultGpuResources::GetDefaultSampleTexture2d()
+	{
+		return m_pDefaultSampleTexture2d.get();
+	}
+	SampleTexture2d* DefaultGpuResources::GetDefaultNormalMap()
+	{
+		return m_pDefaultNormalMap.get();
+	}
+	SampleTexture3d* DefaultGpuResources::GetDefaultSampleTexture3d()
+	{
+		return m_pDefaultSampleTexture3d.get();
+	}
+	SampleTextureCube* DefaultGpuResources::GetDefaultSampleTextureCube()
+	{
+		return m_pDefaultSampleTextureCube.get();
+	}
+	DepthTexture2dArray* DefaultGpuResources::GetDefaultDepthTexture2dArray()
+	{
+		return m_pDefaultDepthTexture2dArray.get();
+	}
+	StorageTexture2d* DefaultGpuResources::GetDefaultStorageTexture2d()
+	{
+		return m_pDefaultStorageTexture2d.get();
+	}
+	StorageTexture3d* DefaultGpuResources::GetDefaultStorageTexture3d()
+	{
+		return m_pDefaultStorageTexture3d.get();
+	}
+
+
+
+
+	// Initialize default materials:
 	void DefaultGpuResources::SetDefaultMaterials(
 		emberBackendInterface::IMaterial* pOutlineMaterial,
 		emberBackendInterface::IMaterial* pDefaultShadowMaterial,
@@ -143,131 +241,42 @@ namespace vulkanRendererBackend
 		if (pPresentMaterial->GetMaterialPass() != emberCommon::MaterialPass::present)
 			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material has wrong material pass.");
 
-		s_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
-		s_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
-		s_pDefaultDeferredLightingMaterial = static_cast<Material*>(pDeferredLightingMaterial);
-		s_pDefaultPresentMaterial = static_cast<Material*>(pPresentMaterial);
+		m_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
+		m_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
+		m_pDefaultDeferredLightingMaterial = static_cast<Material*>(pDeferredLightingMaterial);
+		m_pDefaultPresentMaterial = static_cast<Material*>(pPresentMaterial);
 	}
 	void DefaultGpuResources::ClearDefaultMaterials()
 	{
-		s_pDefaultOutlineMaterial = nullptr;
-		s_pDefaultShadowMaterial = nullptr;
-		s_pDefaultDeferredLightingMaterial = nullptr;
-		s_pDefaultPresentMaterial = nullptr;
+		m_pDefaultOutlineMaterial = nullptr;
+		m_pDefaultShadowMaterial = nullptr;
+		m_pDefaultDeferredLightingMaterial = nullptr;
+		m_pDefaultPresentMaterial = nullptr;
 	}
-	void DefaultGpuResources::SetDefaultComputeShaders(
-		ComputeShader* pGammaCorrectionComputeShader,
-		ComputeShader* pOutlineCompositeComputeShader,
-		ComputeShader* pOutlineHorizontalMaskExpansionComputeShader,
-		ComputeShader* pOutlineVerticalMaskExpansionComputeShader)
-	{
-		if (pGammaCorrectionComputeShader == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. GammaCorrectionComputeShader compute shader is null.");
-		if (pOutlineCompositeComputeShader == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. OutlineCompositeComputeShader compute shader is null.");
-		if (pOutlineHorizontalMaskExpansionComputeShader == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. OutlineHorizontalMaskExpansionComputeShader compute shader is null.");
-		if (pOutlineVerticalMaskExpansionComputeShader == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultComputeShaders(...) failed. OutlineVerticalMaskExpansionComputeShader compute shader is null.");
 
-		s_pGammaCorrectionComputeShader = pGammaCorrectionComputeShader;
-		s_pOutlineCompositeComputeShader = pOutlineCompositeComputeShader;
-		s_pOutlineHorizontalMaskExpansionComputeShader = pOutlineHorizontalMaskExpansionComputeShader;
-		s_pOutlineVerticalMaskExpansionComputeShader = pOutlineVerticalMaskExpansionComputeShader;
-	}
-	void DefaultGpuResources::ClearDefaultComputeShaders()
+
+
+	// Initialize default compute shaders:
+	void DefaultGpuResources::InitializeBuiltInComputeShaders(
+		std::unique_ptr<emberBackendInterface::IComputeShader> pGammaCorrectionComputeShader,
+		std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineCompositeComputeShader,
+		std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineHorizontalMaskExpansionComputeShader,
+		std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineVerticalMaskExpansionComputeShader)
 	{
-		s_pGammaCorrectionComputeShader = nullptr;
-		s_pOutlineCompositeComputeShader = nullptr;
-		s_pOutlineHorizontalMaskExpansionComputeShader = nullptr;
-		s_pOutlineVerticalMaskExpansionComputeShader = nullptr;
-	}
-	// Samplers:
-	Sampler* DefaultGpuResources::GetColorSampler()
-	{
-		return s_pColorSampler.get();
-	}
-	Sampler* DefaultGpuResources::GetColorSamplerClampEdge()
-	{
-		return s_pColorSamplerClampEdge.get();
-	}
-	Sampler* DefaultGpuResources::GetShadowSampler()
-	{
-		return s_pShadowSampler.get();
-	}
-	// Materials:
-	Material* DefaultGpuResources::GetDefaultOutlineMaterial()
-	{
-		if (s_pDefaultOutlineMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::GetDefaultOutlineMaterial() failed. Default outline material is not set.");
-		return s_pDefaultOutlineMaterial;
-	}
-	Material* DefaultGpuResources::GetDefaultShadowMaterial()
-	{
-		if (s_pDefaultShadowMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::GetDefaultShadowMaterial() failed. Default shadow material is not set.");
-		return s_pDefaultShadowMaterial;
-	}
-	Material* DefaultGpuResources::GetDefaultDeferredLightingMaterial()
-	{
-		if (s_pDefaultDeferredLightingMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::GetDefaultDeferredLightingMaterial() failed. Default deferred lighting material is not set.");
-		return s_pDefaultDeferredLightingMaterial;
-	}
-	Material* DefaultGpuResources::GetDefaultPresentMaterial()
-	{
-		if (s_pDefaultPresentMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::GetDefaultPresentMaterial() failed. Default present material is not set.");
-		return s_pDefaultPresentMaterial;
-	}
-	// Compute shaders:
-	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()
-	{
-		return s_pGammaCorrectionComputeShader;
-	}
-	ComputeShader* DefaultGpuResources::GetOutlineCompositeComputeShader()
-	{
-		return s_pOutlineCompositeComputeShader;
-	}
-	ComputeShader* DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader()
-	{
-		return s_pOutlineHorizontalMaskExpansionComputeShader;
-	}
-	ComputeShader* DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader()
-	{
-		return s_pOutlineVerticalMaskExpansionComputeShader;
-	}
-	// Buffers:
-	StorageBuffer* DefaultGpuResources::GetDefaultStorageBuffer()
-	{
-		return s_pDefaultStorageBuffer.get();
-	}
-	SampleTexture2d* DefaultGpuResources::GetDefaultSampleTexture2d()
-	{
-		return s_pDefaultSampleTexture2d.get();
-	}
-	SampleTexture2d* DefaultGpuResources::GetDefaultNormalMap()
-	{
-		return s_pDefaultNormalMap.get();
-	}
-	SampleTexture3d* DefaultGpuResources::GetDefaultSampleTexture3d()
-	{
-		return s_pDefaultSampleTexture3d.get();
-	}
-	SampleTextureCube* DefaultGpuResources::GetDefaultSampleTextureCube()
-	{
-		return s_pDefaultSampleTextureCube.get();
-	}
-	DepthTexture2dArray* DefaultGpuResources::GetDefaultDepthTexture2dArray()
-	{
-		return s_pDefaultDepthTexture2dArray.get();
-	}
-	StorageTexture2d* DefaultGpuResources::GetDefaultStorageTexture2d()
-	{
-		return s_pDefaultStorageTexture2d.get();
-	}
-	StorageTexture3d* DefaultGpuResources::GetDefaultStorageTexture3d()
-	{
-		return s_pDefaultStorageTexture3d.get();
+		if (m_pGammaCorrectionComputeShader != nullptr || m_pOutlineCompositeComputeShader != nullptr || m_pOutlineHorizontalMaskExpansionComputeShader != nullptr || m_pOutlineVerticalMaskExpansionComputeShader != nullptr)
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInComputeShaders(...) failed. Built-in compute shaders are already initialized.");
+		if (pGammaCorrectionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInComputeShaders(...) failed. GammaCorrectionComputeShader compute shader is null.");
+		if (pOutlineCompositeComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInComputeShaders(...) failed. OutlineCompositeComputeShader compute shader is null.");
+		if (pOutlineHorizontalMaskExpansionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInComputeShaders(...) failed. OutlineHorizontalMaskExpansionComputeShader compute shader is null.");
+		if (pOutlineVerticalMaskExpansionComputeShader == nullptr)
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInComputeShaders(...) failed. OutlineVerticalMaskExpansionComputeShader compute shader is null.");
+
+		m_pGammaCorrectionComputeShader.reset(static_cast<ComputeShader*>(pGammaCorrectionComputeShader.release()));
+		m_pOutlineCompositeComputeShader.reset(static_cast<ComputeShader*>(pOutlineCompositeComputeShader.release()));
+		m_pOutlineHorizontalMaskExpansionComputeShader.reset(static_cast<ComputeShader*>(pOutlineHorizontalMaskExpansionComputeShader.release()));
+		m_pOutlineVerticalMaskExpansionComputeShader.reset(static_cast<ComputeShader*>(pOutlineVerticalMaskExpansionComputeShader.release()));
 	}
 }

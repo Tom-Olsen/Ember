@@ -1,6 +1,6 @@
 #include "buffer.h"
 #include "iBuffer.h"
-#include "renderer.h"
+#include "gpuResourceFactory.h"
 
 
 
@@ -23,7 +23,7 @@ namespace emberCore
 	Buffer::Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage)
         : m_name(name)
 	{
-		m_pIBuffer = std::unique_ptr<emberBackendInterface::IBuffer>(Renderer::CreateBuffer(count, elementSize, usage));
+		m_pIBuffer = std::unique_ptr<emberBackendInterface::IBuffer>(GpuResourceFactory::CreateBuffer(count, elementSize, usage));
         m_pIBuffer->SetDebugName(m_name);
 	}
 	Buffer::~Buffer()

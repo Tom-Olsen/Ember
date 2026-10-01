@@ -6,11 +6,9 @@
 // Forward declarations:
 namespace emberBackendInterface
 {
-	class IGpuResourceFactory;
-	class IWindow;
-	class IRenderer;
-	class ICompute;
+	class IGpuBackend;
 	class IGui;
+	class IWindow;
 }
 
 
@@ -20,14 +18,17 @@ namespace emberCore
 	class EMBER_CORE_API Core
 	{
 	public: // Methods:
+		// Initialization/Cleanup:
+		static void Init(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IGpuBackend* pIGpuBackend, emberBackendInterface::IGui* pIGui);
+		static void Clear();
+
+	private: // Methods:
 		// Initialization:
-		static void InitBasics();
-		static void InitBackends(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IRenderer* pIRenderer, emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory, emberBackendInterface::ICompute* pICompute, emberBackendInterface::IGui* pIGui);
+		static void InitBackends(emberBackendInterface::IWindow* pIWindow, emberBackendInterface::IGpuBackend* pIGpuBackend, emberBackendInterface::IGui* pIGui);
 		static void InitManagers();
 		static void InitOther();
 
 		// Cleanup:
-		static void ClearBasics();
 		static void ClearBackends();
 		static void ClearManagers();
 		static void ClearOther();

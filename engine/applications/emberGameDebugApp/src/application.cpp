@@ -15,9 +15,7 @@
 #include "window.h"
 // Backends:
 #include "sdlWindow.h"
-#include "vulkanCompute.h"
-#include "vulkanGpuResourceFactory.h"
-#include "vulkanRenderer.h"
+#include "vulkanBackend.h"
 #include "imGuiSdlVulkan.h"
 // Editor Windows:
 #include "backendDebugWindow.h"
@@ -51,21 +49,17 @@ namespace emberApplication
 		{
 			m_pActiveScene = nullptr;
 
-			// Init basic systems:
-			Core::InitBasics();
-			emberEditor::HandleContext::Init();
-
 			// Window backend:
 			#if defined(__linux__)
 				constexpr bool forceX11VideoDriver = true;
 			#else
 				constexpr bool forceX11VideoDriver = false;
 			#endif
-			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight, forceX11VideoDriver);
 			if (forceX11VideoDriver)
 				LOG_INFO("enabled x11 video driver for detached window support.");
+			emberBackendInterface::IWindow* pIWindow = new sdlWindowBackend::Window(applicationCreateInfo.windowWidth, applicationCreateInfo.windowHeight, forceX11VideoDriver);
 
-			// Renderer backend:
+			// Gpu backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
 			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		            // project settings.
 			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	            // project settings.
@@ -77,29 +71,22 @@ namespace emberApplication
 			rendererCreateInfo.maxDirectionalLights = applicationCreateInfo.maxDirectionalLights;   // clamped to 1-MAX_DIR_LIGHTS in renderer.
 			rendererCreateInfo.maxPositionalLights = applicationCreateInfo.maxPositionalLights;     // clamped to 1-MAX_POS_LIGHTS in renderer.
 			rendererCreateInfo.shadowMapResolution = applicationCreateInfo.shadowMapResolution;     // clamped to 1-SHADOW_MAP_RESOLUTION in renderer.
-			emberBackendInterface::IRenderer* pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
-			emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory = new vulkanRendererBackend::GpuResourceFactory(applicationCreateInfo.shadowMapResolution);
-
-			// Compute backend:
-			emberBackendInterface::ICompute* pICompute = new vulkanRendererBackend::Compute();
+			emberBackendInterface::IGpuBackend* pIGpuBackend = new vulkanRendererBackend::VulkanBackend(rendererCreateInfo, pIWindow);
 
 			// Gui backend:
-			emberBackendInterface::IGui* pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIRenderer, rendererCreateInfo.enableDockSpace);
+			emberBackendInterface::IGui* pIGui = new imGuiSdlVulkanBackend::Gui(pIWindow, pIGpuBackend->GetRenderer(), rendererCreateInfo.enableDockSpace);
 
-			// Init backends:
-			Core::InitBackends(pIWindow, pIRenderer, pIGpuResourceFactory, pICompute, pIGui);
+			// Init core:
+			Core::Init(pIWindow, pIGpuBackend, pIGui);
 
-			// Gpu Resource Managers:
-			Core::InitManagers();
-			Core::InitOther();
+			// Init application-specific systems:
+			emberEditor::HandleContext::Init();
 
 			// Editor windows:
 			m_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
 			m_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
 			m_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
 
-			// Other systems:
-			EventSystem::Init();
 		}
 		catch (const std::exception& e)
 		{
@@ -112,11 +99,8 @@ namespace emberApplication
 		m_pDepthBiasEditorWindow.reset();
 		m_pBackendDebugEditorWindow.reset();
 
-		Renderer::WaitDeviceIdle();
-		Core::ClearOther();
-		Core::ClearManagers();
-		Core::ClearBackends();
-		Core::ClearBasics();
+		emberEditor::HandleContext::Clear();
+		Core::Clear();
 	}
 
 

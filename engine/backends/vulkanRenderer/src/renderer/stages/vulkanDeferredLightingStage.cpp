@@ -61,7 +61,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.pClearValues = &clearValue;
 
 			// Begin render pass:
-			Material* pMaterial = DefaultGpuResources::GetDefaultDeferredLightingMaterial();
+			Material* pMaterial = DefaultGpuResources::Get().GetDefaultDeferredLightingMaterial();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				// Bind Pipeline:

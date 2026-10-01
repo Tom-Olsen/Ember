@@ -79,7 +79,7 @@ namespace vulkanRendererBackend
 				bool staticDescriptorSetsBound = false;
 
 				// Draw calls:
-				Material* pOutlineMaterial = DefaultGpuResources::GetDefaultOutlineMaterial();
+				Material* pOutlineMaterial = DefaultGpuResources::Get().GetDefaultOutlineMaterial();
 				for (const OutlineDrawCall& drawCall : frameContext.frameRenderData.outlineDrawCalls)
 				{
 					// Pipeline swap:

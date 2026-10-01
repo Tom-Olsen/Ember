@@ -1,11 +1,10 @@
 #include "materialManager.h"
-#include "iGpuResourceFactory.h"
+#include "gpuResourceFactory.h"
 #include "iMaterial.h"
 #include "iMaterialManager.h"
 #include "logger.h"
 #include "materialAsset.h"
 #include "materialAssetLoader.h"
-#include "renderer.h"
 #include <algorithm>
 #include <filesystem>
 #include <stdexcept>
@@ -223,10 +222,10 @@ namespace emberCore
 	{
 		if (s_pIMaterialManager != nullptr)
 			return;
-		if (Renderer::s_pIGpuResourceFactory == nullptr)
+		if (GpuResourceFactory::s_pIGpuResourceFactory == nullptr)
 			throw std::runtime_error("MaterialManager::Init() failed. Gpu resource factory is not initialized.");
 
-		s_pIMaterialManager = Renderer::s_pIGpuResourceFactory->GetMaterialManager();
+		s_pIMaterialManager = GpuResourceFactory::GetMaterialManager();
 		if (s_pIMaterialManager == nullptr)
 			throw std::runtime_error("MaterialManager::Init() failed. Gpu resource factory returned a nullptr material manager.");
 

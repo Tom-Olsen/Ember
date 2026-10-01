@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
             shadowSamplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             shadowSamplerBinding.descriptorCount = 1;
             shadowSamplerBinding.stageFlags = VK_SHADER_STAGE_ALL;
-            shadowSamplerBinding.pImmutableSamplers = &DefaultGpuResources::GetShadowSampler()->GetVkSampler();
+            shadowSamplerBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetShadowSampler()->GetVkSampler();
 
             // SamplerState colorSampler : register(s3001, GLOBAL_SET):
             VkDescriptorSetLayoutBinding colorSamplerBinding{};
@@ -41,7 +41,7 @@ namespace vulkanRendererBackend
             colorSamplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             colorSamplerBinding.descriptorCount = 1;
             colorSamplerBinding.stageFlags = VK_SHADER_STAGE_ALL; // or restrict if desired
-            colorSamplerBinding.pImmutableSamplers = &DefaultGpuResources::GetColorSampler()->GetVkSampler();
+            colorSamplerBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetColorSampler()->GetVkSampler();
 
             // SamplerState colorSamplerClampEdge : register(s3002, GLOBAL_SET):
             VkDescriptorSetLayoutBinding colorSamplerClampEdgeBinding{};
@@ -49,7 +49,7 @@ namespace vulkanRendererBackend
             colorSamplerClampEdgeBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
             colorSamplerClampEdgeBinding.descriptorCount = 1;
             colorSamplerClampEdgeBinding.stageFlags = VK_SHADER_STAGE_ALL;
-            colorSamplerClampEdgeBinding.pImmutableSamplers = &DefaultGpuResources::GetColorSamplerClampEdge()->GetVkSampler();
+            colorSamplerClampEdgeBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetColorSamplerClampEdge()->GetVkSampler();
 
             // Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET):
             VkDescriptorSetLayoutBinding shadowMapsBinding{};

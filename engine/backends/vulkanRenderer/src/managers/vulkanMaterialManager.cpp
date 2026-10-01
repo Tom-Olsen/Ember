@@ -71,7 +71,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Set renderer backend default materials:
-		DefaultGpuResources::SetDefaultMaterials(
+		DefaultGpuResources::Get().SetDefaultMaterials(
 			GetMaterial("outlineMaterial"),
 			TryGetMaterial(m_defaultShadowMaterialId),
 			GetMaterial("pbrDeferredLightingMaterial"),
@@ -617,7 +617,7 @@ namespace vulkanRendererBackend
 	// Management:
 	void MaterialManager::Clear()
 	{
-		DefaultGpuResources::ClearDefaultMaterials();
+		DefaultGpuResources::Get().ClearDefaultMaterials();
 		for (uint32_t index = 0; index < m_materialSlots.size(); index++)
 		{
 			MaterialSlot& slot = m_materialSlots[index];

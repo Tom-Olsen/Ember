@@ -20,22 +20,18 @@ namespace emberLogger
 
 	/// <summary>
 	/// Custom wrapper for spdlog.
-	/// Must call Init() to initialize the static class before using the logger.
+	/// Logger is initialized lazily on first use.
 	/// Macros for logging are: LOG_TRACE(), LOG_INFO(), LOG_WARN(), LOG_ERROR(), LOG_CRITICAL().
 	/// </summary>
 	class LOGGER_API Logger
 	{
-	private: // Members:
-		static bool s_initialized;
-		static std::shared_ptr<spdlog::logger> s_coreLogger;
-
 	public: // Methods:
-		// Initialization/Clear:
-		static void Init();	// Must be called once before using the logger.
-		static void Clear();
-
 		// Getters:
 		static std::shared_ptr<spdlog::logger>& GetCoreLogger();
+
+	private: // Methods:
+		// Creation:
+		static std::shared_ptr<spdlog::logger> CreateCoreLogger();
 	};
 
 

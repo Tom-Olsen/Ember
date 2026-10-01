@@ -52,7 +52,7 @@ namespace vulkanRendererBackend
 			SceneColorPair& sceneColorPair = frameContext.renderTargets.GetSceneColorPair();
 			sceneColorPair.TransitionLayoutOfCurrentForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
-			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::GetDefaultPresentMaterial()->GetDescriptorSetBinding();
+			DescriptorSetBinding* pPresentShaderDescriptorSetBinding = DefaultGpuResources::Get().GetDefaultPresentMaterial()->GetDescriptorSetBinding();
 			pPresentShaderDescriptorSetBinding->SetTexture("renderTexture", sceneColorPair.GetCurrentTexture(frameContext.frameExecutionData.frameIndex));
 			pPresentShaderDescriptorSetBinding->SetTexture("gizmoTexture", &frameContext.renderTargets.GetGizmoTexture(frameContext.frameExecutionData.frameIndex));
 			pPresentShaderDescriptorSetBinding->UpdateShaderData(frameContext.frameExecutionData.frameIndex);
@@ -79,7 +79,7 @@ namespace vulkanRendererBackend
 			renderPassBeginInfo.renderArea.extent = VkExtent2D{swapchainExtent.x, swapchainExtent.y};
 
 			// Begin render pass:
-			Material* pMaterial = DefaultGpuResources::GetDefaultPresentMaterial();
+			Material* pMaterial = DefaultGpuResources::Get().GetDefaultPresentMaterial();
 			vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 			{
 				// Bind Pipeline:

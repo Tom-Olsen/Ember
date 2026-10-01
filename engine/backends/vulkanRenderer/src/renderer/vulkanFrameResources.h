@@ -19,9 +19,6 @@ namespace vulkanRendererBackend
 		std::vector<CommandPool> commandPools;
 		std::array<VkDescriptorSet, 3> staticDescriptorSets;
 
-		// VkFence frameFence;
-		// VkSemaphore acquireSemaphore;
-	
 	public: // Methods:
 		// Constructor/Destructor:
 		FrameResources(int secondaryBufferCount);

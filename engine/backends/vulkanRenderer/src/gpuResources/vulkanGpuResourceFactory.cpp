@@ -1,8 +1,9 @@
 #include "vulkanGpuResourceFactory.h"
 #include "descriptorSetMacros.h"
+#include "vulkanComputeShader.h"
 #include "vulkanConvertTextureFormat.h"
-#include "vulkanComputeShaderManager.h"
 #include "vulkanDescriptorSetBinding.h"
+#include "vulkanGarbageCollector.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanMaterial.h"
 #include "vulkanMaterialManager.h"
@@ -18,6 +19,7 @@
 #include "vulkanStorageTexture2d.h"
 #include "vulkanStorageTexture3d.h"
 #include "vulkanVertexBuffer.h"
+#include <stdexcept>
 
 
 
@@ -29,7 +31,6 @@ namespace vulkanRendererBackend
 	{
 		m_pMaterialShaderManager = std::make_unique<MaterialShaderManager>(shadowMapResolution);
 		m_pMaterialManager = std::make_unique<MaterialManager>(m_pMaterialShaderManager.get());
-		m_pComputeShaderManager = std::make_unique<ComputeShaderManager>();
 	}
 	GpuResourceFactory::~GpuResourceFactory()
 	{
@@ -38,14 +39,14 @@ namespace vulkanRendererBackend
 
 
 
-	// Gpu resource factories:
+	// Creation:
 	emberBackendInterface::IMaterialManager* GpuResourceFactory::GetMaterialManager()
 	{
 		return m_pMaterialManager.get();
 	}
-	emberBackendInterface::IComputeShaderManager* GpuResourceFactory::GetComputeShaderManager()
+	emberBackendInterface::IComputeShader* GpuResourceFactory::CreateComputeShader(const emberCommon::ComputeShaderCreateInfo& createInfo)
 	{
-		return m_pComputeShaderManager.get();
+		return new ComputeShader(createInfo.binaryPath, createInfo.features, createInfo.name);
 	}
 	emberBackendInterface::IBuffer* GpuResourceFactory::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
@@ -136,5 +137,23 @@ namespace vulkanRendererBackend
 		Material* pMaterial = static_cast<Material*>(pIMaterial);
 		Shader* pShader = pMaterial->GetShader();
 		return new DescriptorSetBinding(pShader, CALL_SET_INDEX, pMaterial->GetDebugName());
+	}
+
+
+
+	// Retirement:
+	void GpuResourceFactory::RetireComputeShader(emberBackendInterface::IComputeShader* pComputeShader)
+	{
+		ComputeShader* pVulkanComputeShader = static_cast<ComputeShader*>(pComputeShader);
+		if (pVulkanComputeShader == nullptr)
+			return;
+
+		GarbageCollector::RecordPendingGarbage([pVulkanComputeShader]()
+		{
+			if (pVulkanComputeShader->HasPendingUse())
+				return false;
+			delete pVulkanComputeShader;
+			return true;
+		});
 	}
 }

@@ -13,7 +13,7 @@
 
 
 
-	// Forward declarations:
+// Forward declarations:
 namespace emberBackendInterface
 {
 	class IMaterial;
@@ -28,6 +28,11 @@ namespace emberAssetLoader
 
 namespace emberCore
 {
+	// Forward declarations:
+	class Core;
+
+
+
 	/// <summary>
 	/// Purely static facade for the backend material manager.
 	/// Material is a non-owning, generational handle to a backend-owned slot.
@@ -35,6 +40,7 @@ namespace emberCore
 	class EMBER_CORE_API MaterialManager
 	{
 		// Friends:
+		friend class Core;
 		friend class DeferredMaterial;
 		friend class ForwardMaterial;
 		friend class Material;

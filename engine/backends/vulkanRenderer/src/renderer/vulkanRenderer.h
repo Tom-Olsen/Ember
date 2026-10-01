@@ -45,21 +45,26 @@ namespace vulkanRendererBackend
 	struct FrameRenderData;
 	struct FrameResources;
 	class StorageBuffer;
+	class VulkanBackend;
 
 
 
 	class VULKAN_RENDERER_API Renderer : public emberBackendInterface::IRenderer, public emberBackendInterface::IVulkanRenderer
 	{
+		// Friends:
+		friend class VulkanBackend;
+
 	private: // Members:
 		// Backend hooks:
-		emberBackendInterface::IVulkanGui* m_pIVulkanGui = nullptr;
-		emberBackendInterface::IWindow* m_pIWindow = nullptr;
-		Compute* m_pCompute = nullptr;
+		emberBackendInterface::IVulkanGui* m_pIVulkanGui;
+		emberBackendInterface::IWindow* m_pIWindow;
+		Compute* m_pCompute;
 
-		// Render resources:
-		std::unique_ptr<RenderGraph> m_pRenderGraph;
-		std::vector<FrameResources> m_frameResources;
-		std::unique_ptr<RenderTargetResources> m_pRenderTargets;
+		// Render management:
+		emberCommon::RendererCreateInfo m_createInfo;
+		FrameExecutionData m_frameExecutionData;
+		DescriptorSetBinding* m_pSceneDescriptorSetBinding;
+		bool m_rebuildSwapchain;
 
 		// Shadow/Light system:
 		float m_depthBiasConstantFactor;
@@ -79,16 +84,13 @@ namespace vulkanRendererBackend
 		std::vector<emberCommon::DirectionalLight> m_previousDirectionalLights;
 		std::vector<emberCommon::PositionalLight> m_previousPositionalLights;
 
-		// Render management:
-		emberCommon::RendererCreateInfo m_createInfo;
-		FrameExecutionData m_frameExecutionData;
-		DescriptorSetBinding* m_pSceneDescriptorSetBinding;
-		bool m_rebuildSwapchain;
-
-		// Other:
-		emberCommon::Camera m_activeCamera;
+		// Render resources:
+		std::unique_ptr<RenderTargetResources> m_pRenderTargets;
+		std::unique_ptr<RenderGraph> m_pRenderGraph;
 		std::vector<FrameRenderData> m_frameRenderData;
+		std::vector<FrameResources> m_frameResources;
 		std::vector<std::array<VkDescriptorSet, 3>> m_staticDescriptorSets;	// (global/scen/frame) per frame in flight.
+		emberCommon::Camera m_activeCamera;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -173,6 +175,12 @@ namespace vulkanRendererBackend
 		std::array<VkDescriptorSet, 3>& GetStaticDescriptorSets(uint32_t frameIndex);
 
 	private: // Methods:
+		// Initialization/Cleanup:
+		void InitializeInfrastructure();
+		void InitializeRendering();
+		void ClearRendering();
+		void ClearInfrastructure();
+
 		// Resets:
 		void ResetFrameCalls();
 

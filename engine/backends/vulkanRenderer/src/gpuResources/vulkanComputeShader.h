@@ -18,6 +18,7 @@ namespace vulkanRendererBackend
 	class ComputeCallQueue;
 	class ComputeQueue;
 	class DescriptorSetBinding;
+	class GpuResourceFactory;
 	class Pipeline;
 	class Renderer;
 
@@ -29,7 +30,7 @@ namespace vulkanRendererBackend
 		friend class Async;
 		friend class ComputeCallQueue;
 		friend class ComputeQueue;
-		friend class ComputeShaderManager;
+		friend class GpuResourceFactory;
 		friend class Renderer;
 
 	private: // Members:

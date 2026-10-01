@@ -1,6 +1,6 @@
 #include "mesh.h"
 #include "iMesh.h"
-#include "renderer.h"
+#include "gpuResourceFactory.h"
 #include <optional>
 
 
@@ -20,12 +20,12 @@ namespace emberCore
 	Mesh::Mesh()
 	{
 		m_name = "";
-		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(Renderer::CreateMesh(""));
+		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(GpuResourceFactory::CreateMesh(""));
 	}
 	Mesh::Mesh(const std::string& name)
 	{
 		m_name = name;
-		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(Renderer::CreateMesh(name));
+		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(GpuResourceFactory::CreateMesh(name));
 	}
 	Mesh::Mesh(emberBackendInterface::IMesh* pIMesh)
 	{

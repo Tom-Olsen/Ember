@@ -4,7 +4,6 @@
 #include "emberCoreExport.h"
 #include "emberMath.h"
 #include <array>
-#include <memory>
 #include <vector>
 
 
@@ -251,7 +250,7 @@ namespace emberCore
 
 	private: // Members:
 		static bool s_isInitialized;
-		static std::unique_ptr<emberBackendInterface::ICompute> s_pICompute;
+		static emberBackendInterface::ICompute* s_pICompute;
 
 	public: // Methods:
 		// Initialization/Cleanup:

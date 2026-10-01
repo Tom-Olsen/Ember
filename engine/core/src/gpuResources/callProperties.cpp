@@ -1,10 +1,10 @@
 #include "callProperties.h"
 #include "buffer.h"
 #include "commonMaterialPass.h"
+#include "gpuResourceFactory.h"
 #include "iDescriptorSetBinding.h"
 #include "logger.h"
 #include "material.h"
-#include "renderer.h"
 #include "shadowMaterial.h"
 #include "texture.h"
 #include <stdexcept>
@@ -29,7 +29,7 @@ namespace emberCore
 		emberBackendInterface::IMaterial* pIMaterial = material.TryGetInterfaceHandle();
 		m_ownsICallDescriptorSetBinding = true;
 		m_callDescriptorSetBindingExpired = false;
-		m_pICallDescriptorSetBinding = Renderer::CreateDrawCallDescriptorSetBinding(pIMaterial);
+		m_pICallDescriptorSetBinding = GpuResourceFactory::CreateDrawCallDescriptorSetBinding(pIMaterial);
 		m_callDescriptorSetBindingGeneration = m_pICallDescriptorSetBinding ? m_pICallDescriptorSetBinding->GetGeneration() : 0;
 
 		// Link shadow callProperties:

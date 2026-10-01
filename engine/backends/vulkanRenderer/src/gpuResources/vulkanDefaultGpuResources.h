@@ -1,112 +1,126 @@
 #pragma once
+#include "iDefaultGpuResources.h"
+#include "vulkanRendererExport.h"
 #include <cstdint>
 #include <memory>
 
 
 
+// Forward declarations:
 namespace emberBackendInterface
 {
-    class IMaterial;
+	class IComputeShader;
+	class IMaterial;
 }
 
 
 
 namespace vulkanRendererBackend
 {
-    // Forward declarations:
-    class ComputeShader;
-    class DepthTexture2dArray;
-    class Material;
-    class Sampler;
-    class SampleTextureCube;
-    class SampleTexture2d;
-    class SampleTexture3d;
-    class DescriptorSetBinding;
-    class StorageBuffer;
-    class StorageTexture2d;
-    class StorageTexture3d;
+	// Forward declarations:
+	class ComputeShader;
+	class DepthTexture2dArray;
+	class DescriptorSetBinding;
+	class Material;
+	class Sampler;
+	class SampleTextureCube;
+	class SampleTexture2d;
+	class SampleTexture3d;
+	class StorageBuffer;
+	class StorageTexture2d;
+	class StorageTexture3d;
 
 
 
-    class DefaultGpuResources
-    {
-    private: // Members:
-        static bool s_isInitialized;
-        // Samplers:
-        static std::unique_ptr<Sampler> s_pColorSampler;
-        static std::unique_ptr<Sampler> s_pColorSamplerClampEdge;
-        static std::unique_ptr<Sampler> s_pShadowSampler;
-        // Materials:
-        static Material* s_pDefaultOutlineMaterial;
-        static Material* s_pDefaultShadowMaterial;
-        static Material* s_pDefaultDeferredLightingMaterial;
-        static Material* s_pDefaultPresentMaterial;
-        // Compute shaders:
-		static ComputeShader* s_pGammaCorrectionComputeShader;
-		static ComputeShader* s_pOutlineCompositeComputeShader;
-		static ComputeShader* s_pOutlineHorizontalMaskExpansionComputeShader;
-		static ComputeShader* s_pOutlineVerticalMaskExpansionComputeShader;
-        // Buffers:
-        static std::unique_ptr<StorageBuffer> s_pDefaultStorageBuffer;
-        // Textures:
-        static std::unique_ptr<SampleTexture2d> s_pDefaultSampleTexture2d;
-        static std::unique_ptr<SampleTexture2d> s_pDefaultNormalMap;
-        static std::unique_ptr<SampleTexture3d> s_pDefaultSampleTexture3d;
-        static std::unique_ptr<SampleTextureCube> s_pDefaultSampleTextureCube;
-        static std::unique_ptr<DepthTexture2dArray> s_pDefaultDepthTexture2dArray;
-        static std::unique_ptr<StorageTexture2d> s_pDefaultStorageTexture2d;
-        static std::unique_ptr<StorageTexture3d> s_pDefaultStorageTexture3d;
+	class VULKAN_RENDERER_API DefaultGpuResources : public emberBackendInterface::IDefaultGpuResources
+	{
+	private: // Members:
+		static DefaultGpuResources* s_pActiveInstance;
+		// Samplers:
+		std::unique_ptr<Sampler> m_pColorSampler;
+		std::unique_ptr<Sampler> m_pColorSamplerClampEdge;
+		std::unique_ptr<Sampler> m_pShadowSampler;
+		// Materials:
+		Material* m_pDefaultOutlineMaterial;
+		Material* m_pDefaultShadowMaterial;
+		Material* m_pDefaultDeferredLightingMaterial;
+		Material* m_pDefaultPresentMaterial;
+		// Compute Shaders:
+		std::unique_ptr<ComputeShader> m_pGammaCorrectionComputeShader;
+		std::unique_ptr<ComputeShader> m_pOutlineCompositeComputeShader;
+		std::unique_ptr<ComputeShader> m_pOutlineHorizontalMaskExpansionComputeShader;
+		std::unique_ptr<ComputeShader> m_pOutlineVerticalMaskExpansionComputeShader;
+		// Buffers:
+		std::unique_ptr<StorageBuffer> m_pDefaultStorageBuffer;
+		// Textures:
+		std::unique_ptr<SampleTexture2d> m_pDefaultSampleTexture2d;
+		std::unique_ptr<SampleTexture2d> m_pDefaultNormalMap;
+		std::unique_ptr<SampleTexture3d> m_pDefaultSampleTexture3d;
+		std::unique_ptr<SampleTextureCube> m_pDefaultSampleTextureCube;
+		std::unique_ptr<DepthTexture2dArray> m_pDefaultDepthTexture2dArray;
+		std::unique_ptr<StorageTexture2d> m_pDefaultStorageTexture2d;
+		std::unique_ptr<StorageTexture3d> m_pDefaultStorageTexture3d;
 
-    public: // Methods:
-        static void InitSamplers();
-        static void Init();
-        static void Clear();
+	public: // Methods:
+		// Constructor/Destructor:
+		DefaultGpuResources();
+		~DefaultGpuResources() override;
 
-		// Set/Clear default materials:
-        static void SetDefaultMaterials(
+		// Non-copyable:
+		DefaultGpuResources(const DefaultGpuResources&) = delete;
+		DefaultGpuResources& operator=(const DefaultGpuResources&) = delete;
+
+		// Non-movable:
+		DefaultGpuResources(DefaultGpuResources&&) = delete;
+		DefaultGpuResources& operator=(DefaultGpuResources&&) = delete;
+
+		// Getters:
+		// Singleton:
+		static DefaultGpuResources& Get();
+		
+		// Samplers:
+		Sampler* GetColorSampler();
+		Sampler* GetColorSamplerClampEdge();
+		Sampler* GetShadowSampler();
+
+		// Materials:
+		Material* GetDefaultOutlineMaterial();
+		Material* GetDefaultShadowMaterial();
+		Material* GetDefaultDeferredLightingMaterial();
+		Material* GetDefaultPresentMaterial();
+
+		// Compute shaders:
+		ComputeShader* GetGammaCorrectionComputeShader();
+		ComputeShader* GetOutlineCompositeComputeShader();
+		ComputeShader* GetOutlineHorizontalMaskExpansionComputeShader();
+		ComputeShader* GetOutlineVerticalMaskExpansionComputeShader();
+
+		// Buffers:
+		StorageBuffer* GetDefaultStorageBuffer();
+
+		// Textures:
+		SampleTexture2d* GetDefaultSampleTexture2d();
+		SampleTexture2d* GetDefaultNormalMap();
+		SampleTexture3d* GetDefaultSampleTexture3d();
+		SampleTextureCube* GetDefaultSampleTextureCube();
+		DepthTexture2dArray* GetDefaultDepthTexture2dArray();
+		StorageTexture2d* GetDefaultStorageTexture2d();
+		StorageTexture3d* GetDefaultStorageTexture3d();
+
+		// Initialize default materials:
+		void SetDefaultMaterials(
 			emberBackendInterface::IMaterial* pOutlineMaterial,
 			emberBackendInterface::IMaterial* pDefaultShadowMaterial,
-			emberBackendInterface::IMaterial* pDeferredLightingMaterial, 
+			emberBackendInterface::IMaterial* pDeferredLightingMaterial,
 			emberBackendInterface::IMaterial* pPresentMaterial);
-		static void ClearDefaultMaterials();
-		static void SetDefaultComputeShaders(
-			ComputeShader* pGammaCorrectionComputeShader,
-			ComputeShader* pOutlineCompositeComputeShader,
-			ComputeShader* pOutlineHorizontalMaskExpansionComputeShader,
-			ComputeShader* pOutlineVerticalMaskExpansionComputeShader);
-		static void ClearDefaultComputeShaders();
+		void ClearDefaultMaterials();
 
-        // Samplers:
-        static Sampler* GetColorSampler();
-        static Sampler* GetColorSamplerClampEdge();
-        static Sampler* GetShadowSampler();
-        // Materials:
-        static Material* GetDefaultOutlineMaterial();
-        static Material* GetDefaultShadowMaterial();
-        static Material* GetDefaultDeferredLightingMaterial();
-        static Material* GetDefaultPresentMaterial();
-        // Compute shaders:
-        static ComputeShader* GetGammaCorrectionComputeShader();
-        static ComputeShader* GetOutlineCompositeComputeShader();
-        static ComputeShader* GetOutlineHorizontalMaskExpansionComputeShader();
-        static ComputeShader* GetOutlineVerticalMaskExpansionComputeShader();
-        // Buffers:
-        static StorageBuffer* GetDefaultStorageBuffer();
-        static SampleTexture2d* GetDefaultSampleTexture2d();
-        static SampleTexture2d* GetDefaultNormalMap();
-        static SampleTexture3d* GetDefaultSampleTexture3d();
-        static SampleTextureCube* GetDefaultSampleTextureCube();
-        static DepthTexture2dArray* GetDefaultDepthTexture2dArray();
-        static StorageTexture2d* GetDefaultStorageTexture2d();
-        static StorageTexture3d* GetDefaultStorageTexture3d();
+		// Initialize default compute shaders:
+		void InitializeBuiltInComputeShaders(
+			std::unique_ptr<emberBackendInterface::IComputeShader> pGammaCorrectionComputeShader,
+			std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineCompositeComputeShader,
+			std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineHorizontalMaskExpansionComputeShader,
+			std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineVerticalMaskExpansionComputeShader) override;
 
-    private: // Methods
-        // Delete all constructors:
-        DefaultGpuResources() = delete;
-        DefaultGpuResources(const DefaultGpuResources&) = delete;
-        DefaultGpuResources& operator=(const DefaultGpuResources&) = delete;
-        DefaultGpuResources(DefaultGpuResources&&) = delete;
-        DefaultGpuResources& operator=(DefaultGpuResources&&) = delete;
-        ~DefaultGpuResources() = delete;
-    };
+	};
 }

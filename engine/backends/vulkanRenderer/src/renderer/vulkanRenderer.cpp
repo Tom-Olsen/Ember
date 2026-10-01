@@ -75,34 +75,16 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	Renderer::Renderer(const emberCommon::RendererCreateInfo& createInfo, emberBackendInterface::IWindow* pIWindow)
 	{
-		m_createInfo = createInfo;
+		// Backend hooks:
+		m_pIVulkanGui = nullptr;	// gets asigned later via Renderer::LinkIGuiHandle(...).
 		m_pIWindow = pIWindow;
-		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
-		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
-		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
+		m_pCompute = nullptr;		// Renderer::LinkIComputeHandle(...).
 
-		// Initialization:
-		Context::Init(createInfo, pIWindow, this);
-		SingleTimeCommand::Init();
-		GarbageCollector::Init();
-		DescriptorPoolManager::Init();
-		DefaultGpuResources::InitSamplers();
-		PoolManager::Init();
-		m_pRenderTargets = std::make_unique<RenderTargetResources>(createInfo.renderWidth, createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights);
-		RenderPassManager::Init(*m_pRenderTargets);
-		GlobalDescriptorSetLayout::Init(*m_pRenderTargets);
-		SceneDescriptorSetLayout::Init();
-		FrameDescriptorSetLayout::Init();
-		DefaultGpuResources::Init();
+		// Render management:
+		m_createInfo = createInfo;
+		m_pSceneDescriptorSetBinding = nullptr;
 		m_rebuildSwapchain = false;
-
-		// Render resources:
-		m_pRenderGraph = std::make_unique<RenderGraph>();
-		m_frameRenderData.resize(Context::GetFramesInFlight());
-		m_frameResources.reserve(Context::GetFramesInFlight());
-		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-			m_frameResources.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount());
-
+		
 		// Shadow/Light system:
 		m_depthBiasConstantFactor = 0.0f;
 		m_depthBiasClamp = 0.0f;
@@ -113,57 +95,17 @@ namespace vulkanRendererBackend
 		m_positionalLightsCount = 0;
 		m_previousDirectionalLightsCount = 0;
 		m_previousPositionalLightsCount = 0;
+		m_maxDirectionalLights = math::Clamp(createInfo.maxDirectionalLights, uint32_t(1), uint32_t(MAX_DIR_LIGHTS));
+		m_maxPositionalLights = math::Clamp(createInfo.maxPositionalLights, uint32_t(1), uint32_t(MAX_POS_LIGHTS));
+		m_shadowMapResolution = math::Clamp(createInfo.shadowMapResolution, uint32_t(1), uint32_t(SHADOW_MAP_RESOLUTION));
 		m_directionalLights.resize(m_maxDirectionalLights);
 		m_positionalLights.resize(m_maxPositionalLights);
 		m_previousDirectionalLights.resize(m_maxDirectionalLights);
 		m_previousPositionalLights.resize(m_maxPositionalLights);
-
-		// Static descriptor sets:
-		m_staticDescriptorSets.reserve(Context::GetFramesInFlight());
-		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-		{
-			std::array<VkDescriptorSet, 3> staticDescriptorSets =
-			{
-				GlobalDescriptorSetLayout::GetVkDescriptorSet(frameIndex),
-				SceneDescriptorSetLayout::GetVkDescriptorSet(frameIndex),
-				FrameDescriptorSetLayout::GetVkDescriptorSet(frameIndex)
-			};
-			m_staticDescriptorSets.push_back(staticDescriptorSets);
-			m_frameResources[frameIndex].staticDescriptorSets = staticDescriptorSets;
-		}
-
-		// Debug naming:
-		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
-			for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
-			{
-				std::string name = renderStageNames[renderStage];
-				name += "_Frame" + std::to_string(frameIndex);
-				NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetPrimaryVkCommandPool(), "CommandPool_Primary_" + name);
-				NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetPrimaryVkCommandBuffer(), "CommandBuffer_Primary_" + name);
-				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
-				{
-					NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPool_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
-					NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBuffer_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
-				}
-			}
 	}
 	Renderer::~Renderer()
 	{
-		Context::WaitDeviceIdle();
-		m_frameResources.clear();
-		m_pRenderGraph.reset();
-		FrameDescriptorSetLayout::Clear();
-		SceneDescriptorSetLayout::Clear();
-		GlobalDescriptorSetLayout::Clear();
-		PoolManager::Clear();
-		DefaultGpuResources::Clear();
-		RenderPassManager::Clear();
-		m_pRenderTargets.reset();
-		GarbageCollector::Flush();		// descriptor sets must be destroyed while their parent pools are alive.
-		DescriptorPoolManager::Clear();
-		GarbageCollector::Clear();
-		SingleTimeCommand::Clear();
-		Context::Clear();
+
 	}
 
 
@@ -304,7 +246,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Setup outline call:
-		Material* pMaterial = DefaultGpuResources::GetDefaultOutlineMaterial();
+		Material* pMaterial = DefaultGpuResources::Get().GetDefaultOutlineMaterial();
 		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(pMaterial->GetShader());
 		m_frameRenderData[Context::GetFrameIndex()].outlineDrawCalls.emplace_back(static_cast<Mesh*>(pIMesh), descriptorSetBindingHandle, instanceCount);
 		return descriptorSetBindingHandle.Get();
@@ -721,6 +663,83 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
+	// Initialization/Cleanup:
+	void Renderer::InitializeInfrastructure()
+	{
+		Context::Init(m_createInfo, m_pIWindow, this);
+		SingleTimeCommand::Init();
+		GarbageCollector::Init();
+		DescriptorPoolManager::Init();
+		PoolManager::Init();
+	}
+	void Renderer::InitializeRendering()
+	{
+		m_pRenderTargets = std::make_unique<RenderTargetResources>(m_createInfo.renderWidth, m_createInfo.renderHeight, m_shadowMapResolution, m_maxDirectionalLights + m_maxPositionalLights);
+		RenderPassManager::Init(*m_pRenderTargets);
+		GlobalDescriptorSetLayout::Init(*m_pRenderTargets);
+		SceneDescriptorSetLayout::Init();
+		FrameDescriptorSetLayout::Init();
+
+		m_pRenderGraph = std::make_unique<RenderGraph>();
+		m_frameRenderData.resize(Context::GetFramesInFlight());
+		m_frameResources.reserve(Context::GetFramesInFlight());
+		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+			m_frameResources.emplace_back(emberTaskSystem::ParallelThreadPool::GetCoreCount());
+
+		// Static descriptor sets (global/scene/frame):
+		m_staticDescriptorSets.reserve(Context::GetFramesInFlight());
+		for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+		{
+			std::array<VkDescriptorSet, 3> staticDescriptorSets =
+			{
+				GlobalDescriptorSetLayout::GetVkDescriptorSet(frameIndex),
+				SceneDescriptorSetLayout::GetVkDescriptorSet(frameIndex),
+				FrameDescriptorSetLayout::GetVkDescriptorSet(frameIndex)
+			};
+			m_staticDescriptorSets.push_back(staticDescriptorSets);
+			m_frameResources[frameIndex].staticDescriptorSets = staticDescriptorSets;
+		}
+
+		// Asign vulkan debug names:
+		for (int renderStage = 0; renderStage < (int)RenderStage::stageCount; renderStage++)
+			for (int frameIndex = 0; frameIndex < Context::GetFramesInFlight(); frameIndex++)
+			{
+				std::string name = renderStageNames[renderStage];
+				name += "_Frame" + std::to_string(frameIndex);
+				NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetPrimaryVkCommandPool(), "CommandPool_Primary_" + name);
+				NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetPrimaryVkCommandBuffer(), "CommandBuffer_Primary_" + name);
+				for (int threadIndex = 0; threadIndex < emberTaskSystem::ParallelThreadPool::GetCoreCount(); threadIndex++)
+				{
+					NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetSecondaryVkCommandPool(threadIndex), "CommandPool_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
+					NAME_VK_OBJECT(m_frameResources[frameIndex].GetCommandPool(renderStage).GetSecondaryVkCommandBuffer(threadIndex), "CommandBuffer_Secondary_Thread" + std::to_string(threadIndex) + "_" + name);
+				}
+			}
+	}
+	void Renderer::ClearRendering()
+	{
+		Context::WaitDeviceIdle();
+		m_frameResources.clear();
+		m_frameRenderData.clear();
+		m_staticDescriptorSets.clear();
+		m_pRenderGraph.reset();
+		FrameDescriptorSetLayout::Clear();
+		SceneDescriptorSetLayout::Clear();
+		GlobalDescriptorSetLayout::Clear();
+		PoolManager::Clear();
+	}
+	void Renderer::ClearInfrastructure()
+	{
+		RenderPassManager::Clear();
+		m_pRenderTargets.reset();
+		GarbageCollector::Flush();		// descriptor sets must be destroyed while their parent pools are alive.
+		DescriptorPoolManager::Clear();
+		GarbageCollector::Clear();
+		SingleTimeCommand::Clear();
+		Context::Clear();
+	}
+
+
+
 	// Reset render state:
 	void Renderer::ResetFrameCalls()
 	{
@@ -799,7 +818,7 @@ namespace vulkanRendererBackend
 
 			// Expand mask horizontally (midRenderCompute):
 			Uint3 threadCount = { pInputMask->GetWidth(), pInputMask->GetHeight(), 1 };
-			ComputeShader* pHorizontalExpansionComputeShader = DefaultGpuResources::GetOutlineHorizontalMaskExpansionComputeShader();
+			ComputeShader* pHorizontalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineHorizontalMaskExpansionComputeShader();
 			pHorizontalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
 			DescriptorSetBinding* pHorizontalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pMidRenderCompute->RecordComputeShader(pHorizontalExpansionComputeShader, threadCount));
 			if (!pHorizontalExpansionCallDescriptorSetBinding)
@@ -810,7 +829,7 @@ namespace vulkanRendererBackend
 			pMidRenderCompute->RecordBarrier(emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead);
 
 			// Expand mask vertically and remove the original mask (midRenderCompute):
-			ComputeShader* pVerticalExpansionComputeShader = DefaultGpuResources::GetOutlineVerticalMaskExpansionComputeShader();
+			ComputeShader* pVerticalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineVerticalMaskExpansionComputeShader();
 			pVerticalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
 			DescriptorSetBinding* pVerticalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pMidRenderCompute->RecordComputeShader(pVerticalExpansionComputeShader, threadCount));
 			if (!pVerticalExpansionCallDescriptorSetBinding)
@@ -820,7 +839,7 @@ namespace vulkanRendererBackend
 			pVerticalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pExpandedMask);
 
 			// Composite outline into render texture (postRenderCompute):
-			ComputeShader* pOutlineCompositeComputeShader = DefaultGpuResources::GetOutlineCompositeComputeShader();
+			ComputeShader* pOutlineCompositeComputeShader = DefaultGpuResources::Get().GetOutlineCompositeComputeShader();
 			pOutlineCompositeComputeShader->GetDescriptorSetBinding()->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
 			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordComputeShader(pOutlineCompositeComputeShader, Uint3::zero));
 			if (!pCompositeCallDescriptorSetBinding)
@@ -829,7 +848,7 @@ namespace vulkanRendererBackend
 		}
 
 		// Renderer uses linear color space, apply gamma correction is always the final post-render operation:
-		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::GetGammaCorrectionComputeShader(), Uint3::zero) == nullptr)
+		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::Get().GetGammaCorrectionComputeShader(), Uint3::zero) == nullptr)
 			throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the gamma correction compute shader.");
 	}
 	void Renderer::UpdateShaderData()
@@ -852,7 +871,7 @@ namespace vulkanRendererBackend
 
 		// Outline calls:
 		if (!m_frameRenderData[m_frameExecutionData.frameIndex].outlineDrawCalls.empty())
-			DefaultGpuResources::GetDefaultOutlineMaterial()->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
+			DefaultGpuResources::Get().GetDefaultOutlineMaterial()->GetDescriptorSetBinding()->UpdateShaderData(m_frameExecutionData.frameIndex);
 		for (OutlineDrawCall& drawCall : m_frameRenderData[m_frameExecutionData.frameIndex].outlineDrawCalls)
 			drawCall.descriptorSetBindingHandle.Get()->UpdateShaderData(m_frameExecutionData.frameIndex);
 
@@ -872,7 +891,7 @@ namespace vulkanRendererBackend
 
 		// Deferred lighting:
 		{
-			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
+			DescriptorSetBinding* pDeferredLightingDescriptorSetBinding = DefaultGpuResources::Get().GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding();
 			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferAlbedo", &m_pRenderTargets->GetAlbedoTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferNormal", &m_pRenderTargets->GetNormalTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			pDeferredLightingDescriptorSetBinding->SetTexture("gbufferSurfaceProperties", &m_pRenderTargets->GetSurfacePropertiesTexture(m_frameExecutionData.frameIndex), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

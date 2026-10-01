@@ -13,9 +13,7 @@
 #include "window.h"
 // Backends:
 #include "nullWindow.h"
-#include "vulkanCompute.h"
-#include "vulkanGpuResourceFactory.h"
-#include "vulkanRenderer.h"
+#include "vulkanBackend.h"
 #include "nullGui.h"
 // System:
 #include <exception>
@@ -41,13 +39,10 @@ namespace emberApplication
 		{
 			m_pActiveScene = nullptr;
 
-			// Init basic systems:
-			Core::InitBasics();
-
 			// Window backend:
 			emberBackendInterface::IWindow* pIWindow = new nullWindowBackend::Window();
 
-			// Renderer backend:
+			// Gpu backend:
 			emberCommon::RendererCreateInfo rendererCreateInfo = {};
 			rendererCreateInfo.vSyncEnabled = applicationCreateInfo.vSyncEnabled;		            // project settings.
 			rendererCreateInfo.framesInFlight = applicationCreateInfo.framesInFlight;	            // project settings.
@@ -59,21 +54,13 @@ namespace emberApplication
 			rendererCreateInfo.maxDirectionalLights = applicationCreateInfo.maxDirectionalLights;   // clamped to 1-MAX_DIR_LIGHTS in renderer.
 			rendererCreateInfo.maxPositionalLights = applicationCreateInfo.maxPositionalLights;     // clamped to 1-MAX_POS_LIGHTS in renderer.
 			rendererCreateInfo.shadowMapResolution = applicationCreateInfo.shadowMapResolution;     // clamped to 1-SHADOW_MAP_RESOLUTION in renderer.
-			emberBackendInterface::IRenderer* pIRenderer = new vulkanRendererBackend::Renderer(rendererCreateInfo, pIWindow);
-			emberBackendInterface::IGpuResourceFactory* pIGpuResourceFactory = new vulkanRendererBackend::GpuResourceFactory(applicationCreateInfo.shadowMapResolution);
-
-			// Compute backend:
-			emberBackendInterface::ICompute* pICompute = new vulkanRendererBackend::Compute();
+			emberBackendInterface::IGpuBackend* pIGpuBackend = new vulkanRendererBackend::VulkanBackend(rendererCreateInfo, pIWindow);
 
 			// Gui backend:
 			emberBackendInterface::IGui* pIGui = new nullGuiBackend::Gui();
 
-			// Init backends:
-			Core::InitBackends(pIWindow, pIRenderer, pIGpuResourceFactory, pICompute, pIGui);
-
-			// Gpu Resource Managers:
-			Core::InitManagers();
-			Core::InitOther();
+			// Init core:
+			Core::Init(pIWindow, pIGpuBackend, pIGui);
 		}
 		catch (const std::exception& e)
 		{
@@ -82,11 +69,7 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-		Renderer::WaitDeviceIdle();
-		Core::ClearOther();
-		Core::ClearManagers();
-		Core::ClearBackends();
-		Core::ClearBasics();
+		Core::Clear();
 	}
 
 
