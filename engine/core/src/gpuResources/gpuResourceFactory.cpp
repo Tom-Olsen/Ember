@@ -7,6 +7,7 @@
 namespace emberCore
 {
 	// Static members:
+	bool GpuResourceFactory::s_isInitialized = false;
 	emberBackendInterface::IGpuResourceFactory* GpuResourceFactory::s_pIGpuResourceFactory = nullptr;
 
 
@@ -15,15 +16,17 @@ namespace emberCore
 	// Initialization/Cleanup:
 	void GpuResourceFactory::Init(emberBackendInterface::IGpuResourceFactory* pGpuResourceFactory)
 	{
-		if (s_pIGpuResourceFactory != nullptr)
+		if (s_isInitialized)
 			return;
 		if (pGpuResourceFactory == nullptr)
 			throw std::runtime_error("GpuResourceFactory::Init(...) failed. pGpuResourceFactory is nullptr.");
 		s_pIGpuResourceFactory = pGpuResourceFactory;
+		s_isInitialized = true;
 	}
 	void GpuResourceFactory::Clear()
 	{
 		s_pIGpuResourceFactory = nullptr;
+		s_isInitialized = false;
 	}
 
 

@@ -55,6 +55,7 @@ namespace emberCore
 		friend class TextureCube;
 
 	private: // Members:
+		static bool s_isInitialized;
 		static emberBackendInterface::IGpuResourceFactory* s_pIGpuResourceFactory;
 
 	private: // Methods:

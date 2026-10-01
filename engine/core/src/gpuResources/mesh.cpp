@@ -20,12 +20,12 @@ namespace emberCore
 	Mesh::Mesh()
 	{
 		m_name = "";
-		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(GpuResourceFactory::CreateMesh(""));
+		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(GpuResourceFactory::CreateMesh());
 	}
 	Mesh::Mesh(const std::string& name)
 	{
 		m_name = name;
-		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(GpuResourceFactory::CreateMesh(name));
+		m_pIMesh = std::unique_ptr<emberBackendInterface::IMesh>(GpuResourceFactory::CreateMesh());
 	}
 	Mesh::Mesh(emberBackendInterface::IMesh* pIMesh)
 	{
