@@ -6,8 +6,7 @@
 #include "vulkanGarbageCollector.h"
 #include "vulkanIndexBuffer.h"
 #include "vulkanMaterial.h"
-#include "vulkanMaterialManager.h"
-#include "vulkanMaterialShaderManager.h"
+#include "vulkanMaterialShader.h"
 #include "vulkanMesh.h"
 #include "vulkanRenderTexture2d.h"
 #include "vulkanSampleTexture2d.h"
@@ -28,9 +27,9 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	GpuResourceFactory::GpuResourceFactory(uint32_t shadowMapResolution)
+		: m_shadowMapResolution(shadowMapResolution)
 	{
-		m_pMaterialShaderManager = std::make_unique<MaterialShaderManager>(shadowMapResolution);
-		m_pMaterialManager = std::make_unique<MaterialManager>(m_pMaterialShaderManager.get());
+
 	}
 	GpuResourceFactory::~GpuResourceFactory()
 	{
@@ -40,13 +39,120 @@ namespace vulkanRendererBackend
 
 
 	// Creation:
-	emberBackendInterface::IMaterialManager* GpuResourceFactory::GetMaterialManager()
-	{
-		return m_pMaterialManager.get();
-	}
 	emberBackendInterface::IComputeShader* GpuResourceFactory::CreateComputeShader(const emberCommon::ComputeShaderCreateInfo& createInfo)
 	{
 		return new ComputeShader(createInfo.binaryPath, createInfo.features, createInfo.name);
+	}
+	emberBackendInterface::IMaterialShader* GpuResourceFactory::CreateMaterialShader(const emberCommon::MaterialShaderCreateInfo& createInfo)
+	{
+		switch (createInfo.materialPass)
+		{
+			case emberCommon::MaterialPass::gizmo:
+				return new MaterialShader(MaterialShader::CreateGizmoMaterialShader(createInfo.vertexBinaryPath, createInfo.fragmentBinaryPath, createInfo.name));
+			case emberCommon::MaterialPass::outline:
+				return new MaterialShader(MaterialShader::CreateOutlineMaterialShader(createInfo.vertexBinaryPath, createInfo.fragmentBinaryPath, createInfo.name));
+			case emberCommon::MaterialPass::shadow:
+				return new MaterialShader(MaterialShader::CreateShadowMaterialShader(m_shadowMapResolution, createInfo.vertexBinaryPath, createInfo.name));
+			case emberCommon::MaterialPass::deferredGeometry:
+				return new MaterialShader(MaterialShader::CreateDeferredGeometryMaterialShader(createInfo.vertexBinaryPath, createInfo.fragmentBinaryPath, createInfo.name));
+			case emberCommon::MaterialPass::deferredLighting:
+				return new MaterialShader(MaterialShader::CreateDeferredLightingMaterialShader(createInfo.vertexBinaryPath, createInfo.fragmentBinaryPath, createInfo.name));
+			case emberCommon::MaterialPass::forward:
+				return new MaterialShader(MaterialShader::CreateForwardMaterialShader(createInfo.vertexBinaryPath, createInfo.fragmentBinaryPath, createInfo.name));
+			case emberCommon::MaterialPass::present:
+				return new MaterialShader(MaterialShader::CreatePresentMaterialShader(createInfo.vertexBinaryPath, createInfo.fragmentBinaryPath, createInfo.name));
+			default:
+				throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterialShader(...) failed. Unsupported material pass: " + std::string(emberCommon::MaterialPassToString(createInfo.materialPass)));
+		}
+	}
+	emberBackendInterface::IMaterial* GpuResourceFactory::CreateMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const emberCommon::MaterialCreateInfo& createInfo)
+	{
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		if (pVulkanMaterialShader == nullptr)
+			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. pMaterialShader is nullptr.");
+		if (pVulkanMaterialShader->GetMaterialPass() != createInfo.materialPass)
+			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Material and material shader passes do not match.");
+
+		switch (createInfo.materialPass)
+		{
+			case emberCommon::MaterialPass::gizmo:
+			{
+				const emberCommon::GizmoRenderMode* pGizmoRenderMode = std::get_if<emberCommon::GizmoRenderMode>(&createInfo.renderMode);
+				if (pGizmoRenderMode == nullptr || *pGizmoRenderMode == emberCommon::GizmoRenderMode::count)
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Gizmo render mode is invalid.");
+				return new Material(Material::CreateGizmo(pVulkanMaterialShader, *pGizmoRenderMode, createInfo.name));
+			}
+			case emberCommon::MaterialPass::outline:
+				if (!std::holds_alternative<std::monostate>(createInfo.renderMode))
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Outline materials do not use a render mode.");
+				return new Material(Material::CreateOutline(pVulkanMaterialShader, createInfo.name));
+			case emberCommon::MaterialPass::shadow:
+				if (!std::holds_alternative<std::monostate>(createInfo.renderMode))
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Shadow materials do not use a render mode.");
+				return new Material(Material::CreateShadow(pVulkanMaterialShader, createInfo.name));
+			case emberCommon::MaterialPass::deferredGeometry:
+				if (!std::holds_alternative<std::monostate>(createInfo.renderMode))
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Deferred geometry materials do not use a render mode.");
+				return new Material(Material::CreateDeferredGeometry(pVulkanMaterialShader, createInfo.name));
+			case emberCommon::MaterialPass::deferredLighting:
+				if (!std::holds_alternative<std::monostate>(createInfo.renderMode))
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Deferred lighting materials do not use a render mode.");
+				return new Material(Material::CreateDeferredLighting(pVulkanMaterialShader, createInfo.name));
+			case emberCommon::MaterialPass::forward:
+			{
+				const emberCommon::ForwardRenderMode* pForwardRenderMode = std::get_if<emberCommon::ForwardRenderMode>(&createInfo.renderMode);
+				if (pForwardRenderMode == nullptr || *pForwardRenderMode == emberCommon::ForwardRenderMode::count)
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Forward render mode is invalid.");
+				return new Material(Material::CreateForward(pVulkanMaterialShader, *pForwardRenderMode, createInfo.name));
+			}
+			case emberCommon::MaterialPass::present:
+				if (!std::holds_alternative<std::monostate>(createInfo.renderMode))
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Present materials do not use a render mode.");
+				return new Material(Material::CreatePresent(pVulkanMaterialShader, createInfo.name));
+			default:
+				throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateMaterial(...) failed. Unsupported material pass: " + std::string(emberCommon::MaterialPassToString(createInfo.materialPass)));
+		}
+	}
+	emberBackendInterface::IMaterial* GpuResourceFactory::CloneMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const emberCommon::MaterialCloneInfo& cloneInfo)
+	{
+		Material* pVulkanSourceMaterial = static_cast<Material*>(pSourceMaterial);
+		if (pVulkanSourceMaterial == nullptr)
+			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CloneMaterial(...) failed. pSourceMaterial is nullptr.");
+
+		bool useDefaultBindings = cloneInfo.bindingCloneMode == emberCommon::MaterialBindingCloneMode::defaultBindings;
+		switch (pVulkanSourceMaterial->GetMaterialPass())
+		{
+			case emberCommon::MaterialPass::gizmo:
+				return useDefaultBindings
+					? new Material(Material::CloneGizmoWithDefaultBindings(*pVulkanSourceMaterial, cloneInfo.name))
+					: new Material(Material::CloneGizmo(*pVulkanSourceMaterial, cloneInfo.name));
+			case emberCommon::MaterialPass::outline:
+				if (useDefaultBindings)
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CloneMaterial(...) failed. Outline materials do not support cloning with default bindings.");
+				return new Material(Material::CloneOutline(*pVulkanSourceMaterial, cloneInfo.name));
+			case emberCommon::MaterialPass::shadow:
+				if (useDefaultBindings)
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CloneMaterial(...) failed. Shadow materials do not support cloning with default bindings.");
+				return new Material(Material::CloneShadow(*pVulkanSourceMaterial, cloneInfo.name));
+			case emberCommon::MaterialPass::deferredGeometry:
+				return useDefaultBindings
+					? new Material(Material::CloneDeferredGeometryWithDefaultBindings(*pVulkanSourceMaterial, cloneInfo.name))
+					: new Material(Material::CloneDeferredGeometry(*pVulkanSourceMaterial, cloneInfo.name));
+			case emberCommon::MaterialPass::deferredLighting:
+				if (useDefaultBindings)
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CloneMaterial(...) failed. Deferred lighting materials do not support cloning with default bindings.");
+				return new Material(Material::CloneDeferredLighting(*pVulkanSourceMaterial, cloneInfo.name));
+			case emberCommon::MaterialPass::forward:
+				return useDefaultBindings
+					? new Material(Material::CloneForwardWithDefaultBindings(*pVulkanSourceMaterial, cloneInfo.name))
+					: new Material(Material::CloneForward(*pVulkanSourceMaterial, cloneInfo.name));
+			case emberCommon::MaterialPass::present:
+				if (useDefaultBindings)
+					throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CloneMaterial(...) failed. Present materials do not support cloning with default bindings.");
+				return new Material(Material::ClonePresent(*pVulkanSourceMaterial, cloneInfo.name));
+			default:
+				throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CloneMaterial(...) failed. Unsupported material pass.");
+		}
 	}
 	emberBackendInterface::IBuffer* GpuResourceFactory::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
@@ -154,6 +260,28 @@ namespace vulkanRendererBackend
 				return false;
 			delete pVulkanComputeShader;
 			return true;
+		});
+	}
+	void GpuResourceFactory::RetireMaterial(emberBackendInterface::IMaterial* pMaterial)
+	{
+		Material* pVulkanMaterial = static_cast<Material*>(pMaterial);
+		if (pVulkanMaterial == nullptr)
+			return;
+
+		GarbageCollector::RecordFrameGarbage([pVulkanMaterial]()
+		{
+			delete pVulkanMaterial;
+		});
+	}
+	void GpuResourceFactory::RetireMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader)
+	{
+		MaterialShader* pVulkanMaterialShader = static_cast<MaterialShader*>(pMaterialShader);
+		if (pVulkanMaterialShader == nullptr)
+			return;
+
+		GarbageCollector::RecordFrameGarbage([pVulkanMaterialShader]()
+		{
+			delete pVulkanMaterialShader;
 		});
 	}
 }

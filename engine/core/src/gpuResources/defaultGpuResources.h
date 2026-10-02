@@ -9,6 +9,7 @@ namespace emberBackendInterface
 {
 	class IComputeShader;
 	class IDefaultGpuResources;
+	class IMaterial;
 }
 
 
@@ -18,6 +19,7 @@ namespace emberCore
 	// Forward declarations:
 	class ComputeShaderManager;
 	class Core;
+	class MaterialManager;
 
 
 
@@ -26,6 +28,7 @@ namespace emberCore
 		// Friends:
 		friend class ComputeShaderManager;
 		friend class Core;
+		friend class MaterialManager;
 
 	private: // Members:
 		static bool s_isInitialized;
@@ -35,6 +38,13 @@ namespace emberCore
 		// Initialization/Cleanup:
 		static void Init(emberBackendInterface::IDefaultGpuResources* pDefaultGpuResources);
 		static void Clear();
+
+		// Built-in materials:
+		static void InitializeBuiltInMaterials(
+			std::unique_ptr<emberBackendInterface::IMaterial> pOutlineMaterial,
+			std::unique_ptr<emberBackendInterface::IMaterial> pDefaultShadowMaterial,
+			std::unique_ptr<emberBackendInterface::IMaterial> pDeferredLightingMaterial,
+			std::unique_ptr<emberBackendInterface::IMaterial> pPresentMaterial);
 
 		// Built-in compute shaders:
 		static void InitializeBuiltInComputeShaders(

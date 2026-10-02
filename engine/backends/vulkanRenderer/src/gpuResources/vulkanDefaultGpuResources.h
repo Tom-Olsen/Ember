@@ -41,10 +41,10 @@ namespace vulkanRendererBackend
 		std::unique_ptr<Sampler> m_pColorSamplerClampEdge;
 		std::unique_ptr<Sampler> m_pShadowSampler;
 		// Materials:
-		Material* m_pDefaultOutlineMaterial;
-		Material* m_pDefaultShadowMaterial;
-		Material* m_pDefaultDeferredLightingMaterial;
-		Material* m_pDefaultPresentMaterial;
+		std::unique_ptr<Material> m_pDefaultOutlineMaterial;
+		std::unique_ptr<Material> m_pDefaultShadowMaterial;
+		std::unique_ptr<Material> m_pDefaultDeferredLightingMaterial;
+		std::unique_ptr<Material> m_pDefaultPresentMaterial;
 		// Compute Shaders:
 		std::unique_ptr<ComputeShader> m_pGammaCorrectionComputeShader;
 		std::unique_ptr<ComputeShader> m_pOutlineCompositeComputeShader;
@@ -107,20 +107,18 @@ namespace vulkanRendererBackend
 		StorageTexture2d* GetDefaultStorageTexture2d();
 		StorageTexture3d* GetDefaultStorageTexture3d();
 
-		// Initialize default materials:
-		void SetDefaultMaterials(
-			emberBackendInterface::IMaterial* pOutlineMaterial,
-			emberBackendInterface::IMaterial* pDefaultShadowMaterial,
-			emberBackendInterface::IMaterial* pDeferredLightingMaterial,
-			emberBackendInterface::IMaterial* pPresentMaterial);
-		void ClearDefaultMaterials();
+		// Built-in materials:
+		void InitializeBuiltInMaterials(
+			std::unique_ptr<emberBackendInterface::IMaterial> pOutlineMaterial,
+			std::unique_ptr<emberBackendInterface::IMaterial> pDefaultShadowMaterial,
+			std::unique_ptr<emberBackendInterface::IMaterial> pDeferredLightingMaterial,
+			std::unique_ptr<emberBackendInterface::IMaterial> pPresentMaterial) override;
 
-		// Initialize default compute shaders:
+		// Built-in compute shaders:
 		void InitializeBuiltInComputeShaders(
 			std::unique_ptr<emberBackendInterface::IComputeShader> pGammaCorrectionComputeShader,
 			std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineCompositeComputeShader,
 			std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineHorizontalMaskExpansionComputeShader,
 			std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineVerticalMaskExpansionComputeShader) override;
-
 	};
 }

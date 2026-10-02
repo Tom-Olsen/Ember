@@ -1,4 +1,5 @@
 #pragma once
+#include "iMaterialShader.h"
 #include "commonMaterialPass.h"
 #include "commonVertexMemoryLayout.h"
 #include "vulkanPipelineKey.h"
@@ -18,16 +19,16 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class MaterialShaderManager;
+	class GpuResourceFactory;
 	class Mesh;
 	class Pipeline;
 
 
 
-	class VULKAN_RENDERER_API MaterialShader : public Shader
+	class VULKAN_RENDERER_API MaterialShader : public emberBackendInterface::IMaterialShader, public Shader
 	{
 		// Friends:
-		friend class MaterialShaderManager;
+		friend class GpuResourceFactory;
 
 	private: // Members:
 		emberCommon::MaterialPass m_materialPass;
@@ -46,7 +47,7 @@ namespace vulkanRendererBackend
 		MaterialShader& operator=(MaterialShader&& other) noexcept;
 
 		// Getters:
-		emberCommon::MaterialPass GetMaterialPass() const;
+		emberCommon::MaterialPass GetMaterialPass() const override;
 		template<RenderStage stage>
 		requires HasRenderPipelineAndMode<stage>
 		const Pipeline* GetPipeline(const Mesh* pMesh, typename RenderStageTraits<stage>::RenderMode renderMode) const
@@ -71,6 +72,9 @@ namespace vulkanRendererBackend
 				throw std::runtime_error("MaterialShader::GetFullscreenPipeline() failed. Requested material pass is not supported by this material shader.");
 			return GetFullscreenPipeline(RenderStageTraits<stage>::RenderModeIndex());
 		}
+
+		// Debugging:
+		void Print() const override;
 
 	private: // Methods:
 		// Constructor:

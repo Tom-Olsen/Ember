@@ -32,13 +32,21 @@ namespace emberCore
 
 
 	// Creation:
-	emberBackendInterface::IMaterialManager* GpuResourceFactory::GetMaterialManager()
-	{
-		return s_pIGpuResourceFactory->GetMaterialManager();
-	}
 	emberBackendInterface::IComputeShader* GpuResourceFactory::CreateComputeShader(const emberCommon::ComputeShaderCreateInfo& createInfo)
 	{
 		return s_pIGpuResourceFactory->CreateComputeShader(createInfo);
+	}
+	emberBackendInterface::IMaterialShader* GpuResourceFactory::CreateMaterialShader(const emberCommon::MaterialShaderCreateInfo& createInfo)
+	{
+		return s_pIGpuResourceFactory->CreateMaterialShader(createInfo);
+	}
+	emberBackendInterface::IMaterial* GpuResourceFactory::CreateMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const emberCommon::MaterialCreateInfo& createInfo)
+	{
+		return s_pIGpuResourceFactory->CreateMaterial(pMaterialShader, createInfo);
+	}
+	emberBackendInterface::IMaterial* GpuResourceFactory::CloneMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const emberCommon::MaterialCloneInfo& cloneInfo)
+	{
+		return s_pIGpuResourceFactory->CloneMaterial(pSourceMaterial, cloneInfo);
 	}
 	emberBackendInterface::IBuffer* GpuResourceFactory::CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage)
 	{
@@ -71,5 +79,13 @@ namespace emberCore
 	void GpuResourceFactory::RetireComputeShader(emberBackendInterface::IComputeShader* pComputeShader)
 	{
 		s_pIGpuResourceFactory->RetireComputeShader(pComputeShader);
+	}
+	void GpuResourceFactory::RetireMaterial(emberBackendInterface::IMaterial* pMaterial)
+	{
+		s_pIGpuResourceFactory->RetireMaterial(pMaterial);
+	}
+	void GpuResourceFactory::RetireMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader)
+	{
+		s_pIGpuResourceFactory->RetireMaterialShader(pMaterialShader);
 	}
 }

@@ -23,7 +23,6 @@ namespace emberBackendInterface
 	class IDescriptorSetBinding;
 	class IGui;
 	class IMaterial;
-	class IMaterialManager;
 	class IMesh;
 	class ITexture;
 	class IVulkanGui;

@@ -31,10 +31,6 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	DefaultGpuResources::DefaultGpuResources()
-		: m_pDefaultOutlineMaterial(nullptr)
-		, m_pDefaultShadowMaterial(nullptr)
-		, m_pDefaultDeferredLightingMaterial(nullptr)
-		, m_pDefaultPresentMaterial(nullptr)
 	{
 		if (s_pActiveInstance != nullptr)
 			throw std::runtime_error("DefaultGpuResources constructor failed. An active instance already exists.");
@@ -76,6 +72,18 @@ namespace vulkanRendererBackend
 	}
 	DefaultGpuResources::~DefaultGpuResources()
 	{
+		// Materials:
+		m_pDefaultPresentMaterial.reset();
+		m_pDefaultDeferredLightingMaterial.reset();
+		m_pDefaultShadowMaterial.reset();
+		m_pDefaultOutlineMaterial.reset();
+
+		// Compute shaders:
+		m_pOutlineVerticalMaskExpansionComputeShader.reset();
+		m_pOutlineHorizontalMaskExpansionComputeShader.reset();
+		m_pOutlineCompositeComputeShader.reset();
+		m_pGammaCorrectionComputeShader.reset();
+
 		// Textures:
 		m_pDefaultStorageTexture3d.reset();
 		m_pDefaultStorageTexture2d.reset();
@@ -87,15 +95,6 @@ namespace vulkanRendererBackend
 		
 		// Buffers:
 		m_pDefaultStorageBuffer.reset();
-
-		// Compute shaders:
-		m_pOutlineVerticalMaskExpansionComputeShader.reset();
-		m_pOutlineHorizontalMaskExpansionComputeShader.reset();
-		m_pOutlineCompositeComputeShader.reset();
-		m_pGammaCorrectionComputeShader.reset();
-
-		// Materials:
-		ClearDefaultMaterials();
 
 		// Samplers:
 		m_pShadowSampler.reset();
@@ -134,25 +133,25 @@ namespace vulkanRendererBackend
 	{
 		if (m_pDefaultOutlineMaterial == nullptr)
 			throw std::runtime_error("DefaultGpuResources::GetDefaultOutlineMaterial() failed. Default outline material is not set.");
-		return m_pDefaultOutlineMaterial;
+		return m_pDefaultOutlineMaterial.get();
 	}
 	Material* DefaultGpuResources::GetDefaultShadowMaterial()
 	{
 		if (m_pDefaultShadowMaterial == nullptr)
 			throw std::runtime_error("DefaultGpuResources::GetDefaultShadowMaterial() failed. Default shadow material is not set.");
-		return m_pDefaultShadowMaterial;
+		return m_pDefaultShadowMaterial.get();
 	}
 	Material* DefaultGpuResources::GetDefaultDeferredLightingMaterial()
 	{
 		if (m_pDefaultDeferredLightingMaterial == nullptr)
 			throw std::runtime_error("DefaultGpuResources::GetDefaultDeferredLightingMaterial() failed. Default deferred lighting material is not set.");
-		return m_pDefaultDeferredLightingMaterial;
+		return m_pDefaultDeferredLightingMaterial.get();
 	}
 	Material* DefaultGpuResources::GetDefaultPresentMaterial()
 	{
 		if (m_pDefaultPresentMaterial == nullptr)
 			throw std::runtime_error("DefaultGpuResources::GetDefaultPresentMaterial() failed. Default present material is not set.");
-		return m_pDefaultPresentMaterial;
+		return m_pDefaultPresentMaterial.get();
 	}
 	// Compute shaders:
 	ComputeShader* DefaultGpuResources::GetGammaCorrectionComputeShader()
@@ -217,41 +216,36 @@ namespace vulkanRendererBackend
 
 
 
-	// Initialize default materials:
-	void DefaultGpuResources::SetDefaultMaterials(
-		emberBackendInterface::IMaterial* pOutlineMaterial,
-		emberBackendInterface::IMaterial* pDefaultShadowMaterial,
-		emberBackendInterface::IMaterial* pDeferredLightingMaterial,
-		emberBackendInterface::IMaterial* pPresentMaterial)
+	// Built-in materials:
+	void DefaultGpuResources::InitializeBuiltInMaterials(
+		std::unique_ptr<emberBackendInterface::IMaterial> pOutlineMaterial,
+		std::unique_ptr<emberBackendInterface::IMaterial> pDefaultShadowMaterial,
+		std::unique_ptr<emberBackendInterface::IMaterial> pDeferredLightingMaterial,
+		std::unique_ptr<emberBackendInterface::IMaterial> pPresentMaterial)
 	{
+		if (m_pDefaultOutlineMaterial != nullptr || m_pDefaultShadowMaterial != nullptr || m_pDefaultDeferredLightingMaterial != nullptr || m_pDefaultPresentMaterial != nullptr)
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Built-in materials are already initialized.");
 		if (pOutlineMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Outline material is null.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Outline material is null.");
 		if (pDefaultShadowMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material is null.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Default shadow material is null.");
 		if (pDeferredLightingMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Deferred lighting material is null.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Deferred lighting material is null.");
 		if (pPresentMaterial == nullptr)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material is null.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Present material is null.");
 		if (pOutlineMaterial->GetMaterialPass() != emberCommon::MaterialPass::outline)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Outline material has wrong material pass.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Outline material has wrong material pass.");
 		if (pDefaultShadowMaterial->GetMaterialPass() != emberCommon::MaterialPass::shadow)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Default shadow material has wrong material pass.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Default shadow material has wrong material pass.");
 		if (pDeferredLightingMaterial->GetMaterialPass() != emberCommon::MaterialPass::deferredLighting)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Deferred lighting material has wrong material pass.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Deferred lighting material has wrong material pass.");
 		if (pPresentMaterial->GetMaterialPass() != emberCommon::MaterialPass::present)
-			throw std::runtime_error("DefaultGpuResources::SetDefaultMaterials(...) failed. Present material has wrong material pass.");
+			throw std::runtime_error("DefaultGpuResources::InitializeBuiltInMaterials(...) failed. Present material has wrong material pass.");
 
-		m_pDefaultOutlineMaterial = static_cast<Material*>(pOutlineMaterial);
-		m_pDefaultShadowMaterial = static_cast<Material*>(pDefaultShadowMaterial);
-		m_pDefaultDeferredLightingMaterial = static_cast<Material*>(pDeferredLightingMaterial);
-		m_pDefaultPresentMaterial = static_cast<Material*>(pPresentMaterial);
-	}
-	void DefaultGpuResources::ClearDefaultMaterials()
-	{
-		m_pDefaultOutlineMaterial = nullptr;
-		m_pDefaultShadowMaterial = nullptr;
-		m_pDefaultDeferredLightingMaterial = nullptr;
-		m_pDefaultPresentMaterial = nullptr;
+		m_pDefaultOutlineMaterial.reset(static_cast<Material*>(pOutlineMaterial.release()));
+		m_pDefaultShadowMaterial.reset(static_cast<Material*>(pDefaultShadowMaterial.release()));
+		m_pDefaultDeferredLightingMaterial.reset(static_cast<Material*>(pDeferredLightingMaterial.release()));
+		m_pDefaultPresentMaterial.reset(static_cast<Material*>(pPresentMaterial.release()));
 	}
 
 

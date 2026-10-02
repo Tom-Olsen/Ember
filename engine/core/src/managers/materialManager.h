@@ -1,7 +1,11 @@
 #pragma once
 #include "commonForwardRenderMode.h"
 #include "commonGizmoRenderMode.h"
+#include "commonMaterialCloneInfo.h"
 #include "commonMaterialId.h"
+#include "commonMaterialPass.h"
+#include "commonMaterialShaderId.h"
+#include "commonResourceAccessRights.h"
 #include "deferredMaterial.h"
 #include "emberCoreExport.h"
 #include "forwardMaterial.h"
@@ -9,19 +13,21 @@
 #include "material.h"
 #include "shadowMaterial.h"
 #include <filesystem>
+#include <memory>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 
 
 // Forward declarations:
-namespace emberBackendInterface
-{
-	class IMaterial;
-	class IMaterialManager;
-}
 namespace emberAssetLoader
 {
 	struct MaterialAsset;
+}
+namespace emberBackendInterface
+{
+	class IMaterial;
 }
 
 
@@ -33,10 +39,6 @@ namespace emberCore
 
 
 
-	/// <summary>
-	/// Purely static facade for the backend material manager.
-	/// Material is a non-owning, generational handle to a backend-owned slot.
-	/// </summary>
 	class EMBER_CORE_API MaterialManager
 	{
 		// Friends:
@@ -46,10 +48,55 @@ namespace emberCore
 		friend class Material;
 		friend class Renderer;
 
+	private: // Structs:
+		struct ManagedMaterial
+		{
+			std::string name;
+			emberCommon::ResourceAccessRights accessRights;
+			emberCommon::MaterialShaderId materialShaderId;
+			emberCommon::MaterialId shadowMaterialId;
+			std::unique_ptr<emberBackendInterface::IMaterial> pOwnedMaterial;
+			emberBackendInterface::IMaterial* pMaterial;
+
+			// Constructor/Destructor:
+			ManagedMaterial();
+			ManagedMaterial(std::string name, const emberCommon::ResourceAccessRights& accessRights, emberCommon::MaterialShaderId materialShaderId, emberCommon::MaterialId shadowMaterialId, std::unique_ptr<emberBackendInterface::IMaterial> pMaterial);
+			~ManagedMaterial();
+
+			// Non-copyable:
+			ManagedMaterial(const ManagedMaterial&) = delete;
+			ManagedMaterial& operator=(const ManagedMaterial&) = delete;
+
+			// Movable:
+			ManagedMaterial(ManagedMaterial&&) noexcept;
+			ManagedMaterial& operator=(ManagedMaterial&&) noexcept;
+		};
+		struct MaterialSlot
+		{
+			uint32_t generation;
+			ManagedMaterial managedMaterial;
+
+			// Constructor/Destructor:
+			MaterialSlot(uint32_t generation, ManagedMaterial managedMaterial);
+			~MaterialSlot();
+
+			// Non-copyable:
+			MaterialSlot(const MaterialSlot&) = delete;
+			MaterialSlot& operator=(const MaterialSlot&) = delete;
+
+			// Movable:
+			MaterialSlot(MaterialSlot&&) noexcept;
+			MaterialSlot& operator=(MaterialSlot&&) noexcept;
+		};
+
 	private: // Members:
-		static emberBackendInterface::IMaterialManager* s_pIMaterialManager;
+		static bool s_isInitialized;
 		static emberBackendInterface::IMaterial* s_pIErrorMaterial;
 		static emberBackendInterface::IMaterial* s_pIErrorGizmoMaterial;
+		static emberCommon::MaterialId s_defaultShadowMaterialId;
+		static std::unordered_map<std::string, uint32_t> s_materialIdsMap;
+		static std::vector<MaterialSlot> s_materialSlots;
+		static std::vector<uint32_t> s_freeMaterialIds;
 
 	public: // Methods:
 		// Asset loading:
@@ -87,6 +134,10 @@ namespace emberCore
 		static void Init();
 		static void Clear();
 
+		// Creation/Cloning:
+		static emberCommon::MaterialId CreateMaterial(const emberAssetLoader::MaterialAsset& materialAsset);
+		static emberCommon::MaterialId CloneMaterial(emberCommon::MaterialId sourceMaterialId, emberCommon::MaterialPass expectedMaterialPass, emberCommon::MaterialBindingCloneMode bindingCloneMode, const std::string& name);
+
 		// Getters:
 		static Material GetMaterial(emberCommon::MaterialId materialId);
 		static GizmoMaterial GetGizmoMaterial(emberCommon::MaterialId materialId);
@@ -98,6 +149,7 @@ namespace emberCore
 		static emberBackendInterface::IMaterial* TryGetMaterialInterface(emberCommon::MaterialId materialId);
 		static const std::string* TryGetMaterialName(emberCommon::MaterialId materialId);
 		static emberCommon::MaterialId TryGetShadowMaterialIdOfSurfaceMaterial(emberCommon::MaterialId surfaceMaterialId);
+		static const emberCommon::MaterialShaderId* TryGetMaterialShaderId(emberCommon::MaterialId materialId);
 		static bool IsMaterialMutable(emberCommon::MaterialId materialId);
 
 		// Setters:
@@ -106,6 +158,13 @@ namespace emberCore
 
 		// Deleter:
 		static void DeleteMaterial(emberCommon::MaterialId materialId);
+
+		// Management:
+		static emberCommon::MaterialId AddMaterial(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, emberCommon::MaterialShaderId materialShaderId, std::unique_ptr<emberBackendInterface::IMaterial> pMaterial);
+		static std::unique_ptr<emberBackendInterface::IMaterial> TakeMaterialOwnership(const std::string& name);
+		static void RetireMaterial(std::unique_ptr<emberBackendInterface::IMaterial> pMaterial);
+		static emberCommon::MaterialId FindMaterialId(const std::string& name);
+		static void InvalidateMaterialSlot(uint32_t index);
 
 		// Delete all constructors:
 		MaterialManager() = delete;

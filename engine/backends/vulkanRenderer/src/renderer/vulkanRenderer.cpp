@@ -34,7 +34,6 @@
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanMaterial.h"
-#include "vulkanMaterialManager.h"
 #include "vulkanMesh.h"
 #include "vulkanOutlineDrawCall.h"
 #include "vulkanPoolManager.h"

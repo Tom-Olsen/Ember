@@ -60,6 +60,7 @@ namespace emberCore
 	// Asset loading:
 	void ComputeShaderManager::LoadComputeShaderAssets(const std::filesystem::path& directoryPath)
 	{
+		// Error handling:
 		if (!GpuResourceFactory::s_isInitialized)
 			throw std::runtime_error("ComputeShaderManager::LoadComputeShaderAssets(...) failed. Compute shader manager is not initialized.");
 		if (!std::filesystem::is_directory(directoryPath))
@@ -74,7 +75,7 @@ namespace emberCore
 		}
 		std::sort(assetPaths.begin(), assetPaths.end());
 
-		// Load assets:
+		// Load compute shader assets:
 		std::vector<emberAssetLoader::ComputeShaderAsset> computeShaderAssets;
 		computeShaderAssets.reserve(assetPaths.size());
 		for (const std::filesystem::path& assetPath : assetPaths)
@@ -153,15 +154,11 @@ namespace emberCore
 			throw std::runtime_error("ComputeShaderManager::Init() failed. Gpu resource factory is not initialized.");
 
 		LoadComputeShaderAssets(std::filesystem::path(ENGINE_SHADERS_DIR) / "computeShaderAssets");
-		std::unique_ptr<emberBackendInterface::IComputeShader> pGammaCorrectionComputeShader = TakeComputeShaderInterface("gammaCorrection");
-		std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineCompositeComputeShader = TakeComputeShaderInterface("outlineComposite");
-		std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineHorizontalMaskExpansionComputeShader = TakeComputeShaderInterface("outlineHorizontalMaskExpansion");
-		std::unique_ptr<emberBackendInterface::IComputeShader> pOutlineVerticalMaskExpansionComputeShader = TakeComputeShaderInterface("outlineVerticalMaskExpansion");
 		DefaultGpuResources::InitializeBuiltInComputeShaders(
-			std::move(pGammaCorrectionComputeShader),
-			std::move(pOutlineCompositeComputeShader),
-			std::move(pOutlineHorizontalMaskExpansionComputeShader),
-			std::move(pOutlineVerticalMaskExpansionComputeShader));
+			TakeComputeShaderOwnership("gammaCorrection"),
+			TakeComputeShaderOwnership("outlineComposite"),
+			TakeComputeShaderOwnership("outlineHorizontalMaskExpansion"),
+			TakeComputeShaderOwnership("outlineVerticalMaskExpansion"));
 		s_isInitialized = true;
 	}
 	void ComputeShaderManager::Clear()
@@ -240,11 +237,11 @@ namespace emberCore
 
 
 	// Ownership transfer:
-	std::unique_ptr<emberBackendInterface::IComputeShader> ComputeShaderManager::TakeComputeShaderInterface(const std::string& name)
+	std::unique_ptr<emberBackendInterface::IComputeShader> ComputeShaderManager::TakeComputeShaderOwnership(const std::string& name)
 	{
 		emberCommon::ComputeShaderId computeShaderId = FindComputeShaderId(name);
 		if (TryGetComputeShaderInterface(computeShaderId) == nullptr)
-			throw std::runtime_error("ComputeShaderManager::TakeComputeShaderInterface(...) failed. ComputeShader not found: " + name);
+			throw std::runtime_error("ComputeShaderManager::TakeComputeShaderOwnership(...) failed. ComputeShader not found: " + name);
 
 		ComputeShaderSlot& slot = s_computeShaderSlots[computeShaderId.index];
 		s_computeShaderIdsMap.erase(slot.managedComputeShader.name);

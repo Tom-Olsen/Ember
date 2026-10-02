@@ -2,7 +2,6 @@
 #include "iGpuResourceFactory.h"
 #include "vulkanRendererExport.h"
 #include <cstdint>
-#include <memory>
 
 
 
@@ -13,7 +12,7 @@ namespace emberBackendInterface
 	class IComputeShader;
 	class IDescriptorSetBinding;
 	class IMaterial;
-	class IMaterialManager;
+	class IMaterialShader;
 	class IMesh;
 	class ITexture;
 }
@@ -22,17 +21,10 @@ namespace emberBackendInterface
 
 namespace vulkanRendererBackend
 {
-	// Forward declarations:
-	class MaterialManager;
-	class MaterialShaderManager;
-
-
-
 	class VULKAN_RENDERER_API GpuResourceFactory : public emberBackendInterface::IGpuResourceFactory
 	{
 	private: // Members:
-		std::unique_ptr<MaterialShaderManager> m_pMaterialShaderManager;
-		std::unique_ptr<MaterialManager> m_pMaterialManager;
+		uint32_t m_shadowMapResolution;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -40,8 +32,10 @@ namespace vulkanRendererBackend
 		~GpuResourceFactory();
 
 		// Creation:
-		emberBackendInterface::IMaterialManager* GetMaterialManager() override;
 		emberBackendInterface::IComputeShader* CreateComputeShader(const emberCommon::ComputeShaderCreateInfo& createInfo) override;
+		emberBackendInterface::IMaterialShader* CreateMaterialShader(const emberCommon::MaterialShaderCreateInfo& createInfo) override;
+		emberBackendInterface::IMaterial* CreateMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const emberCommon::MaterialCreateInfo& createInfo) override;
+		emberBackendInterface::IMaterial* CloneMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const emberCommon::MaterialCloneInfo& cloneInfo) override;
 		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) override;
 		//emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
@@ -52,5 +46,7 @@ namespace vulkanRendererBackend
 
 		// Retirement:
 		void RetireComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
+		void RetireMaterial(emberBackendInterface::IMaterial* pMaterial) override;
+		void RetireMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader) override;
 	};
 }

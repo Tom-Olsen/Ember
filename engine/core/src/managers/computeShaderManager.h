@@ -110,7 +110,7 @@ namespace emberCore
 		static const std::string* TryGetComputeShaderName(emberCommon::ComputeShaderId computeShaderId);
 
 		// Ownership transfer:
-		static std::unique_ptr<emberBackendInterface::IComputeShader> TakeComputeShaderInterface(const std::string& name);
+		static std::unique_ptr<emberBackendInterface::IComputeShader> TakeComputeShaderOwnership(const std::string& name);
 
 		// Deleter:
 		static void DeleteComputeShader(emberCommon::ComputeShaderId computeShaderId);

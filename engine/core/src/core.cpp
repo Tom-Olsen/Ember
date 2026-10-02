@@ -15,6 +15,7 @@
 #include "iRenderer.h"
 #include "iWindow.h"
 #include "materialManager.h"
+#include "materialShaderManager.h"
 #include "meshManager.h"
 #include "renderer.h"
 #include "textureManager.h"
@@ -63,6 +64,7 @@ namespace emberCore
 		GpuResourceFactory::Init(GpuBackend::GetGpuResourceFactoryInterface());
 		DefaultGpuResources::Init(GpuBackend::GetDefaultGpuResourcesInterface());
 		Renderer::Init(pIRenderer);
+		MaterialShaderManager::Init();
 		MaterialManager::Init();
 		ComputeShaderManager::Init();
 		Compute::Init(pICompute);
@@ -94,6 +96,7 @@ namespace emberCore
 		Compute::Clear();
 		ComputeShaderManager::Clear();
 		MaterialManager::Clear();
+		MaterialShaderManager::Clear();
 		GpuResourceFactory::Clear();
 		Renderer::Clear();
 		DefaultGpuResources::Clear();

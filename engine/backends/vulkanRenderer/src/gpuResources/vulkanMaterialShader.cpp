@@ -24,7 +24,7 @@
 namespace vulkanRendererBackend
 {
 	// Public methods:
-	// Factories/Destructor:
+	// Destructor:
 	MaterialShader::~MaterialShader()
 	{
 
@@ -52,6 +52,14 @@ namespace vulkanRendererBackend
 	emberCommon::MaterialPass MaterialShader::GetMaterialPass() const
 	{
 		return m_materialPass;
+	}
+
+
+
+	// Debugging:
+	void MaterialShader::Print() const
+	{
+		PrintShaderInfo();
 	}
 
 
