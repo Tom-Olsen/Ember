@@ -32,12 +32,15 @@ VertexOutput main(VertexInput input)
 {
     float3 centerLocal = positionBuffer[input.instanceID];
     float3 centerWorld = mul(model_localToWorldMatrix, float4(centerLocal, 1.0f)).xyz;
+    float4x4 worldToClipMatrix = Light_GetShadowWorldToClipMatrix(pc.targetIndex);
+    float3 lightRight = normalize(worldToClipMatrix[0].xyz);
+    // Remove the projection's Vulkan Y flip to recover the light view's up direction.
+    float3 lightUp = -normalize(worldToClipMatrix[1].xyz);
     float2 vertexOffset = renderWidth * (input.uv.xy - 0.5f);
-    float3 vertPosWorld = centerWorld + Camera_GetRight() * vertexOffset.x + Camera_GetUp() * vertexOffset.y;
-    float4 pos = float4(vertPosWorld, 1.0f);
+    float3 vertPosWorld = centerWorld + lightRight * vertexOffset.x + lightUp * vertexOffset.y;
 
     VertexOutput output;
-    output.clipPosition = mul(Light_GetShadowWorldToClipMatrix(pc.targetIndex), float4(vertPosWorld, 1.0f));
+    output.clipPosition = mul(worldToClipMatrix, float4(vertPosWorld, 1.0f));
     output.layer = pc.targetIndex;
     return output;
 }
