@@ -8,7 +8,8 @@ namespace fluidDynamics
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SphFluid3dGpu::SphFluid3dGpu()
+	SphFluid3dGpu::SphFluid3dGpu(Texture& environmentMap)
+		: m_pEnvironmentMap(&environmentMap)
 	{
 		// Material setup:
 		m_particleMaterial = MaterialManager::TryGetForwardMaterial("particleMaterial3d");
@@ -16,6 +17,7 @@ namespace fluidDynamics
 		m_particleMaterial.SetShadowMaterial(particleShadowMaterial);
 		m_volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
 		m_volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// Drawing back-facing triangles enables the camera to enter the fluid volume while it remains rendered.
+		m_water0ComputeShader = ComputeShaderManager::TryGetComputeShader("water0");
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_callProperties = CallProperties(m_particleMaterial);
@@ -49,21 +51,19 @@ namespace fluidDynamics
 			SetAttractorStrength(10.0f);
 			SetAttractorState(0);
 
-			// Particle visuals:
-			SetRenderParticles(false);
+			// Visuals:
+			SetRenderMode(RenderMode::water);
+			// Particles:
 			SetColorMode(0);
 			SetVisualRadius(0.2f);
-
-			// Volumetric visuals:
-			SetRenderVolumetricDensity(true);
+			// Cloud:
 			SetVolumetricDensityResolution(Uint3(160, 120, 100));
 			SetVolumetricDensityRayStepLength(0.4f);
             SetVolumetricDensityAbsorption(0.0001f);
 			SetVolumetricScattering(Float3(0.01f, 0.04f, 0.08f));
-
-            // Lighting:
 			SetRenderVolumetricLight(true);
 			SetVolumetricLightingResolution(Uint3(120));
+			// Water:
 		}
 		m_forceSetters = false;
 
@@ -97,6 +97,7 @@ namespace fluidDynamics
 				m_tripleData.ReallocateOpticalDepthTexture3d(m_volumetricLightingResolution);
 			m_pendingVolumetricDensityResolutionChange = false;
 			m_pendingVolumetricLightingResolutionChange = false;
+			m_pendingRenderRefresh = true;
 		}
 		// ToDo: update optical depth when the directional light or lighting settings change while the simulation is paused.
 		if (!m_isRunning)
@@ -122,23 +123,11 @@ namespace fluidDynamics
 		}
 		m_timeStep++;
 
-        // ComputeDensityTexture3d:
-		if (physicsDataWritten && m_renderVolumetricDensity)
+		// Refresh volume textures for the newly written particle state:
+		if (physicsDataWritten && (m_renderMode == RenderMode::cloud || m_renderMode == RenderMode::water))
 		{
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
-			m_tripleData.fluidBounds[sourceDataIndex] = m_settings.fluidBounds;
-			m_tripleData.extinctionCoefficients[sourceDataIndex] = Float3(m_volumetricDensityAbsorption) + m_volumetricScattering;
-			SphFluid3dGpuSolver::ComputeDensityTexture3d(m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex);
-			RotatedBounds lightBounds;
-			if (m_renderVolumetricLight && TryGetDirectionalLightBounds(lightBounds))
-			{
-				m_tripleData.opticalDepthBounds[sourceDataIndex] = lightBounds;
-				m_tripleData.hasOpticalDepthTexture3d[sourceDataIndex] = true;
-                Compute::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
-				SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(m_computeShaders, m_tripleData, sourceDataIndex);
-			}
-			else
-				m_tripleData.hasOpticalDepthTexture3d[sourceDataIndex] = false;
+			RecordVolumetricRenderData(m_computeShaders, sourceDataIndex);
+			m_pendingRenderRefresh = false;
 		}
 	}
 	void SphFluid3dGpu::Update()
@@ -169,6 +158,8 @@ namespace fluidDynamics
 		if (m_reset)
 			return;
 		m_tripleBufferState.PublishFinishedWrites();
+		if (m_pendingRenderRefresh)
+			RefreshRenderData();
 
 		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
@@ -202,13 +193,12 @@ namespace fluidDynamics
 			CallProperties callProperties = Renderer::DrawMesh(drawData);
 			callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
-		if (m_renderParticles || m_renderVolumetricDensity)
+		m_tripleBufferState.MarkRead();
+		m_lastRenderFrameIndex = Renderer::GetFrameIndex();
+		uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
+		switch (m_renderMode)
 		{
-			m_tripleBufferState.MarkRead();
-			uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
-
-			// Particle rendering:
-			if (m_renderParticles)
+			case RenderMode::particles:
 			{
 				m_particleMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
 				m_particleMaterial.SetBuffer("velocityBuffer", m_tripleData.velocityBuffer.GetBuffer(readDataIndex));
@@ -220,16 +210,15 @@ namespace fluidDynamics
 					shadowMaterial.SetBuffer("positionBuffer", m_tripleData.positionBuffer.GetBuffer(readDataIndex));
 				DrawData drawData(localToWorld, m_particleMesh, m_particleMaterial, m_particleCount, nullptr, true, true);
 				Renderer::DrawMesh(drawData, m_callProperties);
+				break;
 			}
-
-			// Volumetric density rendering:
-			if (m_renderVolumetricDensity)
+			case RenderMode::cloud:
 			{
 				const RotatedBounds& fluidBounds = m_tripleData.fluidBounds[readDataIndex];
-                
-                // Compute fluid to light matrix:
+
+            	// Compute fluid to light matrix:
 				Float4x4 fluidToLightMatrix = Float4x4::identity;
-                bool renderVolumetricLight = m_renderVolumetricLight && m_tripleData.hasOpticalDepthTexture3d[readDataIndex];
+            	bool renderVolumetricLight = m_renderVolumetricLight && m_tripleData.hasOpticalDepthTexture3d[readDataIndex];
 				if (renderVolumetricLight)
 				{
 					const RotatedBounds& lightBounds = m_tripleData.opticalDepthBounds[readDataIndex];
@@ -246,7 +235,7 @@ namespace fluidDynamics
 					fluidToLightMatrix = simulationToLightMatrix * fluidToSimulationMatrix;
 				}
 
-                // Set shader values and bind textures:
+            	// Set shader values and bind textures:
 				m_volumeRaycastMaterial.SetValue("Values", "fluidSize", fluidBounds.localBounds.GetSize());
 				m_volumeRaycastMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
 				m_volumeRaycastMaterial.SetValue("Values", "fluidToLightMatrix", fluidToLightMatrix);
@@ -254,14 +243,42 @@ namespace fluidDynamics
 				m_volumeRaycastMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
 				m_volumeRaycastMaterial.SetTexture("opticalDepthTexture", m_tripleData.opticalDepthTexture3d[readDataIndex]);
 
-                // Draw density cube mesh:
+            	// Draw density cube mesh:
 				Float4x4 densityCubeLocalToWorld = localToWorld
 					* Float4x4::Translate(fluidBounds.localBounds.center)
 					* fluidBounds.GetRotation4x4()
 					* Float4x4::Scale(fluidBounds.localBounds.GetSize());
 				DrawData drawData(densityCubeLocalToWorld, m_volumetricDensityCube, m_volumeRaycastMaterial, false, false);
 				Renderer::DrawMesh(drawData);
+				break;
 			}
+			case RenderMode::water:
+			{
+				const RotatedBounds& fluidBounds = m_tripleData.fluidBounds[readDataIndex];
+				Float4x4 fluidToWorld = localToWorld
+					* Float4x4::Translate(fluidBounds.localBounds.center)
+					* fluidBounds.GetRotation4x4()
+					* Float4x4::Scale(fluidBounds.localBounds.GetSize())
+					* Float4x4::Translate(Float3(-0.5f));
+
+				CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(m_water0ComputeShader);
+				callProperties.SetValue("CallValues", "worldToFluidMatrix", fluidToWorld.Inverse());
+				callProperties.SetValue("CallValues", "surfaceDensity", 0.5f * m_settings.targetDensity);
+				callProperties.SetValue("CallValues", "densityRayStepLength", m_volumetricDensityRayStepLength);
+				callProperties.SetValue("CallValues", "surfaceBias", 0.01f);
+				callProperties.SetValue("CallValues", "fluidIndexOfRefraction", 1.333f);
+				callProperties.SetValue("CallValues", "absorption", Float3(m_volumetricDensityAbsorption));
+				callProperties.SetValue("CallValues", "normalSampleDistance", 1.0f);
+				callProperties.SetValue("CallValues", "sceneRayStepLength", m_volumetricDensityRayStepLength);
+				callProperties.SetValue("CallValues", "sceneRayMaxDistance", 0.0f);
+				callProperties.SetValue("CallValues", "sceneSurfaceThickness", 0.05f);
+				callProperties.SetValue("CallValues", "environmentMipLevel", 3.0f);
+				callProperties.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
+				callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
+				break;
+			}
+		default:
+			break;
 		}
 	}
 
@@ -455,11 +472,16 @@ namespace fluidDynamics
 			m_computeShaders.SetAttractorPoint(m_attractor.point);
 		}
 	}
-    // Particle visuals:
-	void SphFluid3dGpu::SetRenderParticles(bool renderParticles)
+	// Visuals:
+	void SphFluid3dGpu::SetRenderMode(SphFluid3dGpu::RenderMode renderMode)
 	{
-		m_renderParticles = renderParticles;
+		if (m_renderMode != renderMode)
+		{
+			m_renderMode = renderMode;
+			m_pendingRenderRefresh = true;
+		}
 	}
+    // Particles:
 	void SphFluid3dGpu::SetColorMode(int colorMode)
 	{
 		colorMode = math::Clamp(colorMode, 0, 3);
@@ -479,11 +501,7 @@ namespace fluidDynamics
 			m_particleMaterial.GetShadowMaterial().SetValue("Values", "renderWidth", 2.0f * m_visualRadius);
 		}
 	}
-    // Volumetric visuals:
-	void SphFluid3dGpu::SetRenderVolumetricDensity(bool renderVolumetricDensity)
-	{
-		m_renderVolumetricDensity = renderVolumetricDensity;
-	}
+    // Cloud:
 	void SphFluid3dGpu::SetVolumetricDensityResolution(const Uint3& volumetricDensityResolution)
 	{
 		Uint3 resolution = Uint3::Max(volumetricDensityResolution, Uint3::one);
@@ -517,7 +535,6 @@ namespace fluidDynamics
 			m_volumeRaycastMaterial.SetValue("Values", "scattering", m_volumetricScattering);
 		}
 	}
-    // Lighting:
 	void SphFluid3dGpu::SetRenderVolumetricLight(bool renderVolumetricLight)
 	{
 		m_renderVolumetricLight = renderVolumetricLight;
@@ -531,6 +548,7 @@ namespace fluidDynamics
 			m_pendingVolumetricLightingResolutionChange = true;
 		}
 	}
+	// Water:
 
 
     
@@ -627,11 +645,12 @@ namespace fluidDynamics
     {
         return m_attractor.point;
     }
-    // Particle visuals:
-	bool SphFluid3dGpu::GetRenderParticles() const
+	// Visuals:
+	SphFluid3dGpu::RenderMode SphFluid3dGpu::GetRenderMode() const
 	{
-		return m_renderParticles;
+		return m_renderMode;
 	}
+    // Particles:
 	int SphFluid3dGpu::GetColorMode() const
 	{
 		return m_colorMode;
@@ -640,11 +659,7 @@ namespace fluidDynamics
 	{
 		return m_visualRadius;
 	}
-    // Volumetric visuals:
-	bool SphFluid3dGpu::GetRenderVolumetricDensity() const
-	{
-		return m_renderVolumetricDensity;
-	}
+    // Cloud:
 	Uint3 SphFluid3dGpu::GetVolumetricDensityResolution() const
 	{
 		return m_volumetricDensityResolution;
@@ -661,7 +676,6 @@ namespace fluidDynamics
     {
         return m_volumetricScattering;
     }
-    // Lighting:
 	bool SphFluid3dGpu::GetRenderVolumetricLight() const
 	{
 		return m_renderVolumetricLight;
@@ -670,6 +684,10 @@ namespace fluidDynamics
 	{
 		return m_volumetricLightingResolution;
 	}
+	// Water:
+
+
+
 	// Debugging:
 	void SphFluid3dGpu::Print()
 	{
@@ -709,37 +727,57 @@ namespace fluidDynamics
 		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
 		m_scratchData.Reallocate(m_particleCount);
 		m_tripleData.Reallocate(m_particleCount, m_volumetricDensityResolution, m_volumetricLightingResolution);
-		RotatedBounds lightBounds;
-		bool hasDirectionalLight = TryGetDirectionalLightBounds(lightBounds);
 
 		// Reset all buffer slots:
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 		{
 			SphFluid3dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius);
-			if (m_renderVolumetricDensity)
-			{
-				Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
-				m_tripleData.fluidBounds[i] = m_settings.fluidBounds;
-				m_tripleData.extinctionCoefficients[i] = Float3(m_volumetricDensityAbsorption) + m_volumetricScattering;
-				SphFluid3dGpuSolver::ComputeDensityTexture3d(m_computeShaders, m_scratchData, m_tripleData, i);
-				if (m_renderVolumetricLight && hasDirectionalLight)
-				{
-					m_tripleData.opticalDepthBounds[i] = lightBounds;
-					m_tripleData.hasOpticalDepthTexture3d[i] = true;
-					Compute::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
-					SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(m_computeShaders, m_tripleData, i);
-				}
-				else
-					m_tripleData.hasOpticalDepthTexture3d[i] = false;
-			}
+			if (m_renderMode == RenderMode::cloud || m_renderMode == RenderMode::water)
+				RecordVolumetricRenderData(m_computeShaders, i);
 			else
 				m_tripleData.hasOpticalDepthTexture3d[i] = false;
 			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		}
 		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 
+		m_pendingRenderRefresh = false;
 		m_isRunning = false;
+	}
+	void SphFluid3dGpu::RefreshRenderData()
+	{
+		if (m_renderMode == RenderMode::cloud || m_renderMode == RenderMode::water)
+		{
+			// Finish particle writes and graphics reads before rebuilding the current read slot.
+			Compute::Physics::WaitForFinish();
+			m_tripleBufferState.PublishFinishedWrites();
+			if (m_lastRenderFrameIndex != PhysicsTripleBufferState::invalidFrameIndex)
+				Renderer::WaitForFrameFinished(m_lastRenderFrameIndex);
+
+			SphFluid3dGpuSolver::ComputeShaders computeShaders = m_computeShaders;
+			computeShaders.computeType = ComputeType::async;
+			computeShaders.sessionID = Compute::Async::CreateComputeSession();
+			RecordVolumetricRenderData(computeShaders, m_tripleBufferState.GetReadIndex());
+			Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		}
+		m_pendingRenderRefresh = false;
+	}
+	void SphFluid3dGpu::RecordVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex)
+	{
+		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
+		m_tripleData.fluidBounds[dataIndex] = m_settings.fluidBounds;
+		m_tripleData.extinctionCoefficients[dataIndex] = Float3(m_volumetricDensityAbsorption) + m_volumetricScattering;
+		SphFluid3dGpuSolver::ComputeDensityTexture3d(computeShaders, m_scratchData, m_tripleData, dataIndex);
+		RotatedBounds lightBounds;
+		if (m_renderVolumetricLight && TryGetDirectionalLightBounds(lightBounds))
+		{
+			m_tripleData.opticalDepthBounds[dataIndex] = lightBounds;
+			m_tripleData.hasOpticalDepthTexture3d[dataIndex] = true;
+			Compute::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(computeShaders.computeType, computeShaders.sessionID);
+			SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(computeShaders, m_tripleData, dataIndex);
+		}
+		else
+			m_tripleData.hasOpticalDepthTexture3d[dataIndex] = false;
 	}
 	bool SphFluid3dGpu::TryGetDirectionalLightBounds(RotatedBounds& lightBounds)
 	{

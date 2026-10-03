@@ -18,6 +18,14 @@ namespace fluidDynamics
 {
 	class SphFluid3dGpu : public Component
 	{
+	public: // Enums:
+		enum class RenderMode
+		{
+			particles,
+			cloud,
+			water
+		};
+
 	private: // Members:
 		// Management:
 		bool m_isRunning = false;
@@ -28,6 +36,7 @@ namespace fluidDynamics
 		float m_physicsTimeScale = 1.25f;	// gets multiplied to certain values physical quantities to make the physics itself interact faster.
 		uint32_t m_timeStep = 0;
 		int m_particleCount = -1;
+		float m_initialDistributionRadius;
 		bool m_forceSetters = false;
 
 		// Settings:
@@ -41,33 +50,38 @@ namespace fluidDynamics
 		PhysicsTripleBufferState m_tripleBufferState;
 		uint64_t m_pendingResetSessionID = Compute::Physics::invalidPhysicsSessionID;
 
-		// Particle visuals:
-		bool m_renderParticles;
+		// Visuals:
+		RenderMode m_renderMode = RenderMode::water;
+		bool m_pendingRenderRefresh = false;
+		uint32_t m_lastRenderFrameIndex = PhysicsTripleBufferState::invalidFrameIndex;
+		// Particles:
 		int m_colorMode;
 		float m_visualRadius;
-		float m_initialDistributionRadius;
-        // Volumetric visuals:
-		bool m_renderVolumetricDensity;
+        // Cloud:
 		Uint3 m_volumetricDensityResolution;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
 		Float3 m_volumetricScattering;
-        // Lighting:
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
+		// Water:
+		
         // Internal:
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
 		Mesh m_volumetricDensityCube;
 		ForwardMaterial m_particleMaterial;
 		ForwardMaterial m_volumeRaycastMaterial;
+		//ComputeShader m_waterComputeShader;
+		ComputeShader m_water0ComputeShader;
 		CallProperties m_callProperties;
+		Texture* m_pEnvironmentMap;
 
 		// Editor Window:
 		std::unique_ptr<emberEditor::SphFluid3dGpuEditorWindow> editorWindow;
 
 	public: // Methods:
-		SphFluid3dGpu();
+		SphFluid3dGpu(Texture& environmentMap);
 		~SphFluid3dGpu();
 
 		// Overrides:
@@ -102,18 +116,19 @@ namespace fluidDynamics
 		void SetAttractorStrength(float attractorStrength);
 		void SetAttractorState(int attractorState);
 		void SetAttractorPoint(const Float3& attractorPoint);
-		// Particle visuals:
-		void SetRenderParticles(bool renderParticles);
+		// Visuals:
+		void SetRenderMode(RenderMode renderMode);
+		// Particles:
 		void SetColorMode(int colorMode);
 		void SetVisualRadius(float visualRadius);
-		// Volumetric visuals:
-		void SetRenderVolumetricDensity(bool renderVolumetricDensity);
+		// Cloud:
 		void SetVolumetricDensityResolution(const Uint3& volumetricDensityResolution);
 		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
 		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
 		void SetVolumetricScattering(const Float3& volumetricScattering);
 		void SetRenderVolumetricLight(bool renderVolumetricLight);
 		void SetVolumetricLightingResolution(const Uint3& volumetricLightingResolution);
+		// Water:
 
 		// Getters:
 		// Management:
@@ -142,25 +157,29 @@ namespace fluidDynamics
 		float GetAttractorStrength() const;
 		int GetAttractorState() const;
 		Float3 GetAttractorPoint() const;
-		// Particle visuals:
-		bool GetRenderParticles() const;
+		// Visuals:
+		RenderMode GetRenderMode() const;
+		// Particles:
 		int GetColorMode() const;
 		float GetVisualRadius() const;
-		// Volumetric visuals:
+		// Cloud:
 		bool GetRenderVolumetricDensity() const;
+		bool GetRenderScreenSpaceFluid() const;
 		Uint3 GetVolumetricDensityResolution() const;
 		float GetVolumetricDensityRayStepLength() const;
 		float GetVolumetricDensityAbsorption() const;
 		Float3 GetVolumetricScattering() const;
-        // Lighting:
 		bool GetRenderVolumetricLight() const;
 		Uint3 GetVolumetricLightingResolution() const;
+        // Water:
 
 		// Debugging:
 		void Print();
 
 	private: // Methods:
 		void RecordReset();
+		void RefreshRenderData();
+		void RecordVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex);
 		bool TryGetDirectionalLightBounds(RotatedBounds& lightBounds);
 	};
 }

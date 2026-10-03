@@ -41,19 +41,19 @@ namespace emberEditor
 		float m_gravity;
 		float m_attractorRadius;
 		float m_attractorStrength;
-		// Particle visuals:
-		bool m_renderParticles;
+		// Visuals:
+		fluidDynamics::SphFluid3dGpu::RenderMode m_renderMode;
+		// Particles:
 		int m_colorMode;
 		float m_visualRadius;
-		// Volumetric visuals:
-		bool m_renderVolumetricDensity;
+		// Cloud:
 		Uint3 m_volumetricDensityResolution;
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
 		Float3 m_volumetricScattering;
-		// Lighting:
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
+		// Water:
 		// Internal:
 		RotatedBounds m_fluidBounds;
 
@@ -70,13 +70,6 @@ namespace emberEditor
 			m_boundsHandleTarget.SetBounds(&m_fluidBounds);
 			m_transformHandle.SetTarget(&m_boundsHandleTarget);
 			GetData();
-
-			// No serialised data available: get member values from script:
-			//if (...)
-				// GetData();
-			// Get member values from data serialization:
-			//else
-				// Set m_... values and do m_pScript->Set...() for all members.
 		}
 		void PreRender() override
 		{
@@ -113,32 +106,45 @@ namespace emberEditor
 			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
 			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
 			Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
-			// Particle visuals:
+			// Visuals:
 			Gui::SeparatorText("Particle Visuals");
-			Gui::Checkbox("Render Particles:", &m_renderParticles);
-			if (m_renderParticles)
+			if (emberCore::Gui::Selectable("0 - Particles", m_renderMode == fluidDynamics::SphFluid3dGpu::RenderMode::particles))
+				m_renderMode = fluidDynamics::SphFluid3dGpu::RenderMode::particles;
+			if (emberCore::Gui::Selectable("1 - Cloud", m_renderMode == fluidDynamics::SphFluid3dGpu::RenderMode::cloud))
+				m_renderMode = fluidDynamics::SphFluid3dGpu::RenderMode::cloud;
+			if (emberCore::Gui::Selectable("2 - Water", m_renderMode == fluidDynamics::SphFluid3dGpu::RenderMode::water))
+				m_renderMode = fluidDynamics::SphFluid3dGpu::RenderMode::water;
+			
+			switch (m_renderMode)
 			{
-				Gui::DragInt("Color Mode:", &m_colorMode);
-				Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
-			}
-			// Volumetric visuals:
-			Gui::SeparatorText("Volumetric Visuals");
-			Gui::Checkbox("Render Volumetric Density:", &m_renderVolumetricDensity);
-			if (m_renderVolumetricDensity)
-			{
-				Gui::DragUint3("Density Resolution:", &m_volumetricDensityResolution);
-				m_volumetricDensityResolution = Uint3::Max(Uint3::one, m_volumetricDensityResolution);
-				Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
-				Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
-				Gui::DragFloat3("Scattering:", &m_volumetricScattering, 0.01f, 0.1f, "%.8f");
-			}
-			// Lighting:
-			Gui::SeparatorText("Lighting");
-			Gui::Checkbox("Render Volumetric Light:", &m_renderVolumetricLight);
-			if (m_renderVolumetricLight)
-			{
-				Gui::DragUint3("Resolution:", &m_volumetricLightingResolution);
-				m_volumetricLightingResolution = Uint3::Max(Uint3::one, m_volumetricLightingResolution);
+				case fluidDynamics::SphFluid3dGpu::RenderMode::particles:
+				{
+					Gui::DragInt("Color Mode:", &m_colorMode);
+					Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+					break;
+				}
+				case fluidDynamics::SphFluid3dGpu::RenderMode::cloud:
+				{
+					Gui::DragUint3("Density Resolution:", &m_volumetricDensityResolution);
+					m_volumetricDensityResolution = Uint3::Max(Uint3::one, m_volumetricDensityResolution);
+					Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
+					Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
+					Gui::DragFloat3("Scattering:", &m_volumetricScattering, 0.01f, 0.1f, "%.8f");
+					Gui::SeparatorText("Lighting");
+					Gui::Checkbox("Render Volumetric Light:", &m_renderVolumetricLight);
+					if (m_renderVolumetricLight)
+					{
+						Gui::DragUint3("Resolution:", &m_volumetricLightingResolution);
+						m_volumetricLightingResolution = Uint3::Max(Uint3::one, m_volumetricLightingResolution);
+					}
+					break;
+				}
+				case fluidDynamics::SphFluid3dGpu::RenderMode::water:
+				{
+					break;
+				}
+				default:
+					break;
 			}
 
 			// Buttons:
@@ -180,16 +186,18 @@ namespace emberEditor
 			m_attractorRadius = m_pScript->GetAttractorRadius();
 			m_attractorStrength = m_pScript->GetAttractorStrength();
 			// Visuals:
+			m_renderMode = m_pScript->GetRenderMode();
+			// Particles:
 			m_colorMode = m_pScript->GetColorMode();
 			m_visualRadius = m_pScript->GetVisualRadius();
-			m_renderParticles = m_pScript->GetRenderParticles();
-			m_renderVolumetricDensity = m_pScript->GetRenderVolumetricDensity();
+			// Cloud:
 			m_volumetricDensityResolution = m_pScript->GetVolumetricDensityResolution();
 			m_volumetricDensityRayStepLength = m_pScript->GetVolumetricDensityRayStepLength();
 			m_volumetricDensityAbsorption = m_pScript->GetVolumetricDensityAbsorption();
 			m_volumetricScattering = m_pScript->GetVolumetricScattering();
 			m_renderVolumetricLight = m_pScript->GetRenderVolumetricLight();
 			m_volumetricLightingResolution = m_pScript->GetVolumetricLightingResolution();
+			// Water:
 		}
 		void SetData()
 		{
@@ -214,16 +222,18 @@ namespace emberEditor
 			m_pScript->SetAttractorRadius(m_attractorRadius);
 			m_pScript->SetAttractorStrength(m_attractorStrength);
 			// Visuals:
+			m_pScript->SetRenderMode(m_renderMode);
+			// Particles:
 			m_pScript->SetColorMode(m_colorMode);
 			m_pScript->SetVisualRadius(m_visualRadius);
-			m_pScript->SetRenderParticles(m_renderParticles);
-			m_pScript->SetRenderVolumetricDensity(m_renderVolumetricDensity);
+			// Cloud:
 			m_pScript->SetVolumetricDensityResolution(m_volumetricDensityResolution);
 			m_pScript->SetVolumetricDensityRayStepLength(m_volumetricDensityRayStepLength);
 			m_pScript->SetVolumetricDensityAbsorption(m_volumetricDensityAbsorption);
 			m_pScript->SetVolumetricScattering(m_volumetricScattering);
 			m_pScript->SetRenderVolumetricLight(m_renderVolumetricLight);
 			m_pScript->SetVolumetricLightingResolution(m_volumetricLightingResolution);
+			// Water:
 		}
 	};
 }

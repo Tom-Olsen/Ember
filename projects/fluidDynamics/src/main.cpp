@@ -134,7 +134,7 @@ Scene* Fluid3dScene()
 	}
 	{ // Sph Fluid 3d Gpu:
 		Entity entity = Entity::Create("sphFluid3dGpu");
-		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>();
+		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>(skyboxTexture);
 	}
 	return pScene;
 }
@@ -157,8 +157,8 @@ int main()
 		appCreateInfo.vSyncEnabled = false;
 		appCreateInfo.framesInFlight = 2;
 		appCreateInfo.msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
-		appCreateInfo.windowWidth  = 2560; //1920;
-		appCreateInfo.windowHeight = 1440; //1080;
+		appCreateInfo.windowWidth  = 3840; //2560; //1920;
+		appCreateInfo.windowHeight = 2160; //1440; //1080;
 		appCreateInfo.renderWidth  = 2560; //1280;
 		appCreateInfo.renderHeight = 1440; //720;
 		appCreateInfo.maxDirectionalLights = 1; // single directional light.
