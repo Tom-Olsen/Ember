@@ -1,0 +1,451 @@
+ECS REDESIGN FINDINGS AND DISCUSSION CONTEXT
+==========================================
+
+Purpose and status
+------------------
+Redesign the existing entity/component system so that its lifecycle, identity and structural
+changes work reliably. Only then add entity-independent SceneSystems.
+
+This file records verified current problems, requirements and unresolved design
+questions. Brainstorm proposals are context, not authorization to implement them.
+Resolve the open policy choices before implementation; do not silently turn a
+proposal below into an API contract.
+
+
+1. ISSUES WITH THE CURRENT SYSTEM
+================================
+
+1.1 Start is not a reliable initialization phase
+----------------------------------------------
+Scene::Start() dispatches Start to the currently active components. Components
+added later never receive it. Disabled components/entities and components in a
+disabled scene are skipped. There is no per-instance started state, so calling
+Scene::Start() again repeats initialization on existing active components.
+
+Entity::AddComponent() constructs the object before assigning its scene and entity
+fields. Constructors therefore cannot rely on ownership access. Component's
+constructor currently leaves m_pScene and m_entityHandle uninitialized; checking
+m_pScene against nullptr does not make reading an uninitialized pointer safe.
+
+Relevant files: ecsClasses/scene.cpp, componentRegistry.h, entity.inl, component.cpp
+under engine/libs/entityComponentSystem/src/.
+
+1.2 OnDestroy exists but is never dispatched
+-----------------------------------------
+Entity::RemoveComponent<T>() immediately removes registry storage.
+Scene::DestroyEntity() immediately destroys the registry entity.
+Scene's destructor invokes registered clear<T>() callbacks and then clears the
+registry. None of these paths calls Component::OnDestroy().
+
+Adding OnDestroy only to RemoveComponent would leave entity destruction and scene
+teardown uncovered. Cleanup must also work for disabled and never-started objects.
+Normal update eligibility must not be used to decide whether cleanup runs.
+
+1.3 Structural mutations have no lifecycle/traversal policy
+---------------------------------------------------------
+ComponentRegistry traverses live EnTT views and invokes user callbacks directly.
+Those callbacks can remove components, destroy entities or add new components.
+Different mutation cases have different effects on iteration and storage; the
+current dispatcher does not define or enforce safe behavior for them.
+
+Depending on a component type's EnTT storage policy, removal may relocate another
+component. A callback may destroy itself or another instance of its own type.
+The lifetime of the currently executing object, unvisited entries and surviving
+raw pointers must all be considered. Do not assume every EnTT mutation is unsafe,
+or that every mutation is safe: verify the chosen storage and traversal contract.
+
+Adding a previously unregistered type also appends to the global callback vectors
+while a phase may be traversing them. Deferring destruction alone will not solve
+addition and callback-registration mutations.
+
+1.4 Type registration can duplicate callbacks
+--------------------------------------------
+The static registered flag is inside AddComponent<T, Args...>(). It belongs to
+each full template specialization, including constructor argument types. Adding
+the same T through different argument signatures can therefore register T again.
+ComponentRegistry::Register<T>() itself also has no duplicate-registration guard.
+
+This can make lifecycle callbacks run multiple times. Type registration must be
+once per component type, separate from each component instance's initialization.
+Current global registration order also determines type dispatch order across all
+scenes; there is no explicit dependency or deterministic scene-local order policy.
+
+1.5 Entity identity and name bookkeeping are inconsistent
+--------------------------------------------------------
+Scene::DestroyEntity() erases a name-map iterator and then reads it->second to
+erase the reverse mapping. This is use of an invalidated iterator.
+
+Entity::SetName() updates the name-to-handle map and that wrapper's cached name,
+but not the handle-to-name map or other Entity wrapper copies. Component::GetEntity()
+uses the reverse map and operator[], which can insert an entry instead of failing
+when the handle is missing.
+
+Entity::Destroy() destroys by cached name rather than validating and destroying
+its versioned handle. A stale wrapper can consequently target a different entity
+that later reused that name. Names should be metadata, not object identity.
+
+1.6 The existing APIs do not provide the intended handle model
+-------------------------------------------------------------
+Entity is a non-owning value wrapper around a registry handle. Destroying a wrapper
+does not destroy the entity. Component, however, is the actual registry-stored
+object; AddComponent/GetComponent return raw pointers to it. Components are not
+currently lightweight value handles that can safely become invalid after removal.
+
+Entity validity still dereferences a raw Scene pointer, which can dangle after
+scene destruction. Several component-access methods use it without first checking
+the entity. A versioned entity handle alone would also not distinguish two
+successive components of the same type on the same surviving entity.
+
+The scene stores a raw active-camera pointer and does not repair it when the
+camera component/entity is removed. Scene::s_pActiveScene is not reset on scene
+destruction. SetIsEnabled(false) still assigns that scene as the active scene.
+Scene ownership, activation and stored references need a consistent contract.
+
+1.7 Scene-wide behavior is currently forced into unrelated abstractions
+----------------------------------------------------------------------
+PostRenderEffects is a component despite providing scene-wide behavior. A common
+place for selecting/providing an environment cubemap is also missing. Reusing an
+EditorWindow as the runtime owner would couple scene behavior to editor UI.
+
+These are reasons for a future SceneSystem abstraction, but adding it now would
+duplicate unresolved component lifecycle and destruction problems.
+
+
+2. WHAT MUST BE DECIDED BEFORE IMPLEMENTATION
+============================================
+
+2.1 Requirements already established in the discussion
+----------------------------------------------------
+- Start must initialize existing components at scene startup and components added
+  afterward. The earlier idea of Start occurring only at scene startup was replaced.
+- Initialization must be once per instance and precede its normal update callbacks.
+- Requesting destruction of an entity or removal of another entity's component
+  during Start/Update/etc. must be supported. An entity killing another in Update
+  is an essential use case; banning normal callback-time removal is not acceptable.
+- OnDestroy must run before the actual component destructor on every removal path.
+- Raw-pointer misuse by application code is the caller's responsibility. Engine
+  traversal must nevertheless protect its own executing callbacks and storage.
+- The preferred public-reference direction is lightweight value handles that become
+  invalid when their underlying object no longer exists.
+- SceneSystems are postponed until the component ECS is reliable.
+
+Deferred destruction became the preferred direction in the discussion after the
+problems with immediate storage mutation were considered. Its exact timing, state
+model and replacement behavior were still being brainstormed, not finalized.
+
+2.2 Start scheduling and eligibility
+-----------------------------------
+Decide whether late-added components receive Start inside AddComponent or at a
+defined initialization point before their first update. Immediate Start means
+caller configuration after AddComponent happens after initialization. A scheduled
+Start permits that configuration but needs an explicit callback inclusion rule.
+
+Decide how disabled components initialize. The proposed reliable-initialization
+contract is to run Start independently of enabled state; defer only normal updates.
+If initialization instead waits for activation, document that behavior explicitly.
+
+Define behavior for repeated Scene::Start(), re-enabling, additions during Start,
+recursive creation, self-removal during Start and failed initialization. Bind the
+owner and make lookup possible before Start. Pending destruction should prevent
+future Start/update calls. Define AddComponent's return value if Start removes the
+new instance before AddComponent returns.
+
+An optional OnCreation was discussed under the abandoned scene-start-only Start
+policy. It is not a replacement for the current Start requirement. Add another
+callback only if it has a separate, clearly needed purpose.
+
+2.3 Lifecycle state and public access
+------------------------------------
+Define the states/transitions for constructed, attached, initialized, active,
+pending destruction and destroyed. Decide which states require stored flags and
+which can be derived. Enabled state, initialization state and pending destruction
+have different meanings.
+
+Define GetIsValid/GetIsActive/HasComponent/GetComponent for pending objects. Does
+logical removal hide an object immediately while keeping it physically alive for
+cleanup? Can OnDestroy access pending siblings and its owning entity? Are pending
+objects still listed in names, counts, scene bounds and editor selections?
+
+Do not promise that a pending flag prevents arbitrary manual calls through a raw
+pointer. It can gate engine callbacks and checked public operations. It cannot
+abort the callback already executing or undo work already submitted.
+
+The GetX/TryGetX repository rule was also under reconsideration. Decide missing,
+pending and invalid-object behavior explicitly; do not use this redesign to impose
+an unapproved getter-policy change. GetScene's existing behavior was accepted for
+the earlier work.
+
+2.4 Ownership, identity and storage
+----------------------------------
+Decide who owns actual component instances, how handles resolve them and how a
+handle detects owner-scene destruction without dereferencing a dangling pointer.
+Entity handles and component handles need stale-reference protection. Same-type
+component replacement needs its own instance identity/generation, beyond the
+entity's generation. Queued operations must target that identity too.
+
+Choose a storage policy deliberately: EnTT objects with an appropriate stability
+policy, separately owned stable instances, or another explicit representation.
+Verify the guarantees of the vendored EnTT version when making that decision.
+Do not silently force all components to be nonmovable as a shortcut.
+
+Coordinate runtime identity with ToDoSerializationAndScripting.txt. Runtime
+index/generation handles and persistent serialized IDs serve different purposes.
+Do not expand this task into implementing serialization or scripting.
+
+2.5 Destruction timing and queue ownership
+-----------------------------------------
+Decide whether OnDestroy runs immediately when removal is requested or during
+deferred cleanup just before the destructor. Define deduplication for repeated
+requests and overlapping component/entity requests. Define what happens when
+OnDestroy requests more destruction, creates objects or throws.
+
+Identify the actual cleanup boundary in application orchestration. After LateUpdate
+is not necessarily the end of the frame: rendering consumes queued work afterward,
+and editor rendering has additional steps. Resource ownership must allow queued
+draw/compute work to finish consuming referenced data. GPU resource retirement
+for frames in flight is a separate requirement from CPU callback safety.
+
+Also define cleanup when no ordinary frame follows: scene unload/switch, shutdown,
+never-started scenes and interrupted execution. A queue must not depend exclusively
+on a future LateUpdate. Define whether newly queued cleanup work is drained in the
+same flush or later, and guard against duplicate/reentrant teardown.
+
+2.6 Addition, replacement and phase inclusion
+--------------------------------------------
+Decide whether additions become callback-eligible in the current phase, next phase
+or next frame. Define behavior for new component types registered during dispatch.
+The ability to configure a newly added component immediately is separate from when
+its Start/update runs.
+
+Decide same-type remove-and-readd semantics explicitly. Supporting an immediate
+replacement while retaining the old object for cleanup requires a storage/identity
+design for retired instances. Alternatively, initially disallow same-type
+replacement until cleanup, with a clear API response. This choice is still open.
+
+2.7 Teardown dependencies and integration
+-----------------------------------------
+Decide whether all sibling OnDestroy callbacks run before any sibling storage is
+removed, or whether each callback is immediately followed by its destructor.
+Define scene-wide teardown order and the lifetime of mandatory Transform/EntityState.
+Define active-camera/active-scene repair and render-queue behavior on removal.
+
+Choose whether dispatch/removal functions need Scene&, a narrower lifecycle context
+or only entt::registry&. The earlier Scene& change enabled shared lifecycle helpers;
+it was not an EnTT requirement. Context should follow the responsibilities chosen.
+
+Keep eventual reloadable project modules in mind: global callbacks into unloaded
+code cannot remain registered forever. Registration ownership/revocation belongs
+with the serialization/scripting plan, not an immediate scripting implementation.
+
+
+3. BRAINSTORM IDEAS AND THEIR TRADEOFFS
+======================================
+
+3.1 Separate pending destruction from enabled state
+--------------------------------------------------
+Proposed names: m_queuedForDestroy or m_queuedForDestruction.
+
+Setting m_isEnabled = false would suppress ordinary callbacks, but is insufficient
+as destruction state: disabling is reversible, does not identify a queued operation
+and does not deduplicate cleanup. OnDestroy should run even for disabled objects,
+so its eligibility must be separate from update eligibility in either design.
+
+The old m_hasDestroyNotified name was confusing. A notification flag describes
+whether a callback already happened; a pending flag describes the interval between
+the destruction request and actual teardown. Do not retain redundant flags without
+a concrete lifecycle need.
+
+On request, immediately suppress all future engine lifecycle callbacks for that
+instance, including later callbacks in the same phase/frame and later fixed steps.
+Allow the currently executing callback to return safely. Re-enabling must not
+silently cancel destruction; cancellation, if needed, would be a separate policy.
+
+3.2 Entity-level pending state plus an explicit queue
+---------------------------------------------------
+One proposal: Component::GetIsQueuedForDestruction() combines its own pending state
+with its owning entity's pending state. Queue entity destruction once rather than
+touching every component when the request occurs. Components can then derive that
+they are pending without being individually marked immediately.
+
+Maintain a destruction queue so cleanup does not scan every component every frame.
+The pending query solves eligibility; the queue solves finding work to finalize.
+Queued component operations need instance identities, not just entity/type pairs.
+
+Alternative proposal: requesting entity destruction queues and marks every attached
+component. The final ECS stage runs each OnDestroy and removes its storage. This
+makes individual state explicit but requires coordination with already queued
+component removals and performs per-component work at request time.
+
+Both approaches must handle: component removal followed by entity destruction,
+entity destruction followed by component removal, repeated requests and requests
+from cleanup callbacks. Each instance receives OnDestroy and a destructor once.
+
+3.3 Choosing when OnDestroy runs
+-------------------------------
+Option A: notify during cleanup, just before actual teardown. This keeps OnDestroy
+close to object lifetime end and centralizes cleanup. The API must explain that
+requesting destruction has immediate logical effects but delayed notification.
+
+Option B: notify immediately on request but destroy storage later. This matches an
+expectation of immediate reaction, but callbacks become reentrant and must tolerate
+an object that remains physically alive after its cleanup has run.
+
+Option C: introduce a distinct immediate request notification only if a real use
+case requires it, retaining OnDestroy for final teardown. Avoid adding callbacks
+merely to cover hypothetical needs.
+
+An alternative teardown recommendation is to notify all components of an entity
+before destroying any of them, preserving sibling access during cleanup. The same
+principle could apply scene-wide. This conflicts with removing each component
+immediately after its notification; choose and document the required guarantee.
+
+3.4 Immediate logical detachment and replacement
+------------------------------------------------
+The desired workflow is to remove a component, immediately add/configure another
+and retain the old component long enough for safe deferred destruction. Different
+types are a simpler case; replacing the same type is the difficult case because
+the old instance still occupies that entity/type slot in ordinary EnTT storage.
+
+Possible design: detach the old instance from public lookup immediately, keep its
+backing object in retirement storage, and attach a new instance with a new identity.
+The retired component retains access to its owning entity for OnDestroy. Keep that
+owner alive until retired children have finished cleanup if the entity is removed.
+
+Do not move an executing component into retirement storage: that would undermine
+the callback-safety reason for deferral. This proposal needs stable backing storage
+or another design that changes attachment without relocating the live object.
+
+For the retired instance, GetComponent<T>() through its entity would find the new
+attached replacement, while 'this' still denotes the old object. Define this clearly.
+Stale handles and old queued requests must never resolve to or remove the replacement.
+
+The user explicitly treated this as uncertain brainstorming. A simpler initial
+replacement policy remains possible; do not implement either choice without deciding.
+
+3.5 Value wrappers and borrowed pointers
+---------------------------------------
+Preferred direction: retain lightweight value Entity handles and introduce actual
+component handles rather than copying registry-stored Component objects. Copies of
+a handle refer to one shared object, not copied component state. They resolve using
+owner identity plus versioned object identity and become invalid after removal.
+
+Names should be looked up from authoritative entity metadata. A stale wrapper's
+cached name must not authorize destruction of another object with that name.
+
+Borrowed raw pointers may remain useful for immediate access. Caller misuse after
+invalidation is user error, but the engine must establish when pointers can become
+invalid, including relocation of surviving objects during a cleanup flush. The
+dispatcher itself cannot rely on pointer stability that its storage does not provide.
+
+3.6 Dispatch snapshots and structural command processing
+-------------------------------------------------------
+Possible dispatcher: capture stable instance identities for a phase, resolve each
+immediately before invoking it, and skip pending/invalid/uninitialized instances.
+This can make additions and removals predictable, but identity snapshots alone do
+not keep an executing object's address alive if storage relocates it.
+
+Another possibility is structural command processing at explicit boundaries.
+Fully deferred addition conflicts with immediately configuring AddComponent's
+returned object unless construction and attachment are separated deliberately.
+
+Whichever design is chosen must handle mutation of both component storage and the
+type callback registry. Fixing only the deletion loop is insufficient.
+
+3.7 Approaches already questioned or rejected
+--------------------------------------------
+- Do not prohibit normal callback-time destruction/removal as the solution.
+- Do not claim a destruction flag is needed if storage is always destroyed
+  immediately and no pending interval exists; justify state by the chosen design.
+- Do not use enabled state as a substitute for irreversible destruction state.
+- Do not treat Component as an existing value wrapper; that redesign is still needed.
+- Do not assume deferred destruction automatically supports same-type replacement.
+- Do not use EditorWindow ownership to supply runtime scene lifecycle behavior.
+- Do not implement speculative design changes while the user is still discussing them.
+
+
+4. SCENESYSTEMS: POSTPONED UNTIL THE COMPONENT ECS IS RELIABLE
+=============================================================
+
+4.1 Purpose and ownership
+-------------------------
+A SceneSystem supplies component-like Start/EarlyUpdate/FixedUpdate/Update/
+LateUpdate/OnDestroy behavior without attachment to an entity. Intended uses include
+scene-wide post-render orchestration and environment-cubemap selection/provision.
+
+Natural location: engine/libs/entityComponentSystem/src/ecsClasses/, beside Scene
+and Component, with Scene owning its systems. The base must not require an entity,
+Transform or EnTT entity handle. Keep editor integration separate and preserve the
+existing library dependency direction.
+
+Decide one-instance-per-type behavior, duplicate-add response, lookup/removal APIs,
+ownership representation and ordering/dependency rules before adding this feature.
+One instance per concrete type per scene and explicit Scene-managed removal were
+proposed, not a reason to skip these decisions.
+
+4.2 Lifecycle requirements from the discussion
+----------------------------------------------
+- Start and EarlyUpdate: SceneSystems run before components, so component callbacks
+  can depend on prepared scene services.
+- FixedUpdate, Update and LateUpdate: SceneSystems run after components, so they can
+  finalize the changes made by components in that corresponding phase.
+- Document this per-phase order explicitly. A system's Update cannot assume
+  component LateUpdate has already run.
+- Start existing systems at scene startup and systems added later, using the same
+  reliable once-per-instance initialization contract as components.
+- Apply the chosen enabled/pending/cleanup semantics consistently. OnDestroy runs
+  before destruction; system removal and scene teardown use the same safe model.
+- Components may need scene services during OnDestroy. Keeping systems alive until
+  component cleanup completes is a proposed teardown order; dependency ordering
+  among systems must also be decided.
+
+The mixed before/after phase order is intentional preparation/finalization behavior,
+not a rule that systems universally run before or after components. Explain it in
+the public API and docs instead of leaving users to infer it.
+
+4.3 Optional editor UI
+----------------------
+A SceneSystem may benefit from an EditorWindow, but the window is optional UI,
+not its runtime owner or scheduler. Closing/hiding the window must not stop scene
+behavior. Runtime systems should function in game, debug/editor and headless apps.
+Use a separate editor integration appropriate to engine/libs/editor/.
+
+4.4 Do not pre-assign every rendering feature to SceneSystems
+-----------------------------------------------------------
+Distinguish scene-wide configuration/selection from per-camera or per-view rendering
+work and GPU resource ownership. A fixed environment reference may be scene data;
+dynamic selection/blending may justify a system. PostRenderEffects and SSR migration
+need this ownership decision and safe render-resource lifetime handling first.
+
+The current SSR improvement plan in ToDoSsr.txt remains a separate rendering task.
+Introducing SceneSystems does not itself decide the renderer-feature architecture.
+
+
+5. VALIDATION GATE AND IMPLEMENTATION SEQUENCE
+=============================================
+
+First agree on lifecycle, handle/storage, traversal, queue, replacement and cleanup
+contracts. Then implement the component ECS and its application integration.
+Add SceneSystems only after the following behavior is implemented and verified:
+
+- Start once for existing and late-added instances, including the chosen disabled
+  policy, repeated scene startup, recursive additions and self-removal during Start.
+- One registration per type even with different constructor argument signatures.
+- Safe additions/type registrations during every relevant dispatch phase.
+- Destruction/removal of another object during Start, EarlyUpdate, fixed steps,
+  Update and LateUpdate; pending objects skip remaining callbacks immediately.
+- Self-removal, same-pool removal and the chosen pointer/storage-stability guarantees.
+- Duplicate and overlapping entity/component requests; OnDestroy exactly once,
+  before the destructor, including disabled and never-started objects.
+- Cleanup callbacks observing siblings/owners according to the chosen teardown rule,
+  and new cleanup requests following the agreed flush/reentrancy policy.
+- Entity rename/name reuse, entity-slot reuse, component replacement and scene unload
+  never make stale handles target a new object. Fix the erased-iterator bug too.
+- Remove/add/configure works as specified, with an explicit tested same-type policy.
+- Scene teardown/shutdown drains cleanup without requiring another regular frame;
+  active-scene, active-camera and editor references cannot silently dangle.
+- Work already queued for rendering retains the required resources through CPU
+  consumption and GPU execution; define any intentional one-frame visibility.
+
+Once that gate is met, add SceneSystems using the same lifecycle machinery and test
+their phase order, late initialization, removal, scene teardown and optional UI.
+Do not grow a second independent lifecycle implementation with the same edge cases.

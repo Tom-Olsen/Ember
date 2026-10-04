@@ -1,0 +1,19 @@
+Half-resolution SSR
+
+Do not reduce the dispatch resolution of the pass that directly composites into the full-resolution scene-color texture. Replicating one traced reflection across a full-resolution pixel tile visibly reduces reflection detail and can make strongly reflective parts of the image appear downsampled.
+
+Implement half-resolution SSR as two separate stages:
+
+1. Trace reflections into a dedicated half-resolution reflection texture. Store reflected radiance in RGB and hit confidence or validity in alpha. Keep the scene color, depth buffer, normals, and material buffers at full resolution.
+2. Run a full-resolution bilateral upsample and composite pass. For every full-resolution pixel, gather nearby half-resolution reflection samples and weight them using pixel distance, view-depth difference, normal similarity, hit confidence, and optionally roughness. Composite the reconstructed reflection into the untouched full-resolution scene color.
+
+This reduces the expensive ray count to approximately one quarter while retaining full-resolution base rendering. A simple bilinear or nearest-neighbor upscale is not sufficient because it causes reflection bleeding across silhouettes and unrelated surfaces.
+
+Possible later optimizations:
+
+- Trace reflections in a checkerboard pattern and fill missing pixels through temporal reprojection. This requires motion vectors and history validation.
+- Skip or shorten traces for rough surfaces, weak reflection contributions, sky pixels, and rays that immediately leave the screen.
+- Add a hierarchical depth buffer and Hi-Z traversal to skip empty screen-space regions.
+- Select reflection resolution based on material roughness, using full resolution for smooth mirror-like surfaces and lower resolution for rough reflections.
+
+Until the dedicated reflection target and bilateral upsample pass exist, keep the current SSR pass at full resolution.

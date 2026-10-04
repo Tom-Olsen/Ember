@@ -1,0 +1,463 @@
+Texture Layout and Render Graph Refactor
+========================================
+
+
+Purpose
+-------
+
+Ember currently distributes Vulkan image-layout knowledge across VmaImage, texture classes, render passes, render stages, descriptor updates, and the render graph.
+This works while the render sequence is fixed, but the same state change is often described in multiple places and must be kept synchronized manually.
+The resulting system is fragile and will become increasingly difficult to maintain when render stages become optional, reorderable, or dynamically constructed.
+
+The goal of this refactor is to make the render graph the sole authority that schedules image usages and transitions while keeping the tracked state on each physical VmaImage.
+Render stages will declare what they need from an image instead of manually selecting layouts or barriers.
+The graph will derive layouts, access masks, pipeline stages, descriptor layouts, barriers, semaphore dependencies, and queue ownership requirements from those declarations.
+
+
+Current problems
+----------------
+
+- VmaImage tracks only VkImageLayout even though correct synchronization also depends on pipeline stages, access masks, queue ownership, and subresource ranges.
+- DescriptorSetBinding currently uses an image's tracked current layout as the default VkDescriptorImageInfo::imageLayout.
+  A descriptor layout describes the layout at shader access time, which may differ from the image state when the descriptor is updated.
+- Render passes perform implicit initial and final layout transitions that VmaImage cannot observe.
+  Render stages compensate with manual SetLayout(...) calls after vkCmdEndRenderPass(...).
+- The render-pass finalLayout and the matching SetLayout(...) call duplicate the same information.
+  Changing one without changing the other makes subsequent barriers use an incorrect oldLayout.
+- TransitionLayout(...) calls, render-pass dependencies, stage-local barriers, and render-graph semaphores collectively describe synchronization without one authoritative owner.
+- Some images are transitioned directly from UNDEFINED into a read-only layout before any contents are produced.
+  This can be redundant and generates validation warnings even when a later render pass clears the attachment before reading it.
+- The current approach encodes assumptions about a fixed stage order.
+  Adding, removing, or reordering a stage requires manually reviewing transitions and synchronization in several files.
+
+
+General picture
+---------------
+
+An image layout is not an inherent property of a texture type.
+It is one component of the state required for a particular use of a physical image at a particular point in the scheduled GPU command stream.
+
+A G-buffer image may move through the following uses:
+
+    Image creation
+        UNDEFINED
+
+    Deferred geometry
+        COLOR_ATTACHMENT_OPTIMAL
+        color attachment write
+
+    Deferred lighting
+        SHADER_READ_ONLY_OPTIMAL
+        fragment shader sampled read
+
+    Screen-space compute
+        SHADER_READ_ONLY_OPTIMAL
+        compute shader sampled read
+
+    Optional compute modification
+        GENERAL
+        compute shader storage read/write
+
+Texture types still describe capabilities and common usage:
+
+- A sampled texture normally supports sampled reads.
+- A G-buffer texture supports color-attachment writes and sampled reads.
+- A depth texture supports depth-attachment access and sampled depth reads.
+- A storage texture supports storage reads and writes, commonly in GENERAL.
+
+These capabilities determine image creation flags and validate pass declarations, but they do not define one permanent layout.
+
+The system must separate four concepts:
+
+1. Image capabilities
+   Immutable properties such as format, extent, aspects, mip levels, array layers, VkImageUsageFlags, and queue-sharing configuration.
+
+2. Tracked image state
+   The predicted state after the last scheduled use of one physical image.
+   This state is tracked on the CPU but does not claim to represent the GPU's wall-clock execution position.
+
+3. Required image usage
+   A semantic declaration made by a render stage, such as sampled read, storage write, color-attachment write, depth-attachment access, transfer, or presentation.
+
+4. External boundary state
+   A state required by a consumer outside ordinary graph processing, such as presentation, ImGui sampling, transfer readback, or another API.
+
+
+Revised overview
+----------------
+
+- Every physical VmaImage owns an ImageState.
+  This avoids introducing a separate image-state registry and also covers VmaImage instances that are not wrapped by a Texture.
+- ImageState contains layout, pipeline stages, access masks, and queue-family ownership.
+- Initially Ember may track one state for the entire image.
+  Images with independently transitioned mip levels, aspects, or array layers will later require state per subresource range.
+- Render stages declare semantic image usages rather than manually recording layout transitions.
+- The render graph converts each declared usage into a required ImageState.
+- The render graph compares consecutive states and generates image barriers, memory dependencies, semaphore operations, and queue ownership transfers where required.
+- Compatible barriers at the same graph boundary are batched into one vkCmdPipelineBarrier2(...) call.
+- Legacy render passes no longer perform externally visible layout transitions.
+  Their initialLayout and finalLayout remain equal to the layout used by the relevant subpass.
+- Explicit graph barriers establish attachment layouts before a render pass and transition to the next required state afterward.
+- Descriptor image layouts come from the consuming usage declaration, not from the image's state at descriptor-update time.
+- External consumers are represented as graph passes or graph export requirements.
+- Image state is preserved between graph executions.
+  Resources are not unconditionally restored to a generic default layout at the end of every frame.
+- Only the render graph may mutate the state of a graph-managed image.
+  Manual SetLayout(...) calls and unrelated TransitionLayout(...) calls are removed.
+- The graph operates on physical resources.
+  Separate images for separate frames in flight retain separate states.
+
+
+Core data model
+---------------
+
+ImageState should initially contain at least:
+
+    struct ImageState
+    {
+        VkImageLayout layout;
+        VkPipelineStageFlags2 stageMask;
+        VkAccessFlags2 accessMask;
+        uint32_t queueFamilyIndex;
+    };
+
+The exact use of Ember's AccessMask alias should remain consistent with the rest of the Vulkan backend.
+
+ImageState rules:
+
+- It belongs to the physical VmaImage rather than to a logical material binding or render-stage name.
+- It is initialized from the image's creation state.
+- For a newly created image this is normally UNDEFINED, no prior access, and the creating/owning queue family where applicable.
+- It advances when the render graph schedules uses and barriers.
+- It is not reset at the start or end of a frame unless the physical image is recreated.
+- If a pass discards previous contents, that fact belongs to the usage declaration rather than permanently changing the stored state.
+- State mutation must be restricted to render-graph internals once an image becomes graph-managed.
+
+The first implementation may use one ImageState per image under the explicit restriction that the entire image is transitioned together.
+A later ImageSubresourceState representation must be introduced before independently transitioning mip levels, array layers, or separate depth/stencil aspects through the graph.
+
+
+Semantic image usages
+---------------------
+
+Introduce semantic usages from which Vulkan state is derived centrally.
+The final names may follow existing Ember conventions, but the system must cover at least:
+
+- sampledRead
+- storageRead
+- storageWrite
+- storageReadWrite
+- colorAttachmentRead
+- colorAttachmentWrite
+- colorAttachmentReadWrite
+- depthAttachmentRead
+- depthAttachmentWrite
+- depthAttachmentReadWrite
+- transferRead
+- transferWrite
+- present
+
+A use declaration also needs the shader/pipeline stages that perform the access, the affected subresource range, and whether previous contents are loaded, cleared, or discarded.
+
+Example mappings:
+
+    sampledRead in fragment shader
+        layout:     SHADER_READ_ONLY_OPTIMAL
+        stages:     FRAGMENT_SHADER
+        access:     SHADER_SAMPLED_READ
+
+    sampledRead in compute shader
+        layout:     SHADER_READ_ONLY_OPTIMAL
+        stages:     COMPUTE_SHADER
+        access:     SHADER_SAMPLED_READ
+
+    storageReadWrite in compute shader
+        layout:     GENERAL
+        stages:     COMPUTE_SHADER
+        access:     SHADER_STORAGE_READ | SHADER_STORAGE_WRITE
+
+    colorAttachmentWrite
+        layout:     COLOR_ATTACHMENT_OPTIMAL
+        stages:     COLOR_ATTACHMENT_OUTPUT
+        access:     COLOR_ATTACHMENT_WRITE
+
+    depthAttachmentReadWrite
+        layout:     DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        stages:     EARLY_FRAGMENT_TESTS | LATE_FRAGMENT_TESTS
+        access:     DEPTH_STENCIL_ATTACHMENT_READ | DEPTH_STENCIL_ATTACHMENT_WRITE
+
+    transferWrite
+        layout:     TRANSFER_DST_OPTIMAL
+        stages:     TRANSFER
+        access:     TRANSFER_WRITE
+
+    present
+        layout:     PRESENT_SRC_KHR
+        stages/access: determined by the graph's presentation boundary
+
+The mapping must be implemented once and unit tested.
+Individual stages must not reproduce this mapping with raw Vulkan flags.
+
+
+Barrier generation
+------------------
+
+For every ordered pair of uses of the same physical image, the graph compares the tracked state with the required state.
+
+A barrier or other dependency may be required when:
+
+- The layout changes.
+- A previous write must become visible to a later read or write.
+- Queue-family ownership changes.
+- An external producer or consumer requires an acquire/release operation.
+
+A layout change is not required for every dependency.
+For example, GENERAL compute write followed by GENERAL compute read still requires memory visibility even though the layout is unchanged.
+
+Read-after-read in the same compatible layout and queue normally requires no memory barrier.
+The initial implementation may be conservative for correctness, but it must keep stage and access masks precise and should avoid ALL_COMMANDS and generic MEMORY_READ/MEMORY_WRITE masks unless they are truly necessary.
+
+Barriers sharing a graph boundary should be collected and submitted in one VkDependencyInfo.
+The state of each affected image is updated to the predicted post-barrier/use state as the graph records the scheduled command stream.
+
+For different queues or submissions, barriers alone are not sufficient.
+The graph must continue to generate semaphore dependencies, correct semaphore wait stages, and queue-family ownership transfers where required.
+
+
+Render-pass integration
+-----------------------
+
+VkAttachmentDescription still requires initialLayout and finalLayout.
+"Removing final transitions" therefore means making the render-pass boundary layouts equal to the layouts used by its subpasses, not omitting the fields.
+
+For a color attachment used by one subpass:
+
+    attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+The graph explicitly transitions into COLOR_ATTACHMENT_OPTIMAL before vkCmdBeginRenderPass(...) and transitions from it after vkCmdEndRenderPass(...) when the next use requires another state.
+
+Depth attachments follow the same rule using the appropriate depth attachment or depth read-only layout.
+
+Load/store behavior remains part of the render-pass usage contract:
+
+- LOAD requires valid previous contents and a dependency that makes them available.
+- CLEAR does not require preserved previous contents.
+- DONT_CARE permits previous contents to be discarded.
+- STORE is required when a later use consumes the produced contents.
+
+When previous contents are cleared or discarded, the graph may use UNDEFINED discard semantics for the old layout where valid.
+The explicit pre-pass barrier still establishes the attachment layout expected by renderPass.initialLayout before the render pass begins.
+
+External render-pass dependencies that become redundant after graph-owned barriers must be removed or narrowed.
+Internal subpass dependencies and any dependencies required for tile-local subpass behavior must remain.
+
+
+Descriptor integration
+----------------------
+
+VkDescriptorImageInfo::imageLayout describes the layout in which the image will be when the descriptor is accessed by a shader.
+It does not describe the image's layout when vkUpdateDescriptorSets(...) is called.
+
+Descriptor updates must therefore use the state derived from the consuming pass usage.
+The graph usage declaration should be the common source of truth for both synchronization and descriptor layout.
+
+The long-term API should let ordinary callers bind a texture without manually naming a VkImageLayout.
+Raw-layout overloads may remain as internal escape hatches, but graph-managed rendering should not depend on application code selecting Vulkan layouts.
+
+Stable asset textures that are uploaded once and sampled afterward may use a default sampled-read usage outside transient graph passes.
+This is a convenience for a genuinely stable usage pattern, not a replacement for graph declarations on render targets.
+
+
+Persistent, transient, and external resources
+---------------------------------------------
+
+Persistent describes lifetime, not state stability.
+A persistent sampled asset may remain in SHADER_READ_ONLY_OPTIMAL, while a persistent history texture may change state several times per frame.
+
+Transient graph resources retain their last predicted state for as long as the physical image exists.
+Their state is not reset merely because a new frame begins.
+Frame-in-flight variants are separate physical images and therefore maintain separate states.
+
+The creation state is used only when an image is first introduced to the graph.
+The previous graph exit state becomes the next entry state when that same physical image is reused.
+
+External consumers are modeled as graph operations or exports:
+
+- Swapchain presentation requires PRESENT_SRC_KHR.
+- ImGui or another renderer sampling an Ember texture requires a sampled-read state.
+- Readback requires a transfer-source state before copying.
+- External queue/API ownership requires an explicit release state and corresponding acquire contract.
+
+Only resources with an external contract are transitioned to an export state.
+There is no unconditional end-of-frame restoration to a default layout.
+
+
+Performance principles
+----------------------
+
+Replacing a render-pass implicit transition with an equivalent explicit barrier does not introduce an additional logical transition.
+It changes who records and owns that transition.
+
+The cost is governed mainly by the dependency and layout change rather than by the vkCmdPipelineBarrier2(...) function call.
+The graph must therefore:
+
+- Avoid redundant layout transitions.
+- Preserve compatible read-only states across consecutive readers.
+- Use the narrowest correct stage and access masks.
+- Batch barriers at common boundaries.
+- Avoid GENERAL when a more specific layout is sufficient, except where storage access or an external contract requires GENERAL.
+- Avoid unnecessary queue-family ownership transfers.
+- Preserve beneficial subpass/tile-local behavior rather than splitting it without measurement.
+- Measure GPU timing before and after the refactor in representative scenes.
+
+
+Actionable refactor plan
+------------------------
+
+Phase 0: Record the current behavior
+
+- Capture a validation-layer log from the default project before beginning the refactor.
+- Capture reference screenshots for deferred, forward opaque, forward transparent, shadows, outlines, gizmos, post-processing, ImGui, and presentation.
+- Record representative GPU timings so that synchronization regressions can be detected.
+- Inventory every use of VmaImage::TransitionLayout(...), VmaImage::SetLayout(...), and VmaImage::GetImageLayout().
+- Inventory every render-pass initialLayout/finalLayout, external subpass dependency, stage-local pipeline barrier, and descriptor layout override.
+- Document the current stage order, queue used by every stage, semaphore edges, and every physical image read or written by each stage.
+- Classify each image as frame-local, persistent, ping-pong, swapchain-owned, externally consumed, or independently subresourced.
+
+Phase 1: Add state and usage primitives without changing behavior
+
+- Add ImageState in its own header/source pair according to Ember's class/struct file rules.
+- Include layout, stage mask, access mask, and queue-family index.
+- Add equality/comparison support needed by the barrier planner.
+- Add a semantic image-usage enum and a usage description carrying shader stages, subresource range, and load/clear/discard intent.
+- Add one central conversion from semantic usage to required ImageState.
+- Add focused unit tests for every usage-to-state mapping.
+- Replace VmaImage::m_layout with VmaImage::m_imageState while temporarily preserving existing public behavior.
+- Initialize the state from VkImageCreateInfo::initialLayout and the known initial ownership information.
+- Keep compatibility getters temporarily so this phase can compile without migrating every caller at once.
+- Add debug string formatting for ImageState and semantic image usages to make validation failures traceable.
+
+Phase 2: Implement the graph barrier planner
+
+- Add an internal render-graph operation that receives a VmaImage, required usage, and subresource range.
+- Compare VmaImage's tracked ImageState with the resolved required state.
+- Generate VkImageMemoryBarrier2 for layout changes, write hazards, and queue ownership changes.
+- Handle same-layout memory dependencies instead of treating every dependency as a layout transition.
+- Collect compatible image and memory barriers at each graph boundary and submit them in one vkCmdPipelineBarrier2(...) call.
+- Update the VmaImage state only through this graph-owned path.
+- Add debug assertions for unsupported partial-subresource transitions while the implementation still tracks one state per whole image.
+- Log generated barriers in validation/debug builds with resource names and before/after states.
+- Unit test barrier planning for undefined-to-write, write-to-read, read-to-read, write-to-write, same-layout hazards, and queue ownership changes.
+
+Phase 3: Add declarative resource uses to the render graph
+
+- Give every render stage a way to declare its image reads and writes before commands are recorded.
+- Make declarations reference the actual physical image selected for the current frame, including scene-color ping-pong selection and frame-in-flight index.
+- Make stages declare semantic usage rather than predecessor-specific transitions.
+- Build synchronization from the ordered active stage list so optional stages can later be inserted or removed safely.
+- Validate image creation usage flags against declared graph usages and fail clearly when a pass requests an unsupported capability.
+- Keep existing synchronization active until each stage is migrated; do not allow both systems to transition the same boundary.
+
+Phase 4: Integrate descriptors with graph usages
+
+- Stop using VmaImage::GetImageLayout() as the default source for VkDescriptorImageInfo::imageLayout on graph-managed resources.
+- Derive descriptor imageLayout from the consuming sampled/storage usage declaration.
+- Ensure the descriptor and barrier planner consume the same resolved required state.
+- Keep a simple SetTexture(...) call for normal callers; Vulkan layouts should remain an internal concern.
+- Retain a raw explicit-layout path only where an external or exceptional integration cannot yet declare a graph use.
+- Add validation assertions that a descriptor's declared access layout matches the image state required by its consuming pass.
+- Verify descriptor updates that happen before command-buffer recording, especially on the first frame after image creation or recreation.
+
+Phase 5: Migrate render stages incrementally
+
+- Migrate one producer/consumer chain at a time and run validation after every chain.
+- Start with deferred geometry and deferred lighting because their G-buffer relationship is direct and currently contains manual final-layout tracking.
+- Add graph declarations for G-buffer color writes, depth writes, and deferred-lighting sampled reads.
+- Change deferred geometry attachment initial/final layouts to their internal color/depth attachment layouts.
+- Add explicit graph barriers before and after the deferred render pass as required by the declared next uses.
+- Confirm that no constructor pre-transition of the G-buffers to read-only layouts remains, and remove the DeferredGeometryStage SetLayout(...) calls only after graph barriers are active.
+- Migrate shadow rendering and shadow-map sampling.
+- Migrate outline rendering and outline compute consumption.
+- Migrate gizmo rendering and presentation sampling.
+- Migrate scene-color ping-pong compute passes.
+- Migrate forward opaque and forward transparent rendering, including color LOAD behavior and depth read/write behavior.
+- Replace the ForwardStage SetLayout(GENERAL) bookkeeping with graph state updates.
+- Migrate post-render compute and final sampling/presentation.
+- Migrate image uploads, mipmap generation, transfer operations, and any resource-update-stage transitions that participate in graph execution.
+- After each migration, remove only the obsolete stage-local barrier, render-pass external dependency, or manual state mutation covered by the new graph path.
+
+Phase 6: Normalize render-pass boundaries
+
+- Set each migrated attachment's initialLayout and finalLayout to the layout used at the relevant render-pass/subpass boundary.
+- Ensure graph barriers establish initialLayout before vkCmdBeginRenderPass(...).
+- Ensure the tracked post-pass state includes the attachment stage/access that produced the contents, not only finalLayout.
+- Remove redundant external subpass dependencies now represented by graph barriers and semaphores.
+- Preserve required internal subpass dependencies and verify behavior on tile-based hardware where possible.
+- Confirm that CLEAR and DONT_CARE attachments use discard semantics without unnecessary initialization.
+- Confirm that LOAD attachments preserve contents and have a valid producer dependency.
+
+Phase 7: Model external consumers and graph boundaries
+
+- Represent swapchain acquire/present as graph boundary operations with explicit states.
+- Represent ImGui sampling, editor previews, readback, and other external image consumers as graph uses or exports.
+- Persist each physical image's graph exit state for its next execution.
+- Do not add a blanket end-of-frame transition to a default layout.
+- Verify state handling independently for every frame-in-flight image.
+- Verify scene-color ping-pong resources when either texture becomes the final output.
+- Integrate queue-family ownership and semaphore synchronization for images crossing graphics, compute, transfer, or presentation queues.
+
+Phase 8: Remove the legacy layout system
+
+- Remove VmaImage::SetLayout(...).
+- Remove direct stage-owned calls to VmaImage::TransitionLayout(...) for graph-managed images.
+- Remove or restrict GetImageLayout() so descriptors and stages cannot use it as an implicit policy decision.
+- Make ImageState mutation private to render-graph internals.
+- Remove obsolete descriptor-layout plumbing that became unnecessary after usage-driven binding.
+- Remove duplicated access/stage mapping logic from individual stages and texture helper classes.
+- Add assertions that graph-managed images cannot be used by a stage without a matching declaration.
+- Keep explicit import/export helpers for resources whose lifetime or synchronization is partly external to the graph.
+
+Phase 9: Verification and diagnostics
+
+- Build the default project and Vulkan renderer unit tests after every migration phase.
+- Run normal core validation until no correctness errors remain.
+- Run GPU-assisted validation separately after core validation is clean.
+- Confirm that no UNDEFINED-to-read-only initialization warnings remain.
+- Confirm that no descriptor layout differs from the layout active at shader access.
+- Confirm that no render stage requires manual SetLayout(...) bookkeeping.
+- Compare output against all reference screenshots.
+- Compare GPU timings against the baseline and investigate any meaningful regression.
+- Test frames-in-flight reuse, swapchain recreation, window resizing, empty draw-call lists, optional compute calls, and ping-pong texture selection.
+- Add a debug render-graph dump listing each stage, resource use, resolved state, generated barrier, queue, and external boundary.
+
+
+Acceptance criteria
+-------------------
+
+The refactor is complete when:
+
+- Render stages declare image intent and do not manually select Vulkan layouts for graph-managed resources.
+- VmaImage state includes layout, stage/access history, and queue ownership.
+- The render graph is the only owner of graph-managed state mutation and inter-stage image barriers.
+- Render-pass boundary transitions are explicit and visible to the graph.
+- Descriptor layouts are derived from consuming usages rather than current tracked state.
+- External consumers have explicit graph boundary contracts.
+- No unconditional end-of-frame layout restoration exists.
+- No manual SetLayout(...) synchronization remains.
+- The validation layer reports no image-layout or image-synchronization errors for representative workloads.
+- Existing rendered output remains correct.
+- Barrier generation is precise, batched where appropriate, and does not introduce a measured performance regression.
+
+
+Implementation constraints
+--------------------------
+
+- Favor correctness and one authoritative source of truth over compatibility workarounds.
+- Migrate incrementally so each producer/consumer chain can be validated before moving to the next.
+- Do not mix legacy and graph-owned transitions on the same boundary.
+- Preserve the distinction between physical images and logical roles, especially for frames in flight and ping-pong resources.
+- Do not infer synchronization only from layouts; stage masks, access masks, queue ownership, and execution order are equally important.
+- Do not expose raw Vulkan layouts to high-level renderer callers when semantic usage is sufficient.
+- Do not optimize away barriers until the graph has enough information to prove that doing so is safe.

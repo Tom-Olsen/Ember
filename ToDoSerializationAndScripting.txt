@@ -1,0 +1,508 @@
+Ember Editor, Serialization, and C++ Scripting Design
+=====================================================
+
+
+Purpose
+-------
+
+Ember will eventually support project gameplay code written in C++ and compiled into a reloadable shared library.
+The editor and engine remain running while the project module is rebuilt, unloaded, loaded, and its script instances reconstructed.
+This system is intentionally postponed while other engine and editor systems are developed.
+
+Postponing the module loader and compiler integration is safe, but several systems built before it must use compatible foundations.
+Serialization, the inspector, undo/redo, prefabs, asset management, scene management, events, and asynchronous tasks all need stable identity, runtime metadata, and explicit ownership.
+Designing those foundations once prevents each system from inventing incompatible ways to identify and manipulate engine data.
+
+The central relationship is:
+
+                             runtime type metadata
+                                      |
+               +----------------------+----------------------+
+               |                      |                      |
+          serialization           inspector              undo/redo
+               |                      |                      |
+               +----------------------+----------------------+
+                                      |
+                         prefabs and scene cloning
+                                      |
+                           reloadable C++ scripts
+
+The scripting system should consume these systems rather than introduce separate script-only versions of serialization, reflection, inspection, and undo.
+
+
+Core design principles
+----------------------
+
+1. Persist IDs and data, never addresses or compiler-specific implementation details.
+2. Resolve objects at the time an operation runs instead of retaining pointers indefinitely.
+3. Treat serialized data as authoritative and runtime objects as reconstructable.
+4. Give every stored callback, registration, task, and subscription an owner and a way to revoke it.
+5. Keep editor/project data usable when a component or script type is temporarily unavailable.
+6. Separate permanent engine types from temporary project-module types.
+7. Keep typed EnTT access inside the engine, but provide runtime descriptors for editor-facing operations.
+8. Keep editable scene state separate from temporary play-mode state.
+9. Make the future public scripting boundary narrow and versioned.
+
+
+System overview
+---------------
+
+1. Stable identity and handles
+
+Several IDs with different purposes are required:
+
+- EntityId: persistent UUID stored in scenes and used by serialized entity references.
+- EntityHandle: transient index plus generation used to access a live entity efficiently.
+- ComponentId: persistent UUID identifying one component instance.
+- TypeId: persistent UUID identifying a component or script type.
+- PropertyId: persistent UUID identifying a serialized property independently of its display name or memory offset.
+- AssetId: persistent UUID identifying an asset independently of its path.
+- SceneDocumentId: identifies the editor document targeted by commands and selections.
+- ModuleOwnerId: identifies the engine or a particular loaded project-module generation.
+
+Entity names, file paths, entt::entity values, entt::type_name<T>(), RTTI names, object addresses, and field offsets are not persistent identities.
+They may change after a rename, scene reload, compiler change, container reallocation, or script rebuild.
+
+A serialized entity reference stores an EntityId. At runtime the scene maintains a mapping from EntityId to EntityHandle.
+A serialized asset reference similarly stores an AssetId and lets the asset database resolve its current path and runtime object.
+
+ComponentId is required even when native EnTT components are unique by type.
+It allows undoing removal, recording prefab overrides, preserving inspector ordering, and supporting multiple future script instances of the same type on one entity.
+
+
+2. Runtime type and property metadata
+
+The engine needs a runtime TypeRegistry shared by serialization, the inspector, undo/redo, cloning, prefabs, and scripts.
+This is not required to replace normal typed C++ and EnTT access inside engine systems.
+It is an adapter that lets editor systems operate on a component without knowing its C++ type at compile time.
+
+A TypeDescriptor should eventually contain at least:
+
+- Persistent TypeId, name, and schema version.
+- ModuleOwnerId identifying who registered it.
+- Operations to add, find, clone, and remove component instances.
+- Serialization and deserialization operations.
+- A list of PropertyDescriptors.
+- Optional lifecycle and custom-inspector hooks.
+
+A PropertyDescriptor should eventually contain at least:
+
+- Persistent PropertyId and display name.
+- Value type and serialization/editability flags.
+- Get and set operations.
+- Optional editor attributes such as minimum, maximum, step, read-only, asset type, and entity-reference constraints.
+
+Built-in engine types have permanent registrations owned by the engine.
+Future C++ script types have temporary registrations owned by one loaded module generation.
+The registry must return registration tokens and support UnregisterOwner(ModuleOwnerId).
+An append-only callback registry is unsafe for reloadable code because it retains function pointers into an unloaded library.
+
+Names and plain metadata originating in a project DLL should be copied into engine-owned memory.
+Functions supplied by the DLL are valid only while that module generation is loaded and must be removed before unloading it.
+
+Manual registration is sufficient initially.
+Annotation-based code generation can later generate descriptors, factories, serializers, and migration data without changing the registry contract.
+
+
+3. ECS and component representation
+
+Permanent native components can remain concrete EnTT component types and continue using efficient typed views.
+Their TypeDescriptors call those typed operations through registered adapter functions.
+
+Reloadable C++ script classes should not be inserted directly into EnTT as arbitrary concrete types.
+Doing so leaves component destructors, vtables, EnTT storage operations, and update callbacks pointing into the DLL when it is unloaded.
+
+Instead, EnTT should eventually contain one permanent engine-owned script representation.
+It may be a ScriptComponent containing multiple ScriptSlots or a separate stable script-instance store referenced by the entity.
+The final representation can be chosen later, but it must support:
+
+- Multiple scripts on one entity.
+- Multiple instances of the same script type.
+- A persistent ComponentId for every instance.
+- A ScriptAssetId or ScriptTypeId.
+- A transient ScriptInstanceId owned by the scripting runtime.
+- Enabled state and serialized property data that survive module reloads.
+
+Actual C++ script objects live outside EnTT and are owned by the loaded project module through the script runtime.
+All old instances are destroyed before unloading the module and recreated afterward.
+
+
+4. Serialization and schema migration
+
+Serialization should be tagged and versioned. It must serialize meaning rather than raw component memory. A scene should conceptually contain:
+
+- Scene metadata and version.
+- Entities identified by EntityId.
+- Entity name, parent EntityId, and other entity data.
+- Components identified by ComponentId and TypeId.
+- Component schema version.
+- Properties stored as PropertyId to SerializedValue mappings.
+
+SerializedValue needs representations for supported primitives, strings, math types, arrays, nested objects, EntityId references, and AssetId references.
+The on-disk format may be text or binary, but it should pass through one format-independent serialized object model so undo, clipboard operations,
+prefab snapshots, scene cloning, and reload-state capture can reuse it.
+
+Do not serialize raw memory dumps, native pointers, field offsets, compiler hashes, or values whose meaning depends on the current process.
+
+Unknown types and properties must be preserved. If a project DLL is missing or fails to compile, opening and saving a scene must not delete its script components.
+The editor should retain their opaque serialized records, display them as missing types, and attempt to instantiate them again when the type becomes available.
+
+Each type has a schema version. Deserialization applies registered migrations before constructing current runtime state.
+Persistent PropertyIds make reordering harmless, while explicit aliases or migrations handle renames and type changes.
+
+
+5. Inspector
+
+The generic inspector should be metadata-driven:
+
+1. Enumerate component instances on the selected entity.
+2. Resolve each component's TypeDescriptor.
+3. Enumerate its PropertyDescriptors.
+4. Select a property drawer based on value type and attributes.
+5. Submit changes through the undo system.
+
+Custom drawers remain possible for complex components, but ordinary native components and future scripts should work without a handwritten inspector.
+Custom drawers must still use the same property/command interfaces so they do not bypass undo, prefab overrides, or serialization rules.
+
+The inspector must also be able to display preserved data for an unknown component without constructing its missing runtime type.
+
+
+6. Undo and redo
+
+Undo commands must not capture Component*, Scene*, field pointers, references, or lambdas whose code might later be unloaded. A property command stores:
+
+- SceneDocumentId.
+- EntityId.
+- ComponentId.
+- PropertyId.
+- SerializedValue before and after the change.
+
+When Execute or Undo runs, it resolves the target through the scene document and TypeRegistry.
+If the target no longer exists, the command reports a controlled failure rather than dereferencing stale memory.
+
+Structural commands store serialized snapshots. Removing a component stores its entire serialized component record.
+Deleting an entity stores the entity and the required child hierarchy. Undo reconstructs the state using persistent IDs.
+
+Transactions are required so continuous UI edits such as dragging a slider or transform handle create one undo entry.
+Commands should also expose enough information for the prefab system to record the same change as an override.
+
+
+7. Asset database and build/import pipeline
+
+Every asset should have an AssetId independent of its source path.
+Renaming or moving a mesh, material, scene, or future script source must not break references.
+Asset metadata should track its type, source path, importer version, dependencies, and generated artifacts.
+
+File watching and background work should feed a generic pipeline:
+
+    source changed
+        -> asset marked dirty
+        -> importer/compiler job
+        -> diagnostics
+        -> successful staged artifact
+        -> swap at a safe runtime point
+
+Shaders, textures, and future project-script compilation can then share change detection, job status, diagnostics, dependency invalidation, and artifact management.
+A failed import or compile keeps the previous valid artifact active.
+
+
+8. Scene documents, editing, and play mode
+
+New editor systems should explicitly target a SceneDocument rather than relying on one global active Scene. Explicit targeting is needed for multiple open scenes, prefab editing, background loading, undo stacks, and simultaneous edit/runtime worlds.
+
+Play mode should create a runtime clone of the editable scene through the same serialization/cloning model:
+
+    editable SceneDocument -> clone/deserialize -> runtime Scene
+
+Gameplay modifies the runtime scene. Leaving play mode destroys it and returns to unchanged authoring data. Applying selected runtime changes back to the edit scene can later be an explicit undoable operation.
+
+Component lifecycle must distinguish construction, addition, enable, entering play, Start, disable, removal, destruction, and reconstruction after hot reload. This prevents reload or undo from accidentally repeating one-time gameplay behavior.
+
+
+9. Prefabs
+
+Prefabs should be built on the same serialized entity/component representation. An instance refers to a prefab AssetId and records overrides using EntityId/relative entity identity, ComponentId, PropertyId, and SerializedValue. It must not store field pointers or offsets.
+
+Because prefab overrides, undo commands, inspector edits, and script-reload restoration all describe property changes, they should share the same property addressing and value representation.
+
+
+10. Events, tasks, timers, and retained callbacks
+
+Any system that retains executable code is part of the future hot-reload boundary. This includes the event system, task system, timers, physics callbacks, EnTT signals, GUI callbacks, and asset-completion callbacks.
+
+Subscriptions and scheduled work should return revocable handles and record a ModuleOwnerId. Each system needs a bulk cleanup operation such as UnsubscribeOwner, CancelOwner, or WaitForOwner. Before unloading a DLL, the module manager must:
+
+- Prevent new calls into that module.
+- Revoke all subscriptions, timers, and queued callbacks owned by it.
+- Cancel pending work where possible.
+- Wait until already executing work has returned from the DLL.
+
+Cancellation alone is insufficient when a worker thread is currently executing old code. No function pointer, std::function, vtable, or callback originating in the DLL may remain reachable after unload.
+
+
+11. Future C++ project-module system
+
+The eventual editor is a project-independent executable. Project gameplay sources compile into a separate shared library with generation-specific output names, for example MyProjectScripts_0042.dll or libMyProjectScripts_0042.so.
+
+The binary boundary should be narrow and versioned. A C-compatible engine/module function table is the safest ABI, while header-only C++ wrappers can give script authors a natural API. Do not pass EnTT registries, Scene*, component pointers, STL containers, exceptions, or ownership of allocated memory across the boundary. Memory should be freed by the module that allocated it.
+
+Engine access is exposed through opaque handles and deliberate operations such as transform access, logging, input, and entity management. This avoids coupling project modules to Ember's internal storage and makes invalid handles detectable.
+
+Reload sequence:
+
+1. Detect changed project sources and build a new generation in a background process.
+2. Collect compiler diagnostics without interrupting the current module.
+3. If compilation fails, keep the old module and instances running.
+4. At a frame safe point, stop script scheduling.
+5. Serialize script properties and any explicitly reloadable runtime state.
+6. Revoke module-owned callbacks, timers, registrations, and tasks; wait for executing work.
+7. Destroy every old script instance using the old module's destroy function.
+8. Unregister all descriptors and functions owned by the old generation.
+9. Unload the old library.
+10. Load and validate the new generation and its API version.
+11. Register its script types and properties.
+12. Recreate instances and restore compatible serialized fields.
+13. Run a dedicated post-reload lifecycle callback and resume execution.
+
+All script objects are reconstructed on every reload, even when only a function body changed. This produces one reliable path and also handles class-layout changes. State is matched using IDs and schema information, never copied as raw object memory.
+
+
+How the systems interact
+------------------------
+
+Normal inspector edit:
+
+1. SceneDocument resolves EntityId and ComponentId.
+2. TypeRegistry resolves PropertyId and supplies get/set operations.
+3. Inspector begins an undo transaction.
+4. Undo stores the before and after SerializedValues.
+5. The property is changed through its descriptor.
+6. Serialization marks the scene dirty.
+7. If the entity is a prefab instance, the same property address becomes an override.
+
+Scene loading with unavailable project code:
+
+1. Serializer reads entity, component, and property IDs.
+2. TypeRegistry cannot resolve a script TypeId.
+3. The scene retains the component as opaque serialized data.
+4. Inspector displays a missing-script entry and its saved data.
+5. After a successful project-module build, the type registers and the component can be instantiated from that data.
+
+Entering play mode:
+
+1. The edit scene is serialized or cloned through TypeDescriptors.
+2. A separate runtime scene is constructed.
+3. Native component and script lifecycles begin in the runtime scene.
+4. Runtime changes do not dirty the edit document unless explicitly applied.
+
+Hot reload during play mode:
+
+1. The asset/build pipeline produces a validated module artifact.
+2. Module-owned events and tasks are quiesced.
+3. Runtime script state is represented with the same IDs and SerializedValues used elsewhere.
+4. Old instances and registrations are removed.
+5. New script types register through TypeRegistry.
+6. Runtime instances are reconstructed without replacing the EnTT scene or editor process.
+
+
+Actionable implementation plan
+------------------------------
+
+Phase 1: Define identity types and invariants
+
+- Add strongly typed EntityId, EntityHandle, ComponentId, TypeId, PropertyId, AssetId, SceneDocumentId, and ModuleOwnerId types.
+- Use random/persistent UUIDs for saved identities and generation-checked handles for live objects.
+- Add EntityId storage and EntityId-to-EntityHandle lookup to Scene.
+- Stop introducing new serialized or editor-facing references by entity name or raw pointer.
+- Document which IDs survive save/load, clone, duplication, and prefab instantiation.
+
+Pay attention to duplication semantics: loading the same scene preserves IDs, while duplicating an entity or instantiating a prefab generally creates new instance IDs. References inside a duplicated hierarchy must be remapped consistently.
+
+Completion criteria: entities can be renamed, destroyed, recreated, saved, and loaded without confusing references or reusing stale runtime handles.
+
+
+Phase 2: Create the serialized data model
+
+- Implement SerializedValue and tagged serialized object/array records independently of the final text or binary file format.
+- Add explicit EntityId and AssetId reference value kinds.
+- Represent scene, entity, component, and property records with IDs and schema versions.
+- Define behavior for unknown types, unknown properties, malformed values, and partial load failures.
+- Add round-trip tests before integrating all components.
+
+Pay attention to forward compatibility. Reading and saving a document containing unknown component records must preserve their data byte-for-byte or semantically equivalently.
+
+Completion criteria: representative scene data round-trips without runtime pointers, and unknown component/property records survive loading and saving.
+
+
+Phase 3: Implement TypeRegistry and metadata for built-in components
+
+- Define TypeDescriptor, PropertyDescriptor, registration ownership, and registration tokens.
+- Support registration and UnregisterOwner even though initial engine registrations are permanent.
+- Manually register a small component such as Transform first.
+- Add generic get/set, add/remove, serialize/deserialize, and clone adapters around typed EnTT operations.
+- Keep the descriptor contract independent of macros or the eventual code generator.
+
+Pay attention to lifetime. The registry may retain engine-owned metadata, but all executable callbacks from a temporary owner must be removable. Do not base persistent TypeId or PropertyId values on compiler-generated names.
+
+Completion criteria: code knowing only IDs and descriptors can enumerate, read, write, serialize, construct, and remove the test component.
+
+
+Phase 4: Implement scene serialization and migrations
+
+- Integrate Scene and built-in component descriptors with the serialized data model.
+- Serialize entity hierarchies and entity/asset references by persistent IDs.
+- Add type schema versions and a migration pipeline.
+- Preserve unknown component records alongside instantiated components.
+- Add load diagnostics that identify scene, entity, component, and property context.
+- Test save/load after entity, component, and property renames.
+
+Pay attention to error recovery. One invalid component should not necessarily prevent the rest of a scene from opening, and saving must not silently erase data that could not be instantiated.
+
+Completion criteria: scenes round-trip, references remain valid, old schema fixtures migrate, and unavailable types remain preserved.
+
+
+Phase 5: Implement the asset database and generalized import pipeline
+
+- Assign AssetIds through metadata files or a project database.
+- Resolve AssetId to source path and imported artifact.
+- Track dependencies, importer versions, dirty state, diagnostics, and last valid artifacts.
+- Add file watching with debouncing and background jobs.
+- Stage successful artifacts and swap them only at controlled runtime points.
+
+Pay attention to moves and renames. Asset identity must follow the asset rather than be regenerated from its path. Failed imports must not destroy the last usable artifact.
+
+Completion criteria: an asset can move without breaking references, dependency changes trigger rebuilds, and failed rebuilds retain the last valid result.
+
+
+Phase 6: Implement ID-based undo/redo and transactions
+
+- Define commands that target SceneDocumentId, EntityId, ComponentId, and PropertyId.
+- Store property changes as before/after SerializedValues.
+- Store structural changes as serialized snapshots.
+- Add command transactions and coalescing for sliders, text editing, and transform handles.
+- Define controlled behavior when a command target no longer exists or its type is temporarily unavailable.
+
+Pay attention to command lifetime. Commands must contain no pointer or callable tied to a component or future project DLL. An undo stack belongs to a SceneDocument, not to a global active scene.
+
+Completion criteria: property edits, component add/remove, and entity create/delete can be undone after container reallocations and entity renames without stale-pointer access.
+
+
+Phase 7: Build the metadata-driven inspector
+
+- Enumerate components and properties through TypeRegistry.
+- Implement generic drawers for primitives, strings, math types, entity references, and asset references.
+- Route every edit through undo transactions.
+- Support metadata attributes and optional custom drawers.
+- Display unknown components without dropping their serialized properties.
+- Use ComponentId for selection, ordering, and component operations.
+
+Pay attention to custom UI. Custom drawers must not directly mutate objects in a way that bypasses undo, dirty tracking, prefab overrides, validation, or future script reconstruction.
+
+Completion criteria: a newly registered ordinary component becomes serializable and editable without adding component-specific code to the inspector window.
+
+
+Phase 8: Introduce SceneDocument and edit/play separation
+
+- Move editor selection, dirty state, undo stacks, and scene operations under explicit SceneDocuments.
+- Reduce new dependencies on Scene::GetActiveScene and other global active-scene state.
+- Implement runtime scene cloning through the serialization/descriptor path.
+- Define play-mode lifecycle and destruction ordering.
+- Make applying runtime changes back to the edit scene an explicit command.
+
+Pay attention to references between edit and runtime worlds. They are separate object graphs even if persistent source IDs are used to correlate them.
+
+Completion criteria: play mode can mutate and destroy its runtime scene without changing the editable scene, and multiple document-targeted operations do not depend on a global scene.
+
+
+Phase 9: Implement prefabs on the shared data model
+
+- Store prefabs as serialized entity hierarchies identified by AssetId.
+- Define instance identity remapping.
+- Record overrides using component/property identities and SerializedValues.
+- Support missing types and schema migrations in prefab data.
+- Integrate prefab changes with inspector edits and undo transactions.
+
+Pay attention to nested identity and override stability. Renaming a property or moving an asset must not orphan overrides when persistent IDs remain unchanged.
+
+Completion criteria: prefab instances survive scene round-trips, property overrides are undoable, and missing component types do not destroy prefab data.
+
+
+Phase 10: Make retained-code systems owner-aware
+
+- Audit events, tasks, timers, signals, GUI callbacks, physics callbacks, and asynchronous asset callbacks.
+- Return explicit subscription/task handles.
+- Associate retained work with ModuleOwnerId.
+- Add bulk revoke/cancel/wait operations and diagnostics for leaked registrations.
+- Establish frame safe points where systems may be swapped.
+
+Pay attention to executing tasks. A module cannot unload until all threads have returned from its code. Avoid fire-and-forget callbacks whose ownership cannot be inspected.
+
+Completion criteria: a test owner can register work across these systems and one shutdown operation can prove that no owner callbacks remain or are executing.
+
+
+Phase 11: Add the language-independent script abstraction
+
+- Add the permanent engine-owned script representation to ECS.
+- Define ScriptTypeId/ScriptAssetId, ScriptInstanceId, lifecycle, and state ownership.
+- Implement IScriptRuntime without loading a DLL initially; use a fake runtime to test add/remove, play mode, serialization, undo, and reconstruction.
+- Support multiple script instances, including multiple instances of the same type on one entity.
+- Define how Start differs from reconstruction and OnAfterReload.
+
+Pay attention to separation. Script objects must remain outside EnTT, while persistent script identity and properties remain reconstructable engine data.
+
+Completion criteria: destroying and recreating every fake script runtime object preserves scene data and produces correct lifecycle calls.
+
+
+Phase 12: Add the C++ module ABI and build pipeline
+
+- Create a project-independent EmberEditor target and a project-scripts shared-library target.
+- Define versioned C-compatible engine and module function tables with C++ authoring wrappers.
+- Compile generation-specific artifacts in the background through the asset/build pipeline.
+- Load one prebuilt module before attempting automatic reload.
+- Prohibit pointers to engine internals and STL ownership across the ABI.
+- Ensure objects are destroyed by the module that created them.
+
+Pay attention to platform behavior, build configurations, compiler/runtime compatibility, unique DLL names on Windows, and actionable diagnostics for API-version mismatch.
+
+Completion criteria: the editor loads a module, discovers script descriptors, creates and destroys instances, and unloads it with no remaining module-owned registrations.
+
+
+Phase 13: Implement safe hot reload and state restoration
+
+- Implement the complete quiesce, capture, destroy, unregister, unload, load, register, recreate, restore, and resume sequence.
+- Keep the current module running when compilation fails.
+- Add rollback when the new artifact builds but fails validation or loading.
+- Restore fields by PropertyId with schema conversion, not by offset.
+- Stress-test repeated reload, class-size changes, added/removed properties, deleted entities, running tasks, event subscriptions, and missing script types.
+- Add diagnostics that identify which owner registration or executing task prevents unload.
+
+Pay attention to failure atomicity. A failed reload must leave either the old valid generation or a clearly controlled no-script state; it must never leave half of each generation registered.
+
+Completion criteria: hundreds of repeated reloads and representative structural script changes complete without restarting the editor, leaking registrations, losing serialized fields, or calling unloaded code.
+
+
+Rules to enforce during intermediate development
+------------------------------------------------
+
+- Do not serialize entity names, file paths, RTTI names, entt::entity values, pointers, or field offsets as identity.
+- Do not use entt::type_name<T>() as a permanent TypeId.
+- Do not build editor serialization or undo around compile-time component switch statements.
+- Do not store raw component pointers in undo commands, selections, inspectors, or long-lived editor state.
+- Do not retain callbacks without an explicit unregistration handle and owner.
+- Do not silently discard unknown component or property data.
+- Do not let custom inspectors bypass the command/property system.
+- Do not mutate the editable scene directly during play mode.
+- Do not compile project gameplay sources into the permanent editor executable once project modules are introduced.
+- Do not register reloadable script classes through the current append-only ComponentRegistry callbacks.
+- Do not place reloadable script objects directly in EnTT storage.
+- Do not pass STL containers, exceptions, allocator ownership, or engine-internal pointers across the future module ABI.
+- Do not unload a module while any thread, callback, object, registration, or task can still reference its code.
+- Do not overwrite the active module artifact; build a new generation and swap only after validation.
+
+
+What can remain deferred
+------------------------
+
+The dynamic library loader, C++ script base classes, reflection code generator, script compilation target, hot-reload coordinator, and engine scripting API do not need to be implemented while other engine systems are still developing. They can be added after the shared foundations above are proven.
+
+The immediate priority is not scripting-specific code. It is stable IDs, the serialized data model, owner-aware runtime metadata, and ID-based editor operations. These systems are independently valuable and form the path by which the future C++ scripting system can be integrated without replacing serialization, undo, the inspector, prefabs, or scene management.

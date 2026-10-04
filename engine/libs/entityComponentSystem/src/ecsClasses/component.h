@@ -19,7 +19,7 @@ namespace emberEcs
 		friend class Entity;
 
 	private: // Members:
-		std::string m_name;	// automatically set in CoreEntity::AddComponent => friend CoreEntity.
+		std::string m_name;				// automatically set in Entity::AddComponent(...)
 		bool m_isEnabled;
 		entt::entity m_entityHandle;	// can't store Entity reference as those are transient objects.
 		Scene* m_pScene;				// needed to create Entity from entt::entity handle.

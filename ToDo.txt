@@ -1,12 +1,6 @@
 ToDo:
-- clean up todo files
-- write proper AGENTS.md files, layered thorughout the project for better and faster agent context
 - add msaa filtering
 - allow renderWidth/renderHeight to change during runtime.
-- add a GetShadowShaderProperties to MeshRenderer and allow in vulkanBackend for shadow call descriptorSets to be supplied externally, so we can cash shadow call descriptors the same way draw descriptors are cashed.
-- there seems to be a memory leak or similar. Occasionally the defaultProject crashes with a SegFault.
-
-- vulkanPoolManager shouldnt rly exist? split it into vulkanCallDescriptorPoolManager + vulkanStagingBufferPoolManager?
 - rotations are sometimes given in degrees sometimes in radians. decide for one and make it consistent
 - how to handle math checks? are directions always normalized? should functions normalize them to be sure? what about rotation matrizes? should functions check for det=1?
 - Forwards emberCore::Mesh::m_bounds to vulkanRendererBackend and use it for sorting draw calls.
@@ -59,18 +53,14 @@ Add CONFIGURE_DEPENDS to all cmake file(GLOB...) commands? e.g:
 file(GLOB PIPELINES_FILES CONFIGURE_DEPENDS "src/pipelines/*.*")
 This makes cmake auto include newly added files when running make ... so no cmake .. on adding files is needed anymore.
 
-Check transform directions vs world directions and see if they mean the same.
-
 Review draw-call sorting and reduce per-frame overhead by caching sort keys or only resorting when relevant state changes.
 Re-enable texture batch uploading with correct queue synchronization and barriers between transfer and graphics queues.
 Reduce static shared state usage in Context, PoolManager, GarbageCollector, and RenderPassManager to improve encapsulation and thread safety.
-Resources in basic fragment/vertex shaders should belong mostly to SHADER_SET not CALL_SET and then each draw with different textures requires its own material => unity like multi materials from 1 shader source.
 
 Multi thread renderer -> make everything thread save.
 Dynamic descriptorPool allocation.
 Implement static meshes.
 Retry implementing queue ownership transitions.
-Check if layout transitioning and layout tracking logic is correct or needs updating.
 
 
 

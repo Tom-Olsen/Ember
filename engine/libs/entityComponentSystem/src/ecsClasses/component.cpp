@@ -38,7 +38,7 @@ namespace emberEcs
 	}
 	bool Component::GetIsActive() const
 	{
-		return m_isEnabled && GetEntity().GetIsActive();
+		return m_pScene != nullptr && m_isEnabled && GetEntity().GetIsActive();
 	}
 	Entity const Component::GetEntity() const
 	{
