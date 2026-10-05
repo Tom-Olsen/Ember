@@ -8,11 +8,12 @@
 #include "mathInterpolation.hlsli"
 #include "mathLinearAlgebra.hlsli"
 #include "mathRandom.hlsli"
+#include "mathRay.hlsli"
 
 
 
 // Basic functions:
-uint NextPowerOfTwo(uint n)
+uint math_NextPowerOfTwo(uint n)
 {
     if (n == 0)
         return 1;

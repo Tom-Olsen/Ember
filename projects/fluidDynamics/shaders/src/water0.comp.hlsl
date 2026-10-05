@@ -44,11 +44,6 @@ static const uint densityCrossingExit = 2;
 
 
 // Structs:
-struct WorldRay
-{
-	float3 origin;
-	float3 direction;
-};
 struct DensityHit
 {
 	float distance;
@@ -79,24 +74,24 @@ float3 GetWorldPosition(uint2 pixel, float ndcDepth, float2 screenSize)
 	float3 screenPosition = float3(float2(pixel) + 0.5f, ndcDepth);
 	return ScreenPositionToWorld(screenPosition, screenSize);
 }
-WorldRay GetCameraRay(uint2 pixel, float2 screenSize)
+math_Ray GetCameraRay(uint2 pixel, float2 screenSize)
 {
 	float3 nearPosition = GetWorldPosition(pixel, 0.0f, screenSize);
 	float3 farPosition = GetWorldPosition(pixel, 1.0f, screenSize);
 
-	WorldRay ray;
-	ray.origin = nearPosition;
-	ray.direction = normalize(farPosition - nearPosition);
-	return ray;
+	math_Ray worldRay;
+	worldRay.origin = nearPosition;
+	worldRay.direction = normalize(farPosition - nearPosition);
+	return worldRay;
 }
-float GetSceneDistance(uint2 pixel, WorldRay ray, float2 screenSize)
+float GetSceneDistance(uint2 pixel, math_Ray worldRay, float2 screenSize)
 {
 	float sceneDepth = GetSceneNdcDepth(pixel);
 	if (sceneDepth >= 1.0f)
 		return 1.0e30f;
 
 	float3 scenePosition = GetWorldPosition(pixel, sceneDepth, screenSize);
-	return dot(scenePosition - ray.origin, ray.direction);
+	return dot(scenePosition - worldRay.origin, worldRay.direction);
 }
 float3 GetEnvironmentColor(float3 worldDirection)
 {
@@ -147,10 +142,10 @@ bool UpdateRayBoundsInterval(float origin, float direction, inout float enterDis
 	exitDistance = min(exitDistance, distance1);
 	return enterDistance <= exitDistance;
 }
-bool RayFluidBoundsIntersection(WorldRay ray, out float enterDistance, out float exitDistance)
+bool RayFluidBoundsIntersection(math_Ray worldRay, out float enterDistance, out float exitDistance)
 {
-	float3 originFluid = mul(worldToFluidMatrix, float4(ray.origin, 1.0f)).xyz;
-	float3 directionFluid = mul(worldToFluidMatrix, float4(ray.direction, 0.0f)).xyz;
+	float3 originFluid = mul(worldToFluidMatrix, float4(worldRay.origin, 1.0f)).xyz;
+	float3 directionFluid = mul(worldToFluidMatrix, float4(worldRay.direction, 0.0f)).xyz;
 	enterDistance = -1.0e30f;
 	exitDistance = 1.0e30f;
 
@@ -192,12 +187,12 @@ float3 GetDensityNormal(float3 worldPosition, float3 fallbackNormal)
 		return normalize(fallbackNormal);
 	return -gradientWorld * rsqrt(gradientLengthSquared);
 }
-DensityHit RefineDensityHit(WorldRay ray, float frontDistance, float backDistance, bool frontInside)
+DensityHit RefineDensityHit(math_Ray worldRay, float frontDistance, float backDistance, bool frontInside)
 {
 	for (uint refinementIndex = 0; refinementIndex < maxDensityRefinementStepCount; refinementIndex++)
 	{
 		float midpointDistance = 0.5f * (frontDistance + backDistance);
-		bool midpointInside = SampleDensityWorld(ray.origin + midpointDistance * ray.direction) >= surfaceDensity;
+		bool midpointInside = SampleDensityWorld(mathRay_GetPoint(worldRay, midpointDistance)) >= surfaceDensity;
 		if (midpointInside == frontInside)
 			frontDistance = midpointDistance;
 		else
@@ -206,12 +201,12 @@ DensityHit RefineDensityHit(WorldRay ray, float frontDistance, float backDistanc
 
 	DensityHit hit;
 	hit.distance = 0.5f * (frontDistance + backDistance);
-	hit.position = ray.origin + hit.distance * ray.direction;
-	hit.normal = GetDensityNormal(hit.position, -ray.direction);
+	hit.position = mathRay_GetPoint(worldRay, hit.distance);
+	hit.normal = GetDensityNormal(hit.position, -worldRay.direction);
 	hit.isEntering = !frontInside;
 	return hit;
 }
-bool TryMarchDensitySurface(WorldRay ray, float startDistance, float endDistance, uint crossingType, bool detectInitialEntry, out DensityHit hit)
+bool TryMarchDensitySurface(math_Ray worldRay, float startDistance, float endDistance, uint crossingType, bool detectInitialEntry, out DensityHit hit)
 {
 	hit.distance = 0.0f;
 	hit.position = 0.0f;
@@ -226,12 +221,12 @@ bool TryMarchDensitySurface(WorldRay ray, float startDistance, float endDistance
 	float stepLength = max(densityRayStepLength, minimumStepLength);
 	uint stepCount = min((uint)ceil(marchDistance / stepLength), maxDensityStepCount);
 	float previousDistance = startDistance;
-	bool previousInside = SampleDensityWorld(ray.origin + previousDistance * ray.direction) >= surfaceDensity;
+	bool previousInside = SampleDensityWorld(mathRay_GetPoint(worldRay, previousDistance)) >= surfaceDensity;
 	if (detectInitialEntry && previousInside && crossingType != densityCrossingExit)
 	{
 		hit.distance = previousDistance;
-		hit.position = ray.origin + hit.distance * ray.direction;
-		hit.normal = GetDensityNormal(hit.position, -ray.direction);
+		hit.position = mathRay_GetPoint(worldRay, hit.distance);
+		hit.normal = GetDensityNormal(hit.position, -worldRay.direction);
 		hit.isEntering = true;
 		return true;
 	}
@@ -239,7 +234,7 @@ bool TryMarchDensitySurface(WorldRay ray, float startDistance, float endDistance
 	for (uint step = 1; step <= stepCount; step++)
 	{
 		float currentDistance = min(startDistance + float(step) * stepLength, endDistance);
-		bool currentInside = SampleDensityWorld(ray.origin + currentDistance * ray.direction) >= surfaceDensity;
+		bool currentInside = SampleDensityWorld(mathRay_GetPoint(worldRay, currentDistance)) >= surfaceDensity;
 		if (currentInside != previousInside)
 		{
 			bool isEntering = currentInside;
@@ -248,7 +243,7 @@ bool TryMarchDensitySurface(WorldRay ray, float startDistance, float endDistance
 				|| (crossingType == densityCrossingExit && !isEntering);
 			if (acceptsCrossing)
 			{
-				hit = RefineDensityHit(ray, previousDistance, currentDistance, previousInside);
+				hit = RefineDensityHit(worldRay, previousDistance, currentDistance, previousInside);
 				return true;
 			}
 		}
@@ -261,14 +256,14 @@ bool TryMarchDensitySurface(WorldRay ray, float startDistance, float endDistance
 
 
 // Scene depth ray march helpers:
-uint EvaluateSceneRaySample(WorldRay ray, float distance, float2 screenSize, out SceneRaySample sample)
+uint EvaluateSceneRaySample(math_Ray worldRay, float distance, float2 screenSize, out SceneRaySample sample)
 {
 	sample.distance = distance;
 	sample.depthDelta = 0.0f;
 	sample.sceneViewDepth = 0.0f;
 	sample.uv = 0.0f;
 
-	float3 worldPosition = ray.origin + distance * ray.direction;
+	float3 worldPosition = mathRay_GetPoint(worldRay, distance);
 	float4 clipPosition = mul(camera_worldToClipMatrix, float4(worldPosition, 1.0f));
 	if (clipPosition.w <= 0.0f)
 		return sceneSampleOutsideScreen;
@@ -289,14 +284,14 @@ uint EvaluateSceneRaySample(WorldRay ray, float distance, float2 screenSize, out
 	sample.depthDelta = Camera_GetDepth(worldPosition) - sample.sceneViewDepth;
 	return sceneSampleValid;
 }
-bool TryRefineSceneHit(WorldRay ray, float2 screenSize, SceneRaySample frontSample, SceneRaySample backSample, out SceneRaySample hitSample)
+bool TryRefineSceneHit(math_Ray worldRay, float2 screenSize, SceneRaySample frontSample, SceneRaySample backSample, out SceneRaySample hitSample)
 {
 	hitSample = backSample;
 	for (uint refinementIndex = 0; refinementIndex < maxSceneRefinementStepCount; refinementIndex++)
 	{
 		float midpointDistance = 0.5f * (frontSample.distance + backSample.distance);
 		SceneRaySample midpointSample;
-		if (EvaluateSceneRaySample(ray, midpointDistance, screenSize, midpointSample) != sceneSampleValid)
+		if (EvaluateSceneRaySample(worldRay, midpointDistance, screenSize, midpointSample) != sceneSampleValid)
 			return false;
 
 		if (midpointSample.depthDelta < 0.0f)
@@ -311,7 +306,7 @@ bool TryRefineSceneHit(WorldRay ray, float2 screenSize, SceneRaySample frontSamp
 	hitSample = backSample;
 	return true;
 }
-bool TryTraceScene(WorldRay ray, float2 screenSize, float maxDistance, out float3 sceneColor, out float hitDistance)
+bool TryTraceScene(math_Ray worldRay, float2 screenSize, float maxDistance, out float3 sceneColor, out float hitDistance)
 {
 	sceneColor = 0.0f;
 	hitDistance = 0.0f;
@@ -328,7 +323,7 @@ bool TryTraceScene(WorldRay ray, float2 screenSize, float maxDistance, out float
 	{
 		float distance = min(float(step) * stepLength, maxDistance);
 		SceneRaySample sample;
-		uint status = EvaluateSceneRaySample(ray, distance, screenSize, sample);
+		uint status = EvaluateSceneRaySample(worldRay, distance, screenSize, sample);
 		if (status == sceneSampleOutsideScreen)
 			break;
 		if (status == sceneSampleWithoutGeometry)
@@ -340,7 +335,7 @@ bool TryTraceScene(WorldRay ray, float2 screenSize, float maxDistance, out float
 		if (hasPreviousSample && previousSample.depthDelta < 0.0f && sample.depthDelta >= 0.0f)
 		{
 			SceneRaySample hitSample;
-			if (TryRefineSceneHit(ray, screenSize, previousSample, sample, hitSample))
+			if (TryRefineSceneHit(worldRay, screenSize, previousSample, sample, hitSample))
 			{
 				sceneColor = SampleSceneColor(hitSample.uv).rgb;
 				hitDistance = hitSample.distance;
@@ -354,16 +349,16 @@ bool TryTraceScene(WorldRay ray, float2 screenSize, float maxDistance, out float
 }
 float3 TraceSceneOrEnvironment(float3 origin, float3 direction, float2 screenSize)
 {
-	WorldRay ray;
-	ray.origin = origin + max(surfaceBias, 1.0e-4f) * direction;
-	ray.direction = normalize(direction);
+	math_Ray worldRay;
+	worldRay.origin = origin + max(surfaceBias, 1.0e-4f) * direction;
+	worldRay.direction = normalize(direction);
 
 	float3 sceneColor;
 	float hitDistance;
 	float maxDistance = sceneRayMaxDistance > 0.0f ? sceneRayMaxDistance : Camera_GetFarClip();
-	if (TryTraceScene(ray, screenSize, maxDistance, sceneColor, hitDistance))
+	if (TryTraceScene(worldRay, screenSize, maxDistance, sceneColor, hitDistance))
 		return sceneColor;
-	return GetEnvironmentColor(ray.direction);
+	return GetEnvironmentColor(worldRay.direction);
 }
 
 
@@ -378,27 +373,27 @@ float3 TraceFromInsideFluid(float3 startPosition, float3 startDirection, float2 
 
 	for (uint reflectionIndex = 0; reflectionIndex <= maxInternalReflectionCount; reflectionIndex++)
 	{
-		WorldRay internalRay;
-		internalRay.origin = currentPosition + rayBias * currentDirection;
-		internalRay.direction = currentDirection;
+		math_Ray internalWorldRay;
+		internalWorldRay.origin = currentPosition + rayBias * currentDirection;
+		internalWorldRay.direction = currentDirection;
 
 		float boundsEnterDistance;
 		float boundsExitDistance;
-		if (!RayFluidBoundsIntersection(internalRay, boundsEnterDistance, boundsExitDistance))
+		if (!RayFluidBoundsIntersection(internalWorldRay, boundsEnterDistance, boundsExitDistance))
 			break;
 
 		DensityHit exitHit;
 		float marchStart = max(boundsEnterDistance, 0.0f);
-		if (!TryMarchDensitySurface(internalRay, marchStart, boundsExitDistance, densityCrossingExit, false, exitHit))
+		if (!TryMarchDensitySurface(internalWorldRay, marchStart, boundsExitDistance, densityCrossingExit, false, exitHit))
 			break;
 
 		// Opaque geometry can be embedded in or intersect the fluid volume. Test
 		// the screen-space depth before processing the density exit interface.
 		float3 sceneColor;
 		float sceneHitDistance;
-		if (TryTraceScene(internalRay, screenSize, exitHit.distance, sceneColor, sceneHitDistance))
+		if (TryTraceScene(internalWorldRay, screenSize, exitHit.distance, sceneColor, sceneHitDistance))
 		{
-			float3 sceneHitPosition = internalRay.origin + sceneHitDistance * internalRay.direction;
+			float3 sceneHitPosition = mathRay_GetPoint(internalWorldRay, sceneHitDistance);
 			float totalDistance = travelledInsideFluid + distance(currentPosition, sceneHitPosition);
 			float3 transmittance = exp(-max(absorption, 0.0f) * totalDistance);
 			return transmittance * sceneColor;
@@ -439,20 +434,20 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	// Limit the primary density march to the part of the fluid bounds visible
 	// before the opaque scene depth at this pixel.
-	WorldRay cameraRay = GetCameraRay(sourcePixel, screenSize);
+	math_Ray cameraWorldRay = GetCameraRay(sourcePixel, screenSize);
 	float boundsEnterDistance;
 	float boundsExitDistance;
-	if (!RayFluidBoundsIntersection(cameraRay, boundsEnterDistance, boundsExitDistance))
+	if (!RayFluidBoundsIntersection(cameraWorldRay, boundsEnterDistance, boundsExitDistance))
 	{
 		SetSceneColor(sourcePixel, sourceColor);
 		return;
 	}
 
 	float marchStart = max(boundsEnterDistance, 0.0f);
-	float marchEnd = min(boundsExitDistance, GetSceneDistance(sourcePixel, cameraRay, screenSize));
+	float marchEnd = min(boundsExitDistance, GetSceneDistance(sourcePixel, cameraWorldRay, screenSize));
 	DensityHit primaryHit;
 	bool rayEntersFluidBounds = boundsEnterDistance >= 0.0f;
-	if (!TryMarchDensitySurface(cameraRay, marchStart, marchEnd, densityCrossingAny, rayEntersFluidBounds, primaryHit))
+	if (!TryMarchDensitySurface(cameraWorldRay, marchStart, marchEnd, densityCrossingAny, rayEntersFluidBounds, primaryHit))
 	{
 		SetSceneColor(sourcePixel, sourceColor);
 		return;
@@ -460,9 +455,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	float sourceIor = primaryHit.isEntering ? 1.0f : fluidIndexOfRefraction;
 	float destinationIor = primaryHit.isEntering ? fluidIndexOfRefraction : 1.0f;
-	float3 facingNormal = GetFacingNormal(cameraRay.direction, primaryHit.normal);
-	float3 reflectionDirection = normalize(reflect(cameraRay.direction, facingNormal));
-	float3 refractionDirection = refract(cameraRay.direction, facingNormal, sourceIor / destinationIor);
+	float3 facingNormal = GetFacingNormal(cameraWorldRay.direction, primaryHit.normal);
+	float3 reflectionDirection = normalize(reflect(cameraWorldRay.direction, facingNormal));
+	float3 refractionDirection = refract(cameraWorldRay.direction, facingNormal, sourceIor / destinationIor);
 
 	float3 reflectionColor;
 	if (primaryHit.isEntering)
@@ -482,7 +477,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	}
 
 	float fresnel = hasRefraction
-		? GetFresnel(cameraRay.direction, facingNormal, sourceIor, destinationIor)
+		? GetFresnel(cameraWorldRay.direction, facingNormal, sourceIor, destinationIor)
 		: 1.0f;
 	float3 fluidColor = lerp(refractionColor, reflectionColor, fresnel);
 

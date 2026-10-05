@@ -50,7 +50,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float depthBias = max(0.02f, 0.0005f * surfaceDepth);
 	float3 rayOrigin = worldPosition + depthBias * worldNormal;
 	float3 reflectionDirection = normalize(reflect(cameraRayDirection, worldNormal));
-	WorldRay worldRay = {rayOrigin, reflectionDirection};
+	math_Ray worldRay = {rayOrigin, reflectionDirection};
 
 	// Screen space ray marching:
 	uint2 hitPixel;
