@@ -68,12 +68,7 @@ Scene* Fluid3dScene()
 	Texture& skyboxTexture = TextureManager::GetTexture("skybox0");
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
 	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
-	DeferredMaterial floorMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
-	floorMaterial.SetTexture("colorMap", TextureManager::GetTexture("ground0_color"));
-	floorMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("ground0_roughness"));
-	floorMaterial.SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
-	floorMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
-	floorMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");
 
 	{// Camera:
 		Entity entity = Entity::Create("mainCamera");
@@ -117,7 +112,7 @@ Scene* Fluid3dScene()
 	}
 	{// Directional Light:
 		Entity entity = Entity::Create("directionalLight");
-		Float3 pos = 2.0f * Float3(16.0f, 9.0f, 9.0f);
+		Float3 pos = 50.0f * Float3(16.0f, 9.0f, 9.0f);
 		Float3 direction = -pos.Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
     
@@ -126,7 +121,7 @@ Scene* Fluid3dScene()
 		pTransform->SetRotationMatrix(matrix);
     
 		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
-		pDirectionalLight->SetIntensity(1.0f);
+		pDirectionalLight->SetIntensity(5.0f);
 		pDirectionalLight->SetColor(Float3::white);
 		pDirectionalLight->SetDrawFrustum(false);
 		pDirectionalLight->SetShadowCascadeCount(1);

@@ -48,7 +48,7 @@ namespace emberEcs
 	// Setters:
 	void DirectionalLight::SetIntensity(float intensity)
 	{
-		m_intensity = std::clamp(intensity, 0.0f, 1.0f);
+		m_intensity = std::max(intensity, 0.0f);
 	}
 	void DirectionalLight::SetColor(const Float3& color)
 	{

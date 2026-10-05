@@ -30,7 +30,7 @@ namespace emberEcs
 	// Setters:
 	void PointLight::SetIntensity(const float& intensity)
 	{
-		m_intensity = intensity;
+		m_intensity = std::max(intensity, 0.0f);
 	}
 	void PointLight::SetColor(const Float3& color)
 	{

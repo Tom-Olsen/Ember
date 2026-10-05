@@ -1,0 +1,24 @@
+{
+    "materialName": "checkerBoard",
+    "materialShaderName": "checkerBoard",
+    "materialPass": "deferredGeometry",
+    "shaderStages":
+    {
+        "vertex":
+        {
+            "sourcePath": "../src/checkerBoard.vert.hlsl",
+            "binaryPath": "../bin/checkerBoard.vert.spv"
+        },
+        "fragment":
+        {
+            "sourcePath": "../src/checkerBoard.frag.hlsl",
+            "binaryPath": "../bin/checkerBoard.frag.spv"
+        }
+    },
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}
