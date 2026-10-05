@@ -19,22 +19,46 @@ float3 mathRay_GetPoint(math_Ray ray, float t)
 }
 math_Ray mathRay_Transform(math_Ray ray, float4x4 matrix)
 {
-	float3 origin = mul(float4(ray.origin, 1.0f), matrix).xyz;
-	float3 direction = mul(float4(ray.direction, 0.0f), matrix).xyz;
+	float3 origin = mul(matrix, float4(ray.origin, 1.0f)).xyz;
+	float3 direction = mul(matrix, float4(ray.direction, 0.0f)).xyz;
 	math_Ray result = { origin, direction };
 	return result;
 }
 bool mathRay_TryIntersectBounds(math_Ray ray, float3 boundsMin, float3 boundsMax, out float tEnter, out float tExit)
 {
-	float3 inverseDirection = 1.0f / ray.direction;
-	float3 t0 = (boundsMin - ray.origin) * inverseDirection;
-	float3 t1 = (boundsMax - ray.origin) * inverseDirection;
-	float3 tMin = min(t0, t1);
-	float3 tMax = max(t0, t1);
+	tEnter = 0.0f;
+	tExit = 0.0f;
+	float enterDistance = -asfloat(0x7f800000u); // negative infinity.
+	float exitDistance  =  asfloat(0x7f800000u); // positive infinity.
 
-	tEnter = max(tMin.x, max(tMin.y, tMin.z));
-	tExit  = min(tMax.x, min(tMax.y, tMax.z));
-	return tExit >= max(tEnter, 0.0f);
+	for (uint axis = 0; axis < 3; axis++)
+	{
+		// A parallel ray intersects this slab only if its origin is inside it:
+		if (ray.direction[axis] == 0.0f)
+		{
+			if (ray.origin[axis] < boundsMin[axis] || ray.origin[axis] > boundsMax[axis])
+				return false;
+			continue;
+		}
+
+		float t0 = (boundsMin[axis] - ray.origin[axis]) / ray.direction[axis];
+		float t1 = (boundsMax[axis] - ray.origin[axis]) / ray.direction[axis];
+		enterDistance = max(enterDistance, min(t0, t1));
+		exitDistance = min(exitDistance, max(t0, t1));
+		if (enterDistance > exitDistance)
+			return false;
+	}
+
+	if (exitDistance < max(enterDistance, 0.0f))
+		return false;
+	tEnter = enterDistance;
+	tExit = exitDistance;
+	return true;
+}
+bool mathRay_TryIntersectRotatedBounds(math_Ray ray, float4x4 worldToBounds, float3 boundsMin, float3 boundsMax, out float tEnter, out float tExit)
+{// worldToBounds maps world space to local bounds space.
+	math_Ray boundsRay = mathRay_Transform(ray, worldToBounds);
+	return mathRay_TryIntersectBounds(boundsRay, boundsMin, boundsMax, tEnter, tExit);
 }
 bool mathRay_TryIntersectSphere(math_Ray ray, float3 center, float radius, out float tEnter, out float tExit)
 {
