@@ -72,7 +72,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	{
 		float edgeDistance = min(min(hitUv.x, 1.0f - hitUv.x), min(hitUv.y, 1.0f - hitUv.y));
 		float edgeFade = saturate(10.0f * edgeDistance);
-		reflectionColor = lerp(reflectionColor, GetSceneColor(hitPixel).rgb, edgeFade);
+		reflectionColor = lerp(reflectionColor, Scene_GetColor(hitPixel).rgb, edgeFade);
 	}
 
 	// Store reflection color and has hit (alpha=1) for composit pass:

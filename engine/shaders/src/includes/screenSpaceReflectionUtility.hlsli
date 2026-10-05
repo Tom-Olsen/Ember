@@ -45,7 +45,7 @@ float3 GetWorldPosition(uint2 pixel, float ndcDepth, float2 screenSize)
 }
 bool TryGetGeometryWorldPosition(uint2 pixel, float2 screenSize, out float3 worldPosition)
 {
-	float sceneDepth = GetSceneNdcDepth(pixel);
+	float sceneDepth = Scene_GetNdcDepth(pixel);
 	if (sceneDepth >= 1.0f)
 	{
 		worldPosition = 0.0f;
@@ -113,7 +113,7 @@ uint EvaluateScreenRaySample(float3 screenPosition, float2 screenSize, out Scree
 		return screenRaySampleOutsideScreen;
 
 	uint2 pixel = uint2(screenPosition.xy);
-	float sceneNdcDepth = GetSceneNdcDepth(pixel);
+	float sceneNdcDepth = Scene_GetNdcDepth(pixel);
 	if (sceneNdcDepth >= 1.0f)
 		return screenRaySampleWithoutGeometry;
 

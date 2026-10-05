@@ -17,7 +17,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
         return;
 
-    float4 renderColor = GetSceneColor(threadID.xy);
+    float4 renderColor = Scene_GetColor(threadID.xy);
     renderColor.rgb = lerp(renderColor.rgb, outlineColor.rgb, outlineMask[threadID.xy] * outlineColor.a);
-    SetSceneColor(threadID.xy, renderColor);
+    Scene_SetColor(threadID.xy, renderColor);
 }

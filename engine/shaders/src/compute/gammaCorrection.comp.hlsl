@@ -23,8 +23,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
 {
     if (threadID.x < pc.threadCount.x && threadID.y < pc.threadCount.y)
     {
-        float4 color = GetSceneColor(threadID.xy);
+        float4 color = Scene_GetColor(threadID.xy);
         float3 correctedRGB = LinearToSRGB(clamp(color.rgb, 0, 1));
-        SetSceneColor(threadID.xy, float4(correctedRGB, color.a));
+        Scene_SetColor(threadID.xy, float4(correctedRGB, color.a));
     }
 }

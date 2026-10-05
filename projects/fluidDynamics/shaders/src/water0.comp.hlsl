@@ -86,7 +86,7 @@ math_Ray GetCameraRay(uint2 pixel, float2 screenSize)
 }
 float GetSceneDistance(uint2 pixel, math_Ray worldRay, float2 screenSize)
 {
-	float sceneDepth = GetSceneNdcDepth(pixel);
+	float sceneDepth = Scene_GetNdcDepth(pixel);
 	if (sceneDepth >= 1.0f)
 		return 1.0e30f;
 
@@ -275,7 +275,7 @@ uint EvaluateSceneRaySample(math_Ray worldRay, float distance, float2 screenSize
 
 	sample.uv = uv;
 	uint2 pixel = min(uint2(uv * screenSize), uint2(screenSize) - 1);
-	float sceneNdcDepth = GetSceneNdcDepth(pixel);
+	float sceneNdcDepth = Scene_GetNdcDepth(pixel);
 	if (sceneNdcDepth >= 1.0f)
 		return sceneSampleWithoutGeometry;
 
@@ -337,7 +337,7 @@ bool TryTraceScene(math_Ray worldRay, float2 screenSize, float maxDistance, out 
 			SceneRaySample hitSample;
 			if (TryRefineSceneHit(worldRay, screenSize, previousSample, sample, hitSample))
 			{
-				sceneColor = SampleSceneColor(hitSample.uv).rgb;
+				sceneColor = Scene_SampleColor(hitSample.uv).rgb;
 				hitDistance = hitSample.distance;
 				return true;
 			}
@@ -430,7 +430,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
 	float2 screenSize = float2(screenWidth, screenHeight);
 	uint2 sourcePixel = threadID.xy;
-	float4 sourceColor = GetSceneColor(sourcePixel);
+	float4 sourceColor = Scene_GetColor(sourcePixel);
 
 	// Limit the primary density march to the part of the fluid bounds visible
 	// before the opaque scene depth at this pixel.
@@ -439,7 +439,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float boundsExitDistance;
 	if (!RayFluidBoundsIntersection(cameraWorldRay, boundsEnterDistance, boundsExitDistance))
 	{
-		SetSceneColor(sourcePixel, sourceColor);
+		Scene_SetColor(sourcePixel, sourceColor);
 		return;
 	}
 
@@ -449,7 +449,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	bool rayEntersFluidBounds = boundsEnterDistance >= 0.0f;
 	if (!TryMarchDensitySurface(cameraWorldRay, marchStart, marchEnd, densityCrossingAny, rayEntersFluidBounds, primaryHit))
 	{
-		SetSceneColor(sourcePixel, sourceColor);
+		Scene_SetColor(sourcePixel, sourceColor);
 		return;
 	}
 
@@ -489,5 +489,5 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		fluidColor *= exp(-max(absorption, 0.0f) * primaryFluidDistance);
 	}
 
-	SetSceneColor(sourcePixel, float4(fluidColor, sourceColor.a));
+	Scene_SetColor(sourcePixel, float4(fluidColor, sourceColor.a));
 }

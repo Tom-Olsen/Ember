@@ -33,13 +33,13 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	// Source pixel/color:
 	uint2 sourcePixel = threadID.xy;
-	float4 sourceColor = GetSceneColor(sourcePixel);
+	float4 sourceColor = Scene_GetColor(sourcePixel);
 
 	// Sky rays:
 	float3 worldPosition;
 	if (TryGetGeometryWorldPosition(sourcePixel, screenSize, worldPosition) == false)
 	{
-		SetSceneColor(sourcePixel, sourceColor);
+		Scene_SetColor(sourcePixel, sourceColor);
 		return;
 	}
 
@@ -65,7 +65,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	{
 		float edgeDistance = min(min(hitUv.x, 1.0f - hitUv.x), min(hitUv.y, 1.0f - hitUv.y));
 		float edgeFade = saturate(10.0f * edgeDistance);
-		reflectionColor = lerp(reflectionColor, GetSceneColor(hitPixel).rgb, edgeFade);
+		reflectionColor = lerp(reflectionColor, Scene_GetColor(hitPixel).rgb, edgeFade);
 	}
 
 	// Physically based reflections:
@@ -75,5 +75,5 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), saturate(albedo), saturate(metallicity));
 	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
 	float3 fresnel = reflectivity + (1.0f - reflectivity) * pow(1.0f - nDotV, 5.0f);
-	SetSceneColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, fresnel), sourceColor.a));
+	Scene_SetColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, fresnel), sourceColor.a));
 }

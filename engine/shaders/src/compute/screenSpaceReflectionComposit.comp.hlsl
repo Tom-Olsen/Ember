@@ -30,7 +30,7 @@ float3 ScreenPositionToWorld(float3 screenPosition, float2 screenSize)
 }
 bool TryGetSurfaceData(uint2 pixel, float2 screenSize, out float3 worldPosition, out float viewDepth, out float3 worldNormal, out float roughness)
 {
-	float ndcDepth = GetSceneNdcDepth(pixel);
+	float ndcDepth = Scene_GetNdcDepth(pixel);
 
 	// No geometry:
 	if (ndcDepth >= 1.0f)
@@ -65,7 +65,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	// Source pixel/color:
 	uint2 sourcePixel = threadID.xy;
-	float4 sourceColor = GetSceneColor(sourcePixel);
+	float4 sourceColor = Scene_GetColor(sourcePixel);
 
 	// Get surface data:
 	float3 worldPosition;
@@ -147,5 +147,5 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float3 cameraRayDirection = Camera_GetRayDirection(worldPosition);
 	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
 	float3 fresnel = reflectivity + (1.0f - reflectivity) * pow(1.0f - nDotV, 5.0f);
-	SetSceneColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, reconstructionConfidence * fresnel), sourceColor.a));
+	Scene_SetColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, reconstructionConfidence * fresnel), sourceColor.a));
 }
