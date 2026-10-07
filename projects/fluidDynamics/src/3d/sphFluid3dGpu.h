@@ -68,9 +68,10 @@ namespace fluidDynamics
 		float m_waterSurfaceDensity;
 		float m_waterIndexOfRefraction;
 		Float3 m_waterAbsorption;
+		uint32_t m_waterStepCount;
+		uint32_t m_waterRefinementStepCount;
 		float m_waterStepLength;
-		uint32_t m_waterMaxStepCount;
-		uint32_t m_waterMaxRefinementStepCount;
+		uint32_t m_waterSurfaceInteractions;
 
         // Internal:
 		Mesh m_particleMesh;
@@ -137,9 +138,10 @@ namespace fluidDynamics
 		void SetWaterSurfaceDensity(float waterSurfaceDensity);
 		void SetWaterIndexOfRefraction(float waterIndexOfRefraction);
 		void SetWaterAbsorption(const Float3& waterAbsorption);
+		void SetWaterStepCount(uint32_t waterStepCount);
+		void SetWaterRefinementStepCount(uint32_t waterRefinementStepCount);
 		void SetWaterStepLength(float waterStepLength);
-		void SetWaterMaxStepCount(uint32_t waterMaxStepCount);
-		void SetWaterMaxRefinementStepCount(uint32_t waterMaxRefinementStepCount);
+		void SetWaterSurfaceInteractions(uint32_t waterSurfaceInteractions);
 
 		// Getters:
 		// Management:
@@ -186,9 +188,10 @@ namespace fluidDynamics
 		float GetWaterSurfaceDensity() const;
 		float GetWaterIndexOfRefraction() const;
 		Float3 GetWaterAbsorption() const;
+		uint32_t GetWaterStepCount() const;
+		uint32_t GetWaterRefinementStepCount() const;
 		float GetWaterStepLength() const;
-		uint32_t GetWaterMaxStepCount() const;
-		uint32_t GetWaterMaxRefinementStepCount() const;
+		uint32_t GetWaterSurfaceInteractions() const;
 
 		// Debugging:
 		void Print();

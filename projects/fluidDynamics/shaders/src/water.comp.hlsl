@@ -9,13 +9,14 @@ cbuffer CallValues : register(b300, CALL_SET)
 	float4x4 worldToFluidMatrix;	// given by fluid simulation.
 	float3 fluidBoundsMin;			// given by fluid simulation.
 	float3 fluidBoundsMax;			// given by fluid simulation.
-	float surfaceDensity;			// user input.
-	float indexOfRefraction;		// user input.
+	float surfaceDensity;			// user input. cpu setter enforces >= 1e-4f.
+	float indexOfRefraction;		// user input. cpu setter enforces >= 1e-4f.
 	//float3 absorption;				// user input.
 	//float normalSampleDistance;		// user input.
-	uint maxStepCount;				// user input.
-	uint maxRefinementStepCount;	// user input.
-	float stepLength;				// user input.
+	uint stepCount;				// user input. cpu setter enforces >= 1.
+	uint refinementStepCount;	// user input. cpu setter enforces >= 0.
+	float stepLength;				// user input. cpu setter enforces >= 0.01f.
+	uint surfaceInteractions;					// user input. cpu setter clamps to [1,4].
 };
 Texture3D<float> densityTexture : register(t100, CALL_SET);
 TextureCube<float4> environmentMap : register(t101, CALL_SET);
@@ -159,7 +160,7 @@ SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 {
 	// Reject empty search interval:
 	SurfaceHit hit = {math_zero3, math_zero3, 0.0f, missingFluid};
-	if ( fluidRay.stepCount >= maxStepCount)
+	if (fluidRay.stepCount >= stepCount)
 		return hit;
 
 	// Ray march (step0):
@@ -170,7 +171,7 @@ SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 	bool nextInsideFluid = nextDensity > surfaceDensity;
 	float distance = stepLength;	// missing distance from camera to fluid bounds surface. Not needed as that is air distance.
 	fluidRay.stepCount++;
-	for (; fluidRay.stepCount < maxStepCount; fluidRay.stepCount++)
+	for (; fluidRay.stepCount < stepCount; fluidRay.stepCount++)
 	{
 		if (fluidRay.insideFluid != nextInsideFluid)
 			break;
@@ -190,7 +191,7 @@ SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 
 	// Refine hit:
 	float subStepLength = stepLength;
-	for (uint i = 0; i < maxRefinementStepCount; i++)
+	for (uint i = 0; i < refinementStepCount; i++)
 	{
 		float3 midPosition = 0.5f * (currentPosition + nextPosition);
 		float midDensity = SampleDensity_World(midPosition);
@@ -216,6 +217,87 @@ SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 	hit.distance = distance - 0.5f * subStepLength;	// distance from origin to nextPosition.
 	hit.hitState = fluidRay.insideFluid ? leavingFluid : enteringFluid;
 	return hit;
+}
+float3 RayCascade(FluidRay initialRay, float3 sceneColor)
+{
+	// initialRay must have a normalized direction, a prepared origin, and the correct insideFluid state.
+	// Its stepCount contains the marching steps already consumed along this path.
+	struct PendingRay
+	{
+		FluidRay fluidRay;
+		float3 throughput;	// Product of the reflection/transmission weights along this path.
+		uint depth;			// Number of surface interactions before this ray.
+	};
+
+	// Depth-first traversal needs at most 4 (max value of surfaceInteractions) pending rays:
+	PendingRay stack[4];
+	PendingRay initial = {initialRay, math_one3, 0};
+	stack[0] = initial;
+	uint stackSize = 1;
+	float3 accumulatedColor = math_zero3;
+	float epsilon = stepLength * exp2(-float(refinementStepCount));
+
+	// Build reflection+refracton tree iteratively always adding transmission first so reflection gets popped first:
+	while (stackSize > 0)
+	{
+		// Pop one ray. FindFluidSurface updates its consumed step count:
+		stackSize--;
+		PendingRay pending = stack[stackSize];
+		SurfaceHit hit = FindFluidSurface(pending.fluidRay);
+
+		// Miss (includes out of step budget):
+		if (hit.hitState == missingFluid)
+		{
+			// Initial ray misses -> sceneColor:
+    		if (pending.depth == 0)
+        		return sceneColor;
+			// Environment fallback:
+			accumulatedColor += pending.throughput * GetEnvironmentColor(pending.fluidRay.ray.direction);
+			continue;
+		}
+
+		// At the limit, use environment color as fallback:
+		SurfaceOptics optics = ComputeSurfaceOptics(pending.fluidRay, hit);
+		uint nextDepth = pending.depth + 1;
+		if (nextDepth >= surfaceInteractions || pending.fluidRay.stepCount >= stepCount)
+		{
+			float3 terminalColor = GetEnvironmentColor(optics.reflectionDirection);
+			if (optics.weight < 1.0f)
+			{
+				float3 transmissionColor = GetEnvironmentColor(optics.transmissionDirection);
+				terminalColor = lerp(transmissionColor, terminalColor, optics.weight);
+			}
+			accumulatedColor += pending.throughput * terminalColor;
+			continue;
+		}
+
+		// Push transmission first so reflection is popped first:
+		float3 incidentNormal = hit.hitState == enteringFluid ? hit.normal : -hit.normal;
+		if (optics.weight < 1.0f)
+		{
+			PendingRay transmission = pending;
+			transmission.fluidRay.ray.origin = hit.position - epsilon * incidentNormal;
+			transmission.fluidRay.ray.direction = optics.transmissionDirection;
+			transmission.fluidRay.insideFluid = !pending.fluidRay.insideFluid;
+			transmission.throughput *= 1.0f - optics.weight;
+			transmission.depth = nextDepth;
+			stack[stackSize] = transmission;
+			stackSize++;
+		}
+		if (optics.weight > 0.0f)
+		{
+			PendingRay reflection = pending;
+			reflection.fluidRay.ray.origin = hit.position + epsilon * incidentNormal;
+			reflection.fluidRay.ray.direction = optics.reflectionDirection;
+			reflection.fluidRay.insideFluid = pending.fluidRay.insideFluid;
+			reflection.throughput *= optics.weight;
+			reflection.depth = nextDepth;
+			stack[stackSize] = reflection;
+			stackSize++;
+		}
+	}
+
+	return accumulatedColor;
 }
 
 
@@ -251,69 +333,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	}
 	ray.ray.origin = mathRay_GetPoint(ray.ray, max(boundsEnterDistance, 0.0f));;
 
-	// Find fluid surface:
-	SurfaceHit hit = FindFluidSurface(ray);
-
-	// Missed fluid surface:
-	if (hit.hitState == missingFluid)
-	{
-		Scene_SetColor(sourcePixel, color);
-		return;
-	}
-
-	// Optics on first surface hit:
-	SurfaceOptics optics = ComputeSurfaceOptics(ray, hit);
-
-	float epsilon = stepLength * exp2(-float(maxRefinementStepCount));
-	float3 incidentNormal = hit.hitState == enteringFluid ? hit.normal : -hit.normal;
-
-	// Reflection branch:
-	FluidRay rayR = ray;
-	rayR.ray.origin = hit.position + epsilon * incidentNormal;
-	rayR.ray.direction = optics.reflectionDirection;
-	rayR.insideFluid = ray.insideFluid;
-	SurfaceHit hitR = FindFluidSurface(rayR);
-	float3 colorR = GetEnvironmentColor(rayR.ray.direction);	// falback color if reflection doesnt hit another fluid surface.
-	if (hitR.hitState != missingFluid)
-	{
-	    SurfaceOptics opticsR = ComputeSurfaceOptics(rayR, hitR);
-	    float3 colorRR = GetEnvironmentColor(opticsR.reflectionDirection);
-		colorR = colorRR;
-	    if (opticsR.weight < 1.0f)
-	    {
-	        float3 colorRT = GetEnvironmentColor(opticsR.transmissionDirection);
-	        colorR = lerp(colorRT, colorRR, opticsR.weight);
-	    }
-	}
-
-	// Combine reflection and refractin branch:
-	color.xyz = colorR;
-	if (optics.weight < 1.0f)
-	{
-		// Refraction branch:
-		FluidRay rayT = ray;
-		rayT.ray.origin = hit.position - epsilon * incidentNormal;
-		rayT.ray.direction = optics.transmissionDirection;
-		rayT.insideFluid = !ray.insideFluid;
-		SurfaceHit hitT = FindFluidSurface(rayT);
-		float3 colorT = GetEnvironmentColor(rayT.ray.direction);	// falback color if refraction doesnt hit another fluid surface.
-	    if (hitT.hitState != missingFluid)
-	    {
-	        SurfaceOptics opticsT = ComputeSurfaceOptics(rayT, hitT);
-	        float3 colorTR = GetEnvironmentColor(opticsT.reflectionDirection);
-			colorT = colorTR;
-	        if (opticsT.weight < 1.0f)
-	        {
-	            float3 colorTT = GetEnvironmentColor(opticsT.transmissionDirection);
-	            colorT = lerp(colorTT, colorTR, opticsT.weight);
-	        }
-	    }
-
-	    // Combine both branches at optics:
-	    color.xyz = lerp(colorT, colorR, optics.weight);
-	}
-
-	// Coloring:
+	// Ray marching with up to 4 ray splits on surface hit:
+	color.xyz = RayCascade(ray, color.xyz);
 	Scene_SetColor(sourcePixel, color);
 	return;
 }
