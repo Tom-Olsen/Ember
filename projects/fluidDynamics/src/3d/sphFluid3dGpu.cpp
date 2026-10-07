@@ -67,10 +67,10 @@ namespace fluidDynamics
 			SetWaterSurfaceDensity(0.5f * m_settings.targetDensity);
 			SetWaterIndexOfRefraction(1.333f);
 			SetWaterAbsorption(Float3(m_volumetricDensityAbsorption));
-			SetWaterStepCount(64);
-			SetWaterRefinementStepCount(4);
+			SetWaterStepCount(128);
+			SetWaterRefinementStepCount(8);
 			SetWaterStepLength(0.5f);
-			SetWaterSurfaceInteractions(2);
+			SetWaterSurfaceInteractions(3);
 		}
 		m_forceSetters = false;
 
