@@ -17,7 +17,7 @@ namespace fluidDynamics
 		m_particleMaterial.SetShadowMaterial(particleShadowMaterial);
 		m_volumeRaycastMaterial = MaterialManager::TryGetForwardMaterial("volumeRaycastMaterial");
 		m_volumeRaycastMaterial.SetCullMode(emberCommon::CullMode::front);	// Drawing back-facing triangles enables the camera to enter the fluid volume while it remains rendered.
-		m_water0ComputeShader = ComputeShaderManager::TryGetComputeShader("water0");
+		m_waterComputeShader = ComputeShaderManager::TryGetComputeShader("water");
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_callProperties = CallProperties(m_particleMaterial);
@@ -64,6 +64,11 @@ namespace fluidDynamics
 			SetRenderVolumetricLight(true);
 			SetVolumetricLightingResolution(Uint3(120));
 			// Water:
+			SetWaterSurfaceDensity(0.5f * m_settings.targetDensity);
+			SetWaterIndexOfRefraction(1.333f);
+			SetWaterAbsorption(Float3(m_volumetricDensityAbsorption));
+			SetWaterMaxStepCount(64);
+			SetWaterMaxRefinementStepCount(4);
 		}
 		m_forceSetters = false;
 
@@ -257,22 +262,18 @@ namespace fluidDynamics
 				const RotatedBounds& fluidBounds = m_tripleData.fluidBounds[readDataIndex];
 				Float4x4 fluidToWorld = localToWorld
 					* Float4x4::Translate(fluidBounds.localBounds.center)
-					* fluidBounds.GetRotation4x4()
-					* Float4x4::Scale(fluidBounds.localBounds.GetSize())
-					* Float4x4::Translate(Float3(-0.5f));
+					* fluidBounds.GetRotation4x4();
+				Float3 fluidHalfSize = 0.5f * fluidBounds.localBounds.GetSize();
 
-				CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(m_water0ComputeShader);
+				CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(m_waterComputeShader);
 				callProperties.SetValue("CallValues", "worldToFluidMatrix", fluidToWorld.Inverse());
-				callProperties.SetValue("CallValues", "surfaceDensity", 0.5f * m_settings.targetDensity);
-				callProperties.SetValue("CallValues", "densityRayStepLength", m_volumetricDensityRayStepLength);
-				callProperties.SetValue("CallValues", "surfaceBias", 0.01f);
-				callProperties.SetValue("CallValues", "fluidIndexOfRefraction", 1.333f);
-				callProperties.SetValue("CallValues", "absorption", Float3(m_volumetricDensityAbsorption));
-				callProperties.SetValue("CallValues", "normalSampleDistance", 1.0f);
-				callProperties.SetValue("CallValues", "sceneRayStepLength", m_volumetricDensityRayStepLength);
-				callProperties.SetValue("CallValues", "sceneRayMaxDistance", 0.0f);
-				callProperties.SetValue("CallValues", "sceneSurfaceThickness", 0.05f);
-				callProperties.SetValue("CallValues", "environmentMipLevel", 3.0f);
+				callProperties.SetValue("CallValues", "fluidBoundsMin", -fluidHalfSize);
+				callProperties.SetValue("CallValues", "fluidBoundsMax", fluidHalfSize);
+				callProperties.SetValue("CallValues", "surfaceDensity", m_waterSurfaceDensity);
+				callProperties.SetValue("CallValues", "fluidIndexOfRefraction", m_waterIndexOfRefraction);
+				callProperties.SetValue("CallValues", "absorption", m_waterAbsorption);
+				callProperties.SetValue("CallValues", "maxStepCount", static_cast<int>(m_waterMaxStepCount));
+				callProperties.SetValue("CallValues", "maxRefinementStepCount", static_cast<int>(m_waterMaxRefinementStepCount));
 				callProperties.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
 				callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
 				break;
@@ -549,9 +550,29 @@ namespace fluidDynamics
 		}
 	}
 	// Water:
+	void SphFluid3dGpu::SetWaterSurfaceDensity(float waterSurfaceDensity)
+	{
+		m_waterSurfaceDensity = math::Max(1e-4f, waterSurfaceDensity);
+	}
+	void SphFluid3dGpu::SetWaterIndexOfRefraction(float waterIndexOfRefraction)
+	{
+		m_waterIndexOfRefraction = math::Max(1e-4f, waterIndexOfRefraction);
+	}
+	void SphFluid3dGpu::SetWaterAbsorption(const Float3& waterAbsorption)
+	{
+		m_waterAbsorption = waterAbsorption;
+	}
+	void SphFluid3dGpu::SetWaterMaxStepCount(uint32_t waterMaxStepCount)
+	{
+		m_waterMaxStepCount = math::Max(uint32_t(1), waterMaxStepCount);
+	}
+	void SphFluid3dGpu::SetWaterMaxRefinementStepCount(uint32_t waterMaxRefinementStepCount)
+	{
+		m_waterMaxRefinementStepCount = math::Max(uint32_t(0), waterMaxRefinementStepCount);
+	}
 
 
-    
+
 	// Getters:
     // Management:
 	bool SphFluid3dGpu::GetIsRunning() const
@@ -685,6 +706,26 @@ namespace fluidDynamics
 		return m_volumetricLightingResolution;
 	}
 	// Water:
+	float SphFluid3dGpu::GetWaterSurfaceDensity() const
+	{
+		return m_waterSurfaceDensity;
+	}
+	float SphFluid3dGpu::GetWaterIndexOfRefraction() const
+	{
+		return m_waterIndexOfRefraction;
+	}
+	Float3 SphFluid3dGpu::GetWaterAbsorption() const
+	{
+		return m_waterAbsorption;
+	}
+	uint32_t SphFluid3dGpu::GetWaterMaxStepCount() const
+	{
+		return m_waterMaxStepCount;
+	}
+	uint32_t SphFluid3dGpu::GetWaterMaxRefinementStepCount() const
+	{
+		return m_waterMaxRefinementStepCount;
+	}
 
 
 

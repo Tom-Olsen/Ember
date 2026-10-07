@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "water",
+    "sourcePath": "../src/water.comp.hlsl",
+    "binaryPath": "../bin/water.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

@@ -65,15 +65,19 @@ namespace fluidDynamics
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
 		// Water:
-		
+		float m_waterSurfaceDensity;
+		float m_waterIndexOfRefraction;
+		Float3 m_waterAbsorption;
+		uint32_t m_waterMaxStepCount;
+		uint32_t m_waterMaxRefinementStepCount;
+
         // Internal:
 		Mesh m_particleMesh;
 		Mesh m_attractorSphereMesh;
 		Mesh m_volumetricDensityCube;
 		ForwardMaterial m_particleMaterial;
 		ForwardMaterial m_volumeRaycastMaterial;
-		//ComputeShader m_waterComputeShader;
-		ComputeShader m_water0ComputeShader;
+		ComputeShader m_waterComputeShader;
 		CallProperties m_callProperties;
 		Texture* m_pEnvironmentMap;
 
@@ -129,6 +133,11 @@ namespace fluidDynamics
 		void SetRenderVolumetricLight(bool renderVolumetricLight);
 		void SetVolumetricLightingResolution(const Uint3& volumetricLightingResolution);
 		// Water:
+		void SetWaterSurfaceDensity(float waterSurfaceDensity);
+		void SetWaterIndexOfRefraction(float waterIndexOfRefraction);
+		void SetWaterAbsorption(const Float3& waterAbsorption);
+		void SetWaterMaxStepCount(uint32_t waterMaxStepCount);
+		void SetWaterMaxRefinementStepCount(uint32_t waterMaxRefinementStepCount);
 
 		// Getters:
 		// Management:
@@ -171,7 +180,12 @@ namespace fluidDynamics
 		Float3 GetVolumetricScattering() const;
 		bool GetRenderVolumetricLight() const;
 		Uint3 GetVolumetricLightingResolution() const;
-        // Water:
+		// Water:
+		float GetWaterSurfaceDensity() const;
+		float GetWaterIndexOfRefraction() const;
+		Float3 GetWaterAbsorption() const;
+		uint32_t GetWaterMaxStepCount() const;
+		uint32_t GetWaterMaxRefinementStepCount() const;
 
 		// Debugging:
 		void Print();
