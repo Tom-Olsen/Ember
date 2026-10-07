@@ -121,12 +121,50 @@ SurfaceOptics ComputeSurfaceOptics(FluidRay fluidRay, SurfaceHit hit)
 
 
 // Big helpers:
+float3 ClampSurfaceNormalToBounds(float3 densityNormal, float3 position_Fluid, float3 textureSize)
+{
+	// Find the boundary whose outward normal best matches the density normal:
+	uint boundaryAxis = 0;
+	float boundaryPosition = 0.0f;
+	float3 boundsNormal = math_zero3;
+	float boundsAlignment = 0.0f;
+	[unroll]
+	for (uint axis = 0; axis < 3; axis++)
+	{
+		// Positive boundary normal in world space:
+		float3 normal_Bounds = math_zero3;
+		normal_Bounds[axis] = 1.0f;
+		float3 normal_World = normalize(mul(transpose((float3x3)worldToFluidMatrix), normal_Bounds));
+
+		// Keep the best aligned boundary, independent of its distance:
+		float alignment = dot(densityNormal, normal_World);
+		if (abs(alignment) > boundsAlignment)
+		{
+			boundaryAxis = axis;
+			boundaryPosition = alignment >= 0.0f ? 1.0f : 0.0f;
+			boundsNormal = alignment >= 0.0f ? normal_World : -normal_World;
+			boundsAlignment = abs(alignment);
+		}
+	}
+
+	// Distance to the selected boundary in density texels:
+	float boundaryDistance = abs(position_Fluid[boundaryAxis] - boundaryPosition) * textureSize[boundaryAxis];
+
+	// Correction strength fades with distance and normal misalignment:
+	float distanceWeight = 1.0f - smoothstep(1.0f, 2.0f, boundaryDistance);
+	float alignmentWeight = smoothstep(0.70710678f/*cos(45)*/, 0.86602540f/*cos(30)*/, boundsAlignment);
+	float boundsWeight = distanceWeight * alignmentWeight;
+
+	// Blend toward the selected boundary normal:
+	return normalize(lerp(densityNormal, boundsNormal, boundsWeight));
+}
 float3 GetDensityNormal(float3 position_World, float3 fallbackNormal)
 {
 	// Texel size:
 	uint textureWidth, textureHeight, textureDepth;
 	densityTexture.GetDimensions(textureWidth, textureHeight, textureDepth);
-	float3 texelSize = normalSampleDistance / float3(textureWidth, textureHeight, textureDepth);
+	float3 textureSize = float3(textureWidth, textureHeight, textureDepth);
+	float3 texelSize = normalSampleDistance / textureSize;
 
 	// position_World -> position_Fluid:
 	float3 position_Bounds = mul(worldToFluidMatrix, float4(position_World, 1.0f)).xyz;
@@ -154,7 +192,8 @@ float3 GetDensityNormal(float3 position_World, float3 fallbackNormal)
 		return normalize(fallbackNormal);
 
 	// Flip and normalize gradient:
-	return -gradient_World * rsqrt(gradientLengthSquared);
+	float3 densityNormal = -gradient_World * rsqrt(gradientLengthSquared);
+	return ClampSurfaceNormalToBounds(densityNormal, position_Fluid, textureSize);
 }
 SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 {
