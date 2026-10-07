@@ -3,11 +3,12 @@
 
 
 
-// The fluid density texture occupies [0, 1]^3. worldToFluidMatrix must include
-// the component transform, rotated bounds transform, and bounds scale.
+// Bindings:
 cbuffer CallValues : register(b300, CALL_SET)
 {
 	float4x4 worldToFluidMatrix;
+	float3 fluidBoundsMin;
+	float3 fluidBoundsMax;
 	float surfaceDensity;
 	float densityRayStepLength;
 	float surfaceBias;
@@ -19,10 +20,6 @@ cbuffer CallValues : register(b300, CALL_SET)
 	float sceneSurfaceThickness;
 	float environmentMipLevel;
 };
-
-
-
-// Bindings:
 Texture3D<float> densityTexture : register(t100, CALL_SET);
 TextureCube<float4> environmentMap : register(t101, CALL_SET);
 
@@ -44,7 +41,7 @@ static const uint densityCrossingExit = 2;
 
 
 // Structs:
-struct DensityHit
+struct SurfaceHit
 {
 	float distance;
 	float3 position;
@@ -62,37 +59,6 @@ struct SceneRaySample
 
 
 // Small helpers:
-float3 ScreenPositionToWorld(float3 screenPosition, float2 screenSize)
-{
-	float2 uv = screenPosition.xy / screenSize;
-	float4 clipPosition = float4(2.0f * uv - 1.0f, screenPosition.z, 1.0f);
-	float4 worldPosition = mul(camera_clipToWorldMatrix, clipPosition);
-	return worldPosition.xyz / worldPosition.w;
-}
-float3 GetWorldPosition(uint2 pixel, float ndcDepth, float2 screenSize)
-{
-	float3 screenPosition = float3(float2(pixel) + 0.5f, ndcDepth);
-	return ScreenPositionToWorld(screenPosition, screenSize);
-}
-math_Ray GetCameraRay(uint2 pixel, float2 screenSize)
-{
-	float3 nearPosition = GetWorldPosition(pixel, 0.0f, screenSize);
-	float3 farPosition = GetWorldPosition(pixel, 1.0f, screenSize);
-
-	math_Ray worldRay;
-	worldRay.origin = nearPosition;
-	worldRay.direction = normalize(farPosition - nearPosition);
-	return worldRay;
-}
-float GetSceneDistance(uint2 pixel, math_Ray worldRay, float2 screenSize)
-{
-	float sceneDepth = Scene_GetNdcDepth(pixel);
-	if (sceneDepth >= 1.0f)
-		return 1.0e30f;
-
-	float3 scenePosition = GetWorldPosition(pixel, sceneDepth, screenSize);
-	return dot(scenePosition - worldRay.origin, worldRay.direction);
-}
 float3 GetEnvironmentColor(float3 worldDirection)
 {
 	float3 cubeDirection = mul(mathLinAlg_RotateX3x3(-math_PI_2), worldDirection);
@@ -106,8 +72,16 @@ float SampleDensityFluid(float3 fluidPosition)
 }
 float SampleDensityWorld(float3 worldPosition)
 {
-	float3 fluidPosition = mul(worldToFluidMatrix, float4(worldPosition, 1.0f)).xyz;
+	float3 boundsPosition = mul(worldToFluidMatrix, float4(worldPosition, 1.0f)).xyz;
+	float3 fluidPosition = (boundsPosition - fluidBoundsMin) / (fluidBoundsMax - fluidBoundsMin);
 	return SampleDensityFluid(fluidPosition);
+}
+// Sample the interior side of a known bounds boundary despite coordinate rounding:
+float SampleDensityWorldAtBounds(float3 worldPosition)
+{
+	float3 boundsPosition = mul(worldToFluidMatrix, float4(worldPosition, 1.0f)).xyz;
+	float3 fluidPosition = (boundsPosition - fluidBoundsMin) / (fluidBoundsMax - fluidBoundsMin);
+	return SampleDensityFluid(saturate(fluidPosition));
 }
 float3 GetFacingNormal(float3 incidentDirection, float3 outwardNormal)
 {
@@ -124,38 +98,32 @@ float GetFresnel(float3 incidentDirection, float3 facingNormal, float sourceIor,
 
 
 // Fluid bounds and density helpers:
-bool UpdateRayBoundsInterval(float origin, float direction, inout float enterDistance, inout float exitDistance)
+float3 GetFluidBoundsNormal(float3 worldPosition)
 {
-	if (abs(direction) < 1.0e-7f)
-		return origin >= 0.0f && origin <= 1.0f;
-
-	float inverseDirection = 1.0f / direction;
-	float distance0 = -origin * inverseDirection;
-	float distance1 = (1.0f - origin) * inverseDirection;
-	if (distance0 > distance1)
+	// Find the closest face in fluid bounds space:
+	float3 boundsPosition = mul(worldToFluidMatrix, float4(worldPosition, 1.0f)).xyz;
+	float3 minFaceDistances = abs(boundsPosition - fluidBoundsMin);
+	float3 maxFaceDistances = abs(boundsPosition - fluidBoundsMax);
+	float closestDistance = asfloat(0x7f800000u);
+	float3 boundsNormal = 0.0f;
+	for (uint axis = 0; axis < 3; axis++)
 	{
-		float temp = distance0;
-		distance0 = distance1;
-		distance1 = temp;
+		if (minFaceDistances[axis] < closestDistance)
+		{
+			closestDistance = minFaceDistances[axis];
+			boundsNormal = 0.0f;
+			boundsNormal[axis] = -1.0f;
+		}
+		if (maxFaceDistances[axis] < closestDistance)
+		{
+			closestDistance = maxFaceDistances[axis];
+			boundsNormal = 0.0f;
+			boundsNormal[axis] = 1.0f;
+		}
 	}
-	enterDistance = max(enterDistance, distance0);
-	exitDistance = min(exitDistance, distance1);
-	return enterDistance <= exitDistance;
-}
-bool RayFluidBoundsIntersection(math_Ray worldRay, out float enterDistance, out float exitDistance)
-{
-	float3 originFluid = mul(worldToFluidMatrix, float4(worldRay.origin, 1.0f)).xyz;
-	float3 directionFluid = mul(worldToFluidMatrix, float4(worldRay.direction, 0.0f)).xyz;
-	enterDistance = -1.0e30f;
-	exitDistance = 1.0e30f;
 
-	if (!UpdateRayBoundsInterval(originFluid.x, directionFluid.x, enterDistance, exitDistance))
-		return false;
-	if (!UpdateRayBoundsInterval(originFluid.y, directionFluid.y, enterDistance, exitDistance))
-		return false;
-	if (!UpdateRayBoundsInterval(originFluid.z, directionFluid.z, enterDistance, exitDistance))
-		return false;
-	return exitDistance >= max(enterDistance, 0.0f);
+	// Transform the outward face normal to world space, including nonuniform scale:
+	return normalize(mul(transpose((float3x3)worldToFluidMatrix), boundsNormal));
 }
 float3 GetDensityNormal(float3 worldPosition, float3 fallbackNormal)
 {
@@ -166,7 +134,8 @@ float3 GetDensityNormal(float3 worldPosition, float3 fallbackNormal)
 
 	float sampleDistance = max(normalSampleDistance, 1.0f);
 	float3 texelSize = sampleDistance / float3(textureWidth, textureHeight, textureDepth);
-	float3 fluidPosition = mul(worldToFluidMatrix, float4(worldPosition, 1.0f)).xyz;
+	float3 boundsPosition = mul(worldToFluidMatrix, float4(worldPosition, 1.0f)).xyz;
+	float3 fluidPosition = (boundsPosition - fluidBoundsMin) / (fluidBoundsMax - fluidBoundsMin);
 	float negativeXDensity = SampleDensityFluid(fluidPosition - float3(texelSize.x, 0.0f, 0.0f));
 	float positiveXDensity = SampleDensityFluid(fluidPosition + float3(texelSize.x, 0.0f, 0.0f));
 	float negativeYDensity = SampleDensityFluid(fluidPosition - float3(0.0f, texelSize.y, 0.0f));
@@ -179,15 +148,16 @@ float3 GetDensityNormal(float3 worldPosition, float3 fallbackNormal)
 		positiveZDensity - negativeZDensity) / (2.0f * texelSize);
 
 	// Density rises toward the liquid interior, so the outward normal is the
-	// negative gradient. A scalar-field gradient transforms by the transpose
-	// of the world-to-fluid linear transform.
-	float3 gradientWorld = mul(transpose((float3x3)worldToFluidMatrix), gradientFluid);
+	// negative gradient. Convert the texture-space gradient to bounds space,
+	// then transform by the transpose of the world-to-fluid linear transform.
+	float3 gradientBounds = gradientFluid / (fluidBoundsMax - fluidBoundsMin);
+	float3 gradientWorld = mul(transpose((float3x3)worldToFluidMatrix), gradientBounds);
 	float gradientLengthSquared = dot(gradientWorld, gradientWorld);
 	if (gradientLengthSquared < 1.0e-12f)
 		return normalize(fallbackNormal);
 	return -gradientWorld * rsqrt(gradientLengthSquared);
 }
-DensityHit RefineDensityHit(math_Ray worldRay, float frontDistance, float backDistance, bool frontInside)
+SurfaceHit RefineDensityHit(math_Ray worldRay, float frontDistance, float backDistance, bool frontInside)
 {
 	for (uint refinementIndex = 0; refinementIndex < maxDensityRefinementStepCount; refinementIndex++)
 	{
@@ -199,57 +169,92 @@ DensityHit RefineDensityHit(math_Ray worldRay, float frontDistance, float backDi
 			backDistance = midpointDistance;
 	}
 
-	DensityHit hit;
+	SurfaceHit hit;
 	hit.distance = 0.5f * (frontDistance + backDistance);
 	hit.position = mathRay_GetPoint(worldRay, hit.distance);
 	hit.normal = GetDensityNormal(hit.position, -worldRay.direction);
 	hit.isEntering = !frontInside;
 	return hit;
 }
-bool TryMarchDensitySurface(math_Ray worldRay, float startDistance, float endDistance, uint crossingType, bool detectInitialEntry, out DensityHit hit)
+bool TryFindFluidSurface(math_Ray worldRay, float startDistance, float endDistance, uint crossingType, bool detectInitialEntry, bool detectFinalExit, out SurfaceHit hit)
 {
+	// Clear hit:
 	hit.distance = 0.0f;
 	hit.position = 0.0f;
 	hit.normal = 0.0f;
 	hit.isEntering = false;
 
+	// Reject empty search interval:
 	float marchDistance = endDistance - startDistance;
 	if (marchDistance <= 0.0f)
 		return false;
 
+	// Increase step length if needed to cover the interval within the step limit:
 	float minimumStepLength = marchDistance / float(maxDensityStepCount);
 	float stepLength = max(densityRayStepLength, minimumStepLength);
 	uint stepCount = min((uint)ceil(marchDistance / stepLength), maxDensityStepCount);
+
+	// Classify the starting sample as inside or outside the fluid:
 	float previousDistance = startDistance;
-	bool previousInside = SampleDensityWorld(mathRay_GetPoint(worldRay, previousDistance)) >= surfaceDensity;
+	float3 previousPosition = mathRay_GetPoint(worldRay, previousDistance);
+	float previousDensity = detectInitialEntry ? SampleDensityWorldAtBounds(previousPosition) : SampleDensityWorld(previousPosition);
+	bool previousInside = previousDensity >= surfaceDensity;
+
+	// Optionally treat an inside starting sample as an entry:
 	if (detectInitialEntry && previousInside && crossingType != densityCrossingExit)
 	{
 		hit.distance = previousDistance;
 		hit.position = mathRay_GetPoint(worldRay, hit.distance);
-		hit.normal = GetDensityNormal(hit.position, -worldRay.direction);
+		hit.normal = GetFluidBoundsNormal(hit.position);
 		hit.isEntering = true;
 		return true;
 	}
 
+	// Search consecutive samples for the first accepted surface crossing:
 	for (uint step = 1; step <= stepCount; step++)
 	{
-		float currentDistance = min(startDistance + float(step) * stepLength, endDistance);
-		bool currentInside = SampleDensityWorld(mathRay_GetPoint(worldRay, currentDistance)) >= surfaceDensity;
+		// Sample the next position, clamped to the end of the interval:
+		float currentDistance = step == stepCount ? endDistance : min(startDistance + float(step) * stepLength, endDistance);
+		float3 currentPosition = mathRay_GetPoint(worldRay, currentDistance);
+
+		// At a known bounds exit, sample its interior side instead of rounding outside:
+		bool isBoundsExit = detectFinalExit && currentDistance == endDistance;
+		float currentDensity = isBoundsExit ? SampleDensityWorldAtBounds(currentPosition) : SampleDensityWorld(currentPosition);
+		bool currentInside = currentDensity >= surfaceDensity;
+
+		// A change between inside and outside indicates a surface crossing:
 		if (currentInside != previousInside)
 		{
+			// Check whether this entry or exit matches the requested crossing type:
 			bool isEntering = currentInside;
 			bool acceptsCrossing = crossingType == densityCrossingAny
 				|| (crossingType == densityCrossingEntry && isEntering)
 				|| (crossingType == densityCrossingExit && !isEntering);
+
+			// Refine the crossing between these samples and return the surface hit:
 			if (acceptsCrossing)
 			{
 				hit = RefineDensityHit(worldRay, previousDistance, currentDistance, previousInside);
 				return true;
 			}
 		}
+
+		// Retain this sample for comparison with the next one:
 		previousDistance = currentDistance;
 		previousInside = currentInside;
 	}
+
+	// Fluid reaching the bounds exits there even without a sampled density crossing:
+	if (detectFinalExit && previousInside && crossingType != densityCrossingEntry)
+	{
+		hit.distance = endDistance;
+		hit.position = mathRay_GetPoint(worldRay, hit.distance);
+		hit.normal = GetFluidBoundsNormal(hit.position);
+		hit.isEntering = false;
+		return true;
+	}
+
+	// No accepted surface crossing was detected:
 	return false;
 }
 
@@ -279,7 +284,7 @@ uint EvaluateSceneRaySample(math_Ray worldRay, float distance, float2 screenSize
 	if (sceneNdcDepth >= 1.0f)
 		return sceneSampleWithoutGeometry;
 
-	float3 sceneWorldPosition = GetWorldPosition(pixel, sceneNdcDepth, screenSize);
+	float3 sceneWorldPosition = Camera_GetWorldPosition(pixel, sceneNdcDepth, screenSize);
 	sample.sceneViewDepth = Camera_GetDepth(sceneWorldPosition);
 	sample.depthDelta = Camera_GetDepth(worldPosition) - sample.sceneViewDepth;
 	return sceneSampleValid;
@@ -379,12 +384,12 @@ float3 TraceFromInsideFluid(float3 startPosition, float3 startDirection, float2 
 
 		float boundsEnterDistance;
 		float boundsExitDistance;
-		if (!RayFluidBoundsIntersection(internalWorldRay, boundsEnterDistance, boundsExitDistance))
+		if (!mathRay_TryIntersectRotatedBounds(internalWorldRay, worldToFluidMatrix, fluidBoundsMin, fluidBoundsMax, boundsEnterDistance, boundsExitDistance))
 			break;
 
-		DensityHit exitHit;
+		SurfaceHit exitHit;
 		float marchStart = max(boundsEnterDistance, 0.0f);
-		if (!TryMarchDensitySurface(internalWorldRay, marchStart, boundsExitDistance, densityCrossingExit, false, exitHit))
+		if (!TryFindFluidSurface(internalWorldRay, marchStart, boundsExitDistance, densityCrossingExit, false, true, exitHit))
 			break;
 
 		// Opaque geometry can be embedded in or intersect the fluid volume. Test
@@ -408,6 +413,10 @@ float3 TraceFromInsideFluid(float3 startPosition, float3 startDirection, float2 
 			return transmittance * TraceSceneOrEnvironment(exitHit.position, normalize(exitDirection), screenSize);
 		}
 
+		// Stop if another total internal reflection would exceed the limit:
+		if (reflectionIndex == maxInternalReflectionCount)
+			break;
+
 		// Total internal reflection. Stay inside and search for the next exit.
 		currentPosition = exitHit.position;
 		currentDirection = normalize(reflect(currentDirection, facingNormal));
@@ -425,29 +434,35 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
 		return;
 
+	// Screen size:
 	uint screenWidth;
 	uint screenHeight;
 	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
 	float2 screenSize = float2(screenWidth, screenHeight);
+
+	// Source pixel/color:
 	uint2 sourcePixel = threadID.xy;
 	float4 sourceColor = Scene_GetColor(sourcePixel);
 
-	// Limit the primary density march to the part of the fluid bounds visible
-	// before the opaque scene depth at this pixel.
-	math_Ray cameraWorldRay = GetCameraRay(sourcePixel, screenSize);
+	// Camera world ray (direction is normalized):
+	math_Ray cameraWorldRay = Camera_GetRay(sourcePixel, screenSize);
+
+	// Skip rays that do not hit the fluid bounds:
 	float boundsEnterDistance;
 	float boundsExitDistance;
-	if (!RayFluidBoundsIntersection(cameraWorldRay, boundsEnterDistance, boundsExitDistance))
+	if (!mathRay_TryIntersectRotatedBounds(cameraWorldRay, worldToFluidMatrix, fluidBoundsMin, fluidBoundsMax, boundsEnterDistance, boundsExitDistance))
 	{
 		Scene_SetColor(sourcePixel, sourceColor);
 		return;
 	}
 
+	// March denisty surface:
 	float marchStart = max(boundsEnterDistance, 0.0f);
-	float marchEnd = min(boundsExitDistance, GetSceneDistance(sourcePixel, cameraWorldRay, screenSize));
-	DensityHit primaryHit;
+	float marchEnd = min(boundsExitDistance, Scene_GetDistance(sourcePixel, cameraWorldRay, screenSize, true));
+	SurfaceHit primaryHit;
 	bool rayEntersFluidBounds = boundsEnterDistance >= 0.0f;
-	if (!TryMarchDensitySurface(cameraWorldRay, marchStart, marchEnd, densityCrossingAny, rayEntersFluidBounds, primaryHit))
+	bool rayExitsFluidBounds = marchEnd == boundsExitDistance;
+	if (!TryFindFluidSurface(cameraWorldRay, marchStart, marchEnd, densityCrossingAny, rayEntersFluidBounds, rayExitsFluidBounds, primaryHit))
 	{
 		Scene_SetColor(sourcePixel, sourceColor);
 		return;
