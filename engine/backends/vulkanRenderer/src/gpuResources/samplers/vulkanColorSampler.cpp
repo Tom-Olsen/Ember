@@ -21,7 +21,7 @@ namespace vulkanRendererBackend
 		samplerInfo.addressModeW = settings.addressMode;					// texture w coordinates outside the image
 		samplerInfo.anisotropyEnable = VK_TRUE;								// anisotropic filtering
 		samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;	// lower values = better performance but lower quality
-		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;			// border color for: addressModeU/V/W = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE/BORDER
+		samplerInfo.borderColor = settings.borderColor;						// border color used by CLAMP_TO_BORDER
 		samplerInfo.unnormalizedCoordinates = VK_FALSE;						// VK_FALSE: uvw in [0,1], VK_TRUE: uvw in [0, width/height/depth]
 		samplerInfo.compareEnable = VK_FALSE;								// enable comparison against a reference value
 		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;						// comparison function to apply

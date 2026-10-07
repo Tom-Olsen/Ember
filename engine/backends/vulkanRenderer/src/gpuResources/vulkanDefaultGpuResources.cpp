@@ -7,10 +7,10 @@
 #include "vulkanComputeShader.h"
 #include "vulkanDepthTexture2dArray.h"
 #include "vulkanMaterial.h"
-#include "vulkanSampler.h"
 #include "vulkanSampleTexture2d.h"
 #include "vulkanSampleTexture3d.h"
 #include "vulkanSampleTextureCube.h"
+#include "vulkanSampler.h"
 #include "vulkanShadowSampler.h"
 #include "vulkanStorageBuffer.h"
 #include "vulkanStorageTexture2d.h"
@@ -47,6 +47,11 @@ namespace vulkanRendererBackend
 			colorSamplerClampEdgeSettings.name = "Sampler_ColorClampEdge";
 			colorSamplerClampEdgeSettings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			m_pColorSamplerClampEdge = std::make_unique<ColorSampler>(colorSamplerClampEdgeSettings);
+
+			ColorSampler::Settings colorSamplerClampBorderSettings;
+			colorSamplerClampBorderSettings.name = "Sampler_ColorClampBorder";
+			colorSamplerClampBorderSettings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+			m_pColorSamplerClampBorder = std::make_unique<ColorSampler>(colorSamplerClampBorderSettings);
 			m_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
 
 			// Buffers:
@@ -98,6 +103,7 @@ namespace vulkanRendererBackend
 
 		// Samplers:
 		m_pShadowSampler.reset();
+		m_pColorSamplerClampBorder.reset();
 		m_pColorSamplerClampEdge.reset();
 		m_pColorSampler.reset();
 
@@ -123,6 +129,10 @@ namespace vulkanRendererBackend
 	Sampler* DefaultGpuResources::GetColorSamplerClampEdge()
 	{
 		return m_pColorSamplerClampEdge.get();
+	}
+	Sampler* DefaultGpuResources::GetColorSamplerClampBorder()
+	{
+		return m_pColorSamplerClampBorder.get();
 	}
 	Sampler* DefaultGpuResources::GetShadowSampler()
 	{

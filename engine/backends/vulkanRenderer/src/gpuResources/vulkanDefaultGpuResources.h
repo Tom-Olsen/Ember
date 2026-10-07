@@ -39,6 +39,7 @@ namespace vulkanRendererBackend
 		// Samplers:
 		std::unique_ptr<Sampler> m_pColorSampler;
 		std::unique_ptr<Sampler> m_pColorSamplerClampEdge;
+		std::unique_ptr<Sampler> m_pColorSamplerClampBorder;
 		std::unique_ptr<Sampler> m_pShadowSampler;
 		// Materials:
 		std::unique_ptr<Material> m_pDefaultOutlineMaterial;
@@ -81,6 +82,7 @@ namespace vulkanRendererBackend
 		// Samplers:
 		Sampler* GetColorSampler();
 		Sampler* GetColorSamplerClampEdge();
+		Sampler* GetColorSamplerClampBorder();
 		Sampler* GetShadowSampler();
 
 		// Materials:

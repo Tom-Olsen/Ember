@@ -9,6 +9,7 @@
 #include "vulkanRenderTargetResources.h"
 #include "vulkanSampler.h"
 #include "vulkanTexture.h"
+#include <array>
 
 
 
@@ -51,6 +52,14 @@ namespace vulkanRendererBackend
             colorSamplerClampEdgeBinding.stageFlags = VK_SHADER_STAGE_ALL;
             colorSamplerClampEdgeBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetColorSamplerClampEdge()->GetVkSampler();
 
+            // SamplerState colorSamplerClampBorder : register(s3003, GLOBAL_SET):
+            VkDescriptorSetLayoutBinding colorSamplerClampBorderBinding{};
+            colorSamplerClampBorderBinding.binding = 3003;
+            colorSamplerClampBorderBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+            colorSamplerClampBorderBinding.descriptorCount = 1;
+            colorSamplerClampBorderBinding.stageFlags = VK_SHADER_STAGE_ALL;
+            colorSamplerClampBorderBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetColorSamplerClampBorder()->GetVkSampler();
+
             // Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET):
             VkDescriptorSetLayoutBinding shadowMapsBinding{};
             shadowMapsBinding.binding = 3100;
@@ -59,7 +68,7 @@ namespace vulkanRendererBackend
             shadowMapsBinding.stageFlags = VK_SHADER_STAGE_ALL;
             shadowMapsBinding.pImmutableSamplers = nullptr;
 
-            std::array<VkDescriptorSetLayoutBinding, 4> bindings = { shadowSamplerBinding, colorSamplerBinding, colorSamplerClampEdgeBinding, shadowMapsBinding };
+            std::array<VkDescriptorSetLayoutBinding, 5> bindings = { shadowSamplerBinding, colorSamplerBinding, colorSamplerClampEdgeBinding, colorSamplerClampBorderBinding, shadowMapsBinding };
             VkDescriptorSetLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
             createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
             createInfo.pBindings = bindings.data();

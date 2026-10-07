@@ -27,6 +27,7 @@ namespace vulkanRendererBackend
             std::string name = "Sampler_Color";
 			VkFilter filter = VK_FILTER_LINEAR;
 			VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+			VkBorderColor borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 			VkSamplerMipmapMode mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		};
 
