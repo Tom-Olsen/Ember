@@ -19,6 +19,10 @@ SamplerState colorSamplerClampEdge : register(s3002, GLOBAL_SET);
 // Filtering blends edge texels with the border, so samples just outside [0, 1] can be nonzero.
 SamplerState colorSamplerClampBorder : register(s3003, GLOBAL_SET);
 
+// Linear filtering and linear mip interpolation, with anisotropic filtering disabled.
+// Uses a floating-point zero border; at mip 0, edge density fades to zero half a texel outside the texture.
+SamplerState colorSamplerClampBorderNoAnisotropy : register(s3004, GLOBAL_SET);
+
 Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET);
 
 

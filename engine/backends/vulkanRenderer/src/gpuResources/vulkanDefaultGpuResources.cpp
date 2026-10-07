@@ -52,6 +52,12 @@ namespace vulkanRendererBackend
 			colorSamplerClampBorderSettings.name = "Sampler_ColorClampBorder";
 			colorSamplerClampBorderSettings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 			m_pColorSamplerClampBorder = std::make_unique<ColorSampler>(colorSamplerClampBorderSettings);
+
+			ColorSampler::Settings colorSamplerClampBorderNoAnisotropySettings;
+			colorSamplerClampBorderNoAnisotropySettings.name = "Sampler_ColorClampBorderNoAnisotropy";
+			colorSamplerClampBorderNoAnisotropySettings.addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+			colorSamplerClampBorderNoAnisotropySettings.anisotropyEnable = false;
+			m_pColorSamplerClampBorderNoAnisotropy = std::make_unique<ColorSampler>(colorSamplerClampBorderNoAnisotropySettings);
 			m_pShadowSampler = std::make_unique<ShadowSampler>("Sampler_Shadow");
 
 			// Buffers:
@@ -103,6 +109,7 @@ namespace vulkanRendererBackend
 
 		// Samplers:
 		m_pShadowSampler.reset();
+		m_pColorSamplerClampBorderNoAnisotropy.reset();
 		m_pColorSamplerClampBorder.reset();
 		m_pColorSamplerClampEdge.reset();
 		m_pColorSampler.reset();
@@ -133,6 +140,10 @@ namespace vulkanRendererBackend
 	Sampler* DefaultGpuResources::GetColorSamplerClampBorder()
 	{
 		return m_pColorSamplerClampBorder.get();
+	}
+	Sampler* DefaultGpuResources::GetColorSamplerClampBorderNoAnisotropy()
+	{
+		return m_pColorSamplerClampBorderNoAnisotropy.get();
 	}
 	Sampler* DefaultGpuResources::GetShadowSampler()
 	{

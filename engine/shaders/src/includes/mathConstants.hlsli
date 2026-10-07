@@ -13,6 +13,9 @@ static const float math_SQRT2_INV = 0.70710678118654752440f;
 static const float math_SQRT3 = 1.73205080756887729353f;
 static const float math_SQRT3_INV = 0.57735026918962576451f;
 
+static const float2 math_zero2 = float2(0, 0);
+static const float3 math_zero3 = float3(0, 0, 0);
+static const float4 math_zero4 = float4(0, 0, 0, 0);
 static const float2 math_one2 = float2(1, 1);
 static const float3 math_one3 = float3(1, 1, 1);
 static const float4 math_one4 = float4(1, 1, 1, 1);

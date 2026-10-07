@@ -15,6 +15,7 @@ namespace vulkanRendererBackend
 		// Examples:
 		// colorSamplerClampEdge
 		// colorSamplerClampBorder
+		// colorSamplerClampBorderNoAnisotropy
 		// colorSamplerMirror
 		// colorSamplerNearest
 		// colorSamplerCubicClampEdge
@@ -29,6 +30,7 @@ namespace vulkanRendererBackend
 			VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 			VkBorderColor borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
 			VkSamplerMipmapMode mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			bool anisotropyEnable = true;
 		};
 
 	public: // Methods:

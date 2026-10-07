@@ -60,6 +60,14 @@ namespace vulkanRendererBackend
             colorSamplerClampBorderBinding.stageFlags = VK_SHADER_STAGE_ALL;
             colorSamplerClampBorderBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetColorSamplerClampBorder()->GetVkSampler();
 
+            // SamplerState colorSamplerClampBorderNoAnisotropy : register(s3004, GLOBAL_SET):
+            VkDescriptorSetLayoutBinding colorSamplerClampBorderNoAnisotropyBinding{};
+            colorSamplerClampBorderNoAnisotropyBinding.binding = 3004;
+            colorSamplerClampBorderNoAnisotropyBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+            colorSamplerClampBorderNoAnisotropyBinding.descriptorCount = 1;
+            colorSamplerClampBorderNoAnisotropyBinding.stageFlags = VK_SHADER_STAGE_ALL;
+            colorSamplerClampBorderNoAnisotropyBinding.pImmutableSamplers = &DefaultGpuResources::Get().GetColorSamplerClampBorderNoAnisotropy()->GetVkSampler();
+
             // Texture2DArray<float> shadowMaps : register(t3100, GLOBAL_SET):
             VkDescriptorSetLayoutBinding shadowMapsBinding{};
             shadowMapsBinding.binding = 3100;
@@ -68,7 +76,7 @@ namespace vulkanRendererBackend
             shadowMapsBinding.stageFlags = VK_SHADER_STAGE_ALL;
             shadowMapsBinding.pImmutableSamplers = nullptr;
 
-            std::array<VkDescriptorSetLayoutBinding, 5> bindings = { shadowSamplerBinding, colorSamplerBinding, colorSamplerClampEdgeBinding, colorSamplerClampBorderBinding, shadowMapsBinding };
+            std::array<VkDescriptorSetLayoutBinding, 6> bindings = { shadowSamplerBinding, colorSamplerBinding, colorSamplerClampEdgeBinding, colorSamplerClampBorderBinding, colorSamplerClampBorderNoAnisotropyBinding, shadowMapsBinding };
             VkDescriptorSetLayoutCreateInfo createInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
             createInfo.bindingCount = static_cast<uint32_t>(bindings.size());
             createInfo.pBindings = bindings.data();
