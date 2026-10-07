@@ -39,8 +39,8 @@ struct SurfaceHit
 struct SurfaceOptics
 {
     float3 reflectionDirection;
-    float3 refractionDirection;
-    float reflectionWeight;		// 0 = refraction, 1 = reflection.
+    float3 transmissionDirection;
+    float weight;	// 0 = transmission, 1 = reflection.
 };
 
 
@@ -89,7 +89,7 @@ float3 GetFluidBoundsPadding()
 
 
 // Optics:
-float3 RefractionDirection(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
+float3 TransmissionDirection(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
 {
 	float3 orientedNormal = entering ? fluidSurfaceNormal : -fluidSurfaceNormal;
 	float eta = entering ? 1.0f / indexOfRefraction : indexOfRefraction;
@@ -110,10 +110,10 @@ SurfaceOptics ComputeSurfaceOptics(FluidRay fluidRay, SurfaceHit hit)
 	SurfaceOptics optics;
 	bool entering = hit.hitState == enteringFluid;
 	optics.reflectionDirection = reflect(fluidRay.ray.direction, hit.normal);
-	optics.refractionDirection = RefractionDirection(fluidRay.ray.direction, hit.normal, entering);
-	bool totalInternalReflection = dot(optics.refractionDirection, optics.refractionDirection) == 0.0f;
+	optics.transmissionDirection = TransmissionDirection(fluidRay.ray.direction, hit.normal, entering);
+	bool totalInternalReflection = dot(optics.transmissionDirection, optics.transmissionDirection) == 0.0f;
 	float fresnel = SchlickFresnel(fluidRay.ray.direction, hit.normal, entering);
-	optics.reflectionWeight = totalInternalReflection ? 1.0f : fresnel;
+	optics.weight = totalInternalReflection ? 1.0f : fresnel;
 	return optics;
 }
 
@@ -234,46 +234,86 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	// Source pixel/color:
 	uint2 sourcePixel = threadID.xy;
-	float4 sourceColor = Scene_GetColor(sourcePixel);
+	float4 color = Scene_GetColor(sourcePixel);
 
 	// Normalized fluid ray:
-	FluidRay fluidRay = {Camera_GetRay(sourcePixel, screenSize), 0, false};
-	fluidRay.insideFluid = InsideFluid_World(fluidRay.ray.origin);
+	FluidRay ray = {Camera_GetRay(sourcePixel, screenSize), 0, false};
+	ray.insideFluid = InsideFluid_World(ray.ray.origin);
 
 	// Jump ray to fluid bounds surface:
 	float3 boundsPadding = GetFluidBoundsPadding();
 	float boundsEnterDistance;
 	float boundsExitDistance;
-	if (!mathRay_TryIntersectRotatedBounds(fluidRay.ray, worldToFluidMatrix, fluidBoundsMin - boundsPadding, fluidBoundsMax + boundsPadding, boundsEnterDistance, boundsExitDistance))
+	if (!mathRay_TryIntersectRotatedBounds(ray.ray, worldToFluidMatrix, fluidBoundsMin - boundsPadding, fluidBoundsMax + boundsPadding, boundsEnterDistance, boundsExitDistance))
 	{
-		Scene_SetColor(sourcePixel, sourceColor);
+		Scene_SetColor(sourcePixel, color);
 		return;
 	}
-	fluidRay.ray.origin = mathRay_GetPoint(fluidRay.ray, max(boundsEnterDistance, 0.0f));;
+	ray.ray.origin = mathRay_GetPoint(ray.ray, max(boundsEnterDistance, 0.0f));;
 
 	// Find fluid surface:
-	SurfaceHit hit = FindFluidSurface(fluidRay);
+	SurfaceHit hit = FindFluidSurface(ray);
 
 	// Missed fluid surface:
 	if (hit.hitState == missingFluid)
 	{
-		Scene_SetColor(sourcePixel, sourceColor);
+		Scene_SetColor(sourcePixel, color);
 		return;
 	}
 
-	// Fluid normals:
-	//sourceColor.xyz = hit.normal;
+	// Optics on first surface hit:
+	SurfaceOptics optics = ComputeSurfaceOptics(ray, hit);
 
-	// Reflect + Refract environment via SchlickFresnel:
-	SurfaceOptics optics = ComputeSurfaceOptics(fluidRay, hit);
-	float3 reflectionColor = GetEnvironmentColor(optics.reflectionDirection);
-	sourceColor.xyz = reflectionColor;
-	if (optics.reflectionWeight < 1.0f)
+	float epsilon = stepLength * exp2(-float(maxRefinementStepCount));
+	float3 incidentNormal = hit.hitState == enteringFluid ? hit.normal : -hit.normal;
+
+	// Reflection branch:
+	FluidRay rayR = ray;
+	rayR.ray.origin = hit.position + epsilon * incidentNormal;
+	rayR.ray.direction = optics.reflectionDirection;
+	rayR.insideFluid = ray.insideFluid;
+	SurfaceHit hitR = FindFluidSurface(rayR);
+	float3 colorR = GetEnvironmentColor(rayR.ray.direction);	// falback color if reflection doesnt hit another fluid surface.
+	if (hitR.hitState != missingFluid)
 	{
-	    float3 refractionColor = GetEnvironmentColor(optics.refractionDirection);
-	    sourceColor.xyz = lerp(refractionColor, reflectionColor, optics.reflectionWeight);
+	    SurfaceOptics opticsR = ComputeSurfaceOptics(rayR, hitR);
+	    float3 colorRR = GetEnvironmentColor(opticsR.reflectionDirection);
+		colorR = colorRR;
+	    if (opticsR.weight < 1.0f)
+	    {
+	        float3 colorRT = GetEnvironmentColor(opticsR.transmissionDirection);
+	        colorR = lerp(colorRT, colorRR, opticsR.weight);
+	    }
 	}
 
-	Scene_SetColor(sourcePixel, sourceColor);
+	// Combine reflection and refractin branch:
+	color.xyz = colorR;
+	if (optics.weight < 1.0f)
+	{
+		// Refraction branch:
+		FluidRay rayT = ray;
+		rayT.ray.origin = hit.position - epsilon * incidentNormal;
+		rayT.ray.direction = optics.transmissionDirection;
+		rayT.insideFluid = !ray.insideFluid;
+		SurfaceHit hitT = FindFluidSurface(rayT);
+		float3 colorT = GetEnvironmentColor(rayT.ray.direction);	// falback color if refraction doesnt hit another fluid surface.
+	    if (hitT.hitState != missingFluid)
+	    {
+	        SurfaceOptics opticsT = ComputeSurfaceOptics(rayT, hitT);
+	        float3 colorTR = GetEnvironmentColor(opticsT.reflectionDirection);
+			colorT = colorTR;
+	        if (opticsT.weight < 1.0f)
+	        {
+	            float3 colorTT = GetEnvironmentColor(opticsT.transmissionDirection);
+	            colorT = lerp(colorTT, colorTR, opticsT.weight);
+	        }
+	    }
+
+	    // Combine both branches at optics:
+	    color.xyz = lerp(colorT, colorR, optics.weight);
+	}
+
+	// Coloring:
+	Scene_SetColor(sourcePixel, color);
 	return;
 }
