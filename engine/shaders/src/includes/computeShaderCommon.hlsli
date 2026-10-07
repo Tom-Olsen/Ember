@@ -13,6 +13,16 @@ float Scene_GetNdcDepth(uint2 pixel)
 {// ndc depth in [0,1].
 	return sceneDepthTexture[pixel];
 }
+float Scene_GetDistance(uint2 pixel, math_Ray worldRay, float2 screenSize, bool directionIsNormalized = false)
+{
+	float sceneDepth = Scene_GetNdcDepth(pixel);
+	if (sceneDepth >= 1.0f)
+		return 1.0e30f;
+
+	float3 scenePosition = Camera_GetWorldPosition(pixel, sceneDepth, screenSize);
+	float result = dot(scenePosition - worldRay.origin, worldRay.direction);
+	return directionIsNormalized ? result : result / length(worldRay.direction);
+}
 float4 Scene_GetColor(uint2 pixel)
 {
 	if (pc.sceneColorIndex == 0)
