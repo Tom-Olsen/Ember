@@ -10,7 +10,7 @@ cbuffer CallValues : register(b300, CALL_SET)
 	float3 fluidBoundsMin;			// given by fluid simulation.
 	float3 fluidBoundsMax;			// given by fluid simulation.
 	float surfaceDensity;			// user input.
-	//float fluidIndexOfRefraction;	// user input.
+	float indexOfRefraction;		// user input.
 	//float3 absorption;				// user input.
 	//float normalSampleDistance;		// user input.
 	uint maxStepCount;				// user input.
@@ -33,6 +33,12 @@ struct SurfaceHit
 	float3 normal;
 	float distance;
 	uint hitState;
+};
+struct SurfaceOptics
+{
+    float3 reflectionDirection;
+    float3 refractionDirection;
+    float reflectionWeight;		// 0 = refraction, 1 = reflection.
 };
 
 
@@ -76,6 +82,37 @@ float3 GetFluidBoundsPadding()
 	uint textureWidth, textureHeight, textureDepth;
 	densityTexture.GetDimensions(textureWidth, textureHeight, textureDepth);
 	return 0.5f * (fluidBoundsMax - fluidBoundsMin) / float3(textureWidth, textureHeight, textureDepth);
+}
+
+
+
+// Optics:
+float3 RefractionDirection(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
+{
+	float3 orientedNormal = entering ? fluidSurfaceNormal : -fluidSurfaceNormal;
+	float eta = entering ? 1.0f / indexOfRefraction : indexOfRefraction;
+	return refract(rayDirection, orientedNormal, eta);
+}
+float SchlickFresnel(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
+{
+	float n1 = entering ? 1.0f : indexOfRefraction;
+	float n2 = entering ? indexOfRefraction  : 1.0f;
+	float3 orientedNormal = entering ? fluidSurfaceNormal : -fluidSurfaceNormal;
+	float cosTheta = saturate(-dot(rayDirection, orientedNormal));
+	float r = (n1 - n2) / (n1 + n2);
+	float f0 = r * r;
+	return f0 + (1.0f - f0) * pow(1.0f - cosTheta, 5.0f);
+}
+SurfaceOptics ComputeSurfaceOptics(FluidRay fluidRay, SurfaceHit hit)
+{
+	SurfaceOptics optics;
+	bool entering = hit.hitState == enteringFluid;
+	optics.reflectionDirection = reflect(fluidRay.ray.direction, hit.normal);
+	optics.refractionDirection = RefractionDirection(fluidRay.ray.direction, hit.normal, entering);
+	bool totalInternalReflection = dot(optics.refractionDirection, optics.refractionDirection) == 0.0f;
+	float fresnel = SchlickFresnel(fluidRay.ray.direction, hit.normal, entering);
+	optics.reflectionWeight = totalInternalReflection ? 1.0f : fresnel;
+	return optics;
 }
 
 
@@ -221,17 +258,36 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float marchEnd = min(boundsExitDistance, Scene_GetDistance(sourcePixel, fluidRay.ray, screenSize, true));
 	SurfaceHit hit = FindFluidSurface(fluidRay, marchStart, marchEnd);
 
+	// Missed fluid surface:
 	if (hit.hitState == missingFluid)
 	{
 		Scene_SetColor(sourcePixel, sourceColor);
 		return;
 	}
-	if (hit.hitState == enteringFluid)
-		sourceColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
-	else if (hit.hitState == leavingFluid)
-		sourceColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
 
-	sourceColor.xyz = hit.normal;
+	// Fluid normals:
+	//sourceColor.xyz = hit.normal;
+
+	// Reflect environment:
+	//float3 reflectionDirection = reflect(fluidRay.ray.direction, hit.normal);
+	//float3 reflectionColor = GetEnvironmentColor(reflectionDirection);
+	//sourceColor.xyz = reflectionColor;
+
+	// Refract environment:
+	//float3 refractionDirection = RefractionDirection(fluidRay.ray.direction, hit.normal, hit.hitState == enteringFluid);
+	//float3 refractionColor = GetEnvironmentColor(refractionDirection);
+	//sourceColor.xyz = refractionColor;
+
+	// Reflect + Refract environment via SchlickFresnel:
+	SurfaceOptics optics = ComputeSurfaceOptics(fluidRay, hit);
+	float3 reflectionColor = GetEnvironmentColor(optics.reflectionDirection);
+	sourceColor.xyz = reflectionColor;
+	if (optics.reflectionWeight < 1.0f)
+	{
+	    float3 refractionColor = GetEnvironmentColor(optics.refractionDirection);
+	    sourceColor.xyz = lerp(refractionColor, reflectionColor, optics.reflectionWeight);
+	}
+
 	Scene_SetColor(sourcePixel, sourceColor);
 	return;
 }
