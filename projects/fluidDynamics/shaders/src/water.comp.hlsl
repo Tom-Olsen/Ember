@@ -155,21 +155,20 @@ float3 GetDensityNormal(float3 position_World, float3 fallbackNormal)
 	// Flip and normalize gradient:
 	return -gradient_World * rsqrt(gradientLengthSquared);
 }
-SurfaceHit FindFluidSurface(inout FluidRay fluidRay, float startDistance, float endDistance)
+SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 {
 	// Reject empty search interval:
 	SurfaceHit hit = {math_zero3, math_zero3, 0.0f, missingFluid};
-	float marchDistance = endDistance - startDistance;
-	if (marchDistance <= 0.0f || fluidRay.stepCount >= maxStepCount)
+	if ( fluidRay.stepCount >= maxStepCount)
 		return hit;
 
-	// Ray march:
-	float3 currentPosition = mathRay_GetPoint(fluidRay.ray, startDistance);
+	// Ray march (step0):
+	float3 currentPosition = fluidRay.ray.origin;
 	float3 nextPosition = currentPosition + stepLength * fluidRay.ray.direction;
 	float currentDensity = SampleDensity_World(currentPosition);
 	float nextDensity = SampleDensity_World(nextPosition);
 	bool nextInsideFluid = nextDensity > surfaceDensity;
-	float distance = startDistance + stepLength;
+	float distance = stepLength;	// missing distance from camera to fluid bounds surface. Not needed as that is air distance.
 	fluidRay.stepCount++;
 	for (; fluidRay.stepCount < maxStepCount; fluidRay.stepCount++)
 	{
@@ -241,7 +240,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	FluidRay fluidRay = {Camera_GetRay(sourcePixel, screenSize), 0, false};
 	fluidRay.insideFluid = InsideFluid_World(fluidRay.ray.origin);
 
-	// Skip rays that do not hit the fluid bounds:
+	// Jump ray to fluid bounds surface:
 	float3 boundsPadding = GetFluidBoundsPadding();
 	float boundsEnterDistance;
 	float boundsExitDistance;
@@ -250,11 +249,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		Scene_SetColor(sourcePixel, sourceColor);
 		return;
 	}
+	fluidRay.ray.origin = mathRay_GetPoint(fluidRay.ray, max(boundsEnterDistance, 0.0f));;
 
 	// Find fluid surface:
-	float marchStart = max(boundsEnterDistance, 0.0f);
-	float marchEnd = min(boundsExitDistance, Scene_GetDistance(sourcePixel, fluidRay.ray, screenSize, true));
-	SurfaceHit hit = FindFluidSurface(fluidRay, marchStart, marchEnd);
+	SurfaceHit hit = FindFluidSurface(fluidRay);
 
 	// Missed fluid surface:
 	if (hit.hitState == missingFluid)
