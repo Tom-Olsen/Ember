@@ -67,6 +67,7 @@ namespace fluidDynamics
 			SetWaterSurfaceDensity(0.5f * m_settings.targetDensity);
 			SetWaterIndexOfRefraction(1.333f);
 			SetWaterAbsorption(Float3(m_volumetricDensityAbsorption));
+			SetWaterStepLength(0.5f);
 			SetWaterMaxStepCount(64);
 			SetWaterMaxRefinementStepCount(4);
 		}
@@ -270,10 +271,11 @@ namespace fluidDynamics
 				callProperties.SetValue("CallValues", "fluidBoundsMin", -fluidHalfSize);
 				callProperties.SetValue("CallValues", "fluidBoundsMax", fluidHalfSize);
 				callProperties.SetValue("CallValues", "surfaceDensity", m_waterSurfaceDensity);
-				callProperties.SetValue("CallValues", "fluidIndexOfRefraction", m_waterIndexOfRefraction);
+				callProperties.SetValue("CallValues", "indexOfRefraction", m_waterIndexOfRefraction);
 				callProperties.SetValue("CallValues", "absorption", m_waterAbsorption);
 				callProperties.SetValue("CallValues", "maxStepCount", static_cast<int>(m_waterMaxStepCount));
 				callProperties.SetValue("CallValues", "maxRefinementStepCount", static_cast<int>(m_waterMaxRefinementStepCount));
+				callProperties.SetValue("CallValues", "stepLength", m_waterStepLength);
 				callProperties.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
 				callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
 				break;
@@ -562,6 +564,10 @@ namespace fluidDynamics
 	{
 		m_waterAbsorption = waterAbsorption;
 	}
+	void SphFluid3dGpu::SetWaterStepLength(float waterStepLength)
+	{
+		m_waterStepLength = math::Max(0.01f, waterStepLength);
+	}
 	void SphFluid3dGpu::SetWaterMaxStepCount(uint32_t waterMaxStepCount)
 	{
 		m_waterMaxStepCount = math::Max(uint32_t(1), waterMaxStepCount);
@@ -717,6 +723,10 @@ namespace fluidDynamics
 	Float3 SphFluid3dGpu::GetWaterAbsorption() const
 	{
 		return m_waterAbsorption;
+	}
+	float SphFluid3dGpu::GetWaterStepLength() const
+	{
+		return m_waterStepLength;
 	}
 	uint32_t SphFluid3dGpu::GetWaterMaxStepCount() const
 	{

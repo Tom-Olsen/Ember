@@ -15,6 +15,7 @@ cbuffer CallValues : register(b300, CALL_SET)
 	//float normalSampleDistance;		// user input.
 	uint maxStepCount;				// user input.
 	uint maxRefinementStepCount;	// user input.
+	float stepLength;				// user input.
 };
 Texture3D<float> densityTexture : register(t100, CALL_SET);
 TextureCube<float4> environmentMap : register(t101, CALL_SET);
@@ -25,6 +26,7 @@ TextureCube<float4> environmentMap : register(t101, CALL_SET);
 struct FluidRay
 {
 	math_Ray ray;
+	uint stepCount;		// starts at 0 and gets icremented with every iteration. Gets inherited by children.
 	bool insideFluid;
 };
 struct SurfaceHit
@@ -153,18 +155,13 @@ float3 GetDensityNormal(float3 position_World, float3 fallbackNormal)
 	// Flip and normalize gradient:
 	return -gradient_World * rsqrt(gradientLengthSquared);
 }
-SurfaceHit FindFluidSurface(FluidRay fluidRay, float startDistance, float endDistance)
+SurfaceHit FindFluidSurface(inout FluidRay fluidRay, float startDistance, float endDistance)
 {
 	// Reject empty search interval:
 	SurfaceHit hit = {math_zero3, math_zero3, 0.0f, missingFluid};
 	float marchDistance = endDistance - startDistance;
-	if (marchDistance <= 0.0f)
+	if (marchDistance <= 0.0f || fluidRay.stepCount >= maxStepCount)
 		return hit;
-
-	// Increase step length if needed to cover the interval within the step limit:
-	float stepLength = marchDistance / float(maxStepCount);
-	stepLength = max(stepLength, minStepLength);
-	uint stepCount = min((uint)ceil(marchDistance / stepLength), maxStepCount);
 
 	// Ray march:
 	float3 currentPosition = mathRay_GetPoint(fluidRay.ray, startDistance);
@@ -173,7 +170,8 @@ SurfaceHit FindFluidSurface(FluidRay fluidRay, float startDistance, float endDis
 	float nextDensity = SampleDensity_World(nextPosition);
 	bool nextInsideFluid = nextDensity > surfaceDensity;
 	float distance = startDistance + stepLength;
-	for (uint step = 1; step < stepCount; step++)
+	fluidRay.stepCount++;
+	for (; fluidRay.stepCount < maxStepCount; fluidRay.stepCount++)
 	{
 		if (fluidRay.insideFluid != nextInsideFluid)
 			break;
@@ -192,17 +190,18 @@ SurfaceHit FindFluidSurface(FluidRay fluidRay, float startDistance, float endDis
     	return hit;
 
 	// Refine hit:
+	float subStepLength = stepLength;
 	for (uint i = 0; i < maxRefinementStepCount; i++)
 	{
 		float3 midPosition = 0.5f * (currentPosition + nextPosition);
 		float midDensity = SampleDensity_World(midPosition);
 		bool midInsideFluid = midDensity > surfaceDensity;
-		stepLength = 0.5f * stepLength;
+		subStepLength = 0.5f * subStepLength;
 		if (fluidRay.insideFluid != midInsideFluid)
 		{
 			nextPosition = midPosition;
 			nextDensity = midDensity;
-			distance -= stepLength;	// distance from origin to nextPosition.
+			distance -= subStepLength;	// distance from origin to nextPosition.
 		}
 		else
 		{
@@ -211,12 +210,11 @@ SurfaceHit FindFluidSurface(FluidRay fluidRay, float startDistance, float endDis
 		}
 	}
 
-
 	// Hit:
 	float3 fallbackNormal = fluidRay.insideFluid ? fluidRay.ray.direction : -fluidRay.ray.direction;
 	hit.position = 0.5f * (currentPosition + nextPosition);
 	hit.normal = GetDensityNormal(hit.position, fallbackNormal);
-	hit.distance = distance - 0.5f * stepLength;	// distance from origin to nextPosition.
+	hit.distance = distance - 0.5f * subStepLength;	// distance from origin to nextPosition.
 	hit.hitState = fluidRay.insideFluid ? leavingFluid : enteringFluid;
 	return hit;
 }
@@ -240,7 +238,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float4 sourceColor = Scene_GetColor(sourcePixel);
 
 	// Normalized fluid ray:
-	FluidRay fluidRay = {Camera_GetRay(sourcePixel, screenSize), false};
+	FluidRay fluidRay = {Camera_GetRay(sourcePixel, screenSize), 0, false};
 	fluidRay.insideFluid = InsideFluid_World(fluidRay.ray.origin);
 
 	// Skip rays that do not hit the fluid bounds:
@@ -267,16 +265,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	// Fluid normals:
 	//sourceColor.xyz = hit.normal;
-
-	// Reflect environment:
-	//float3 reflectionDirection = reflect(fluidRay.ray.direction, hit.normal);
-	//float3 reflectionColor = GetEnvironmentColor(reflectionDirection);
-	//sourceColor.xyz = reflectionColor;
-
-	// Refract environment:
-	//float3 refractionDirection = RefractionDirection(fluidRay.ray.direction, hit.normal, hit.hitState == enteringFluid);
-	//float3 refractionColor = GetEnvironmentColor(refractionDirection);
-	//sourceColor.xyz = refractionColor;
 
 	// Reflect + Refract environment via SchlickFresnel:
 	SurfaceOptics optics = ComputeSurfaceOptics(fluidRay, hit);

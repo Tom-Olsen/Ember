@@ -57,6 +57,7 @@ namespace emberEditor
 		float m_waterSurfaceDensity;
 		float m_waterIndexOfRefraction;
 		Float3 m_waterAbsorption;
+		float m_waterStepLength;
 		uint32_t m_waterMaxStepCount;
 		uint32_t m_waterMaxRefinementStepCount;
 		// Internal:
@@ -149,6 +150,7 @@ namespace emberEditor
 					Gui::DragFloat("Surface Density:", &m_waterSurfaceDensity, 0.1f, 1.0f, "%.8f");
 					Gui::DragFloat("Index Of Refraction:", &m_waterIndexOfRefraction, 0.01f, 0.1f, "%.8f");
 					Gui::DragFloat3("Absorption:", &m_waterAbsorption, 0.0001f, 0.001f, "%.8f");
+					Gui::DragFloat("Step Length:", &m_waterStepLength, 0.01f, 0.1f, "%.8f");
 					Gui::DragUint("Max Step Count:", &m_waterMaxStepCount);
 					Gui::DragUint("Max Refinement Step Count:", &m_waterMaxRefinementStepCount);
 					break;
@@ -211,6 +213,7 @@ namespace emberEditor
 			m_waterSurfaceDensity = m_pScript->GetWaterSurfaceDensity();
 			m_waterIndexOfRefraction = m_pScript->GetWaterIndexOfRefraction();
 			m_waterAbsorption = m_pScript->GetWaterAbsorption();
+			m_waterStepLength = m_pScript->GetWaterStepLength();
 			m_waterMaxStepCount = m_pScript->GetWaterMaxStepCount();
 			m_waterMaxRefinementStepCount = m_pScript->GetWaterMaxRefinementStepCount();
 		}
@@ -252,6 +255,7 @@ namespace emberEditor
 			m_pScript->SetWaterSurfaceDensity(m_waterSurfaceDensity);
 			m_pScript->SetWaterIndexOfRefraction(m_waterIndexOfRefraction);
 			m_pScript->SetWaterAbsorption(m_waterAbsorption);
+			m_pScript->SetWaterStepLength(m_waterStepLength);
 			m_pScript->SetWaterMaxStepCount(m_waterMaxStepCount);
 			m_pScript->SetWaterMaxRefinementStepCount(m_waterMaxRefinementStepCount);
 		}

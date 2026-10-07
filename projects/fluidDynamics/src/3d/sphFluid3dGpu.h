@@ -68,6 +68,7 @@ namespace fluidDynamics
 		float m_waterSurfaceDensity;
 		float m_waterIndexOfRefraction;
 		Float3 m_waterAbsorption;
+		float m_waterStepLength;
 		uint32_t m_waterMaxStepCount;
 		uint32_t m_waterMaxRefinementStepCount;
 
@@ -136,6 +137,7 @@ namespace fluidDynamics
 		void SetWaterSurfaceDensity(float waterSurfaceDensity);
 		void SetWaterIndexOfRefraction(float waterIndexOfRefraction);
 		void SetWaterAbsorption(const Float3& waterAbsorption);
+		void SetWaterStepLength(float waterStepLength);
 		void SetWaterMaxStepCount(uint32_t waterMaxStepCount);
 		void SetWaterMaxRefinementStepCount(uint32_t waterMaxRefinementStepCount);
 
@@ -184,6 +186,7 @@ namespace fluidDynamics
 		float GetWaterSurfaceDensity() const;
 		float GetWaterIndexOfRefraction() const;
 		Float3 GetWaterAbsorption() const;
+		float GetWaterStepLength() const;
 		uint32_t GetWaterMaxStepCount() const;
 		uint32_t GetWaterMaxRefinementStepCount() const;
 
