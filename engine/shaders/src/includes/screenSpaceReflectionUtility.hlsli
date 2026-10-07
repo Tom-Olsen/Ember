@@ -107,16 +107,19 @@ uint EvaluateScreenRaySample(float3 screenPosition, float2 screenSize, out Scree
 	raySample.sceneViewDepth = 0.0f;
 	raySample.depthDelta = 0.0f;
 
+	// Check if raySample is outside of screen:
 	if (screenPosition.x < 0.0f || screenPosition.x >= screenSize.x ||
 		screenPosition.y < 0.0f || screenPosition.y >= screenSize.y ||
 		screenPosition.z < 0.0f || screenPosition.z >= 1.0f)
 		return screenRaySampleOutsideScreen;
 
+	// Check if raySample points at geometry:
 	uint2 pixel = uint2(screenPosition.xy);
 	float sceneNdcDepth = Scene_GetNdcDepth(pixel);
 	if (sceneNdcDepth >= 1.0f)
 		return screenRaySampleWithoutGeometry;
 
+	// raySample is valid, compute sceneViewDepth and depthDelta:
 	float2 pixelCenter = float2(pixel) + 0.5f;
 	float3 rayWorldPosition = ScreenPositionToWorld(float3(pixelCenter, screenPosition.z), screenSize);
 	float3 sceneWorldPosition = ScreenPositionToWorld(float3(pixelCenter, sceneNdcDepth), screenSize);
@@ -219,6 +222,7 @@ bool ScreenSpaceRayMarch(uint2 sourcePixel, math_Ray worldRay, float2 screenSize
 	// No hit detected:
 	return false;
 }
+
 
 
 #endif // __INCLUDE_GUARD_screenSpaceReflectionUtility_hlsli__
