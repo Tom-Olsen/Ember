@@ -96,15 +96,26 @@ float3 TransmissionDirection(float3 rayDirection, float3 fluidSurfaceNormal, boo
 	float eta = entering ? 1.0f / indexOfRefraction : indexOfRefraction;
 	return refract(rayDirection, orientedNormal, eta);
 }
-float SchlickFresnel(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
+float Fresnel(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
 {
-	float n1 = entering ? 1.0f : indexOfRefraction;
-	float n2 = entering ? indexOfRefraction  : 1.0f;
-	float3 orientedNormal = entering ? fluidSurfaceNormal : -fluidSurfaceNormal;
-	float cosTheta = saturate(-dot(rayDirection, orientedNormal));
-	float r = (n1 - n2) / (n1 + n2);
-	float f0 = r * r;
-	return f0 + (1.0f - f0) * pow(1.0f - cosTheta, 5.0f);
+    float n1 = entering ? 1.0f : indexOfRefraction;
+    float n2 = entering ? indexOfRefraction : 1.0f;
+    float3 orientedNormal = entering ? fluidSurfaceNormal : -fluidSurfaceNormal;
+    float cosThetaI = saturate(-dot(rayDirection, orientedNormal));
+    float eta = n1 / n2;
+
+    // Snell's law:
+    float sinThetaTSquared = eta * eta * (1.0f - cosThetaI * cosThetaI);
+
+    // Total internal reflection:
+    if (sinThetaTSquared >= 1.0f)
+        return 1.0f;
+
+    // Fresnel equations:
+    float cosThetaT = sqrt(1.0f - sinThetaTSquared);
+    float rs = (n1 * cosThetaI - n2 * cosThetaT) / (n1 * cosThetaI + n2 * cosThetaT);
+    float rp = (n1 * cosThetaT - n2 * cosThetaI) / (n1 * cosThetaT + n2 * cosThetaI);
+    return 0.5f * (rs * rs + rp * rp);
 }
 SurfaceOptics ComputeSurfaceOptics(FluidRay fluidRay, SurfaceHit hit)
 {
@@ -112,9 +123,7 @@ SurfaceOptics ComputeSurfaceOptics(FluidRay fluidRay, SurfaceHit hit)
 	bool entering = hit.hitState == enteringFluid;
 	optics.reflectionDirection = reflect(fluidRay.ray.direction, hit.normal);
 	optics.transmissionDirection = TransmissionDirection(fluidRay.ray.direction, hit.normal, entering);
-	bool totalInternalReflection = dot(optics.transmissionDirection, optics.transmissionDirection) == 0.0f;
-	float fresnel = SchlickFresnel(fluidRay.ray.direction, hit.normal, entering);
-	optics.weight = totalInternalReflection ? 1.0f : fresnel;
+	optics.weight = Fresnel(fluidRay.ray.direction, hit.normal, entering);
 	return optics;
 }
 
