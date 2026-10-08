@@ -1,4 +1,5 @@
 ToDo:
+- rethink the entire GetX() vs TryGetX() convention.
 - add msaa filtering
 - allow renderWidth/renderHeight to change during runtime.
 - rotations are sometimes given in degrees sometimes in radians. decide for one and make it consistent

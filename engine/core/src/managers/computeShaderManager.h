@@ -3,11 +3,10 @@
 #include "commonResourceAccessRights.h"
 #include "computeShader.h"
 #include "emberCoreExport.h"
+#include "namedSlotMap.h"
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 
 
@@ -41,13 +40,12 @@ namespace emberCore
 	private: // Structs:
 		struct ManagedComputeShader
 		{
-			std::string name;
 			emberCommon::ResourceAccessRights accessRights;
 			std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader;
 
 			// Constructor/Destructor:
 			ManagedComputeShader();
-			ManagedComputeShader(std::string name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
+			ManagedComputeShader(const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
 			~ManagedComputeShader();
 
 			// Non-copyable:
@@ -58,29 +56,10 @@ namespace emberCore
 			ManagedComputeShader(ManagedComputeShader&&) noexcept;
 			ManagedComputeShader& operator=(ManagedComputeShader&&) noexcept;
 		};
-		struct ComputeShaderSlot
-		{
-			uint32_t generation;
-			ManagedComputeShader managedComputeShader;
-
-			// Constructor/Destructor:
-			ComputeShaderSlot(uint32_t generation, ManagedComputeShader managedComputeShader);
-			~ComputeShaderSlot();
-
-			// Non-copyable:
-			ComputeShaderSlot(const ComputeShaderSlot&) = delete;
-			ComputeShaderSlot& operator=(const ComputeShaderSlot&) = delete;
-
-			// Movable:
-			ComputeShaderSlot(ComputeShaderSlot&&) noexcept;
-			ComputeShaderSlot& operator=(ComputeShaderSlot&&) noexcept;
-		};
 
 	private: // Members:
 		static bool s_isInitialized;
-		static std::unordered_map<std::string, uint32_t> s_computeShaderIdsMap;
-		static std::vector<ComputeShaderSlot> s_computeShaderSlots;
-		static std::vector<uint32_t> s_freeComputeShaderIds;
+		static emberDataStructures::NamedSlotMap<emberCommon::ComputeShaderId, ManagedComputeShader> s_computeShaderSlotMap;
 
 	public: // Methods:
 		// Asset loading:
@@ -107,7 +86,7 @@ namespace emberCore
 		static emberCommon::ComputeShaderId TryGetAccessibleComputeShaderId(const std::string& name);
 		static bool IsComputeShaderMutable(emberCommon::ComputeShaderId computeShaderId);
 		static emberBackendInterface::IComputeShader* TryGetComputeShaderInterface(emberCommon::ComputeShaderId computeShaderId);
-		static const std::string* TryGetComputeShaderName(emberCommon::ComputeShaderId computeShaderId);
+		static std::string GetComputeShaderName(emberCommon::ComputeShaderId computeShaderId);
 
 		// Ownership transfer:
 		static std::unique_ptr<emberBackendInterface::IComputeShader> TakeComputeShaderOwnership(const std::string& name);
@@ -119,7 +98,6 @@ namespace emberCore
 		static emberCommon::ComputeShaderId AddComputeShader(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
 		static void RetireComputeShader(std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
 		static emberCommon::ComputeShaderId FindComputeShaderId(const std::string& name);
-		static void InvalidateComputeShaderSlot(uint32_t index);
 
 		// Delete all constructors:
 		ComputeShaderManager() = delete;

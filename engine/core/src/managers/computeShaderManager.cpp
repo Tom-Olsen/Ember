@@ -8,6 +8,7 @@
 #include "logger.h"
 #include <algorithm>
 #include <filesystem>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -18,9 +19,7 @@ namespace emberCore
 {
 	// Static members:
 	bool ComputeShaderManager::s_isInitialized = false;
-	std::unordered_map<std::string, uint32_t> ComputeShaderManager::s_computeShaderIdsMap;
-	std::vector<ComputeShaderManager::ComputeShaderSlot> ComputeShaderManager::s_computeShaderSlots;
-	std::vector<uint32_t> ComputeShaderManager::s_freeComputeShaderIds;
+	emberDataStructures::NamedSlotMap<emberCommon::ComputeShaderId, ComputeShaderManager::ManagedComputeShader> ComputeShaderManager::s_computeShaderSlotMap;
 
 
 
@@ -30,9 +29,8 @@ namespace emberCore
 	{
 
 	}
-	ComputeShaderManager::ManagedComputeShader::ManagedComputeShader(std::string name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader)
-		: name(std::move(name))
-		, accessRights(accessRights)
+	ComputeShaderManager::ManagedComputeShader::ManagedComputeShader(const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader)
+		: accessRights(accessRights)
 		, pComputeShader(std::move(pComputeShader))
 	{
 
@@ -40,19 +38,6 @@ namespace emberCore
 	ComputeShaderManager::ManagedComputeShader::~ManagedComputeShader() = default;
 	ComputeShaderManager::ManagedComputeShader::ManagedComputeShader(ManagedComputeShader&&) noexcept = default;
 	ComputeShaderManager::ManagedComputeShader& ComputeShaderManager::ManagedComputeShader::operator=(ManagedComputeShader&&) noexcept = default;
-
-
-
-	// Compute shader slot methods:
-	ComputeShaderManager::ComputeShaderSlot::ComputeShaderSlot(uint32_t generation, ManagedComputeShader managedComputeShader)
-		: generation(generation)
-		, managedComputeShader(std::move(managedComputeShader))
-	{
-
-	}
-	ComputeShaderManager::ComputeShaderSlot::~ComputeShaderSlot() = default;
-	ComputeShaderManager::ComputeShaderSlot::ComputeShaderSlot(ComputeShaderSlot&&) noexcept = default;
-	ComputeShaderManager::ComputeShaderSlot& ComputeShaderManager::ComputeShaderSlot::operator=(ComputeShaderSlot&&) noexcept = default;
 
 
 
@@ -68,10 +53,10 @@ namespace emberCore
 
 		// Collect asset paths:
 		std::vector<std::filesystem::path> assetPaths;
-		for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directoryPath))
+		for (const std::filesystem::directory_entry& directoryEntry : std::filesystem::directory_iterator(directoryPath))
 		{
-			if (entry.is_regular_file() && entry.path().filename().string().ends_with(".computeShaderAsset.json"))
-				assetPaths.push_back(entry.path());
+			if (directoryEntry.is_regular_file() && directoryEntry.path().filename().string().ends_with(".computeShaderAsset.json"))
+				assetPaths.push_back(directoryEntry.path());
 		}
 		std::sort(assetPaths.begin(), assetPaths.end());
 
@@ -132,13 +117,12 @@ namespace emberCore
 		}
 
 		LOG_TRACE("ComputeShaderManager contents:");
-		for (const std::pair<const std::string, uint32_t>& computeShaderIdPair : s_computeShaderIdsMap)
+		for (emberCommon::ComputeShaderId computeShaderId : s_computeShaderSlotMap.GetActiveIds())
 		{
-			const std::string& name = computeShaderIdPair.first;
-			const uint32_t index = computeShaderIdPair.second;
-			const ComputeShaderSlot& slot = s_computeShaderSlots[index];
-			const emberCommon::ResourceAccessRights& accessRights = slot.managedComputeShader.accessRights;
-			LOG_TRACE("  {}: index {}, generation {}, accessible {}, deletable {}, mutable {}", name, index, slot.generation, accessRights.isAccessible, accessRights.isDeletable, accessRights.isMutable);
+			const ManagedComputeShader* pManagedComputeShader = s_computeShaderSlotMap.TryGetValue(computeShaderId);
+			const emberCommon::ResourceAccessRights& accessRights = pManagedComputeShader->accessRights;
+			std::string name = GetComputeShaderName(computeShaderId);
+			LOG_TRACE("  {}: index {}, generation {}, accessible {}, deletable {}, mutable {}", name, computeShaderId.index, computeShaderId.generation, accessRights.isAccessible, accessRights.isDeletable, accessRights.isMutable);
 		}
 	}
 
@@ -166,16 +150,11 @@ namespace emberCore
 		if (!s_isInitialized)
 			return;
 
-		for (uint32_t index = 0; index < s_computeShaderSlots.size(); index++)
+		for (emberCommon::ComputeShaderId computeShaderId : s_computeShaderSlotMap.GetActiveIds())
 		{
-			ComputeShaderSlot& slot = s_computeShaderSlots[index];
-			if (slot.managedComputeShader.pComputeShader == nullptr)
-				continue;
-
-			RetireComputeShader(std::move(slot.managedComputeShader.pComputeShader));
-			InvalidateComputeShaderSlot(index);
+			std::optional<ManagedComputeShader> managedComputeShader = s_computeShaderSlotMap.Remove(computeShaderId);
+			RetireComputeShader(std::move(managedComputeShader->pComputeShader));
 		}
-		s_computeShaderIdsMap.clear();
 		s_isInitialized = false;
 	}
 
@@ -190,13 +169,13 @@ namespace emberCore
 			return computeShaderId;
 
 		// Create compute shader from asset:
-		emberCommon::ComputeShaderCreateInfo createInfo
+		emberCommon::ComputeShaderCreateInfo computeShaderCreateInfo
 		{
 			computeShaderAsset.binaryPath,
 			computeShaderAsset.features,
 			computeShaderAsset.computeShaderName
 		};
-		std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader(GpuResourceFactory::CreateComputeShader(createInfo));
+		std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader(GpuResourceFactory::CreateComputeShader(computeShaderCreateInfo));
 		if (pComputeShader == nullptr)
 			throw std::runtime_error("ComputeShaderManager::CreateComputeShader(...) failed. Gpu resource factory returned nullptr for: " + computeShaderAsset.computeShaderName);
 
@@ -209,29 +188,27 @@ namespace emberCore
 	emberCommon::ComputeShaderId ComputeShaderManager::TryGetAccessibleComputeShaderId(const std::string& name)
 	{
 		emberCommon::ComputeShaderId computeShaderId = FindComputeShaderId(name);
-		if (TryGetComputeShaderInterface(computeShaderId) == nullptr || !s_computeShaderSlots[computeShaderId.index].managedComputeShader.accessRights.isAccessible)
+		const ManagedComputeShader* pManagedComputeShader = s_computeShaderSlotMap.TryGetValue(computeShaderId);
+		if (pManagedComputeShader == nullptr || !pManagedComputeShader->accessRights.isAccessible)
 			return emberCommon::invalidComputeShaderId;
 		return computeShaderId;
 	}
 	bool ComputeShaderManager::IsComputeShaderMutable(emberCommon::ComputeShaderId computeShaderId)
 	{
-		return TryGetComputeShaderInterface(computeShaderId) != nullptr && s_computeShaderSlots[computeShaderId.index].managedComputeShader.accessRights.isMutable;
+		const ManagedComputeShader* pManagedComputeShader = s_computeShaderSlotMap.TryGetValue(computeShaderId);
+		return pManagedComputeShader != nullptr && pManagedComputeShader->accessRights.isMutable;
 	}
 	emberBackendInterface::IComputeShader* ComputeShaderManager::TryGetComputeShaderInterface(emberCommon::ComputeShaderId computeShaderId)
 	{
-		if (computeShaderId.index == emberCommon::invalidComputeShaderId.index || computeShaderId.index >= s_computeShaderSlots.size())
-			return nullptr;
-
-		const ComputeShaderSlot& slot = s_computeShaderSlots[computeShaderId.index];
-		if (slot.generation != computeShaderId.generation)
-			return nullptr;
-		return slot.managedComputeShader.pComputeShader.get();
+		ManagedComputeShader* pManagedComputeShader = s_computeShaderSlotMap.TryGetValue(computeShaderId);
+		return pManagedComputeShader != nullptr ? pManagedComputeShader->pComputeShader.get() : nullptr;
 	}
-	const std::string* ComputeShaderManager::TryGetComputeShaderName(emberCommon::ComputeShaderId computeShaderId)
+	std::string ComputeShaderManager::GetComputeShaderName(emberCommon::ComputeShaderId computeShaderId)
 	{
-		if (TryGetComputeShaderInterface(computeShaderId) == nullptr)
-			return nullptr;
-		return &s_computeShaderSlots[computeShaderId.index].managedComputeShader.name;
+		std::optional<std::string> name = s_computeShaderSlotMap.TryGetName(computeShaderId);
+		if (!name)
+			throw std::runtime_error("ComputeShaderManager::GetComputeShaderName(...) failed. ComputeShader is invalid or expired.");
+		return std::move(*name);
 	}
 
 
@@ -240,14 +217,10 @@ namespace emberCore
 	std::unique_ptr<emberBackendInterface::IComputeShader> ComputeShaderManager::TakeComputeShaderOwnership(const std::string& name)
 	{
 		emberCommon::ComputeShaderId computeShaderId = FindComputeShaderId(name);
-		if (TryGetComputeShaderInterface(computeShaderId) == nullptr)
+		std::optional<ManagedComputeShader> managedComputeShader = s_computeShaderSlotMap.Remove(computeShaderId);
+		if (!managedComputeShader)
 			throw std::runtime_error("ComputeShaderManager::TakeComputeShaderOwnership(...) failed. ComputeShader not found: " + name);
-
-		ComputeShaderSlot& slot = s_computeShaderSlots[computeShaderId.index];
-		s_computeShaderIdsMap.erase(slot.managedComputeShader.name);
-		std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader = std::move(slot.managedComputeShader.pComputeShader);
-		InvalidateComputeShaderSlot(computeShaderId.index);
-		return pComputeShader;
+		return std::move(managedComputeShader->pComputeShader);
 	}
 
 
@@ -255,19 +228,16 @@ namespace emberCore
 	// Deleter:
 	void ComputeShaderManager::DeleteComputeShader(emberCommon::ComputeShaderId computeShaderId)
 	{
-		if (TryGetComputeShaderInterface(computeShaderId) == nullptr)
+		ManagedComputeShader* pManagedComputeShader = s_computeShaderSlotMap.TryGetValue(computeShaderId);
+		if (pManagedComputeShader == nullptr)
 			return;
-
-		ComputeShaderSlot& slot = s_computeShaderSlots[computeShaderId.index];
-		if (!slot.managedComputeShader.accessRights.isDeletable)
+		if (!pManagedComputeShader->accessRights.isDeletable)
 		{
-			LOG_WARN("ComputeShaderManager::DeleteComputeShader(...) failed. ComputeShader '{}' is not deletable.", slot.managedComputeShader.name);
+			LOG_WARN("ComputeShaderManager::DeleteComputeShader(...) failed. ComputeShader '{}' is not deletable.", GetComputeShaderName(computeShaderId));
 			return;
 		}
-
-		s_computeShaderIdsMap.erase(slot.managedComputeShader.name);
-		RetireComputeShader(std::move(slot.managedComputeShader.pComputeShader));
-		InvalidateComputeShaderSlot(computeShaderId.index);
+		std::optional<ManagedComputeShader> managedComputeShader = s_computeShaderSlotMap.Remove(computeShaderId);
+		RetireComputeShader(std::move(managedComputeShader->pComputeShader));
 	}
 
 
@@ -277,31 +247,7 @@ namespace emberCore
 	{
 		if (pComputeShader == nullptr)
 			throw std::runtime_error("ComputeShaderManager::AddComputeShader(...) failed. pComputeShader is nullptr.");
-		if (TryGetComputeShaderInterface(FindComputeShaderId(name)) != nullptr)
-			throw std::runtime_error("ComputeShaderManager::AddComputeShader(...) failed. ComputeShader already exists: " + name);
-
-		emberCommon::ComputeShaderId computeShaderId;
-		if (s_freeComputeShaderIds.empty())
-		{
-			if (s_computeShaderSlots.size() >= emberCommon::invalidComputeShaderId.index)
-				throw std::runtime_error("ComputeShaderManager::AddComputeShader(...) failed. Compute shader id limit reached.");
-			computeShaderId.index = static_cast<uint32_t>(s_computeShaderSlots.size());
-			s_computeShaderSlots.emplace_back(1, ManagedComputeShader(name, accessRights, std::move(pComputeShader)));
-		}
-		else
-		{
-			computeShaderId.index = s_freeComputeShaderIds.back();
-			s_freeComputeShaderIds.pop_back();
-
-			ComputeShaderSlot& slot = s_computeShaderSlots[computeShaderId.index];
-			slot.managedComputeShader.name = name;
-			slot.managedComputeShader.accessRights = accessRights;
-			slot.managedComputeShader.pComputeShader = std::move(pComputeShader);
-		}
-
-		computeShaderId.generation = s_computeShaderSlots[computeShaderId.index].generation;
-		s_computeShaderIdsMap[name] = computeShaderId.index;
-		return computeShaderId;
+		return s_computeShaderSlotMap.Add(name, ManagedComputeShader(accessRights, std::move(pComputeShader)));
 	}
 	void ComputeShaderManager::RetireComputeShader(std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader)
 	{
@@ -310,20 +256,6 @@ namespace emberCore
 	}
 	emberCommon::ComputeShaderId ComputeShaderManager::FindComputeShaderId(const std::string& name)
 	{
-		std::unordered_map<std::string, uint32_t>::const_iterator iterator = s_computeShaderIdsMap.find(name);
-		if (iterator == s_computeShaderIdsMap.end())
-			return emberCommon::invalidComputeShaderId;
-
-		const uint32_t index = iterator->second;
-		return emberCommon::ComputeShaderId{ index, s_computeShaderSlots[index].generation };
-	}
-	void ComputeShaderManager::InvalidateComputeShaderSlot(uint32_t index)
-	{
-		ComputeShaderSlot& slot = s_computeShaderSlots[index];
-		slot.managedComputeShader.name.clear();
-		slot.managedComputeShader.accessRights = { false, false, false };
-		slot.generation++;
-		if (slot.generation != emberCommon::invalidComputeShaderId.generation)
-			s_freeComputeShaderIds.push_back(index);
+		return s_computeShaderSlotMap.Find(name);
 	}
 }

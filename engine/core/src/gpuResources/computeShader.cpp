@@ -30,12 +30,9 @@ namespace emberCore
 			throw std::runtime_error("ComputeShader::GetBlockSize() failed. ComputeShader is invalid or expired.");
 		return pIComputeShader->GetBlockSize();
 	}
-	const std::string& ComputeShader::GetName() const
+	std::string ComputeShader::GetName() const
 	{
-		const std::string* pName = ComputeShaderManager::TryGetComputeShaderName(m_computeShaderId);
-		if (pName == nullptr)
-			throw std::runtime_error("ComputeShader::GetName() failed. ComputeShader is invalid or expired.");
-		return *pName;
+		return ComputeShaderManager::GetComputeShaderName(m_computeShaderId);
 	}
 	bool ComputeShader::IsValid() const
 	{
