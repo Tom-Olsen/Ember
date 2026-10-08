@@ -29,9 +29,9 @@ namespace emberCore
 	{
 
 	}
-	ComputeShaderManager::ManagedComputeShader::ManagedComputeShader(const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader)
+	ComputeShaderManager::ManagedComputeShader::ManagedComputeShader(const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader)
 		: accessRights(accessRights)
-		, pComputeShader(std::move(pComputeShader))
+		, pIComputeShader(std::move(pIComputeShader))
 	{
 
 	}
@@ -153,7 +153,7 @@ namespace emberCore
 		for (emberCommon::ComputeShaderId computeShaderId : s_computeShaderSlotMap.GetActiveIds())
 		{
 			std::optional<ManagedComputeShader> managedComputeShader = s_computeShaderSlotMap.Remove(computeShaderId);
-			RetireComputeShader(std::move(managedComputeShader->pComputeShader));
+			RetireComputeShader(std::move(managedComputeShader->pIComputeShader));
 		}
 		s_isInitialized = false;
 	}
@@ -175,11 +175,11 @@ namespace emberCore
 			computeShaderAsset.features,
 			computeShaderAsset.computeShaderName
 		};
-		std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader(GpuResourceFactory::CreateComputeShader(computeShaderCreateInfo));
-		if (pComputeShader == nullptr)
+		std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader(GpuResourceFactory::CreateComputeShader(computeShaderCreateInfo));
+		if (pIComputeShader == nullptr)
 			throw std::runtime_error("ComputeShaderManager::CreateComputeShader(...) failed. Gpu resource factory returned nullptr for: " + computeShaderAsset.computeShaderName);
 
-		return AddComputeShader(computeShaderAsset.computeShaderName, computeShaderAsset.accessRights, std::move(pComputeShader));
+		return AddComputeShader(computeShaderAsset.computeShaderName, computeShaderAsset.accessRights, std::move(pIComputeShader));
 	}
 
 
@@ -201,7 +201,7 @@ namespace emberCore
 	emberBackendInterface::IComputeShader* ComputeShaderManager::TryGetComputeShaderInterface(emberCommon::ComputeShaderId computeShaderId)
 	{
 		ManagedComputeShader* pManagedComputeShader = s_computeShaderSlotMap.TryGetValue(computeShaderId);
-		return pManagedComputeShader != nullptr ? pManagedComputeShader->pComputeShader.get() : nullptr;
+		return pManagedComputeShader != nullptr ? pManagedComputeShader->pIComputeShader.get() : nullptr;
 	}
 	std::string ComputeShaderManager::GetComputeShaderName(emberCommon::ComputeShaderId computeShaderId)
 	{
@@ -220,7 +220,7 @@ namespace emberCore
 		std::optional<ManagedComputeShader> managedComputeShader = s_computeShaderSlotMap.Remove(computeShaderId);
 		if (!managedComputeShader)
 			throw std::runtime_error("ComputeShaderManager::TakeComputeShaderOwnership(...) failed. ComputeShader not found: " + name);
-		return std::move(managedComputeShader->pComputeShader);
+		return std::move(managedComputeShader->pIComputeShader);
 	}
 
 
@@ -237,22 +237,22 @@ namespace emberCore
 			return;
 		}
 		std::optional<ManagedComputeShader> managedComputeShader = s_computeShaderSlotMap.Remove(computeShaderId);
-		RetireComputeShader(std::move(managedComputeShader->pComputeShader));
+		RetireComputeShader(std::move(managedComputeShader->pIComputeShader));
 	}
 
 
 
 	// Management:
-	emberCommon::ComputeShaderId ComputeShaderManager::AddComputeShader(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader)
+	emberCommon::ComputeShaderId ComputeShaderManager::AddComputeShader(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader)
 	{
-		if (pComputeShader == nullptr)
-			throw std::runtime_error("ComputeShaderManager::AddComputeShader(...) failed. pComputeShader is nullptr.");
-		return s_computeShaderSlotMap.Add(name, ManagedComputeShader(accessRights, std::move(pComputeShader)));
+		if (pIComputeShader == nullptr)
+			throw std::runtime_error("ComputeShaderManager::AddComputeShader(...) failed. pIComputeShader is nullptr.");
+		return s_computeShaderSlotMap.Add(name, ManagedComputeShader(accessRights, std::move(pIComputeShader)));
 	}
-	void ComputeShaderManager::RetireComputeShader(std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader)
+	void ComputeShaderManager::RetireComputeShader(std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader)
 	{
-		if (pComputeShader != nullptr)
-			GpuResourceFactory::RetireComputeShader(pComputeShader.release());
+		if (pIComputeShader != nullptr)
+			GpuResourceFactory::RetireComputeShader(pIComputeShader.release());
 	}
 	emberCommon::ComputeShaderId ComputeShaderManager::FindComputeShaderId(const std::string& name)
 	{

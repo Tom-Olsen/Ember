@@ -41,11 +41,11 @@ namespace emberCore
 		struct ManagedComputeShader
 		{
 			emberCommon::ResourceAccessRights accessRights;
-			std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader;
+			std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader;
 
 			// Constructor/Destructor:
 			ManagedComputeShader();
-			ManagedComputeShader(const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
+			ManagedComputeShader(const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader);
 			~ManagedComputeShader();
 
 			// Non-copyable:
@@ -95,8 +95,8 @@ namespace emberCore
 		static void DeleteComputeShader(emberCommon::ComputeShaderId computeShaderId);
 
 		// Management:
-		static emberCommon::ComputeShaderId AddComputeShader(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
-		static void RetireComputeShader(std::unique_ptr<emberBackendInterface::IComputeShader> pComputeShader);
+		static emberCommon::ComputeShaderId AddComputeShader(const std::string& name, const emberCommon::ResourceAccessRights& accessRights, std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader);
+		static void RetireComputeShader(std::unique_ptr<emberBackendInterface::IComputeShader> pIComputeShader);
 		static emberCommon::ComputeShaderId FindComputeShaderId(const std::string& name);
 
 		// Delete all constructors:
