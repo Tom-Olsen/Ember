@@ -3,7 +3,9 @@
 #include "logger.h"
 #include "materialManager.h"
 #include "shadowMaterial.h"
+#include <optional>
 #include <stdexcept>
+#include <utility>
 
 
 
@@ -36,16 +38,15 @@ namespace emberCore
 
 
 	// Getters:
-	const std::string& Material::GetName() const
+	std::string Material::GetName() const
 	{
-		const std::string* pName = MaterialManager::TryGetMaterialName(m_materialId);
-		if (pName == nullptr)
+		std::optional<std::string> materialName = MaterialManager::TryGetMaterialName(m_materialId);
+		if (!materialName)
 		{
 			LOG_WARN("Material::GetName() failed. Material is invalid or expired.");
-			static const std::string invalidName = "invalidOrExpired";
-			return invalidName;
+			return "invalidOrExpired";
 		}
-		return *pName;
+		return std::move(*materialName);
 	}
 	emberCommon::MaterialPass Material::GetMaterialPass() const
 	{

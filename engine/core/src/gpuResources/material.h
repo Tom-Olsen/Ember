@@ -57,7 +57,7 @@ namespace emberCore
 		void Destroy();
 
 		// Getters:
-		const std::string& GetName() const;
+		std::string GetName() const;
 		emberCommon::MaterialPass GetMaterialPass() const;
 		emberCommon::CullMode GetCullMode() const;
 		ShadowMaterial GetShadowMaterial() const;
