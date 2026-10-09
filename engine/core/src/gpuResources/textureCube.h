@@ -1,3 +1,4 @@
+#pragma once
 #include "texture.h"
 #include "commonTextureFormat.h"
 #include "commonTextureUsage.h"
@@ -12,8 +13,12 @@ namespace emberCore
 {
 	class EMBER_CORE_API TextureCube : public Texture
 	{
+		// Friends:
+		friend class TextureManager;
+
 	public: // methods:
 		// Constructor/Destructor:
+		TextureCube();
 		TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 		TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const float> data, emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 		TextureCube(const std::string& name, int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, std::span<const Float2> data, emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
@@ -22,15 +27,15 @@ namespace emberCore
 		TextureCube(const std::string& name, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, const std::filesystem::path& path, emberCommon::TextureImageCountMode imageCountMode = emberCommon::TextureImageCountMode::single);
 		~TextureCube();
 
-		// Non-copyable:
-		TextureCube(const TextureCube&) = delete;
-		TextureCube& operator=(const TextureCube&) = delete;
+		// Copyable:
+		TextureCube(const TextureCube&) = default;
+		TextureCube& operator=(const TextureCube&) = default;
 
 		// Movable:
 		TextureCube(TextureCube&& other) noexcept = default;
 		TextureCube& operator=(TextureCube&& other) noexcept = default;
 
-	protected: // Methods:
-		uint64_t GetExpectedTexelCount() const override;
+	private: // Methods:
+		explicit TextureCube(const Texture& texture);
 	};
 }

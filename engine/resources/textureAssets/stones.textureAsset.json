@@ -1,0 +1,8 @@
+{
+    "textureName": "stones",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/stones.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

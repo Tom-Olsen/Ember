@@ -8,8 +8,8 @@ namespace fluidDynamics
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SphFluid3dGpu::SphFluid3dGpu(Texture& environmentMap)
-		: m_pEnvironmentMap(&environmentMap)
+	SphFluid3dGpu::SphFluid3dGpu(Texture environmentMap)
+		: m_environmentMap(environmentMap)
 	{
 		// Material setup:
 		m_particleMaterial = MaterialManager::TryGetForwardMaterial("particleMaterial3d");
@@ -247,8 +247,8 @@ namespace fluidDynamics
 				m_volumeRaycastMaterial.SetValue("Values", "absorption", m_volumetricDensityAbsorption);
 				m_volumeRaycastMaterial.SetValue("Values", "fluidToLightMatrix", fluidToLightMatrix);
 				m_volumeRaycastMaterial.SetValue("Values", "renderVolumetricLight", static_cast<int>(renderVolumetricLight));
-				m_volumeRaycastMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
-				m_volumeRaycastMaterial.SetTexture("opticalDepthTexture", m_tripleData.opticalDepthTexture3d[readDataIndex]);
+				m_volumeRaycastMaterial.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex].GetTexture());
+				m_volumeRaycastMaterial.SetTexture("opticalDepthTexture", m_tripleData.opticalDepthTexture3d[readDataIndex].GetTexture());
 
             	// Draw density cube mesh:
 				Float4x4 densityCubeLocalToWorld = localToWorld
@@ -278,8 +278,8 @@ namespace fluidDynamics
 				callProperties.SetValue("CallValues", "refinementStepCount", static_cast<int>(m_waterRefinementStepCount));
 				callProperties.SetValue("CallValues", "stepLength", m_waterStepLength);
 				callProperties.SetValue("CallValues", "surfaceInteractions", static_cast<int>(m_waterSurfaceInteractions));
-				callProperties.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex]);
-				callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
+				callProperties.SetTexture("densityTexture", m_tripleData.densityTexture3d[readDataIndex].GetTexture());
+				callProperties.SetTexture("environmentMap", m_environmentMap);
 				break;
 			}
 		default:

@@ -65,7 +65,7 @@ Scene* Fluid3dScene()
 
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
-	Texture& skyboxTexture = TextureManager::GetTexture("skybox0");
+	Texture skyboxTexture = TextureManager::GetTexture("skybox0");
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
 	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");

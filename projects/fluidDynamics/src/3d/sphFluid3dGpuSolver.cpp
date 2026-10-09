@@ -74,7 +74,7 @@ namespace fluidDynamics
 		{
 			densityTexture3dResolution = resolution;
 			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
-				densityTexture3d[i] = Texture3d("densityTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storageSample);
+				densityTexture3d[i] = Texture3DOwner("densityTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::r32_sfloat, emberCommon::TextureUsage::storageSample);
 		}
 	}
 	void SphFluid3dGpuSolver::TripleData::ReallocateOpticalDepthTexture3d(Uint3 resolution)
@@ -96,7 +96,7 @@ namespace fluidDynamics
 			opticalDepthTexture3dResolution = resolution;
 			for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 			{
-				opticalDepthTexture3d[i] = Texture3d("opticalDepthTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::rgba16_sfloat, emberCommon::TextureUsage::storageSample);
+				opticalDepthTexture3d[i] = Texture3DOwner("opticalDepthTexture3d[" + std::to_string(i) + "]", resolution.x, resolution.y, resolution.z, emberCommon::TextureFormats::rgba16_sfloat, emberCommon::TextureUsage::storageSample);
 				hasOpticalDepthTexture3d[i] = false;
 			}
 		}
@@ -450,7 +450,7 @@ namespace fluidDynamics
 		BufferView<uint32_t>& sortPermutationBufferView = scratchData.sortPermutationBuffer.GetBufferView();
 		BufferView<Float3>& positionBufferView = tripleData.positionBuffer.GetBufferView(dataIndex);
 		BufferView<Float3>& sortedPositionBufferView = scratchData.tempBuffer0.GetBufferView();
-		Texture3d& densityTexture = tripleData.densityTexture3d[dataIndex];
+		Texture3d densityTexture = tripleData.densityTexture3d[dataIndex].GetTexture();
 		const RotatedBounds& fluidBounds = tripleData.fluidBounds[dataIndex];
 
 		// Build hash grid:
@@ -477,8 +477,8 @@ namespace fluidDynamics
 
 	void SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(ComputeShaders& computeShaders, TripleData& tripleData, uint32_t dataIndex)
 	{
-		Texture3d& densityTexture = tripleData.densityTexture3d[dataIndex];
-		Texture3d& opticalDepthTexture = tripleData.opticalDepthTexture3d[dataIndex];
+		Texture3d densityTexture = tripleData.densityTexture3d[dataIndex].GetTexture();
+		Texture3d opticalDepthTexture = tripleData.opticalDepthTexture3d[dataIndex].GetTexture();
 		const RotatedBounds& fluidBounds = tripleData.fluidBounds[dataIndex];
 		const RotatedBounds& lightBounds = tripleData.opticalDepthBounds[dataIndex];
 

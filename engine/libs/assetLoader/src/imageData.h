@@ -6,7 +6,7 @@
 
 namespace emberAssetLoader
 {
-	struct ImageAsset
+	struct ImageData
 	{
 		int width = 0;
 		int height = 0;

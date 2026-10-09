@@ -1,0 +1,8 @@
+{
+    "textureName": "concrete0_color",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/concrete0_color.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

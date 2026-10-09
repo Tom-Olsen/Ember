@@ -1,0 +1,8 @@
+{
+    "textureName": "white",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/white.png",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

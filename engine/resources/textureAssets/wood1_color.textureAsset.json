@@ -1,0 +1,8 @@
+{
+    "textureName": "wood1_color",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/wood1_color.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

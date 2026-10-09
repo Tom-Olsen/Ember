@@ -81,13 +81,13 @@ namespace fluidDynamics
 		ForwardMaterial m_volumeRaycastMaterial;
 		ComputeShader m_waterComputeShader;
 		CallProperties m_callProperties;
-		Texture* m_pEnvironmentMap;
+		Texture m_environmentMap;
 
 		// Editor Window:
 		std::unique_ptr<emberEditor::SphFluid3dGpuEditorWindow> editorWindow;
 
 	public: // Methods:
-		SphFluid3dGpu(Texture& environmentMap);
+		SphFluid3dGpu(Texture environmentMap);
 		~SphFluid3dGpu();
 
 		// Overrides:

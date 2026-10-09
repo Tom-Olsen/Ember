@@ -1,5 +1,7 @@
 #include "texture.h"
+#include "commonTextureType.h"
 #include "iTexture.h"
+#include "textureManager.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -10,98 +12,58 @@
 
 namespace emberCore
 {
-	// Static members:
-	uint32_t Texture::s_unnamedTextureCounter = 0;
-
-
-
-	// Private Methods:
-	emberBackendInterface::ITexture* Texture::GetInterfaceHandle()
-	{
-		return m_pITexture;
-	}
-	std::string Texture::CreateUnnamedTextureName()
-	{
-		return "#unnamed" + std::to_string(s_unnamedTextureCounter++);
-	}
-
-
-
-	// Public Methods:
+	// Public methods:
 	// Constructor/Destructor:
-	Texture::Texture(emberBackendInterface::ITexture* pITexture, bool ownsTexture)
+	Texture::Texture()
+		: m_textureId(emberCommon::invalidTextureId)
 	{
-		m_ownsITexture = ownsTexture;
-        m_name = CreateUnnamedTextureName();
-		m_pITexture = pITexture;
+
 	}
-	Texture::~Texture()
+	Texture::~Texture() = default;
+
+
+
+	// Deleter:
+	void Texture::Destroy()
 	{
-		if (m_ownsITexture && m_pITexture)
-			delete m_pITexture;
-	}
-	
-
-
-	// Movable:
-	Texture::Texture(Texture&& other) noexcept
-	{
-		m_ownsITexture = other.m_ownsITexture;
-		m_name = std::move(other.m_name);
-		m_pITexture = other.m_pITexture;
-
-		other.m_ownsITexture = false;
-		other.m_name = CreateUnnamedTextureName();
-		other.m_pITexture = nullptr;
-	}
-	Texture& Texture::operator=(Texture&& other) noexcept
-	{
-		if (this != &other)
-		{
-			if (m_ownsITexture)
-				delete m_pITexture;
-
-			m_ownsITexture = other.m_ownsITexture;
-			m_name = std::move(other.m_name);
-			m_pITexture = other.m_pITexture;
-
-			other.m_ownsITexture = false;
-			other.m_name = CreateUnnamedTextureName();
-			other.m_pITexture = nullptr;
-		}
-		return *this;
+		TextureManager::DeleteTexture(m_textureId);
+		m_textureId = emberCommon::invalidTextureId;
 	}
 
 
 
 	// Getters:
-	const std::string& Texture::GetName() const
+	std::string Texture::GetName() const
 	{
-		return m_name;
+		return TextureManager::GetTextureName(m_textureId);
+	}
+	bool Texture::IsValid() const
+	{
+		return TextureManager::TryGetTextureInterface(m_textureId) != nullptr;
 	}
 	uint32_t Texture::GetWidth() const
 	{
-		return m_pITexture->GetWidth();
+		return GetInterfaceHandle()->GetWidth();
 	}
 	uint32_t Texture::GetHeight() const
 	{
-		return m_pITexture->GetHeight();
+		return GetInterfaceHandle()->GetHeight();
 	}
 	uint32_t Texture::GetDepth() const
 	{
-		return m_pITexture->GetDepth();
+		return GetInterfaceHandle()->GetDepth();
 	}
 	uint32_t Texture::GetChannels() const
 	{
-		return m_pITexture->GetChannels();
+		return GetInterfaceHandle()->GetChannels();
 	}
 	const emberCommon::TextureFormat Texture::GetFormat() const
 	{
-		return m_pITexture->GetTextureFormat();
+		return GetInterfaceHandle()->GetTextureFormat();
 	}
 	emberCommon::TextureImageCountMode Texture::GetImageCountMode() const
 	{
-		return m_pITexture->GetImageCountMode();
+		return GetInterfaceHandle()->GetImageCountMode();
 	}
 
 
@@ -140,21 +102,21 @@ namespace emberCore
 		uint64_t copyByteCount = std::min<uint64_t>(expectedByteCount, data.size());
 		if (copyByteCount > 0)
 			std::memcpy(bytes.data(), data.data(), copyByteCount);
-		m_pITexture->SetData(bytes.data());
+		GetInterfaceHandle()->SetData(bytes.data());
 	}
 
 
 
 	// Protected methods:
-	Texture::Texture()
+	Texture::Texture(emberCommon::TextureId textureId)
+		: m_textureId(textureId)
 	{
-		m_ownsITexture = false;
-        m_name = CreateUnnamedTextureName();
-		m_pITexture = nullptr;
+
 	}
 	uint64_t Texture::GetExpectedTexelCount() const
 	{
-		return static_cast<uint64_t>(GetWidth()) * GetHeight() * GetDepth();
+		uint32_t faceCount = TextureManager::GetTextureType(m_textureId) == emberCommon::TextureType::textureCube ? 6 : 1;
+		return static_cast<uint64_t>(GetWidth()) * GetHeight() * GetDepth() * faceCount;
 	}
 	std::vector<std::byte> Texture::ConvertToTextureFormat(std::span<const float> data, uint32_t sourceChannels) const
 	{
@@ -241,6 +203,13 @@ namespace emberCore
 
 
     // Private methods:
+	emberBackendInterface::ITexture* Texture::GetInterfaceHandle() const
+	{
+		emberBackendInterface::ITexture* pITexture = TextureManager::TryGetTextureInterface(m_textureId);
+		if (pITexture == nullptr)
+			throw std::runtime_error("Texture::GetInterfaceHandle() failed. Texture is invalid or expired.");
+		return pITexture;
+	}
 	double Texture::MaxUnsignedValue(uint32_t bytesPerChannel)
 	{
 		switch (bytesPerChannel)

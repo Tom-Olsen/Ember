@@ -13,6 +13,7 @@
 #include "shadowMaterial.h"
 #include "texture.h"
 #include "texture2d.h"
+#include "textureManager.h"
 #include "window.h"
 #include <cassert>
 #include <stdexcept>
@@ -266,11 +267,11 @@ namespace emberCore
 	}
 	Texture2d Renderer::GetFinalRenderTexture()
 	{
-		return Texture2d(s_pIRenderer->GetFinalRenderTexture(), false);
+		return TextureManager::GetTexture<Texture2d>(TextureManager::s_finalRenderTextureName);
 	}
 	Texture2d Renderer::GetGizmoTexture()
 	{
-		return Texture2d(s_pIRenderer->GetGizmoTexture(), false);
+		return TextureManager::GetTexture<Texture2d>(TextureManager::s_gizmoTextureName);
 	}
 	float Renderer::GetDepthBiasConstantFactor()
 	{

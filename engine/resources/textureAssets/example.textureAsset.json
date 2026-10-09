@@ -1,0 +1,8 @@
+{
+    "textureName": "example",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/example.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

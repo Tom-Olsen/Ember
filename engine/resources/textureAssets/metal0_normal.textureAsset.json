@@ -1,0 +1,8 @@
+{
+    "textureName": "metal0_normal",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/metal0_normal.png",
+    "format": "rgba08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

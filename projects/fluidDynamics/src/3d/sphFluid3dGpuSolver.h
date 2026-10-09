@@ -92,8 +92,8 @@ namespace fluidDynamics
 			TripleBuffer<float> densityBuffer;
 			TripleBuffer<Float3> normalBuffer;
 			TripleBuffer<float> curvatureBuffer;
-			std::array<Texture3d, PhysicsTripleBufferState::bufferCount> densityTexture3d;
-			std::array<Texture3d, PhysicsTripleBufferState::bufferCount> opticalDepthTexture3d;
+			std::array<Texture3DOwner, PhysicsTripleBufferState::bufferCount> densityTexture3d;
+			std::array<Texture3DOwner, PhysicsTripleBufferState::bufferCount> opticalDepthTexture3d;
 			std::array<RotatedBounds, PhysicsTripleBufferState::bufferCount> fluidBounds;
 			std::array<RotatedBounds, PhysicsTripleBufferState::bufferCount> opticalDepthBounds;
 			std::array<bool, PhysicsTripleBufferState::bufferCount> hasOpticalDepthTexture3d;

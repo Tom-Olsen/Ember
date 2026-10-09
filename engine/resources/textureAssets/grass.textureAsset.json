@@ -1,0 +1,8 @@
+{
+    "textureName": "grass",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/grass.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

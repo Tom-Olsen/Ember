@@ -60,7 +60,7 @@ namespace emberCore
 
 
 	// Setters:
-	void Shader::SetTexture(const std::string& name, Texture& texture)
+	void Shader::SetTexture(const std::string& name, const Texture& texture)
 	{
 		if (emberBackendInterface::IDescriptorSetBinding* pDescriptorSetBinding = TryGetShaderDescriptorSetBinding())
 			pDescriptorSetBinding->SetTexture(name, texture.GetInterfaceHandle());

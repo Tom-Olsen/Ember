@@ -47,7 +47,7 @@ namespace emberCore
 		Shader& operator=(Shader&& other) noexcept;
 
 		// Setters:
-		void SetTexture(const std::string& name, Texture& texture);
+		void SetTexture(const std::string& name, const Texture& texture);
 		void SetBuffer(const std::string& name, Buffer& buffer);
 
 		// Uniform Buffer Setters:

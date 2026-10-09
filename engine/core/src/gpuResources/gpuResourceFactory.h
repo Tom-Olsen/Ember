@@ -41,6 +41,7 @@ namespace emberCore
 	class Texture2d;
 	class Texture3d;
 	class TextureCube;
+	class TextureManager;
 
 
 
@@ -58,6 +59,7 @@ namespace emberCore
 		friend class Texture2d;
 		friend class Texture3d;
 		friend class TextureCube;
+		friend class TextureManager;
 
 	private: // Members:
 		static bool s_isInitialized;
@@ -84,6 +86,7 @@ namespace emberCore
 		static void RetireComputeShader(emberBackendInterface::IComputeShader* pComputeShader);
 		static void RetireMaterial(emberBackendInterface::IMaterial* pMaterial);
 		static void RetireMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader);
+		static void RetireTexture(emberBackendInterface::ITexture* pITexture);
 
 		// Delete all constructors:
 		GpuResourceFactory() = delete;

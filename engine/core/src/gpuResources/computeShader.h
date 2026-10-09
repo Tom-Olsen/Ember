@@ -49,7 +49,7 @@ namespace emberCore
 
 		// Getters:
 		Uint3 GetBlockSize() const;
-		const std::string& GetName() const;
+		std::string GetName() const;
 		bool IsValid() const;
 
 		// Debugging:

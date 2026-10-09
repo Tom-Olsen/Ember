@@ -50,6 +50,7 @@ namespace emberCore
 		friend class Texture2d;
 		friend class Texture3d;
 		friend class TextureCube;
+		friend class TextureManager;
 
 	private: // Members:
 		static bool s_isInitialized;

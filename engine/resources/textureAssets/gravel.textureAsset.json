@@ -1,0 +1,8 @@
+{
+    "textureName": "gravel",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/gravel.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

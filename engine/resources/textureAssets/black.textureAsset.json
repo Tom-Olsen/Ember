@@ -1,0 +1,8 @@
+{
+    "textureName": "black",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/black.png",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

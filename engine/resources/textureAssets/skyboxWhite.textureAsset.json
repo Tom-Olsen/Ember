@@ -1,0 +1,8 @@
+{
+    "textureName": "skyboxWhite",
+    "textureType": "textureCube",
+    "sourcePath": "../textures/skyBoxWhite",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": false
+}

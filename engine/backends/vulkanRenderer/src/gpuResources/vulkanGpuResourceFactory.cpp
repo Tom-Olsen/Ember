@@ -284,4 +284,14 @@ namespace vulkanRendererBackend
 			delete pVulkanMaterialShader;
 		});
 	}
+	void GpuResourceFactory::RetireTexture(emberBackendInterface::ITexture* pITexture)
+	{
+		if (pITexture == nullptr)
+			return;
+
+		GarbageCollector::RecordFrameGarbage([pITexture]()
+		{
+			delete pITexture;
+		});
+	}
 }
