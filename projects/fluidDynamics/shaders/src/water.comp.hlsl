@@ -277,8 +277,8 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor)
 		uint depth;			// Number of surface interactions before this ray.
 	};
 
-	// Depth-first traversal needs at most 4 (max value of surfaceInteractions) pending rays:
-	PendingRay stack[4];
+	// Depth-first traversal needs at most 6 (max value of surfaceInteractions) pending rays:
+	PendingRay stack[6];
 	PendingRay initial = {initialRay, math_one3, 0};
 	stack[0] = initial;
 	uint stackSize = 1;

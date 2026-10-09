@@ -580,7 +580,7 @@ namespace fluidDynamics
 	}
 	void SphFluid3dGpu::SetWaterSurfaceInteractions(uint32_t waterSurfaceInteractions)
 	{
-		m_waterSurfaceInteractions = math::Clamp(waterSurfaceInteractions, uint32_t(1), uint32_t(4));
+		m_waterSurfaceInteractions = math::Clamp(waterSurfaceInteractions, uint32_t(1), uint32_t(6));
 	}
 
 
