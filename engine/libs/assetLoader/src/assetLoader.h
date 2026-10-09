@@ -3,6 +3,7 @@
 
 
 #include "computeShaderAssetLoader.h"
-#include "imageAssetLoader.h"
+#include "imageLoader.h"
 #include "materialAssetLoader.h"
 #include "meshAssetLoader.h"
+#include "textureAssetLoader.h"

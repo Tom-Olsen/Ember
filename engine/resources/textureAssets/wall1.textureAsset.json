@@ -1,0 +1,8 @@
+{
+    "textureName": "wall1",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/wall1.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

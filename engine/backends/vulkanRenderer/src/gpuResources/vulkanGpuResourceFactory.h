@@ -48,5 +48,6 @@ namespace vulkanRendererBackend
 		void RetireComputeShader(emberBackendInterface::IComputeShader* pComputeShader) override;
 		void RetireMaterial(emberBackendInterface::IMaterial* pMaterial) override;
 		void RetireMaterialShader(emberBackendInterface::IMaterialShader* pMaterialShader) override;
+		void RetireTexture(emberBackendInterface::ITexture* pITexture) override;
 	};
 }

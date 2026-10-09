@@ -1,0 +1,8 @@
+{
+    "textureName": "skybox0",
+    "textureType": "textureCube",
+    "sourcePath": "../textures/skyboxClouds1",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": false
+}

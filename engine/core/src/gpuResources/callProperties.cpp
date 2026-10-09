@@ -87,7 +87,7 @@ namespace emberCore
 
 
 	// Setters:
-	void CallProperties::SetTexture(const std::string& name, Texture& texture)
+	void CallProperties::SetTexture(const std::string& name, const Texture& texture)
 	{
 		GetValidCallInterfaceHandle()->SetTexture(name, texture.GetInterfaceHandle());
 	}

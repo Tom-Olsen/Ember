@@ -25,7 +25,7 @@ inline Scene* DefaultScene()
 	DeferredMaterial lightSourceMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
 	lightSourceMaterial.SetValue("SurfaceProperties", "surface_isLit", false);
 	lightSourceMaterial.SetValue("SurfaceProperties", "surface_diffuseColor", Float4::white);
-	Texture& skyboxTexture = TextureManager::GetTexture("skybox0");
+	Texture skyboxTexture = TextureManager::GetTexture("skybox0");
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
 	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = pbrMaterial.CloneWithDefaultBindings("floorMaterial");

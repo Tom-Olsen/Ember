@@ -1,0 +1,8 @@
+{
+    "textureName": "pebbles",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/pebbles.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

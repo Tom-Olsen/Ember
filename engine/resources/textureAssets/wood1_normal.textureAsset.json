@@ -1,0 +1,8 @@
+{
+    "textureName": "wood1_normal",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/wood1_normal.png",
+    "format": "rgba08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

@@ -1,0 +1,8 @@
+{
+    "textureName": "bricks1_roughness",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/bricks1_roughness.jpg",
+    "format": "r08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

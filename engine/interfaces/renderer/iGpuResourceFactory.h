@@ -47,5 +47,6 @@ namespace emberBackendInterface
 		virtual void RetireComputeShader(IComputeShader* pComputeShader) = 0;
 		virtual void RetireMaterial(IMaterial* pMaterial) = 0;
 		virtual void RetireMaterialShader(IMaterialShader* pMaterialShader) = 0;
+		virtual void RetireTexture(ITexture* pITexture) = 0;
 	};
 }

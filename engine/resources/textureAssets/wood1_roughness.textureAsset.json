@@ -1,0 +1,8 @@
+{
+    "textureName": "wood1_roughness",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/wood1_roughness.jpg",
+    "format": "r08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

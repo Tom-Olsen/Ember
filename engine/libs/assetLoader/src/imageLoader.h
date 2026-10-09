@@ -1,12 +1,12 @@
 #pragma once
-#include "imageAsset.h"
+#include "imageData.h"
 #include <filesystem>
 
 
 
 namespace emberAssetLoader
 {
-	namespace ImageAssetLoader
+	namespace ImageLoader
 	{
 		// desiredChannels = 0                    : return image as-is (channels = file’s actual number).
 		// desiredChannels = 1, imageChannels == 1: copy
@@ -25,7 +25,7 @@ namespace emberAssetLoader
 		// desiredChannels = 4, imageChannels == 2: use R as gray in RGB, set A=B
 		// desiredChannels = 4, imageChannels == 3: copy RGB, set A=255
 		// desiredChannels = 4, imageChannels == 4: copy
-		ImageAsset LoadFile(const std::filesystem::path& path, int desiredChannels = 0, bool flipImage = true);
-		ImageAsset LoadCubeFiles(const std::filesystem::path& path, int desiredChannels = 0, bool flipImage = true);
+		ImageData LoadFile(const std::filesystem::path& path, int desiredChannels = 0, bool flipImage = true);
+		ImageData LoadCubeFiles(const std::filesystem::path& path, int desiredChannels = 0, bool flipImage = true);
 	}
 }

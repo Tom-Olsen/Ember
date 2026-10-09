@@ -209,7 +209,7 @@ namespace emberCore
 	{
 		return s_pIGui->Selectable(label, selected);
 	}
-	void Gui::Image(Texture& texture, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
+	void Gui::Image(const Texture& texture, const Float2& imageSize, const Float2& uv0, const Float2& uv1)
 	{
 		s_pIGui->Image(texture.GetInterfaceHandle(), imageSize, uv0, uv1);
 	}

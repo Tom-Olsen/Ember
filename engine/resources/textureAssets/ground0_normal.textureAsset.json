@@ -1,0 +1,8 @@
+{
+    "textureName": "ground0_normal",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/ground0_normal.png",
+    "format": "rgba08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

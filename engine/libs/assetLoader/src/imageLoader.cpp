@@ -1,6 +1,6 @@
 // needs to be defined before including stb_image.h, but may not be in a header file!
 #define STB_IMAGE_IMPLEMENTATION
-#include "imageAssetLoader.h"
+#include "imageLoader.h"
 #include "logger.h"
 #include "stb_image.h"
 #include <array>
@@ -14,18 +14,18 @@
 
 namespace emberAssetLoader
 {
-	ImageAsset ImageAssetLoader::LoadFile(const std::filesystem::path& path, int desiredChannels, bool flipImage)
+	ImageData ImageLoader::LoadFile(const std::filesystem::path& path, int desiredChannels, bool flipImage)
 	{
 		// Error handling:
 		if (!std::filesystem::exists(path))
 		{
 			LOG_ERROR("Error: File does not exist: {}", path.string());
-			return ImageAsset{};
+			return ImageData{};
 		}
 		if (!std::filesystem::is_regular_file(path))
 		{
 			LOG_ERROR("Error: Path is not a regular file: {}", path.string());
-			return ImageAsset{};
+			return ImageData{};
 		}
 
 		// Load pixelData:
@@ -44,9 +44,9 @@ namespace emberAssetLoader
         std::vector<std::byte> pixels(reinterpret_cast<std::byte*>(pPixels), reinterpret_cast<std::byte*>(pPixels + usedChannels * width * height));
         stbi_image_free(pPixels);
 
-		return ImageAsset{ width, height, usedChannels, std::move(pixels) };
+		return ImageData{ width, height, usedChannels, std::move(pixels) };
 	}
-	ImageAsset ImageAssetLoader::LoadCubeFiles(const std::filesystem::path& directoryPath, int desiredChannels, bool flipImage)
+	ImageData ImageLoader::LoadCubeFiles(const std::filesystem::path& directoryPath, int desiredChannels, bool flipImage)
 	{
 		// Error handling:
 		if (!std::filesystem::exists(directoryPath))
@@ -82,23 +82,23 @@ namespace emberAssetLoader
 		int channels = 0;
 		for (size_t i = 0; i < filePaths.size(); i++)
 		{
-			ImageAsset imageAsset = LoadFile(filePaths[i], desiredChannels, flipImage);
+			ImageData imageData = LoadFile(filePaths[i], desiredChannels, flipImage);
 			if (i == 0)
 			{
-				width = imageAsset.width;
-				height = imageAsset.height;
-				channels = imageAsset.channels;
+				width = imageData.width;
+				height = imageData.height;
+				channels = imageData.channels;
 			}
 			else
 			{
-				if (imageAsset.width != width || imageAsset.height != height)
+				if (imageData.width != width || imageData.height != height)
 					throw std::runtime_error("Cubemap face size mismatch at: " + filePaths[i].string());
-				if (imageAsset.channels != channels)
+				if (imageData.channels != channels)
 					throw std::runtime_error("Cubemap face channel count mismatch at: " + filePaths[i].string());
 			}
-			data.insert(data.end(), imageAsset.pixels.begin(), imageAsset.pixels.end());
+			data.insert(data.end(), imageData.pixels.begin(), imageData.pixels.end());
 		}
 
-		return ImageAsset{ width, height, channels, std::move(data) };
+		return ImageData{ width, height, channels, std::move(data) };
 	}
 }

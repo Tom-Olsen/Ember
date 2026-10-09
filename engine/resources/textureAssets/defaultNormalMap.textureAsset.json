@@ -1,0 +1,8 @@
+{
+    "textureName": "defaultNormalMap",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/defaultNormalMap.png",
+    "format": "rgba08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

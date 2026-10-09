@@ -10,8 +10,8 @@ using namespace emberCore;
 namespace emberEcs
 {
 	// Constructor/Destructor:
-	ScreenSpaceReflectionDispatcher::ScreenSpaceReflectionDispatcher(Texture& environmentMap)
-		: m_pEnvironmentMap(&environmentMap)
+	ScreenSpaceReflectionDispatcher::ScreenSpaceReflectionDispatcher(Texture environmentMap)
+		: m_environmentMap(environmentMap)
 	{
 		ssrMode = 2;
 		m_ssrComputeShader = ComputeShaderManager::TryGetComputeShader("screenSpaceReflections");
@@ -21,8 +21,8 @@ namespace emberEcs
 		m_ssrUvCompositComputeShader = ComputeShaderManager::TryGetComputeShader("screenSpaceReflectionUvComposit");
 		m_reflectionWidth = emberCore::Renderer::GetRenderWidth() / 2;
 		m_reflectionHeight = emberCore::Renderer::GetRenderHeight() / 2;
-		m_ssrReflectionTexture = emberCore::Texture2d("ssrReflectionTexture", m_reflectionWidth, m_reflectionHeight, emberCommon::TextureFormats::rgba16_sfloat, emberCommon::TextureUsage::storage, emberCommon::TextureImageCountMode::perFrameInFlight);
-		m_ssrReflectionUvTexture = emberCore::Texture2d("ssrReflectionUvTexture", m_reflectionWidth, m_reflectionHeight, emberCommon::TextureFormats::rgba16_unorm, emberCommon::TextureUsage::storage, emberCommon::TextureImageCountMode::perFrameInFlight);
+		m_ssrReflectionTexture = emberCore::Texture2DOwner("ssrReflectionTexture", m_reflectionWidth, m_reflectionHeight, emberCommon::TextureFormats::rgba16_sfloat, emberCommon::TextureUsage::storage, emberCommon::TextureImageCountMode::perFrameInFlight);
+		m_ssrReflectionUvTexture = emberCore::Texture2DOwner("ssrReflectionUvTexture", m_reflectionWidth, m_reflectionHeight, emberCommon::TextureFormats::rgba16_unorm, emberCommon::TextureUsage::storage, emberCommon::TextureImageCountMode::perFrameInFlight);
 	}
 	ScreenSpaceReflectionDispatcher::~ScreenSpaceReflectionDispatcher()
 	{
@@ -42,7 +42,7 @@ namespace emberEcs
 		if (ssrMode == 0)
 		{
 			CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrComputeShader);
-			callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
+			callProperties.SetTexture("environmentMap", m_environmentMap);
 		}
 		// sceneColorA (read) -> reflectionTexture
 		// finish write before read barrier
@@ -51,13 +51,13 @@ namespace emberEcs
 		{
 			{
 				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrReflectionMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
-				callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
-				callProperties.SetTexture("reflectionMap", m_ssrReflectionTexture);
+				callProperties.SetTexture("environmentMap", m_environmentMap);
+				callProperties.SetTexture("reflectionMap", m_ssrReflectionTexture.GetTexture());
 			}
 			Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeRead();
 			{
 				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrCompositComputeShader);
-				callProperties.SetTexture("reflectionMap", m_ssrReflectionTexture);
+				callProperties.SetTexture("reflectionMap", m_ssrReflectionTexture.GetTexture());
 			}
 		}
 		// sceneColorA metadata -> reflectionUvTexture
@@ -67,13 +67,13 @@ namespace emberEcs
 		{
 			{
 				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrReflectionUvMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
-				callProperties.SetTexture("reflectionUvMap", m_ssrReflectionUvTexture);
+				callProperties.SetTexture("reflectionUvMap", m_ssrReflectionUvTexture.GetTexture());
 			}
 			Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeRead();
 			{
 				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrUvCompositComputeShader);
-				callProperties.SetTexture("environmentMap", *m_pEnvironmentMap);
-				callProperties.SetTexture("reflectionUvMap", m_ssrReflectionUvTexture);
+				callProperties.SetTexture("environmentMap", m_environmentMap);
+				callProperties.SetTexture("reflectionUvMap", m_ssrReflectionUvTexture.GetTexture());
 			}
 		}
 	}

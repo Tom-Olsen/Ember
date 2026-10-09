@@ -1,0 +1,8 @@
+{
+    "textureName": "bricks2_normal",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/bricks2_normal.png",
+    "format": "rgba08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

@@ -1,0 +1,8 @@
+{
+    "textureName": "bricks0_color",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/bricks0_color.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}

@@ -88,4 +88,8 @@ namespace emberCore
 	{
 		s_pIGpuResourceFactory->RetireMaterialShader(pMaterialShader);
 	}
+	void GpuResourceFactory::RetireTexture(emberBackendInterface::ITexture* pITexture)
+	{
+		s_pIGpuResourceFactory->RetireTexture(pITexture);
+	}
 }

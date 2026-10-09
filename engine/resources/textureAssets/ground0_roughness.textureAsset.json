@@ -1,0 +1,8 @@
+{
+    "textureName": "ground0_roughness",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/ground0_roughness.jpg",
+    "format": "r08_unorm",
+    "usage": "sample",
+    "flipImage": true
+}

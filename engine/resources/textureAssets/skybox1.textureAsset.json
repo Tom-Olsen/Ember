@@ -1,0 +1,8 @@
+{
+    "textureName": "skybox1",
+    "textureType": "textureCube",
+    "sourcePath": "../textures/skyboxNebula0",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": false
+}

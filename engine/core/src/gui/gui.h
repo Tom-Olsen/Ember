@@ -89,7 +89,7 @@ namespace emberCore
 		[[nodiscard]] static bool Button(const char* label, const Float2& size = Float2::zero);
 		[[nodiscard]] static bool InvisibleButton(const char* strID, const Float2& size, emberCommon::GuiButtonFlags flags = emberCommon::GuiButtonFlags::none);
 		[[nodiscard]] static bool Selectable(const char* label, bool selected);
-		static void Image(Texture& texture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
+		static void Image(const Texture& texture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
 
 		// Custom Widgets:
 		static bool Checkbox(const std::string& label, bool* value);

@@ -1,0 +1,8 @@
+{
+    "textureName": "brick",
+    "textureType": "texture2d",
+    "sourcePath": "../textures/brick.jpg",
+    "format": "rgba08_srgb",
+    "usage": "sample",
+    "flipImage": true
+}
