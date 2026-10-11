@@ -266,7 +266,7 @@ SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
 	hit.hitState = fluidRay.insideFluid ? leavingFluid : enteringFluid;
 	return hit;
 }
-float3 RayCascade(FluidRay initialRay, float3 sceneColor)
+float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel)
 {
 	// initialRay must have a normalized direction, a prepared origin, and the correct insideFluid state.
 	// Its stepCount contains the marching steps already consumed along this path.
@@ -302,6 +302,15 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor)
 			// Environment fallback:
 			accumulatedColor += pending.throughput * GetEnvironmentColor(pending.fluidRay.ray.direction);
 			continue;
+		}
+
+		// Geometry in front of the first fluid surface:
+		if (pending.depth == 0)
+		{
+			float4 surfaceClip = mul(camera_worldToClipMatrix, float4(hit.position, 1.0f));
+			float surfaceNdcDepth = surfaceClip.z / surfaceClip.w;
+			if (Scene_GetNdcDepth(sourcePixel) < surfaceNdcDepth)
+				return sceneColor;
 		}
 
 		// At the limit, use environment color as fallback:
@@ -379,10 +388,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		Scene_SetColor(sourcePixel, color);
 		return;
 	}
-	ray.ray.origin = mathRay_GetPoint(ray.ray, max(boundsEnterDistance, 0.0f));;
+	ray.ray.origin = mathRay_GetPoint(ray.ray, max(boundsEnterDistance, 0.0f));
 
 	// Ray marching with up to 4 ray splits on surface hit:
-	color.xyz = RayCascade(ray, color.xyz);
+	color.xyz = RayCascade(ray, color.xyz, sourcePixel);
 	Scene_SetColor(sourcePixel, color);
 	return;
 }
