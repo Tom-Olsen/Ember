@@ -69,6 +69,12 @@ Scene* Fluid3dScene()
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
 	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");
+	DeferredMaterial cube0Material = pbrMaterial.CloneWithDefaultBindings("cube0Material");
+	cube0Material.SetTexture("colorMap", TextureManager::GetTexture("wood1_color"));
+	cube0Material.SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
+	cube0Material.SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
+	cube0Material.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+	cube0Material.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.5, 0.5, 0, 0));
 
 	{// Camera:
 		Entity entity = Entity::Create("mainCamera");
@@ -109,6 +115,20 @@ Scene* Fluid3dScene()
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(floorMaterial);
+	}
+	{// Cube0:
+		Entity entity = Entity::Create("cube0");
+		Float3 pos = Float3(0.0f, -20.0f, 0.0f);
+
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		pTransform->SetScale(Float3(2.0f, 2.0f, 5.0f));
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
+		pMeshRenderer->SetMaterial(cube0Material);
+
+		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
 	{// Directional Light:
 		Entity entity = Entity::Create("directionalLight");

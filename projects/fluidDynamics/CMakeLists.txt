@@ -70,8 +70,12 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC PROJECT_SHADERS_DIR="${PROJECT
 
 # -------------- Link Custom Libraries --------------
 # Ember Game Debug Application:
-add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberGameDebugApp" EmberGameDebugApp)
-target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameDebugApp)
+#add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberGameDebugApp" EmberGameDebugApp)
+#target_link_libraries(${PROJECT_NAME} PUBLIC EmberGameDebugApp)
+
+# Ember Game Editor Application:
+add_subdirectory("${ENGINE_APPLICATIONS_DIR}/emberEditorApp" EmberEditorApp)
+target_link_libraries(${PROJECT_NAME} PUBLIC EmberEditorApp)
 
 # Shaders:
 add_subdirectory(${PROJECT_SHADERS_DIR} FluidDynamicsShaderCompiler)
