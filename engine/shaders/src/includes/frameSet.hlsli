@@ -69,21 +69,20 @@ float Camera_GetDepth(float3 worldPosition)
 
 // Camera world position:
 float3 Camera_GetWorldPosition(float3 ndcPosition)
-{// ndc: xy in [-1, 1], z in [0, 1].
+{// ndc: xy in [-1,1], z in [0,1].
     float4 worldPosition = mul(camera_clipToWorldMatrix, float4(ndcPosition, 1.0f));
     return worldPosition.xyz / worldPosition.w;
 }
-
 float3 Camera_GetWorldPosition(float2 uv, float ndcDepth)
-{// uv in [0, 1], ndcDepth in [0, 1].
+{// uv in [0,1], ndcDepth in [0,1].
     return Camera_GetWorldPosition(float3(2.0f * uv - 1.0f, ndcDepth));
 }
-float3 Camera_GetWorldPosition(float2 pixelPosition, float ndcDepth, float2 screenSize)
-{// continuous position in pixel units; pixel centers already include the 0.5 offset.
-    return Camera_GetWorldPosition(pixelPosition / screenSize, ndcDepth);
+float3 Camera_GetWorldPosition(float2 pixelCenter, float ndcDepth, float2 screenSize)
+{// pixelCenter in [0.5...screenSize.x-0.5]x[0.5...screenSize.y-0.5]
+    return Camera_GetWorldPosition(pixelCenter / screenSize, ndcDepth);
 }
 float3 Camera_GetWorldPosition(uint2 pixel, float ndcDepth, float2 screenSize)
-{// integer pixel index; reconstruct the position at the pixel center.
+{// pixel in [0...screenSize.x-1]x[0...screenSize.y-1]
     return Camera_GetWorldPosition(float2(pixel) + 0.5f, ndcDepth, screenSize);
 }
 
@@ -96,18 +95,18 @@ float3 Camera_GetRayDirection(float3 worldPosition)
     return isPerspective ? normalize(worldPosition - camera_position.xyz) : Camera_GetForward();
 }
 math_Ray Camera_GetRay(float2 uv)
-{// uv in [0, 1]; the ray starts at the near plane.
+{// uv in [0,1]; the ray starts at the near plane.
     math_Ray worldRay;
     worldRay.origin = Camera_GetWorldPosition(uv, 0.0f);
     worldRay.direction = Camera_GetRayDirection(worldRay.origin);
     return worldRay;
 }
-math_Ray Camera_GetRay(float2 pixelPosition, float2 screenSize)
-{// continuous position in pixel units; pixel centers already include the 0.5 offset.
-    return Camera_GetRay(pixelPosition / screenSize);
+math_Ray Camera_GetRay(float2 pixelCenter, float2 screenSize)
+{// pixelCenter in [0.5...screenSize.x-0.5]x[0.5...screenSize.y-0.5]
+    return Camera_GetRay(pixelCenter / screenSize);
 }
 math_Ray Camera_GetRay(uint2 pixel, float2 screenSize)
-{// integer pixel index; construct the ray through the pixel center.
+{// pixel in [0...screenSize.x-1]x[0...screenSize.y-1]
     return Camera_GetRay(float2(pixel) + 0.5f, screenSize);
 }
 

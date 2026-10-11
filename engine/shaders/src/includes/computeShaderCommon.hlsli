@@ -9,12 +9,25 @@
 
 
 
+// Scene depth:
 float Scene_GetNdcDepth(uint2 pixel)
-{// ndc depth in [0,1].
+{// pixel in [0...screenSize.x-1]x[0...screenSize.y-1], ndc depth in [0,1].
 	return sceneDepthTexture[pixel];
 }
+float Scene_GetNdcDepth(float2 pixelCenter)
+{// pixelCenter in [0.5...screenSize.x-0.5]x[0.5...screenSize.y-0.5], ndc depth in [0,1].
+	return Scene_GetNdcDepth(uint2(pixelCenter));
+}
+float Scene_GetNdcDepth(float2 uv, float2 screenSize)
+{// uv in [0,1), ndcDepth in [0,1], ndc depth in [0,1].
+	return Scene_GetNdcDepth(uv * screenSize);
+}
+
+
+
+// Distance from worldRay to scene:
 float Scene_GetDistance(uint2 pixel, math_Ray worldRay, float2 screenSize, bool directionIsNormalized = false)
-{
+{// pixel in [0...screenSize.x-1]x[0...screenSize.y-1], ndc depth in [0,1].
 	float sceneDepth = Scene_GetNdcDepth(pixel);
 	if (sceneDepth >= 1.0f)
 		return 1.0e30f;
@@ -23,6 +36,21 @@ float Scene_GetDistance(uint2 pixel, math_Ray worldRay, float2 screenSize, bool 
 	float result = dot(scenePosition - worldRay.origin, worldRay.direction);
 	return directionIsNormalized ? result : result / length(worldRay.direction);
 }
+float Scene_GetDistance(float2 pixelCenter, math_Ray worldRay, float2 screenSize, bool directionIsNormalized = false)
+{// pixelCenter in [0.5...screenSize.x-0.5]x[0.5...screenSize.y-0.5], ndc depth in [0,1].
+	float sceneDepth = Scene_GetNdcDepth(pixelCenter);
+	if (sceneDepth >= 1.0f)
+		return 1.0e30f;
+
+	float3 scenePosition = Camera_GetWorldPosition(pixelCenter, sceneDepth, screenSize);
+	float result = dot(scenePosition - worldRay.origin, worldRay.direction);
+	return directionIsNormalized ? result : result / length(worldRay.direction);
+}
+// Scene_GetDistance uv overload not possibel due to input argument clash wih pixelCenter version. 
+
+
+
+// Scene Color:
 float4 Scene_GetColor(uint2 pixel)
 {
 	if (pc.sceneColorIndex == 0)
