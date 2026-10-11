@@ -13,10 +13,10 @@ cbuffer CallValues : register(b300, CALL_SET)
 	float indexOfRefraction;		// user input. cpu setter enforces >= 1e-4f.
 	//float3 absorption;				// user input.
 	//float normalSampleDistance;		// user input.
-	uint stepCount;				// user input. cpu setter enforces >= 1.
-	uint refinementStepCount;	// user input. cpu setter enforces >= 0.
+	uint stepCount;					// user input. cpu setter enforces >= 1.
+	uint refinementStepCount;		// user input. cpu setter enforces >= 0.
 	float stepLength;				// user input. cpu setter enforces >= 0.01f.
-	uint surfaceInteractions;					// user input. cpu setter clamps to [1,4].
+	uint surfaceInteractions;		// user input. cpu setter clamps to [1,4].
 };
 Texture3D<float> densityTexture : register(t100, CALL_SET);
 TextureCube<float4> environmentMap : register(t101, CALL_SET);
@@ -47,9 +47,12 @@ struct SurfaceOptics
 
 
 // Hit state:
-static const uint enteringFluid = 0;
-static const uint leavingFluid = 1;
-static const uint missingFluid = 2;
+static const uint HitState_undefined = 0;
+static const uint HitState_enteringFluid = 1;
+static const uint HitState_leavingFluid = 2;
+static const uint HitState_missingFluid = 3;
+static const uint HitState_hitFluid = 4;
+static const uint HitState_hitGeometry = 5;
 
 
 
@@ -86,6 +89,14 @@ float3 GetFluidBoundsPadding()
 	densityTexture.GetDimensions(textureWidth, textureHeight, textureDepth);
 	return 0.5f * (fluidBoundsMax - fluidBoundsMin) / float3(textureWidth, textureHeight, textureDepth);
 }
+bool IsValidClipPosition(float4 clipPosition)
+{
+	return 0.0f < clipPosition.w && 0.0f <= clipPosition.z && clipPosition.z < clipPosition.w;
+}
+bool IsValidSceneDepth(float sceneDepth)
+{
+	return 0.0f <= sceneDepth && sceneDepth < 1.0f;
+}
 
 
 
@@ -120,7 +131,7 @@ float Fresnel(float3 rayDirection, float3 fluidSurfaceNormal, bool entering)
 SurfaceOptics ComputeSurfaceOptics(FluidRay fluidRay, SurfaceHit hit)
 {
 	SurfaceOptics optics;
-	bool entering = hit.hitState == enteringFluid;
+	bool entering = hit.hitState == HitState_enteringFluid;
 	optics.reflectionDirection = reflect(fluidRay.ray.direction, hit.normal);
 	optics.transmissionDirection = TransmissionDirection(fluidRay.ray.direction, hit.normal, entering);
 	optics.weight = Fresnel(fluidRay.ray.direction, hit.normal, entering);
@@ -204,77 +215,178 @@ float3 GetDensityNormal(float3 position_World, float3 fallbackNormal)
 	float3 densityNormal = -gradient_World * rsqrt(gradientLengthSquared);
 	return ClampSurfaceNormalToBounds(densityNormal, position_Fluid, textureSize);
 }
-SurfaceHit FindFluidSurface(inout FluidRay fluidRay)
+float4 RefineFluidHit(float3 pos0, float3 pos1, bool insideFluid)
+{
+	float subStepLength = stepLength;
+	float distance = stepLength; // distance from pos0 to final posMid.
+	for (uint i = 0; i < refinementStepCount; i++)
+	{
+		float3 posMid = 0.5f * (pos0 + pos1);
+		bool midInsideFluid = SampleDensity_World(posMid) > surfaceDensity;
+		subStepLength = 0.5f * subStepLength;
+		if (insideFluid != midInsideFluid)
+		{
+			pos1 = posMid;
+			distance -= subStepLength;
+		}
+		else
+			pos0 = posMid;
+	}
+	return float4(0.5f * (pos0 + pos1), distance - 0.5f * subStepLength);
+}
+float4 RefineGeometryHit(float4 clipPos0, float4 clipPos1, float2 screenSize)
+{
+	static const float minSurfaceThickness = 0.05f;
+	static const float relativeSurfaceThickness = 0.005f;
+	const float4 invalidHit = float4(0.0f, 0.0f, 0.0f, 1.0e30f);
+	float subStepLength = stepLength;
+	float distance = stepLength; // distance from pos0 to final endpoint.
+	for (uint i = 0; i < refinementStepCount; i++)
+	{
+		float4 clipPosMid = 0.5f * (clipPos0 + clipPos1);
+		if (!IsValidClipPosition(clipPosMid))
+    		return invalidHit;
+		float2 uv = 0.5f * (clipPosMid.xy / clipPosMid.w + 1.0f);
+		if (any(uv < 0.0f) || any(uv >= 1.0f))
+    		return invalidHit;
+		float sceneDepthMid = Scene_GetNdcDepth(uv, screenSize);
+		if (!IsValidSceneDepth(sceneDepthMid))
+			return invalidHit;
+
+		float depthDeltaMid = clipPosMid.z / clipPosMid.w - sceneDepthMid;
+		subStepLength *= 0.5f;
+		if (depthDeltaMid >= 0.0f)
+		{
+			clipPos1 = clipPosMid;
+			distance -= subStepLength;
+		}
+		else
+			clipPos0 = clipPosMid;
+	}
+
+	// Validate the final back endpoint:
+	if (!IsValidClipPosition(clipPos1))
+		return invalidHit;
+	float2 uv = 0.5f * (clipPos1.xy / clipPos1.w + 1.0f);
+	if (any(uv < 0.0f) || any(uv >= 1.0f))
+		return invalidHit;
+	uint2 pixel = uv * screenSize;
+	float sceneDepth = Scene_GetNdcDepth(pixel);
+	if (!IsValidSceneDepth(sceneDepth))
+		return invalidHit;
+
+	// Apply thickness tolerance in view-space units:
+	float3 pos1 = Camera_GetWorldPosition(clipPos1.xyz / clipPos1.w);
+	float3 scenePosition = Camera_GetWorldPosition(pixel, sceneDepth, screenSize);
+	float sceneViewDepth = Camera_GetDepth(scenePosition);
+	float depthDelta = Camera_GetDepth(pos1) - sceneViewDepth;
+	float surfaceThickness = max(minSurfaceThickness, relativeSurfaceThickness * sceneViewDepth);
+
+	if (depthDelta < 0.0f || depthDelta > surfaceThickness)
+		return invalidHit;
+
+	return float4(pos1, distance);
+}
+SurfaceHit FindNextHit(inout FluidRay fluidRay, float2 screenSize)
 {
 	// Reject empty search interval:
-	SurfaceHit hit = {math_zero3, math_zero3, 0.0f, missingFluid};
+	SurfaceHit hit = {math_zero3, math_zero3, 0.0f, HitState_missingFluid};
 	if (fluidRay.stepCount >= stepCount)
 		return hit;
 
-	// Ray march (step0):
+	// Fluid ray march (step0):
 	float3 currentPosition = fluidRay.ray.origin;
 	float3 nextPosition = currentPosition + stepLength * fluidRay.ray.direction;
 	float currentDensity = SampleDensity_World(currentPosition);
 	float nextDensity = SampleDensity_World(nextPosition);
 	bool nextInsideFluid = nextDensity > surfaceDensity;
-	float distance = stepLength;	// missing distance from camera to fluid bounds surface. Not needed as that is air distance.
-	fluidRay.stepCount++;
-	for (; fluidRay.stepCount < stepCount; fluidRay.stepCount++)
+	float distance = 0.0f;	// distance the ray marches.
+	// Screen ray march (step0):
+	float4 currentClipPosition = Camera_WorldToClip(float4(currentPosition, 1.0f));
+	float4 nextClipPosition = Camera_WorldToClip(float4(nextPosition, 1.0f));
+	float currentSceneDepth = Scene_GetNdcDepth(currentPosition, screenSize);
+	float nextSceneDepth = Scene_GetNdcDepth(nextPosition, screenSize);
+	bool currentValid = IsValidClipPosition(currentClipPosition) && IsValidSceneDepth(currentSceneDepth);
+	bool nextValid = IsValidClipPosition(nextClipPosition) && IsValidSceneDepth(nextSceneDepth);
+	float currentDepthDelta = currentValid ? currentClipPosition.z / currentClipPosition.w - currentSceneDepth : 0.0f;
+	float nextDepthDelta = nextValid ? nextClipPosition.z / nextClipPosition.w - nextSceneDepth : 0.0f;
+
+	// Ray march loop:
+	bool hitFluid = false;
+	bool hitGeometry = false;
+	while (fluidRay.stepCount < stepCount)
 	{
-		if (fluidRay.insideFluid != nextInsideFluid)
+		fluidRay.stepCount++;
+
+		// Detect fluidSurface/sceneGeometry hit:
+		hitFluid = fluidRay.insideFluid != nextInsideFluid;
+		hitGeometry = currentValid && nextValid && currentDepthDelta < 0.0f && nextDepthDelta >= 0.0f;
+
+		// Refine fluid hit (can fail in case of hitGeometry, if it does we keep marching):
+		if (hitFluid || hitGeometry)
+		{
+			float4 fluidRefinement = hitFluid ? RefineFluidHit(currentPosition, nextPosition, fluidRay.insideFluid) : float4(0,0,0, 1.0e30f);
+			float4 geometryRefinement = hitGeometry ? RefineGeometryHit(currentClipPosition, nextClipPosition, screenSize) : float4(0,0,0, 1.0e30f);
+			// Hit:
+			if (min(fluidRefinement.w, geometryRefinement.w) < 1.0e30f)
+			{
+				float3 fallbackNormal = fluidRay.insideFluid ? fluidRay.ray.direction : -fluidRay.ray.direction;
+				if (fluidRefinement.w <= geometryRefinement.w)
+				{
+					hit.position = fluidRefinement.xyz;
+					hit.normal = GetDensityNormal(hit.position, fallbackNormal);
+					hit.distance = distance + fluidRefinement.w;
+					hit.hitState = fluidRay.insideFluid ? HitState_leavingFluid : HitState_enteringFluid;
+					return hit;
+				}
+				else
+				{
+					hit.position = geometryRefinement.xyz;
+					hit.normal = math_zero3;	// not needed on geometry hit.
+					hit.distance = distance + geometryRefinement.w;
+					hit.hitState = HitState_hitGeometry;
+					return hit;
+				}
+			}
+		}
+
+		// Out of steps:
+		if (fluidRay.stepCount >= stepCount)
 			break;
 
-		// Next step:
+		// Carry previous step (next -> current):
 		currentPosition = nextPosition;
-		nextPosition += stepLength * fluidRay.ray.direction;
 		currentDensity = nextDensity;
+		currentClipPosition = nextClipPosition;
+		currentSceneDepth = nextSceneDepth;
+		currentValid = nextValid;
+		currentDepthDelta = nextDepthDelta;
+
+		// Prepare the new next fluid sample:
+		nextPosition += stepLength * fluidRay.ray.direction;
 		nextDensity = SampleDensity_World(nextPosition);
 		nextInsideFluid = nextDensity > surfaceDensity;
-		distance += stepLength;	// distance from origin to nextPosition.
+		distance += stepLength;
+
+		// Prepare the new next scene sample:
+		nextClipPosition = Camera_PositionWorldToClip(nextPosition);
+		nextSceneDepth = Scene_GetNdcDepth(nextPosition, screenSize);
+		nextValid = IsValidClipPosition(nextClipPosition) && IsValidSceneDepth(nextSceneDepth);
+		nextDepthDelta = nextValid ? nextClipPosition.z / nextClipPosition.w - nextSceneDepth : 0.0f;
 	}
 
 	// Miss:
-	if (fluidRay.insideFluid == nextInsideFluid)
-    	return hit;
-
-	// Refine hit:
-	float subStepLength = stepLength;
-	for (uint i = 0; i < refinementStepCount; i++)
-	{
-		float3 midPosition = 0.5f * (currentPosition + nextPosition);
-		float midDensity = SampleDensity_World(midPosition);
-		bool midInsideFluid = midDensity > surfaceDensity;
-		subStepLength = 0.5f * subStepLength;
-		if (fluidRay.insideFluid != midInsideFluid)
-		{
-			nextPosition = midPosition;
-			nextDensity = midDensity;
-			distance -= subStepLength;	// distance from origin to nextPosition.
-		}
-		else
-		{
-			currentPosition = midPosition;
-			currentDensity = midDensity;
-		}
-	}
-
-	// Hit:
-	float3 fallbackNormal = fluidRay.insideFluid ? fluidRay.ray.direction : -fluidRay.ray.direction;
-	hit.position = 0.5f * (currentPosition + nextPosition);
-	hit.normal = GetDensityNormal(hit.position, fallbackNormal);
-	hit.distance = distance - 0.5f * subStepLength;	// distance from origin to nextPosition.
-	hit.hitState = fluidRay.insideFluid ? leavingFluid : enteringFluid;
 	return hit;
 }
-float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel)
+float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel, float2 screenSize)
 {
 	// initialRay must have a normalized direction, a prepared origin, and the correct insideFluid state.
 	// Its stepCount contains the marching steps already consumed along this path.
 	struct PendingRay
 	{
 		FluidRay fluidRay;
-		float3 throughput;	// Product of the reflection/transmission weights along this path.
-		uint depth;			// Number of surface interactions before this ray.
+		float3 throughput;	// product of the reflection/transmission weights along this path.
+		uint depth;			// number of surface interactions before this ray.
 	};
 
 	// Depth-first traversal needs at most 6 (max value of surfaceInteractions) pending rays:
@@ -288,13 +400,13 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel)
 	// Build reflection+refracton tree iteratively always adding transmission first so reflection gets popped first:
 	while (stackSize > 0)
 	{
-		// Pop one ray. FindFluidSurface updates its consumed step count:
+		// Pop next ray:
 		stackSize--;
 		PendingRay pending = stack[stackSize];
-		SurfaceHit hit = FindFluidSurface(pending.fluidRay);
+		SurfaceHit hit = FindNextHit(pending.fluidRay, screenSize);
 
 		// Miss (includes out of step budget):
-		if (hit.hitState == missingFluid)
+		if (hit.hitState == HitState_missingFluid)
 		{
 			// Initial ray misses -> sceneColor:
     		if (pending.depth == 0)
@@ -304,7 +416,16 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel)
 			continue;
 		}
 
-		// Geometry in front of the first fluid surface:
+		// Hit scene geometry:
+		if (hit.hitState == HitState_hitGeometry)
+		{
+			uint2 hitPixel = uint2(Camera_WorldToPixel(hit.position, screenSize));
+			float3 geometryColor = Scene_GetColor(hitPixel).rgb;
+			accumulatedColor += pending.throughput * geometryColor;
+			continue;
+		}
+
+		// Hit geometry in front of the first fluid surface:
 		if (pending.depth == 0)
 		{
 			float4 surfaceClip = mul(camera_worldToClipMatrix, float4(hit.position, 1.0f));
@@ -329,7 +450,7 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel)
 		}
 
 		// Push transmission first so reflection is popped first:
-		float3 incidentNormal = hit.hitState == enteringFluid ? hit.normal : -hit.normal;
+		float3 incidentNormal = hit.hitState == HitState_enteringFluid ? hit.normal : -hit.normal;
 		if (optics.weight < 1.0f)
 		{
 			PendingRay transmission = pending;
@@ -391,7 +512,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	ray.ray.origin = mathRay_GetPoint(ray.ray, max(boundsEnterDistance, 0.0f));
 
 	// Ray marching with up to 4 ray splits on surface hit:
-	color.xyz = RayCascade(ray, color.xyz, sourcePixel);
+	color.xyz = RayCascade(ray, color.xyz, sourcePixel, screenSize);
 	Scene_SetColor(sourcePixel, color);
 	return;
 }

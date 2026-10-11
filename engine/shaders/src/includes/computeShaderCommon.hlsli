@@ -22,6 +22,13 @@ float Scene_GetNdcDepth(float2 uv, float2 screenSize)
 {// uv in [0,1), ndcDepth in [0,1], ndc depth in [0,1].
 	return Scene_GetNdcDepth(uv * screenSize);
 }
+float Scene_GetNdcDepth(float3 worldPosition, float2 screenSize)
+{// 1.0f for an invalid pixel; otherwise ndcDepth in [0,1].
+	float2 pixel = Camera_WorldToPixel(worldPosition, screenSize);
+	if (any(pixel < 0.0f) || any(pixel >= screenSize))
+		return 1.0f;
+	return Scene_GetNdcDepth(pixel);
+}
 
 
 

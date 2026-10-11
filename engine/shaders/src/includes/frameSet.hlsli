@@ -59,6 +59,38 @@ float3 Camera_GetUp()
 
 
 
+// Camera world to clip:
+float4 Camera_WorldToClip(float4 vec)
+{
+	return mul(camera_worldToClipMatrix, vec);
+}
+float4 Camera_PositionWorldToClip(float3 position)
+{
+	return mul(camera_worldToClipMatrix, float4(position, 1.0f));
+}
+float4 Camera_DirectionWorldToClip(float3 direction)
+{
+	return mul(camera_worldToClipMatrix, float4(direction, 0.0f));
+}
+float3 Camera_PositionWorldToNdc(float3 position)
+{
+    float4 clip = Camera_PositionWorldToClip(position);
+    return clip.xyz / clip.w;
+}
+
+
+
+// Camera world to pixel:
+float2 Camera_WorldToPixel(float3 worldPosition, float2 screenSize)
+{
+	float4 clipPosition = Camera_PositionWorldToClip(worldPosition);
+	if (clipPosition.w <= 0.0f)
+		return float2(-1.0f, -1.0f);	// invalid pixel.
+	return (clipPosition.xy / clipPosition.w * 0.5f + 0.5f) * screenSize;
+}
+
+
+
 // Camera depth:
 float Camera_GetDepth(float3 worldPosition)
 {// view space depth: [nearClip,farClip] can exceed bounds if worldPosition outside camera near/far plane.

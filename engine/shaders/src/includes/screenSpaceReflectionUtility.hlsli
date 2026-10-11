@@ -135,7 +135,7 @@ bool TryRefineScreenRayHit(float2 screenSize, ScreenRaySample frontSample, Scree
 	hitSample.depthDelta = 0.0f;
 
 	// Refine front-to-back depth crossings:
-	for (uint refinementIndex = 0; refinementIndex < maxRefinementStepCount; refinementIndex++)
+	for (uint i = 0; i < maxRefinementStepCount; i++)
 	{
 		// Exit early if refinementPixelPrecision is reached:
 		float2 bracketSize = abs(backSample.screenPosition.xy - frontSample.screenPosition.xy);
