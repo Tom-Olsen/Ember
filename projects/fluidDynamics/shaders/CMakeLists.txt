@@ -18,6 +18,10 @@ endif()
 
 # Cache directories:
 get_filename_component(ENGINE_SHADERS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../../engine/shaders" ABSOLUTE)  # engine shaders
+
+# Embed source debugging information for RenderDoc without changing shader optimization:
+set(FLUID_DYNAMICS_WATER_SHADER_DEBUG_INFO OFF)
+message(STATUS "FLUID_DYNAMICS_WATER_SHADER_DEBUG_INFO: ${FLUID_DYNAMICS_WATER_SHADER_DEBUG_INFO}")
 # ---------------------------------------------------
 
 
@@ -66,11 +70,18 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
     set(OUTPUT_FILE "${OUTPUT_DIR}/${FILE_NAME}${EXT_TRIMMED}.spv")
     list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
 
+    set(shaderDebugFlags "")
+    if(FLUID_DYNAMICS_WATER_SHADER_DEBUG_INFO AND SHADER_FILE STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}/src/water.comp.hlsl")
+        list(APPEND shaderDebugFlags
+            -fspv-extension=SPV_KHR_non_semantic_info
+            -fspv-debug=vulkan-with-source)
+    endif()
+
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
         BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src -I ${ENGINE_SHADERS_DIR}/src/includes -I ${ENGINE_SHADERS_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
+        COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout ${shaderDebugFlags} -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src -I ${ENGINE_SHADERS_DIR}/src/includes -I ${ENGINE_SHADERS_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         COMMENT "Compiling shader: ${SHADER_FILE}"
