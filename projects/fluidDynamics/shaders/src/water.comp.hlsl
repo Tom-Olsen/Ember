@@ -11,7 +11,7 @@ cbuffer CallValues : register(b300, CALL_SET)
 	float3 fluidBoundsMax;			// given by fluid simulation.
 	float surfaceDensity;			// user input. cpu setter enforces >= 1e-4f.
 	float indexOfRefraction;		// user input. cpu setter enforces >= 1e-4f.
-	//float3 absorption;				// user input.
+	float3 absorption;				// user input.
 	//float normalSampleDistance;		// user input.
 	uint stepCount;					// user input. cpu setter enforces >= 1.
 	uint refinementStepCount;		// user input. cpu setter enforces >= 0.
@@ -376,6 +376,7 @@ SurfaceHit FindNextHit(inout FluidRay fluidRay, float2 screenSize)
 	}
 
 	// Miss:
+	hit.distance = distance + stepLength;
 	return hit;
 }
 float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel, float2 screenSize)
@@ -388,6 +389,7 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel, flo
 		float3 throughput;	// product of the reflection/transmission weights along this path.
 		uint depth;			// number of surface interactions before this ray.
 	};
+	static const float throughputThreshold = 0.1f;
 
 	// Depth-first traversal needs at most 6 (max value of surfaceInteractions) pending rays:
 	PendingRay stack[6];
@@ -404,6 +406,14 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel, flo
 		stackSize--;
 		PendingRay pending = stack[stackSize];
 		SurfaceHit hit = FindNextHit(pending.fluidRay, screenSize);
+
+		// Beer–Lambert absorption over the segment through water:
+		if (pending.fluidRay.insideFluid)
+			pending.throughput *= exp(-absorption * hit.distance);
+
+		// Terminate ray cascade once remaining light intensity is to low:
+		if (max(pending.throughput.r, max(pending.throughput.g, pending.throughput.b)) < throughputThreshold)
+			continue;
 
 		// Miss (includes out of step budget):
 		if (hit.hitState == HitState_missingFluid)

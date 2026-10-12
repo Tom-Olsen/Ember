@@ -66,7 +66,7 @@ namespace fluidDynamics
 			// Water:
 			SetWaterSurfaceDensity(0.5f * m_settings.targetDensity);
 			SetWaterIndexOfRefraction(1.333f);
-			SetWaterAbsorption(Float3(m_volumetricDensityAbsorption));
+			SetWaterAbsorption(Float3(0.08f, 0.04f, 0.01f));
 			SetWaterStepCount(128);
 			SetWaterRefinementStepCount(8);
 			SetWaterStepLength(0.5f);
@@ -191,7 +191,7 @@ namespace fluidDynamics
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
 		Gizmo::SetDefaultState();
-		Gizmo::DrawRotatedBounds(localToWorld, m_settings.fluidBounds, 0.2f);
+		//Gizmo::DrawRotatedBounds(localToWorld, m_settings.fluidBounds, 0.2f);
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);

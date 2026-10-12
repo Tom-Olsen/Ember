@@ -106,7 +106,7 @@ Scene* Fluid3dScene()
 	}
 	{ // Floor:
 		Entity entity = Entity::Create("floor");
-		Float3 pos = Float3(0.0f, 0.0f, -12.0f);
+		Float3 pos = Float3(0.0f, 0.0f, -10.0f);
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
@@ -132,7 +132,7 @@ Scene* Fluid3dScene()
 	}
 	{// Directional Light:
 		Entity entity = Entity::Create("directionalLight");
-		Float3 pos = 50.0f * Float3(16.0f, 9.0f, 9.0f);
+		Float3 pos = 50.0f * Float3(-16.0f, -9.0f, 9.0f);
 		Float3 direction = -pos.Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
     
