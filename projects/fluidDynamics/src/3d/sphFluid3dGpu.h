@@ -18,6 +18,14 @@ namespace fluidDynamics
 {
 	class SphFluid3dGpu : public Component
 	{
+	private: // Enums:
+		enum class BenchmarkState
+		{
+			idle,
+			waitingForReset,
+			running
+		};
+
 	public: // Enums:
 		enum class RenderMode
 		{
@@ -38,6 +46,15 @@ namespace fluidDynamics
 		int m_particleCount = -1;
 		float m_initialDistributionRadius;
 		bool m_forceSetters = false;
+
+		// Benchmark:
+		static constexpr double benchmarkDuration = 10.0;
+		BenchmarkState m_benchmarkState = BenchmarkState::idle;
+		bool m_benchmarkCameraControllerWasEnabled = false;
+		double m_benchmarkElapsedTime = 0.0;
+		double m_benchmarkMinFps = 0.0;
+		double m_benchmarkMaxFps = 0.0;
+		uint64_t m_benchmarkFrameCount = 0;
 
 		// Settings:
 		SphFluid3dGpuSolver::Settings m_settings;
@@ -149,6 +166,9 @@ namespace fluidDynamics
 		bool GetIsRunning() const;
 		bool GetUseGridOptimization() const;
 		RotatedBounds GetFluidBounds() const;
+		// Benchmark:
+		bool GetIsBenchmarking() const;
+		double GetBenchmarkRemainingTime() const;
 		// Time:
 		float GetTimeScale() const;
 		float GetPhysicsTimeScale() const;
@@ -196,9 +216,15 @@ namespace fluidDynamics
 		uint32_t GetWaterSurfaceInteractions() const;
 
 		// Debugging:
+		void Benchmark();
 		void Print();
 
 	private: // Methods:
+		// Benchmark:
+		void UpdateBenchmark();
+		void EndBenchmark();
+
+		// Reset and rendering:
 		void RecordReset();
 		void RefreshRenderData();
 		void RecordVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex);

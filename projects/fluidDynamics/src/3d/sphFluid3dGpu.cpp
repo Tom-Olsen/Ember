@@ -1,6 +1,7 @@
 #include "sphFluid3dGpu.h"
 #include "logger.h"
 #include "sphFluid3dGpuEditorWindow.h"
+#include <algorithm>
 #include <stdexcept>
 
 
@@ -71,7 +72,7 @@ namespace fluidDynamics
 			SetWaterStepCount(128);
 			SetWaterRefinementStepCount(8);
 			SetWaterStepLength(0.5f);
-			SetWaterSurfaceInteractions(3);
+			SetWaterSurfaceInteractions(4);
 		}
 		m_forceSetters = false;
 
@@ -79,7 +80,7 @@ namespace fluidDynamics
 	}
 	SphFluid3dGpu::~SphFluid3dGpu()
 	{
-
+		EndBenchmark();
 	}
 
 
@@ -140,25 +141,27 @@ namespace fluidDynamics
 	}
 	void SphFluid3dGpu::Update()
 	{
+		UpdateBenchmark();
+
 		// Detect framerate crash:
-		if (m_isRunning && Time::GetDeltaTime() > 0.1f)
+		if (m_isRunning && m_benchmarkState != BenchmarkState::running && Time::GetDeltaTime() > 0.1f)
 		{
 			m_isRunning = false;
 			LOG_TRACE("Stopped simulation due to framerate crash.");
 		}
 
 		// Keyboard interactions:
-		if (EventSystem::KeyDown(Input::Key::Space))
+		if (!GetIsBenchmarking() && EventSystem::KeyDown(Input::Key::Space))
 		{
-			m_isRunning = !m_isRunning;
+			SetIsRunning(!m_isRunning);
 			if (m_isRunning)
 				LOG_TRACE("Simulation running.");
 			else
 				LOG_TRACE("Simulation stopped.");
 		}
-		if (EventSystem::KeyDown(Input::Key::Delete))
+		if (!GetIsBenchmarking() && EventSystem::KeyDown(Input::Key::Delete))
 		{
-			m_reset = true;
+			Reset();
 			LOG_TRACE("Simulation stopped and reset.");
 		}
 
@@ -171,7 +174,7 @@ namespace fluidDynamics
 
 		// Mouse scrolling:
 		float mouseScroll = EventSystem::MouseScrollY();
-		if (mouseScroll != 0)
+		if (!GetIsBenchmarking() && mouseScroll != 0)
 		{
 			if (EventSystem::KeyDownOrHeld(Input::Key::ShiftLeft))
 			{
@@ -186,8 +189,11 @@ namespace fluidDynamics
 		}
 
 		// Keyboard attractor activation:
-		int attractorState = (int)EventSystem::KeyDownOrHeld(Input::Key::Num1) - (int)EventSystem::KeyDownOrHeld(Input::Key::Num2);
-		SetAttractorState(attractorState);
+		if (!GetIsBenchmarking())
+		{
+			int attractorState = (int)EventSystem::KeyDownOrHeld(Input::Key::Num1) - (int)EventSystem::KeyDownOrHeld(Input::Key::Num2);
+			SetAttractorState(attractorState);
+		}
 
 		// Rendering:
 		Float4x4 localToWorld = GetTransform()->GetLocalToWorldMatrix();
@@ -294,10 +300,20 @@ namespace fluidDynamics
     // Management:
 	void SphFluid3dGpu::Reset()
 	{
+		if (m_benchmarkState != BenchmarkState::idle)
+		{
+			EndBenchmark();
+			LOG_INFO("SPH 3D GPU benchmark cancelled by reset.");
+		}
 		m_reset = true;
 	}
 	void SphFluid3dGpu::SetIsRunning(bool isRunning)
 	{
+		if (!isRunning && GetIsBenchmarking())
+		{
+			EndBenchmark();
+			LOG_INFO("SPH 3D GPU benchmark cancelled by stopping the simulation.");
+		}
 		m_isRunning = isRunning;
 	}
 	void SphFluid3dGpu::SetUseHashGridOptimization(bool useGridOptimization)
@@ -613,6 +629,15 @@ namespace fluidDynamics
 	{
 		return m_settings.fluidBounds;
 	}
+	// Benchmark:
+	bool SphFluid3dGpu::GetIsBenchmarking() const
+	{
+		return m_benchmarkState != BenchmarkState::idle;
+	}
+	double SphFluid3dGpu::GetBenchmarkRemainingTime() const
+	{
+		return std::max(0.0, benchmarkDuration - m_benchmarkElapsedTime);
+	}
     // Time:
 	float SphFluid3dGpu::GetTimeScale() const
 	{
@@ -768,10 +793,43 @@ namespace fluidDynamics
 
 
 	// Debugging:
+	void SphFluid3dGpu::Benchmark()
+	{
+		// Always use same camera setup for consistency:
+		Camera* pCamera = GetEntity().GetScene()->GetActiveCamera();
+		if (pCamera == nullptr)
+		{
+			LOG_WARN("Cannot benchmark SPH 3D GPU without an active camera.");
+			return;
+		}
+		m_benchmarkCameraControllerWasEnabled = false;
+		if (CameraController* pController = pCamera->GetComponent<CameraController>())
+		{
+			m_benchmarkCameraControllerWasEnabled = pController->GetIsEnabled();
+			pController->SetIsEnabled(false);
+		}
+
+		// Match the initial camera transform in Fluid3dScene:
+		Float3 position(25.0f, -25.0f, 10.0f);
+		Float3x3 rotation = Float3x3::RotateThreeLeg(Float3::down, -position + 8.0f * Float3::down, Float3::forward, Float3::up);
+		pCamera->GetTransform()->SetPosition(position);
+		pCamera->GetTransform()->SetRotationMatrix(rotation);
+
+		// Set benchmark stats to 0:
+		Reset();
+		m_isRunning = false;
+		SetAttractorState(0);
+		m_benchmarkState = BenchmarkState::waitingForReset;
+		m_benchmarkElapsedTime = 0.0;
+		m_benchmarkMinFps = 0.0;
+		m_benchmarkMaxFps = 0.0;
+		m_benchmarkFrameCount = 0;
+		LOG_INFO("SPH 3D GPU benchmark: waiting for the simulation reset.");
+	}
 	void SphFluid3dGpu::Print()
 	{
 		LOG_INFO("Printing:");
-		m_isRunning = false;
+		SetIsRunning(false);
 
 		std::vector<float> densities(m_particleCount);
 		m_tripleData.densityBuffer.Download(m_tripleBufferState.GetSrcIndex(), densities);
@@ -787,6 +845,69 @@ namespace fluidDynamics
 
 
 	// Private methods:
+	// Benchmark:
+	void SphFluid3dGpu::UpdateBenchmark()
+	{
+		if (m_benchmarkState == BenchmarkState::waitingForReset)
+		{
+			if (!m_reset)
+			{
+				m_isRunning = true;
+				m_benchmarkState = BenchmarkState::running;
+				LOG_INFO("SPH 3D GPU benchmark: measuring FPS for 10 seconds.");
+			}
+			// This frame's delta time includes reset work, so start sampling next frame.
+			return;
+		}
+		if (m_benchmarkState != BenchmarkState::running)
+			return;
+
+		// Update benchmark:
+		double frameTime = Time::GetDeltaTime();
+		if (frameTime <= 0.0)
+			return;
+		double fps = Time::GetFps();
+		m_benchmarkMinFps = m_benchmarkFrameCount == 0 ? fps : std::min(m_benchmarkMinFps, fps);
+		m_benchmarkMaxFps = std::max(m_benchmarkMaxFps, fps);
+		m_benchmarkElapsedTime += frameTime;
+		m_benchmarkFrameCount++;
+
+		// End benchmark:
+		if (m_benchmarkElapsedTime >= benchmarkDuration)
+		{
+			m_isRunning = false;
+			EndBenchmark();
+			double averageFps = static_cast<double>(m_benchmarkFrameCount) / m_benchmarkElapsedTime;
+			const char* solverName = "Unknown";
+			switch (m_settings.solverType)
+			{
+			case SphFluid3dGpuSolver::SolverType::leapFrog:
+				solverName = "LeapFrog";
+				break;
+			case SphFluid3dGpuSolver::SolverType::velocityVerlet:
+				solverName = "VelocityVerlet";
+				break;
+			case SphFluid3dGpuSolver::SolverType::rungeKutta2:
+				solverName = "RungeKutta2";
+				break;
+			}
+			LOG_INFO("SPH 3D GPU benchmark ({}): {} particles, {:.3f} seconds, {} frames. FPS min: {:.2f}, max: {:.2f}, average: {:.2f}.", solverName, m_particleCount, m_benchmarkElapsedTime, m_benchmarkFrameCount, m_benchmarkMinFps, m_benchmarkMaxFps, averageFps);
+		}
+	}
+	void SphFluid3dGpu::EndBenchmark()
+	{
+		if (!GetIsBenchmarking())
+			return;
+		m_benchmarkState = BenchmarkState::idle;
+		Camera* pCamera = GetEntity().GetScene()->GetActiveCamera();
+		if (pCamera != nullptr)
+		{
+			if (CameraController* pController = pCamera->GetComponent<CameraController>())
+				pController->SetIsEnabled(m_benchmarkCameraControllerWasEnabled);
+		}
+	}
+
+	// Reset and rendering:
 	void SphFluid3dGpu::RecordReset()
 	{
 		if (m_pendingResetSessionID != Compute::Physics::invalidPhysicsSessionID)

@@ -24,6 +24,7 @@ namespace emberEcs
 	}
 	Scene::~Scene()
 	{
+		m_pActiveCamera = nullptr;
 		// Delete all components:
 		for (auto& destroyCallback : ComponentRegistry::GetDestructionRegistry())
 			destroyCallback(m_registry);

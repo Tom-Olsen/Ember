@@ -81,6 +81,8 @@ namespace emberEditor
 		}
 		void PreRender() override
 		{
+			if (m_pScript->GetIsBenchmarking())
+				return;
 			m_transformHandle.ConsumeModeHotkeys();
 			m_transformHandle.Update();
 			m_transformHandle.Draw();
@@ -89,7 +91,9 @@ namespace emberEditor
 		}
 		void Render() override
 		{
+			// Start Gui:
 			GetData();
+			Gui::BeginDisabled(m_pScript->GetIsBenchmarking());
 
 			// Time:
 			Gui::SeparatorText("Time");
@@ -180,8 +184,20 @@ namespace emberEditor
 				m_pScript->Reset();
 			if (Gui::Button("Print"))
 				m_pScript->Print();
+			if (Gui::Button("Benchmark"))
+				m_pScript->Benchmark();
 
-			SetData();
+			// Benchmark timer:
+			if (m_pScript->GetIsBenchmarking())
+			{
+				Gui::SameLine();
+				Gui::Text("%.1fs", m_pScript->GetBenchmarkRemainingTime());
+			}
+
+			// End Gui:
+			Gui::EndDisabled();
+			if (!m_pScript->GetIsBenchmarking())
+				SetData();
 		}
 
 	private:
