@@ -60,6 +60,10 @@ namespace emberBackendInterface
 		virtual bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) = 0;
 		virtual bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none) = 0;
 
+		// Disabled scopes:
+		virtual void BeginDisabled(bool disabled = true) = 0;
+		virtual void EndDisabled() = 0;
+
 		// Layout:
 		virtual void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f) = 0;
 		virtual void SetNextItemWidth(float itemWidth) = 0;

@@ -125,6 +125,18 @@ namespace nullGuiBackend
 
 
 
+	// Disabled scopes:
+	void Gui::BeginDisabled(bool disabled)
+	{
+
+	}
+	void Gui::EndDisabled()
+	{
+
+	}
+
+
+
 	// Layout:
 	void Gui::SameLine(float offsetFromStartX, float spacingW)
 	{

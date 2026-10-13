@@ -65,6 +65,10 @@ namespace nullGuiBackend
 		bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none) override;
 		bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none) override;
 
+		// Disabled scopes:
+		void BeginDisabled(bool disabled = true) override;
+		void EndDisabled() override;
+
 		// Layout:
 		void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f) override;
 		void SetNextItemWidth(float itemWidth) override;

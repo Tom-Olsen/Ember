@@ -306,6 +306,18 @@ namespace imGuiSdlVulkanBackend
 
 
 
+	// Disabled scopes:
+	void Gui::BeginDisabled(bool disabled)
+	{
+		ImGui::BeginDisabled(disabled);
+	}
+	void Gui::EndDisabled()
+	{
+		ImGui::EndDisabled();
+	}
+
+
+
 	// Layout:
 	void Gui::SameLine(float offsetFromStartX, float spacingW)
 	{

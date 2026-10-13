@@ -144,6 +144,18 @@ namespace emberCore
 
 
 
+	// Disabled scopes:
+	void Gui::BeginDisabled(bool disabled)
+	{
+		s_pIGui->BeginDisabled(disabled);
+	}
+	void Gui::EndDisabled()
+	{
+		s_pIGui->EndDisabled();
+	}
+
+
+
 	// Layout:
 	void Gui::SameLine(float offsetFromStartX, float spacingW)
 	{

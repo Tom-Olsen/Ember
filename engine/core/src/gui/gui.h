@@ -70,6 +70,10 @@ namespace emberCore
 		static bool IsWindowFocused(emberCommon::GuiFocusedFlags flags = emberCommon::GuiFocusedFlags::none);
 		static bool IsWindowHovered(emberCommon::GuiHoveredFlags flags = emberCommon::GuiHoveredFlags::none);
 
+		// Disabled scopes:
+		static void BeginDisabled(bool disabled = true);
+		static void EndDisabled();
+
 		// Layout:
 		static void SameLine(float offsetFromStartX = 0.0f, float spacingW = -1.0f);
 		static void SetNextItemWidth(float itemWidth);
