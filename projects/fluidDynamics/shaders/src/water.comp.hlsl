@@ -249,7 +249,7 @@ float4 RefineGeometryHit(float4 clipPos0, float4 clipPos1, float2 screenSize)
 		float2 uv = 0.5f * (clipPosMid.xy / clipPosMid.w + 1.0f);
 		if (any(uv < 0.0f) || any(uv >= 1.0f))
     		return invalidHit;
-		float sceneDepthMid = Scene_GetNdcDepth(uv, screenSize);
+		float sceneDepthMid = Scene_SampleNdcDepth(uv);
 		if (!IsValidSceneDepth(sceneDepthMid))
 			return invalidHit;
 
@@ -270,20 +270,20 @@ float4 RefineGeometryHit(float4 clipPos0, float4 clipPos1, float2 screenSize)
 	float2 uv = 0.5f * (clipPos1.xy / clipPos1.w + 1.0f);
 	if (any(uv < 0.0f) || any(uv >= 1.0f))
 		return invalidHit;
-	uint2 pixel = uv * screenSize;
-	float sceneDepth = Scene_GetNdcDepth(pixel);
+	float sceneDepth = Scene_SampleNdcDepth(uv);
 	if (!IsValidSceneDepth(sceneDepth))
 		return invalidHit;
 
 	// Apply thickness tolerance in view-space units:
 	float3 pos1 = Camera_GetWorldPosition(clipPos1.xyz / clipPos1.w);
-	float3 scenePosition = Camera_GetWorldPosition(pixel, sceneDepth, screenSize);
+	float3 scenePosition = Camera_GetWorldPosition(uv, sceneDepth);
 	float sceneViewDepth = Camera_GetDepth(scenePosition);
 	float depthDelta = Camera_GetDepth(pos1) - sceneViewDepth;
 	float surfaceThickness = max(minSurfaceThickness, relativeSurfaceThickness * sceneViewDepth);
 
-	if (depthDelta < 0.0f || depthDelta > surfaceThickness)
-		return invalidHit;
+	// This also accepts depth deltas slightly behind a geometry surface:
+	if (abs(depthDelta) > surfaceThickness)
+    	return invalidHit;
 
 	return float4(pos1, distance);
 }

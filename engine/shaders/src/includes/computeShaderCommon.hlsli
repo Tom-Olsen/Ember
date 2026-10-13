@@ -10,6 +10,17 @@
 
 
 // Scene depth:
+float Scene_SampleNdcDepth(float2 uv)
+{
+	return sceneDepthTexture.SampleLevel(colorSamplerClampEdge, uv, 0.0f);
+}
+float Scene_SampleNdcDepth(float3 worldPosition, float2 screenSize)
+{// 1.0f for an invalid pixel; otherwise ndcDepth in [0,1].
+	float2 pixel = Camera_WorldToPixel(worldPosition, screenSize);
+	if (any(pixel < 0.0f) || any(pixel >= screenSize))
+		return 1.0f;
+	return Scene_SampleNdcDepth(pixel / screenSize);
+}
 float Scene_GetNdcDepth(uint2 pixel)
 {// pixel in [0...screenSize.x-1]x[0...screenSize.y-1], ndc depth in [0,1].
 	return sceneDepthTexture[pixel];
