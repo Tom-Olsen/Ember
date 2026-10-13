@@ -429,8 +429,8 @@ float3 RayCascade(FluidRay initialRay, float3 sceneColor, uint2 sourcePixel, flo
 		// Hit scene geometry:
 		if (hit.hitState == HitState_hitGeometry)
 		{
-			uint2 hitPixel = uint2(Camera_WorldToPixel(hit.position, screenSize));
-			float3 geometryColor = Scene_GetColor(hitPixel).rgb;
+			float2 hitUv = Camera_WorldToPixel(hit.position, screenSize) / screenSize;
+			float3 geometryColor = Scene_SampleColor(hitUv).rgb;
 			accumulatedColor += pending.throughput * geometryColor;
 			continue;
 		}
