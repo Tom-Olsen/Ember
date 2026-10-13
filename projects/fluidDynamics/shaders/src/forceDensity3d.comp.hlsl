@@ -67,7 +67,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        forceDensityBuffer[index] = float3(0, 0, 0);
+        float3 forceDensity = float3(0, 0, 0);
         float particlePressure = Pressure(densityBuffer[index], targetDensity, pressureMultiplier);
         float particleNearPressure = NearPressure(nearDensityBuffer[index], pressureMultiplier, nearPressureRatio);
         float3 particlePos = positionBuffer[index];
@@ -103,15 +103,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
                         float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                         float otherParticleNearPressure = NearPressure(nearDensityBuffer[otherIndex], pressureMultiplier, nearPressureRatio);
                         float sharedNearPressure = 0.5f * (particleNearPressure + otherParticleNearPressure);
-                        // Old:
-                        //forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
-                        // New:
-                        forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[otherIndex];
-                        forceDensityBuffer[index] += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        forceDensity += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[otherIndex];
+                        forceDensity += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[otherIndex];
 
                         // Viscosity force density:
                         float3 velocityDiff = velocityBuffer[otherIndex] - velocityBuffer[index];
-                        forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]);
+                        forceDensity += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[otherIndex]);
                     }
                     otherIndex++;
                 }
@@ -135,25 +132,22 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float sharedPressure = 0.5f * (particlePressure + otherParticlePressure);
                     float otherParticleNearPressure = NearPressure(nearDensityBuffer[i], pressureMultiplier, nearPressureRatio);
                     float sharedNearPressure = 0.5f * (particleNearPressure + otherParticleNearPressure);
-                    // Old:
-                    //forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
-                    // New:
-                    forceDensityBuffer[index] += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[i];
-                    forceDensityBuffer[index] += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
+                    forceDensity += -mass * sharedPressure * SmoothingKernal_DSpiky2(r, dir, effectRadius) / densityBuffer[i];
+                    forceDensity += -mass * sharedNearPressure * SmoothingKernal_DSpiky3(r, dir, effectRadius) / densityBuffer[i];
 
                     // Viscosity force density:
                     float3 velocityDiff = velocityBuffer[i] - velocityBuffer[index];
-                    forceDensityBuffer[index] += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
+                    forceDensity += viscosity * mass * velocityDiff * (SmoothingKernal_DDViscos(r, effectRadius) / densityBuffer[i]);
                 }
             };
         }
         // Self interaction forces:
         {
             // Gravity force density:
-            forceDensityBuffer[index] += densityBuffer[index] * float3(0.0f, 0.0f, -gravity);
+            forceDensity += densityBuffer[index] * float3(0.0f, 0.0f, -gravity);
 
             // Surface tension:
-            forceDensityBuffer[index] += surfaceTension * curvatureBuffer[index] * normalBuffer[index];
+            forceDensity += surfaceTension * curvatureBuffer[index] * normalBuffer[index];
 
             // Attractor force density:
             float3 offset = attractorPoint - positionBuffer[index];
@@ -161,8 +155,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
             if (r < attractorRadius && r > 1e-8f)
             {
                 r /= attractorRadius;
-                forceDensityBuffer[index] += attractorState * attractorStrength * densityBuffer[index] * offset * r * r;
+                forceDensity += attractorState * attractorStrength * densityBuffer[index] * offset * r * r;
             }
         }
+        forceDensityBuffer[index] = forceDensity;
     }
 }

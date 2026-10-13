@@ -26,8 +26,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        densityBuffer[index] = 0;
-        nearDensityBuffer[index] = 0;
+        float density = 0;
+        float nearDensity = 0;
         float3 particlePos = positionBuffer[index];
         if (useHashGridOptimization)
         {
@@ -48,8 +48,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     float r = length(offset);
                     if (r < effectRadius)
                     {
-                        densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);
-                        nearDensityBuffer[index] += mass * SmoothingKernal_Spiky3(r, effectRadius);
+                        density += mass * SmoothingKernal_Poly6(r, effectRadius);
+                        nearDensity += mass * SmoothingKernal_Spiky3(r, effectRadius);
                     }
                     otherIndex++;
                 }
@@ -63,10 +63,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 float r = length(offset);
                 if (r < effectRadius)
                 {
-                    densityBuffer[index] += mass * SmoothingKernal_Poly6(r, effectRadius);
-                    nearDensityBuffer[index] += mass * SmoothingKernal_Spiky3(r, effectRadius);
+                    density += mass * SmoothingKernal_Poly6(r, effectRadius);
+                    nearDensity += mass * SmoothingKernal_Spiky3(r, effectRadius);
                 }
             };
         }
+        densityBuffer[index] = density;
+        nearDensityBuffer[index] = nearDensity;
     }
 }

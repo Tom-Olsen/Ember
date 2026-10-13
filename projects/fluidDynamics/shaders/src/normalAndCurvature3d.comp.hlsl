@@ -27,8 +27,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
     uint index = threadID.x;
     if (index < pc.threadCount.x)
     {
-        normalBuffer[index] = 0;
-        curvatureBuffer[index] = 0;
+        float3 normal = 0;
+        float curvature = 0;
         float3 particlePos = positionBuffer[index];
         if (useHashGridOptimization)
         {
@@ -59,17 +59,17 @@ void main(uint3 threadID : SV_DispatchThreadID)
                     {
                         float3 dir = offset / r;
                         float c = mass / densityBuffer[otherIndex];
-                        normalBuffer[index] += c * SmoothingKernal_DPoly6(r, dir, effectRadius);
-                        curvatureBuffer[index] -= c * SmoothingKernal_DDPoly6(r, effectRadius);
+                        normal += c * SmoothingKernal_DPoly6(r, dir, effectRadius);
+                        curvature -= c * SmoothingKernal_DDPoly6(r, effectRadius);
                     }
                     otherIndex++;
                 }
             }
-            float normalLength = length(normalBuffer[index]);
+            float normalLength = length(normal);
             if (normalLength > 1e-3f)
-                curvatureBuffer[index] /= normalLength;
+                curvature /= normalLength;
             else
-                curvatureBuffer[index] = 0;
+                curvature = 0;
         }
         else
         {
@@ -85,15 +85,17 @@ void main(uint3 threadID : SV_DispatchThreadID)
                 {
                     float3 dir = offset / r;
                     float c = mass / densityBuffer[i];
-                    normalBuffer[index] += c * SmoothingKernal_DPoly6(r, dir, effectRadius);
-                    curvatureBuffer[index] -= c * SmoothingKernal_DDPoly6(r, effectRadius);
+                    normal += c * SmoothingKernal_DPoly6(r, dir, effectRadius);
+                    curvature -= c * SmoothingKernal_DDPoly6(r, effectRadius);
                 }
             };
-            float normalLength = length(normalBuffer[index]);
+            float normalLength = length(normal);
             if (normalLength > 1e-3f)
-                curvatureBuffer[index] /= normalLength;
+                curvature /= normalLength;
             else
-                curvatureBuffer[index] = 0;
+                curvature = 0;
         }
+        normalBuffer[index] = normal;
+        curvatureBuffer[index] = curvature;
     }
 }
