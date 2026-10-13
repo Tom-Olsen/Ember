@@ -104,6 +104,7 @@ namespace fluidDynamics
 		// Time:
 		void SetTimeScale(float timeScale);
 		void SetPhysicsTimeScale(float physicsTimeScale);
+		void SetSolverType(SphFluid3dGpuSolver::SolverType solverType);
 		// Fluid:
 		void SetParticleCount(int particleCount);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
@@ -152,6 +153,7 @@ namespace fluidDynamics
 		float GetTimeScale() const;
 		float GetPhysicsTimeScale() const;
 		uint32_t GetTimeStep() const;
+		SphFluid3dGpuSolver::SolverType GetSolverType() const;
 		// Fluid:
 		int GetParticleCount() const;
 		float GetInitialDistributionRadius() const;

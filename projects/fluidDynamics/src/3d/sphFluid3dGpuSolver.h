@@ -10,7 +10,13 @@ namespace fluidDynamics
 {
 	class SphFluid3dGpuSolver
 	{
-	public: // Structs:
+	public: // Enums/Structs:
+		enum class SolverType
+		{
+			leapFrog,
+			velocityVerlet,
+			rungeKutta2
+		};
 		struct ComputeShaders
 		{
 			ComputeType computeType;
@@ -23,6 +29,10 @@ namespace fluidDynamics
 			ComputeShader densityComputeShader;
 			ComputeShader normalAndCurvatureComputeShader;
 			ComputeShader forceDensityComputeShader;
+			ComputeShader leapFrogStep1ComputeShader;
+			ComputeShader leapFrogStep2ComputeShader;
+			ComputeShader velocityVerletStep1ComputeShader;
+			ComputeShader velocityVerletStep2ComputeShader;
 			ComputeShader rungeKutta2Step1ComputeShader;
 			ComputeShader rungeKutta2Step2ComputeShader;
 			ComputeShader boundaryCollisionsComputeShader;
@@ -48,6 +58,7 @@ namespace fluidDynamics
 		};
 		struct Settings
 		{
+			SolverType solverType = SolverType::rungeKutta2;
 			bool useHashGridOptimization;
 			bool computeDensityTexture3d;
 			float effectRadius;
@@ -116,8 +127,9 @@ namespace fluidDynamics
 
 	public: // Methods:
 		// Ordinary Differential Equation Solvers:
-		//static void TimeStepLeapFrog(float dt, int timeStep, const Settings& settings, Data& data, const Attractor& attractor);
-		//static void TimeStepVelocityVerlet(float dt, const Settings& settings, Data& data, const Attractor& attractor);
+		static void TimeStep(float dt, const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t sourceDataIndex, uint32_t destinationDataIndex);
+		static void TimeStepLeapFrog(float dt, const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t sourceDataIndex, uint32_t destinationDataIndex);
+		static void TimeStepVelocityVerlet(float dt, const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t sourceDataIndex, uint32_t destinationDataIndex);
 		static void TimeStepRungeKutta2(float dt, const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t sourceDataIndex, uint32_t destinationDataIndex);
 
 		// Data management:
@@ -129,10 +141,18 @@ namespace fluidDynamics
 		static void ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
 		static void ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
 		static void ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView);
+		static void ComputeLeapFrogStep1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
+		static void ComputeLeapFrogStep2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
+		static void ComputeVelocityVerletStep1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
+		static void ComputeVelocityVerletStep2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
 		static void ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView);
 		static void ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
 		static void ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const RotatedBounds& fluidBounds, float collisionDampening);
 		static void ComputeDensityTexture3d(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex);
 		static void ComputeOpticalDepthTexture3d(ComputeShaders& computeShaders, TripleData& tripleData, uint32_t dataIndex);
+
+	private: // Methods:
+		static void BuildHashGrid(const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, BufferView<Float3>& positionBufferView, BufferView<Float3>& velocityBufferView, BufferView<Float3>& orderedPositionBufferView, BufferView<Float3>& orderedVelocityBufferView);
+		static void ComputeNeighborFields(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView);
 	};
 }

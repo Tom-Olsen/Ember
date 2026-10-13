@@ -1,6 +1,7 @@
 #include "sphFluid3dGpu.h"
 #include "logger.h"
 #include "sphFluid3dGpuEditorWindow.h"
+#include <stdexcept>
 
 
 
@@ -121,7 +122,7 @@ namespace fluidDynamics
 		while (restTime > 0.0f)
 		{
 			float deltaT = math::Min(dt, restTime);
-			SphFluid3dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
+			SphFluid3dGpuSolver::TimeStep(deltaT, m_settings, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
 			m_tripleBufferState.CommitWrite(Compute::Physics::GetRecordingSessionID());
 			physicsDataWritten = true;
 			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
@@ -334,6 +335,19 @@ namespace fluidDynamics
 		    m_computeShaders.SetMaxVelocity(m_physicsTimeScale * m_settings.maxVelocity);
 		    m_computeShaders.SetAttractorStrength(accelerationScale * m_attractor.strength);
 		    m_particleMaterial.SetValue("Values", "maxVelocity", m_physicsTimeScale * m_settings.maxVelocity);
+		}
+	}
+	void SphFluid3dGpu::SetSolverType(SphFluid3dGpuSolver::SolverType solverType)
+	{
+		switch (solverType)
+		{
+		case SphFluid3dGpuSolver::SolverType::leapFrog:
+		case SphFluid3dGpuSolver::SolverType::velocityVerlet:
+		case SphFluid3dGpuSolver::SolverType::rungeKutta2:
+			m_settings.solverType = solverType;
+			break;
+		default:
+			throw std::invalid_argument("Invalid SPH solver type.");
 		}
 	}
     // Fluid:
@@ -611,6 +625,10 @@ namespace fluidDynamics
 	uint32_t SphFluid3dGpu::GetTimeStep() const
 	{
 		return m_timeStep;
+	}
+	SphFluid3dGpuSolver::SolverType SphFluid3dGpu::GetSolverType() const
+	{
+		return m_settings.solverType;
 	}
     // Fluid:
 	int SphFluid3dGpu::GetParticleCount() const

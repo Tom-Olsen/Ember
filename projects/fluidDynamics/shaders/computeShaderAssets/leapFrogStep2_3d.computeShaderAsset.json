@@ -1,0 +1,10 @@
+{
+    "computeShaderName": "leapFrogStep2_3d",
+    "sourcePath": "../src/leapFrogStep2_3d.comp.hlsl",
+    "binaryPath": "../bin/leapFrogStep2_3d.comp.spv",
+    "accessRights": {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

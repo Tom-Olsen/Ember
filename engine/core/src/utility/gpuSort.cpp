@@ -173,6 +173,10 @@ namespace emberCore
 		if (!s_localBitonicSortComputeShader.IsValid())
 			throw std::runtime_error("GpuSort::Sort: shaders for this type not implemented yet.");
 
+		// A buffer with fewer than two entries is already sorted:
+		if (bufferView.GetCount() < 2)
+			return;
+
 		// Gpu buffer access setup:
 		int blockSize = 2 * s_localBitonicSortComputeShader.GetBlockSize().x;
 		int bufferSize = static_cast<int>(bufferView.GetCount());   // total number of elements for sorting (entire buffer).
@@ -241,6 +245,10 @@ namespace emberCore
 			CallProperties callProperties = Compute::RecordComputeShader(computeType, s_initIndexBufferComputeShader, threadCountInit, sessionID);
 			callProperties.SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
 			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+
+			// The identity permutation is complete for a single entry:
+			if (bufferSize == 1)
+				return;
 
 			// Local bitonic sort for each block:
 			callProperties = Compute::RecordComputeShader(computeType, s_localBitonicSortPermutationComputeShader, threadCountLocal, sessionID);

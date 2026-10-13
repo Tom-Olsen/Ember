@@ -1,0 +1,10 @@
+{
+    "computeShaderName": "velocityVerletStep2_3d",
+    "sourcePath": "../src/velocityVerletStep2_3d.comp.hlsl",
+    "binaryPath": "../bin/velocityVerletStep2_3d.comp.spv",
+    "accessRights": {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

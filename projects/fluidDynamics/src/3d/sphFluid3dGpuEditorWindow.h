@@ -1,10 +1,10 @@
 #pragma once
-#include "commonGuiFlags.h"
 #include "editorWindow.h"
+#include "commonGuiFlags.h"
 #include "gui.h"
+#include "rotatedBoundsHandleTarget.h"
 #include "sphFluid3dGpu.h"
 #include "transformHandle.h"
-#include "rotatedBoundsHandleTarget.h"
 
 
 
@@ -25,6 +25,7 @@ namespace emberEditor
 		bool m_isRunning;
 		float m_timeScale;
 		float m_physicsTimeScale;
+		fluidDynamics::SphFluid3dGpuSolver::SolverType m_solverType;
 		// Fluid:
 		int m_particleCount;
 		float m_initialDistributionRadius;
@@ -95,6 +96,13 @@ namespace emberEditor
 			Gui::DragFloat("Time Scale:", &m_timeScale);
 			Gui::DragFloat("Physics Time Scale:", &m_physicsTimeScale);
 			Gui::Text(("Time Step:" + std::to_string(m_pScript->GetTimeStep())).c_str());
+			Gui::SeparatorText("Solver");
+			if (Gui::Selectable("LeapFrog", m_solverType == fluidDynamics::SphFluid3dGpuSolver::SolverType::leapFrog))
+				m_solverType = fluidDynamics::SphFluid3dGpuSolver::SolverType::leapFrog;
+			if (Gui::Selectable("VelocityVerlet", m_solverType == fluidDynamics::SphFluid3dGpuSolver::SolverType::velocityVerlet))
+				m_solverType = fluidDynamics::SphFluid3dGpuSolver::SolverType::velocityVerlet;
+			if (Gui::Selectable("RungeKutta2", m_solverType == fluidDynamics::SphFluid3dGpuSolver::SolverType::rungeKutta2))
+				m_solverType = fluidDynamics::SphFluid3dGpuSolver::SolverType::rungeKutta2;
 			// Fluid:
 			Gui::SeparatorText("Fluid");
 			Gui::DragInt("Particle Count:", &m_particleCount);
@@ -183,6 +191,7 @@ namespace emberEditor
 			m_isRunning = m_pScript->GetIsRunning();
 			m_timeScale = m_pScript->GetTimeScale();
 			m_physicsTimeScale = m_pScript->GetPhysicsTimeScale();
+			m_solverType = m_pScript->GetSolverType();
 			// Fluid:
 			m_particleCount = m_pScript->GetParticleCount();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
@@ -226,6 +235,7 @@ namespace emberEditor
 			m_pScript->SetIsRunning(m_isRunning);
 			m_pScript->SetTimeScale(m_timeScale);
 			m_pScript->SetPhysicsTimeScale(m_physicsTimeScale);
+			m_pScript->SetSolverType(m_solverType);
 			// Fluid:
 			m_pScript->SetParticleCount(m_particleCount);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
