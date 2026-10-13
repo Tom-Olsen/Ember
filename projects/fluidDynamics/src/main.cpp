@@ -25,7 +25,7 @@ Scene* Fluid2dCpuScene()
 		pTransform->SetPosition(pos);
 
 		Camera* pCamera = entity.AddComponent<Camera>();
-		pCamera->SetFarClip(100.0f);
+		pCamera->SetFarClip(200.0f);
 
 		pScene->SetActiveCamera(pCamera);
 	}

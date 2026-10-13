@@ -33,6 +33,7 @@ namespace fluidDynamics
 			// Time:
 			SetTimeScale(1.0f);
 			SetPhysicsTimeScale(1.1f);
+			SetSolverType(SphFluid3dGpuSolver::SolverType::leapFrog);
 
 			// Fluid:
 			SetParticleCount(100000);
