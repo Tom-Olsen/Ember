@@ -25,8 +25,14 @@ namespace emberCore
         static float s_fixedTimeAccumulator;    // in seconds.
         static std::chrono::steady_clock::time_point s_start;
         static std::chrono::steady_clock::time_point s_end;
+        static constexpr int fpsWindowSize = 60;
+        static float s_frameTimes[fpsWindowSize];
+        static int s_frameTimeIndex;
+        static int s_frameTimeCount;
+        static double s_frameTimeSum;
 
     public: // Methods
+        // Time management:
         static void Reset();
         static void Update();
         static void Sleep(int time, TimeUnit unit = TimeUnit::s);
@@ -35,6 +41,7 @@ namespace emberCore
         static float GetTime(TimeUnit unit = TimeUnit::s);
         static float GetDeltaTime(TimeUnit unit = TimeUnit::s);
         static float GetFixedDeltaTime(TimeUnit unit = TimeUnit::s);
+        static float GetFps();
         static bool ShouldUpdatePhysics();
         static bool UpdatePhysics(bool skipDelayedUpdates = false);
 

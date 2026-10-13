@@ -1,5 +1,6 @@
 #include "emberTime.h"
 #include "emberMath.h"
+#include <algorithm>
 #include <thread>
 
 
@@ -13,6 +14,10 @@ namespace emberCore
 	float Time::s_fixedTimeAccumulator = 0.0f;
 	std::chrono::steady_clock::time_point Time::s_start = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point Time::s_end = std::chrono::steady_clock::now();
+	float Time::s_frameTimes[fpsWindowSize] = {};
+	int Time::s_frameTimeIndex = 0;
+	int Time::s_frameTimeCount = 0;
+	double Time::s_frameTimeSum = 0.0;
 
 
 
@@ -23,6 +28,10 @@ namespace emberCore
 		s_deltaTime = 0.0f;
 		s_fixedDeltaTime = 1.0f / 50.0f;
 		s_fixedTimeAccumulator = 0.0f;
+		std::fill_n(s_frameTimes, fpsWindowSize, 0.0f);
+		s_frameTimeIndex = 0;
+		s_frameTimeCount = 0;
+		s_frameTimeSum = 0.0;
 		s_start = std::chrono::steady_clock::now();
 	}
 	void Time::Update()
@@ -32,6 +41,11 @@ namespace emberCore
 		s_time += s_deltaTime;
 		s_fixedTimeAccumulator += s_deltaTime;
 		s_start = s_end;
+		s_frameTimeSum -= s_frameTimes[s_frameTimeIndex];
+		s_frameTimes[s_frameTimeIndex] = s_deltaTime;
+		s_frameTimeSum += s_deltaTime;
+		s_frameTimeIndex = (s_frameTimeIndex + 1) % fpsWindowSize;
+		s_frameTimeCount = std::min(s_frameTimeCount + 1, fpsWindowSize);
 	}
 	void Time::Sleep(int time, TimeUnit unit)
 	{
@@ -95,6 +109,10 @@ namespace emberCore
 		default:
 			return 0;
 		}
+	}
+	float Time::GetFps()
+	{
+		return s_frameTimeSum > 0.0 ? static_cast<float>(s_frameTimeCount / s_frameTimeSum) : 0.0f;
 	}
 	bool Time::ShouldUpdatePhysics()
 	{

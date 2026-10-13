@@ -1,6 +1,6 @@
 #pragma once
-#include "commonGuiFlags.h"
 #include "editorWindow.h"
+#include "commonGuiFlags.h"
 #include "emberTime.h"
 #include "gui.h"
 
@@ -12,14 +12,6 @@ namespace emberEditor
 	{
 		// Easy access to emberEngine Gui:
 		using Gui = emberCore::Gui;
-
-	private: // Members
-		float m_frameTimes[60] = {};
-		int m_index = 0;
-		float m_frameTime = 0.0f;
-		float m_fps = 0.0f;
-		float m_deltaTimeSum = 0.0f;
-		int m_rampUpIndex = 1;
 
 	public: // Methods
 		FpsEditorWindow()
@@ -33,24 +25,10 @@ namespace emberEditor
 
 		void Render() override
 		{
-			m_deltaTimeSum -= m_frameTimes[m_index];
-			m_frameTimes[m_index] = emberCore::Time::GetDeltaTime();
-			m_deltaTimeSum += m_frameTimes[m_index];
-			m_index = (m_index + 1) % 60;
-			if (m_rampUpIndex < 60)
-			{
-				m_fps = m_rampUpIndex / m_deltaTimeSum;
-				m_frameTime = 1.0f / m_fps;
-				m_rampUpIndex++;
-			}
-			else
-			{
-				m_fps = 60.0f / m_deltaTimeSum;
-				m_frameTime = 1.0f / m_fps;
-			}
-
-			Gui::Text("FPS: %.1f", m_fps);
-			Gui::Text("Frame Time: %.2fms", 1000 * m_frameTime);
+			float fps = emberCore::Time::GetFps();
+			float frameTime = fps > 0.0f ? 1000.0f / fps : 0.0f;
+			Gui::Text("FPS: %.1f", fps);
+			Gui::Text("Frame Time: %.2fms", frameTime);
 		}
 	};
 }
