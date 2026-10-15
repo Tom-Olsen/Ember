@@ -223,6 +223,8 @@ namespace emberEcs
 			if (!m_isActive)
 				CancelNavigation();
 		}
+		if (EventSystem::KeyDown(Input::Key::O))
+			LOG_TRACE("Camera Position: {}", GetTransform()->GetPosition().ToString());
 
 		if (!m_isActive)
 			return;
