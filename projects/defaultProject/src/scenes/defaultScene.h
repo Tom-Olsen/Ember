@@ -40,12 +40,13 @@ inline Scene* DefaultScene()
 	wallMaterial.SetTexture("normalMap", TextureManager::GetTexture("bricks0_normal"));
 	wallMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
 	wallMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 2, 0, 0));
-	DeferredMaterial cube0Material = pbrMaterial.CloneWithDefaultBindings("cube0Material");
-	cube0Material.SetTexture("colorMap", TextureManager::GetTexture("wood1_color"));
-	cube0Material.SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
-	cube0Material.SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
-	cube0Material.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
-	cube0Material.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.5, 0.5, 0, 0));
+	DeferredMaterial monkeyMaterial = pbrMaterial.CloneWithDefaultBindings("monkeyMaterial");
+	monkeyMaterial.SetTexture("colorMap", TextureManager::GetTexture("metal0_color"));
+	monkeyMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("metal0_roughness"));
+	monkeyMaterial.SetTexture("normalMap", TextureManager::GetTexture("metal0_normal"));
+	monkeyMaterial.SetValue("SurfaceProperties", "surface_roughness", 0.5f);
+	monkeyMaterial.SetValue("SurfaceProperties", "surface_metallicity", 0.5f);
+	monkeyMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(5, 5, 0, 0));
 	DeferredMaterial meshTesterMaterial = pbrMaterial.CloneWithDefaultBindings("meshTesterMaterial");
 	meshTesterMaterial.SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
 	meshTesterMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
@@ -265,16 +266,18 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetCastShadows(true);
 		pMeshRenderer->SetReceiveShadows(true);
 	}
-	{// Cube0:
-		Entity entity = Entity::Create("cube0");
-		Float3 pos = Float3(-2.0f, 0.0f, 0.0f);
+	{// Monkey:
+		Entity entity = Entity::Create("monkey");
+		Float3 pos = Float3(-2.0f, 0.0f, 0.33f);
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(pos);
+		pTransform->SetScale(0.66f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
-		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(cube0Material);
+		//pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("monkey"));
+		pMeshRenderer->SetMaterial(monkeyMaterial);
 
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 

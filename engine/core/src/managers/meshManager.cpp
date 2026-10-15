@@ -99,6 +99,11 @@ namespace emberCore
 		leb9.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(leb9File));
 		AddMesh(std::move(leb9));
 
+		std::filesystem::path monkeyFile = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "meshes/monkey.csv").make_preferred();
+		Mesh monkey("monkey");
+		monkey.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(monkeyFile));
+		AddMesh(std::move(monkey));
+
         Mesh translateHandleFrame = MeshGenerator::TranslateHandleFrame(0.5f, 5.0f);
         translateHandleFrame.SetName("translateHandleFrame");
         AddMesh(std::move(translateHandleFrame));
