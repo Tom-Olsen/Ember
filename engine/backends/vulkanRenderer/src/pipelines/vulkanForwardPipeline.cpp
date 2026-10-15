@@ -115,9 +115,9 @@ namespace vulkanRendererBackend
         //     finalColor = newColor;
         // finalColor = finalColor & colorWriteMask;
 
-        // Standard alpha blending:
+        // Transparent alpha blending:
         // finalColor.rgb = (srcAlpha * newColor.rgb) + ((1 - srcAlpha) * oldColor.rgb);
-        // finalColor.a = newAlpha.a;
+        // finalColor.a = newColor.a + ((1 - srcAlpha) * oldColor.a);
 
         // Color blending:
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};

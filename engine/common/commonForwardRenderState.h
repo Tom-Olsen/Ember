@@ -101,7 +101,7 @@ namespace emberCommon
 	}
 	inline ForwardRenderState ForwardRenderState::TransparentDefault(int32_t renderQueue)
 	{
-		return ForwardRenderState(ForwardRenderMode::transparent, renderQueue, CullMode::none, PolygonMode::fill, FrontFace::counterClockwise, true, false, CompareOp::less, true, BlendFactor::srcAlpha, BlendFactor::oneMinusSrcAlpha, BlendOp::add, BlendFactor::one, BlendFactor::zero, BlendOp::add, ColorComponent::all);
+		return ForwardRenderState(ForwardRenderMode::transparent, renderQueue, CullMode::none, PolygonMode::fill, FrontFace::counterClockwise, true, false, CompareOp::less, true, BlendFactor::srcAlpha, BlendFactor::oneMinusSrcAlpha, BlendOp::add, BlendFactor::one, BlendFactor::oneMinusSrcAlpha, BlendOp::add, ColorComponent::all);
 	}
 	inline ForwardRenderState ForwardRenderState::WireframeDefault(int32_t renderQueue)
 	{
