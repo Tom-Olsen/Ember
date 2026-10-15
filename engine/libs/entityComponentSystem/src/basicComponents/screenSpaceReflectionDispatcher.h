@@ -10,6 +10,15 @@ namespace emberEcs
 {
 	class ScreenSpaceReflectionDispatcher : public Component
 	{
+	public: // Enums:
+		enum class SsrMode
+		{
+			off,
+			fullResolution, 
+			reflectionMap, 
+			reflectionUVMap
+		};
+	
 	private: // Members:
 		emberCore::ComputeShader m_ssrComputeShader;				// sceneColorA -> sceneColorB direct reflections
 		emberCore::ComputeShader m_ssrReflectionMapComputeShader;	// sceneColorA (read)  -> reflectionTexture
@@ -23,7 +32,7 @@ namespace emberEcs
 		emberCore::Texture m_environmentMap;
 
 	public: // Members:
-		int ssrMode;
+		SsrMode ssrMode;
 
 	public: // Methods:
 		ScreenSpaceReflectionDispatcher(emberCore::Texture environmentMap);

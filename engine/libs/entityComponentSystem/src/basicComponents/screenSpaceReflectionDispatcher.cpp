@@ -13,7 +13,7 @@ namespace emberEcs
 	ScreenSpaceReflectionDispatcher::ScreenSpaceReflectionDispatcher(Texture environmentMap)
 		: m_environmentMap(environmentMap)
 	{
-		ssrMode = 2;
+		ssrMode = SsrMode::reflectionUVMap;
 		m_ssrComputeShader = ComputeShaderManager::TryGetComputeShader("screenSpaceReflections");
 		m_ssrReflectionMapComputeShader = ComputeShaderManager::TryGetComputeShader("screenSpaceReflectionMap");
 		m_ssrCompositComputeShader = ComputeShaderManager::TryGetComputeShader("screenSpaceReflectionComposit");
@@ -39,7 +39,9 @@ namespace emberEcs
 	void ScreenSpaceReflectionDispatcher::LateUpdate()
 	{
 		// sceneColorA -> sceneColorB direct reflections
-		if (ssrMode == 0)
+		if (ssrMode == SsrMode::off)
+			return;
+		if (ssrMode == SsrMode::fullResolution)
 		{
 			CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrComputeShader);
 			callProperties.SetTexture("environmentMap", m_environmentMap);
@@ -47,7 +49,7 @@ namespace emberEcs
 		// sceneColorA (read) -> reflectionTexture
 		// finish write before read barrier
 		// reflectionTexture -> sceneColorA (write)
-		else if (ssrMode == 1)
+		else if (ssrMode == SsrMode::reflectionMap)
 		{
 			{
 				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrReflectionMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
@@ -63,7 +65,7 @@ namespace emberEcs
 		// sceneColorA metadata -> reflectionUvTexture
 		// finish write before read barrier
 		// reflectionUvTexture + sceneColorA (read) -> sceneColorB (write)
-		else if (ssrMode == 2)
+		else if (ssrMode == SsrMode::reflectionUVMap)
 		{
 			{
 				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrReflectionUvMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));

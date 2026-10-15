@@ -55,12 +55,14 @@ namespace emberEditor
 			}
 
 			// Ssr mode selection:
-			if (emberCore::Gui::Selectable("0 - Full resolution", pDispatcher->ssrMode == 0))
-				pDispatcher->ssrMode = 0;
-			if (emberCore::Gui::Selectable("1 - Reflection map", pDispatcher->ssrMode == 1))
-				pDispatcher->ssrMode = 1;
-			if (emberCore::Gui::Selectable("2 - Reflection UV map", pDispatcher->ssrMode == 2))
-				pDispatcher->ssrMode = 2;
+			if (emberCore::Gui::Selectable("Off", pDispatcher->ssrMode == emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::off))
+				pDispatcher->ssrMode = emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::off;
+			if (emberCore::Gui::Selectable("Full resolution", pDispatcher->ssrMode == emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::fullResolution))
+				pDispatcher->ssrMode = emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::fullResolution;
+			if (emberCore::Gui::Selectable("Reflection map", pDispatcher->ssrMode == emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::reflectionMap))
+				pDispatcher->ssrMode = emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::reflectionMap;
+			if (emberCore::Gui::Selectable("Reflection UV map", pDispatcher->ssrMode == emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::reflectionUVMap))
+				pDispatcher->ssrMode = emberEcs::ScreenSpaceReflectionDispatcher::SsrMode::reflectionUVMap;
 		}
 	};
 }
