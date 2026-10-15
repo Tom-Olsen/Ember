@@ -14,6 +14,28 @@ Render stages will declare what they need from an image instead of manually sele
 The graph will derive layouts, access masks, pipeline stages, descriptor layouts, barriers, semaphore dependencies, and queue ownership requirements from those declarations.
 
 
+Saved implementation snapshots (2026-10-15)
+-------------------------------------------
+
+Two mipmap-related stashes preserve the implementation work preceding this design plan:
+
+- Full mipmap refactor before isolated VmaImage support 2026-10-14
+  Commit: 7fef97d5c74c7d83b6d71388eb7ca9ec94aa6e68 (stash@{1} when this note was written).
+  Contains the original broad implementation across Vulkan textures, VmaImage, mip-state helpers, descriptors, factories, frontend/interfaces, compute/render stages, and documentation.
+  Includes new untracked source files; this is the original implementation snapshot to consult when implementing the remaining feature.
+
+- Reviewed isolated VmaImage mipmap support and design notes 2026-10-15
+  Commit: 5d48f29b54a96b4c34cb7deb7998d99518bb2b00 (stash@{0} when this note was written).
+  Contains the isolated VmaImage changes reviewed in this discussion: explicit cached views, named view descriptions, mip validation, and per-mip layout tracking.
+  Includes temporary texture compatibility adapters and descriptor/render-pass/readback call-site changes needed to keep the isolated implementation compiling.
+  Also preserves ToDoTexture.txt and this document's mip/view design notes before the stash inventory was added.
+
+These snapshots overlap; do not apply both sequentially as if they were independent patches.
+Inspect or restore the relevant snapshot and reconcile it with this design plan before reusing its implementation.
+Stash indices change as stashes are added or removed; use the commit IDs and descriptions to identify these snapshots.
+The older branch-reconciliation stash remains separate, and local ImGui submodule changes were left untouched.
+
+
 Current problems
 ----------------
 
@@ -90,7 +112,7 @@ Revised overview
   This avoids introducing a separate image-state registry and also covers VmaImage instances that are not wrapped by a Texture.
 - ImageState contains layout, pipeline stages, access masks, and queue-family ownership.
 - Initially Ember may track one state for the entire image.
-  Images with independently transitioned mip levels, aspects, or array layers will later require state per subresource range.
+  State per subresource range and range-aware dependency analysis must exist before separate graph passes independently access mip levels, aspects, or array layers.
 - Render stages declare semantic image usages rather than manually recording layout transitions.
 - The render graph converts each declared usage into a required ImageState.
 - The render graph compares consecutive states and generates image barriers, memory dependencies, semaphore operations, and queue ownership transfers where required.
@@ -134,7 +156,83 @@ ImageState rules:
 - State mutation must be restricted to render-graph internals once an image becomes graph-managed.
 
 The first implementation may use one ImageState per image under the explicit restriction that the entire image is transitioned together.
-A later ImageSubresourceState representation must be introduced before independently transitioning mip levels, array layers, or separate depth/stencil aspects through the graph.
+An ImageSubresourceState representation must be introduced before independently transitioning mip levels, array layers, or separate depth/stencil aspects through the graph.
+Per-mip layouts alone are insufficient when cube faces or array layers can be used independently.
+The state representation and dependency planner must agree on subresource granularity; the storage representation can remain an internal implementation detail.
+
+
+Texture views and mip-level access
+---------------------------------
+
+Keep three responsibilities separate: physical image ownership/state, typed view selection, and the consuming usage.
+Supporting arbitrary Vulkan subresources at the lowest level must not force ordinary engine callers to construct Vulkan ranges or choose VkImageViewType values.
+
+VmaImage responsibilities:
+
+- Own the complete allocated VkImage, its allocation metadata, tracked state, and cached native image views.
+- Validate explicit native view descriptions against the allocation's mip levels, layers, aspects, and view compatibility.
+- Keep selected ranges on views and operations rather than imposing a second, globally restricted "allowed range" on the owned image.
+- Keep layout bookkeeping and helpers such as ValidateMipRangeLayout internal.
+  Restrict state mutation to the synchronization owner; use narrow friendship only where genuinely necessary.
+
+Typed texture responsibilities:
+
+- Texture2d::GetView(...) returns a 2D view.
+- TextureCube::GetView(...) returns the normal six-face cube view.
+- Texture2dArray::GetView(...) returns an array view.
+- TextureCube::GetFaceView(face, ...) returns a 2D view of one face.
+- Texture2dArray::GetLayerView(layer, ...) returns a 2D view of one layer; provide a dedicated array-subset method when needed.
+- Concrete texture types construct the native view descriptions internally and expose only meaningful selections.
+- Keep common ownership, frame selection, and metadata in the texture base class.
+  Review DepthTexture2dArray inheriting from Texture2d so that array textures do not undermine the 2D-only view contract.
+
+Introduce a small TextureView value representing a resource reference and its selected mip/layer/face range and view shape.
+It does not own another image allocation or copy the image's mutable layout state.
+Resolve the physical image and cached native view for the current frame when consumed; define lifetime validation for retained views.
+Keep frontend view selection Vulkan-independent.
+
+Use MipRange::All() as the default parameter for view selection:
+
+    TextureView GetView(MipRange mips = MipRange::All()) const;
+    TextureView GetFaceView(CubeFace face, MipRange mips = MipRange::All()) const;
+
+    cube.GetView();                          // Six faces, all allocated mips.
+    cube.GetView(MipRange::Single(2));        // Six faces, only mip 2.
+    cube.GetFaceView(face);                  // One face, all allocated mips.
+
+All() selects the allocated mip chain; it does not allocate, initialize, or generate mip contents.
+View selection performs no layout transitions.
+The consuming sampled, storage, attachment, or transfer usage determines the required state.
+Sampled views may span several mips; storage-image bindings and framebuffer attachments must explicitly select one mip.
+Reject incompatible selections rather than silently interpreting All() as mip 0.
+
+A cube face view can be bound to a compatible 2D shader binding without constructing a Texture2d that shares the cube's allocation.
+Validate view shape and capabilities against the consuming binding/attachment requirements.
+Descriptors and graph declarations must refer to the same selection so synchronization covers exactly the data being accessed.
+Remove GetLegacyImageView/GetLegacyImageSubresourceRange once callers migrate, and restrict ordinary access to raw VmaImage internals.
+
+
+Mipmap implementation scope
+----------------------------
+
+Allocating a mip chain, uploading data, generating mips, and sampling the completed chain can be implemented before a full render-graph refactor.
+Typed views and native view caching are also useful independent groundwork.
+General independent mip/face/layer use across passes must be coordinated with the subresource-aware graph design described here.
+
+Different mips legitimately need different layouts during generation, selective uploads/readback, rendering into a selected mip, or custom compute filtering.
+For example, blit generation reads one mip as transfer source while writing the next as transfer destination.
+Compute filtering similarly declares the source read and destination storage write, including their data dependency.
+Generating mips is an explicit operation; selecting a view or rendering into mip 0 does not automatically refresh the remaining levels.
+
+While the graph tracks whole images, mip generation may be one encapsulated graph operation with explicit entry and exit states.
+That operation owns its internal per-mip barriers and reports the final state of the affected image to the graph.
+A whole-image state is valid afterward only when all covered subresources have that state.
+Do not let temporary internal transitions become scattered stage-owned synchronization.
+Before exposing independent subresource uses to separate graph passes, implement both subresource state tracking and overlap-aware dependency analysis.
+Render stages declare the selected ranges and usages; the graph remains responsible for their transitions.
+
+Implement this in small, independently compiling steps: typed views, encapsulated generation, then graph-visible independent subresource uses.
+Agree on the shared range model and synchronization authority before migrating callers.
 
 
 Semantic image usages
@@ -202,7 +300,10 @@ Individual stages must not reproduce this mapping with raw Vulkan flags.
 Barrier generation
 ------------------
 
-For every ordered pair of uses of the same physical image, the graph compares the tracked state with the required state.
+For every ordered pair of uses of the same physical image, the graph compares the tracked state with the required state for the affected subresources.
+Once independent subresource use is enabled, dependency analysis must compare overlapping mip/layer/aspect ranges.
+Disjoint ranges retain independent state and do not create image data dependencies merely because they share an allocation.
+Overlapping ranges still require dependency analysis even when their layouts match.
 
 A barrier or other dependency may be required when:
 
@@ -287,7 +388,7 @@ External consumers are modeled as graph operations or exports:
 
 - Swapchain presentation requires PRESENT_SRC_KHR.
 - ImGui or another renderer sampling an Ember texture requires a sampled-read state.
-- Readback requires a transfer-source state before copying.
+- Readback requires a transfer-source state for the copied mip/layer range before copying; preserve the state of unrelated subresources.
 - External queue/API ownership requires an explicit release state and corresponding acquire contract.
 
 Only resources with an external contract are transitioned to an export state.
@@ -338,6 +439,8 @@ Phase 1: Add state and usage primitives without changing behavior
 - Initialize the state from VkImageCreateInfo::initialLayout and the known initial ownership information.
 - Keep compatibility getters temporarily so this phase can compile without migrating every caller at once.
 - Add debug string formatting for ImageState and semantic image usages to make validation failures traceable.
+- Introduce the shared mip/view selection model and typed TextureView API described above, keeping native view construction inside the backend.
+- Keep the whole-image-state restriction explicit until the state tracker and dependency planner both support independent ranges.
 
 Phase 2: Implement the graph barrier planner
 
@@ -350,6 +453,7 @@ Phase 2: Implement the graph barrier planner
 - Add debug assertions for unsupported partial-subresource transitions while the implementation still tracks one state per whole image.
 - Log generated barriers in validation/debug builds with resource names and before/after states.
 - Unit test barrier planning for undefined-to-write, write-to-read, read-to-read, write-to-write, same-layout hazards, and queue ownership changes.
+- Before enabling independent ranges, add subresource state and overlap analysis together; test overlapping/disjoint mips and layers and preservation of unaffected state.
 
 Phase 3: Add declarative resource uses to the render graph
 
@@ -364,7 +468,7 @@ Phase 4: Integrate descriptors with graph usages
 
 - Stop using VmaImage::GetImageLayout() as the default source for VkDescriptorImageInfo::imageLayout on graph-managed resources.
 - Derive descriptor imageLayout from the consuming sampled/storage usage declaration.
-- Ensure the descriptor and barrier planner consume the same resolved required state.
+- Ensure the descriptor and barrier planner consume the same view selection and resolved required state.
 - Keep a simple SetTexture(...) call for normal callers; Vulkan layouts should remain an internal concern.
 - Retain a raw explicit-layout path only where an external or exceptional integration cannot yet declare a graph use.
 - Add validation assertions that a descriptor's declared access layout matches the image state required by its consuming pass.
@@ -386,6 +490,7 @@ Phase 5: Migrate render stages incrementally
 - Replace the ForwardStage SetLayout(GENERAL) bookkeeping with graph state updates.
 - Migrate post-render compute and final sampling/presentation.
 - Migrate image uploads, mipmap generation, transfer operations, and any resource-update-stage transitions that participate in graph execution.
+- Encapsulate generation with declared entry/exit states while whole-image tracking remains; expose per-mip generation steps only after range-aware state and dependencies are available.
 - After each migration, remove only the obsolete stage-local barrier, render-pass external dependency, or manual state mutation covered by the new graph path.
 
 Phase 6: Normalize render-pass boundaries
@@ -413,7 +518,8 @@ Phase 8: Remove the legacy layout system
 - Remove VmaImage::SetLayout(...).
 - Remove direct stage-owned calls to VmaImage::TransitionLayout(...) for graph-managed images.
 - Remove or restrict GetImageLayout() so descriptors and stages cannot use it as an implicit policy decision.
-- Make ImageState mutation private to render-graph internals.
+- Make ImageState mutation and low-level range-layout validation private to the responsible internals.
+- Remove GetLegacyImageView/GetLegacyImageSubresourceRange and migrate bindings/attachments to typed TextureView selections.
 - Remove obsolete descriptor-layout plumbing that became unnecessary after usage-driven binding.
 - Remove duplicated access/stage mapping logic from individual stages and texture helper classes.
 - Add assertions that graph-managed images cannot be used by a stage without a matching declaration.
@@ -427,6 +533,8 @@ Phase 9: Verification and diagnostics
 - Confirm that no UNDEFINED-to-read-only initialization warnings remain.
 - Confirm that no descriptor layout differs from the layout active at shader access.
 - Confirm that no render stage requires manual SetLayout(...) bookkeeping.
+- Verify default view shapes, All()/single-mip selection, cube-face/array-layer bindings, and attachment/storage rejection of multi-mip views.
+- Verify mip generation followed by sampling, selective uploads/readback, and independent mip/layer access without corrupting unrelated state.
 - Compare output against all reference screenshots.
 - Compare GPU timings against the baseline and investigate any meaningful regression.
 - Test frames-in-flight reuse, swapchain recreation, window resizing, empty draw-call lists, optional compute calls, and ping-pong texture selection.
@@ -439,7 +547,9 @@ Acceptance criteria
 The refactor is complete when:
 
 - Render stages declare image intent and do not manually select Vulkan layouts for graph-managed resources.
-- VmaImage state includes layout, stage/access history, and queue ownership.
+- VmaImage state includes layout, stage/access history, and queue ownership at the granularity of supported independent accesses.
+- Typed texture views hide Vulkan view construction and share their exact selection with bindings and graph usages.
+- Independent subresource uses have both correct state tracking and overlap-aware dependencies; view selection itself performs no transitions.
 - The render graph is the only owner of graph-managed state mutation and inter-stage image barriers.
 - Render-pass boundary transitions are explicit and visible to the graph.
 - Descriptor layouts are derived from consuming usages rather than current tracked state.
