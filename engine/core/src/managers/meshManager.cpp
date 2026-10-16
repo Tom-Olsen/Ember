@@ -104,6 +104,11 @@ namespace emberCore
 		monkey.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(monkeyFile));
 		AddMesh(std::move(monkey));
 
+		std::filesystem::path spotLightFile = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "meshes/spotLight.csv").make_preferred();
+		Mesh spotLight("spotLight");
+		spotLight.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(spotLightFile));
+		AddMesh(std::move(spotLight));
+
         Mesh translateHandleFrame = MeshGenerator::TranslateHandleFrame(0.5f, 5.0f);
         translateHandleFrame.SetName("translateHandleFrame");
         AddMesh(std::move(translateHandleFrame));
