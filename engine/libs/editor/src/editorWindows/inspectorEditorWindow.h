@@ -4,6 +4,7 @@
 #include "editorWindow.h"
 #include "entity.h"
 #include "gui.h"
+#include "transform.h"
 
 
 
@@ -30,7 +31,10 @@ namespace emberEditor
 			if (emberEditor::EditorSelection::HasSelectedEntity())
 			{
 				emberEcs::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
-				Gui::TextUnformatted(entity.GetName().c_str());
+				Gui::TextSelectable("Name", entity.GetName());
+				Gui::TextSelectable("Position", entity.GetTransform()->GetPosition().ToString());
+				Gui::TextSelectable("Rotation", entity.GetTransform()->GetRotation().ToString());
+				Gui::TextSelectable("Scale", entity.GetTransform()->GetScale().ToString());
 			}
 			else
 				Gui::TextUnformatted("No selection");
