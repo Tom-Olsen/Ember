@@ -27,7 +27,7 @@ namespace emberEditor
 	float HandleContext::s_scaleSnap;
 
 
-    
+
     // Protected methods:
     // Init/Clear:
     void HandleContext::Init()

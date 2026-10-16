@@ -28,7 +28,7 @@ namespace emberEditor
 	RotateHandle::RotateHandle()
 	{
 		m_handleScale = 1.0f;
-		m_coordinateSpace = CoordinateSpace::world;
+		m_coordinateSpace = CoordinateSpace::local;
 		m_pHandleTarget = nullptr;
 		m_isDragging = false;
 		m_octantIndex = 0;
@@ -143,6 +143,7 @@ namespace emberEditor
 		m_hoveredSubHandle = RotateHandle::SubHandle::none;
 		m_activeSubHandle = RotateHandle::SubHandle::none;
 		m_dragStartRotation = Float3x3::identity;
+		m_dragStartAngle = Degrees();
 		m_dragStartMousePos = Float2::zero;
 		m_dragAxisDir = Float3::zero;
 	}
@@ -181,6 +182,7 @@ namespace emberEditor
 			return;
 		}
 		m_dragAxisDir = OctantRotationSign(m_octantIndex, m_activeSubHandle) * m_dragAxisDir.Normalize();
+		m_dragStartAngle = RotationAngle(m_dragStartRotation, m_dragAxisDir, m_activeSubHandle);
 
 		// Start drag:
 		m_isDragging = true;
@@ -202,7 +204,7 @@ namespace emberEditor
 		// Update entity rotation:
 		Float2 mouseDelta = HandleContext::GetViewportMousePos() - m_dragStartMousePos;
 		Degrees angle = s_rotationSensitivity * (mouseDelta.x - mouseDelta.y);
-		angle = HandleContext::ApplyRotationSnap(angle);
+		angle = HandleContext::ApplyRotationSnap(m_dragStartAngle + angle) - m_dragStartAngle;
 		m_pHandleTarget->SetRotation(Float3x3::Rotate(m_dragAxisDir, angle.ToRadians()) * m_dragStartRotation);
 		emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
 	}
@@ -314,6 +316,41 @@ namespace emberEditor
     }
 
     // Static helpers:
+	Degrees RotateHandle::RotationAngle(const Float3x3& rotation, const Float3& axisDir, SubHandle subHandle)
+	{
+	    // Measure the signed rotation around axisDir.
+		int axisIndex = static_cast<int>(subHandle) - static_cast<int>(SubHandle::axisX);
+		int referenceIndex0 = (axisIndex + 1) % 3;
+		int referenceIndex1 = (axisIndex + 2) % 3;
+
+		// Select the two coordinate axes other than the rotation axis:
+		Float3 referenceDirection0 = Float3x3::identity.GetColumn(referenceIndex0);
+		Float3 referenceDirection1 = Float3x3::identity.GetColumn(referenceIndex1);
+		Float3 rotatedDirection0 = rotation.GetColumn(referenceIndex0);
+		Float3 rotatedDirection1 = rotation.GetColumn(referenceIndex1);
+
+	    // Remove components parallel to the rotation axis:
+		referenceDirection0 -= Float3::Dot(referenceDirection0, axisDir) * axisDir;
+		referenceDirection1 -= Float3::Dot(referenceDirection1, axisDir) * axisDir;
+		rotatedDirection0 -= Float3::Dot(rotatedDirection0, axisDir) * axisDir;
+		rotatedDirection1 -= Float3::Dot(rotatedDirection1, axisDir) * axisDir;
+
+		// Prefer the reference pair with the larger projected lengths:
+		float projectionScore0 = referenceDirection0.LengthSq() * rotatedDirection0.LengthSq();
+		float projectionScore1 = referenceDirection1.LengthSq() * rotatedDirection1.LengthSq();
+		if (projectionScore1 > projectionScore0 + math::absEpsilon)
+		{
+			referenceDirection0 = referenceDirection1;
+			rotatedDirection0 = rotatedDirection1;
+		}
+
+	    // Compute the signed angle between the projected directions around axisDir.
+	    // The cross product determines the rotation sign; the dot product provides the cosine term.
+		// Atan2 returns an angle in [-180°, +180°] after conversion.
+		float signedCross = Float3::Dot(axisDir, Float3::Cross(referenceDirection0, rotatedDirection0));
+		float dot = Float3::Dot(referenceDirection0, rotatedDirection0);
+		return math::Atan2(signedCross, dot).ToDegrees();
+	}
 	Float3 RotateHandle::SubHandleDirection(RotateHandle::SubHandle subHandle)
     {
 		switch (subHandle)

@@ -36,6 +36,7 @@ namespace emberEditor
 		SubHandle m_hoveredSubHandle;
 		SubHandle m_activeSubHandle;
 		Float3x3 m_dragStartRotation;
+		Degrees m_dragStartAngle;
 		Float2 m_dragStartMousePos;
 		Float3 m_dragAxisDir;
 		uint32_t m_octantIndex;
@@ -83,6 +84,7 @@ namespace emberEditor
 		void TryPickAxisSubHandle(RotateHandle::SubHandle subHandle, const Float4x4& localToWorldMatrix, const Ray& ray, float& closestHitDistanceSq);
 
         // Static helpers:
+		static Degrees RotationAngle(const Float3x3& rotation, const Float3& axisDir, SubHandle subHandle);
 		static Float3 SubHandleDirection(RotateHandle::SubHandle subHandle);
 		static Float4 SubHandleBaseColor(RotateHandle::SubHandle subHandle);
 		static Float3 OctantSigns(uint32_t octantIndex);
