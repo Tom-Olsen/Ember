@@ -70,20 +70,17 @@ Scene* Fluid3dScene()
 	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");
 	DeferredMaterial cube0Material = pbrMaterial.CloneWithDefaultBindings("cube0Material");
-	cube0Material.SetTexture("colorMap", TextureManager::GetTexture("wood1_color"));
-	cube0Material.SetTexture("roughnessMap", TextureManager::GetTexture("wood1_roughness"));
-	cube0Material.SetTexture("normalMap", TextureManager::GetTexture("wood1_normal"));
+	cube0Material.SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
+	cube0Material.SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
+	cube0Material.SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
 	cube0Material.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
-	cube0Material.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.5, 0.5, 0, 0));
+	cube0Material.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.25f, 2.5f, 0, 0));
 
 	{// Camera:
-		Entity entity = Entity::Create("mainCamera");
-		Float3 pos = Float3(25.0f, -25.0f, 10.0f);
-		Float3x3 rotation = Float3x3::RotateThreeLeg(Float3::down, -pos + 8 * Float3::down, Float3::forward, Float3::up);
-
+		Entity entity = Entity::Create("Camera");
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(pos);
-		pTransform->SetRotationMatrix(rotation);
+		pTransform->SetPosition(Float3(17.3513f, -27.4224f, 0.9268f));
+		pTransform->SetRotationEuler(EulerDegrees(54.9628f, 80.8496f, 82.5193f));
 
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
@@ -92,8 +89,7 @@ Scene* Fluid3dScene()
 		pScene->SetActiveCamera(pCamera);
 	}
 	{// Skybox:
-		Entity entity = Entity::Create("skybox");
-
+		Entity entity = Entity::Create("Skybox");
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
 
@@ -105,24 +101,21 @@ Scene* Fluid3dScene()
 		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	{ // Floor:
-		Entity entity = Entity::Create("floor");
-		Float3 pos = Float3(0.0f, 0.0f, -10.0f);
-
+		Entity entity = Entity::Create("Floor");
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(pos);
+		pTransform->SetPosition(Float3(0.0f, 0.0f, -10.0f));
 		pTransform->SetScale(60.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
 		pMeshRenderer->SetMaterial(floorMaterial);
 	}
-	{// Cube0:
-		Entity entity = Entity::Create("cube0");
-		Float3 pos = Float3(0.0f, -20.0f, 0.0f);
-
+	{// Cube:
+		Entity entity = Entity::Create("Cube");
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(pos);
-		pTransform->SetScale(Float3(2.0f, 2.0f, 5.0f));
+		pTransform->SetPosition(Float3(0.3395f, 13.8969f, -0.6801f));
+		pTransform->SetRotationEuler(EulerDegrees(0.0f, 25.5000f, 0.0000f));
+		pTransform->SetScale(Float3(2.0f, 2.0f, 20.0f));
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
@@ -131,7 +124,7 @@ Scene* Fluid3dScene()
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
 	{// Directional Light:
-		Entity entity = Entity::Create("directionalLight");
+		Entity entity = Entity::Create("DirectionalLight");
 		Float3 pos = 50.0f * Float3(-16.0f, -9.0f, 9.0f);
 		Float3 direction = -pos.Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);

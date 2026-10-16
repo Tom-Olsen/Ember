@@ -109,7 +109,6 @@ namespace fluidDynamics
 			m_pendingVolumetricLightingResolutionChange = false;
 			m_pendingRenderRefresh = true;
 		}
-		// ToDo: update optical depth when the directional light or lighting settings change while the simulation is paused.
 		if (!m_isRunning)
 			return;
 		m_tripleBufferState.PublishFinishedWrites();
@@ -170,6 +169,17 @@ namespace fluidDynamics
 		if (m_reset)
 			return;
 		m_tripleBufferState.PublishFinishedWrites();
+
+		// Light color and intensity are read by the shader each frame; optical depth caches the light bounds.
+		if (!m_isRunning && m_renderMode == RenderMode::cloud && m_renderVolumetricLight)
+		{
+			uint32_t readDataIndex = m_tripleBufferState.GetReadIndex();
+			RotatedBounds lightBounds;
+			bool hasDirectionalLight = TryGetDirectionalLightBounds(lightBounds);
+			if (hasDirectionalLight != m_tripleData.hasOpticalDepthTexture3d[readDataIndex]
+				|| (hasDirectionalLight && lightBounds != m_tripleData.opticalDepthBounds[readDataIndex]))
+				m_pendingRenderRefresh = true;
+		}
 		if (m_pendingRenderRefresh)
 			RefreshRenderData();
 
@@ -560,7 +570,10 @@ namespace fluidDynamics
 	{
 		volumetricDensityAbsorption = math::Max(1e-4f, volumetricDensityAbsorption);
 		if (m_forceSetters || m_volumetricDensityAbsorption != volumetricDensityAbsorption)
+		{
 			m_volumetricDensityAbsorption = volumetricDensityAbsorption;
+			m_pendingRenderRefresh = true;
+		}
 	}
 	void SphFluid3dGpu::SetVolumetricScattering(const Float3& volumetricScattering)
 	{
@@ -569,11 +582,16 @@ namespace fluidDynamics
 		{
 			m_volumetricScattering = scattering;
 			m_volumeRaycastMaterial.SetValue("Values", "scattering", m_volumetricScattering);
+			m_pendingRenderRefresh = true;
 		}
 	}
 	void SphFluid3dGpu::SetRenderVolumetricLight(bool renderVolumetricLight)
 	{
-		m_renderVolumetricLight = renderVolumetricLight;
+		if (m_forceSetters || m_renderVolumetricLight != renderVolumetricLight)
+		{
+			m_renderVolumetricLight = renderVolumetricLight;
+			m_pendingRenderRefresh = true;
+		}
 	}
 	void SphFluid3dGpu::SetVolumetricLightingResolution(const Uint3& volumetricLightingResolution)
 	{
