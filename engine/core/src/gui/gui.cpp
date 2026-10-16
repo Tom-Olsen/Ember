@@ -229,6 +229,20 @@ namespace emberCore
 
 
 	// Custom Widgets:
+	void Gui::TextSelectable(const std::string& label, const std::string& text)
+	{
+		TextUnformatted(label.c_str());
+		SameLine();
+		Float2 cursorPos = GetCursorPos();
+		cursorPos.x = math::Max(cursorPos.x, s_labelPercentile * Editor::GetWindowWidth());
+		SetCursorPos(cursorPos);
+
+		float inputWidth = math::Max(Editor::GetRemainingWidth() - Editor::GetSpacingX(), s_minWidgetWidth);
+		SetNextItemWidth(inputWidth);
+		PushID(label.c_str());
+		s_pIGui->TextSelectable("##value", text.c_str());
+		PopID();
+	}
 	bool Gui::Checkbox(const std::string& label, bool* value)
 	{
 		// Draw label:

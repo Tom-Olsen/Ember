@@ -198,6 +198,10 @@ namespace nullGuiBackend
 	{
 
 	}
+	void Gui::TextSelectable(const char* label, const char* text)
+	{
+
+	}
 	void Gui::SeparatorText(const char* label)
 	{
 

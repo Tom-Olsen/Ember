@@ -96,6 +96,7 @@ namespace emberCore
 		static void Image(const Texture& texture, const Float2& imageSize, const Float2& uv0 = Float2::zero, const Float2& uv1 = Float2::one);
 
 		// Custom Widgets:
+		static void TextSelectable(const std::string& label, const std::string& text);
 		static bool Checkbox(const std::string& label, bool* value);
 		static bool ColorEdit(const std::string& label, Float4* color);
 		static bool InputInt(const std::string& label, int* value, int step = 1, int stepFast = 100, emberCommon::GuiInputTextFlags flags = emberCommon::GuiInputTextFlags::none);

@@ -6,12 +6,13 @@
 #include "iWindow.h"
 #include "imGuiConvertGuiFlags.h"
 #include "imGuiConvertGuiStyle.h"
-#include <stdexcept>
-#include <utility>
 #include <SDL3/SDL.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -381,6 +382,11 @@ namespace imGuiSdlVulkanBackend
 	void Gui::TextUnformatted(const char* text, const char* textEnd)
 	{
 		return ImGui::TextUnformatted(text, textEnd);
+	}
+	void Gui::TextSelectable(const char* label, const char* text)
+	{
+		std::string buffer = text;
+		ImGui::InputText(label, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_ReadOnly);
 	}
 	void Gui::SeparatorText(const char* label)
 	{
