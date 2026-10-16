@@ -1,4 +1,5 @@
 #include "vulkanSampleTextureCube.h"
+#include "emberMath.h"
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
@@ -63,7 +64,7 @@ namespace vulkanRendererBackend
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseArrayLayer = 0;
 		subresourceRange.baseMipLevel = 0;
-		subresourceRange.levelCount = 1;	// mipmapping makes no sense for skyboxes.
+		subresourceRange.levelCount = static_cast<uint32_t>(math::Floor(math::Log2(math::Max(m_width, m_height)))) + 1;
 		subresourceRange.layerCount = 6;
 
 		// Create image:

@@ -1,6 +1,7 @@
 #define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_OUT_OF_PLACE
 #include "computeShaderCommon.hlsli"
 #include "deferredRenderingConstants.h"
+#include "reflectionLighting.hlsli"
 
 
 
@@ -48,11 +49,6 @@ bool TryGetSurfaceData(uint2 pixel, float2 screenSize, out float3 worldPosition,
 	worldNormal = normalize(2.0f * gbufferNormalTexture.Load(int3(pixel, 0)).xyz - 1.0f);
 	roughness = gbufferSurfacePropertiesTexture.Load(int3(pixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
 	return true;
-}
-float3 GetEnvironmentColor(float3 worldDirection)
-{
-	float3 cubeDirection = mul(mathLinAlg_RotateX3x3(-math_PI_2), worldDirection);
-	return environmentMap.SampleLevel(colorSampler, cubeDirection, 0.0f).rgb;
 }
 
 
@@ -153,7 +149,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	// Fade reflections near screen boundaries to hide cut off broken reflections:
 	float3 cameraRayDirection = Camera_GetRayDirection(worldPosition);
 	float3 reflectionDirection = normalize(reflect(cameraRayDirection, worldNormal));
-	float3 reflectionColor = GetEnvironmentColor(reflectionDirection);
+	float3 reflectionColor = Reflection_GetEnvironmentColor(environmentMap, reflectionDirection, roughness);
 	if (totalHitWeight > 1.0e-5f)
 	{
 		float2 hitUv = weightedHitUv / totalHitWeight;
@@ -163,12 +159,11 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		reflectionColor = lerp(reflectionColor, Scene_SampleColor(hitUv).rgb, edgeFade * hitConfidence);
 	}
 
-	// Apply material reflectivity at full resolution so the base image and material edges remain sharp:
+	// Apply the material BRDF at full resolution and add indirect specular lighting:
 	float3 albedo = gbufferAlbedoTexture.Load(int3(sourcePixel, 0)).rgb;
-	float metallicity = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0))[DEFERRED_SURFACE_PROPERTIES_METALLICITY_CHANNEL];
-	float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), saturate(albedo), saturate(metallicity));
+	float4 surfaceProperties = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0));
 	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
-	float3 fresnel = reflectivity + (1.0f - reflectivity) * pow(1.0f - nDotV, 5.0f);
+	float3 specularResponse = Reflection_GetSpecularResponse(albedo, surfaceProperties, nDotV);
 	float reconstructionConfidence = saturate(totalWeight);
-	Scene_SetColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, reconstructionConfidence * fresnel), sourceColor.a));
+	Scene_SetColor(sourcePixel, float4(sourceColor.rgb + reconstructionConfidence * reflectionColor * specularResponse, sourceColor.a));
 }

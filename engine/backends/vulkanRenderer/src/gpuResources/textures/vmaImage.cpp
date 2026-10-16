@@ -9,6 +9,7 @@
 #include "vulkanMemoryAllocator.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanStagingBuffer.h"
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
@@ -197,6 +198,15 @@ namespace vulkanRendererBackend
 	}
 	void VmaImage::GenerateMipmaps(VkCommandBuffer commandBuffer, uint32_t mipLevels)
 	{
+		if (mipLevels > 1)
+		{
+			VkFormatProperties formatProperties;
+			vkGetPhysicalDeviceFormatProperties(Context::GetVkPhysicalDevice(), m_imageInfo.format, &formatProperties);
+			VkFormatFeatureFlags requiredFeatures = VK_FORMAT_FEATURE_BLIT_SRC_BIT | VK_FORMAT_FEATURE_BLIT_DST_BIT | VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
+			if ((formatProperties.optimalTilingFeatures & requiredFeatures) != requiredFeatures)
+				throw std::runtime_error("VmaImage::GenerateMipmaps(...) failed. Image format does not support linear mipmap blits.");
+		}
+
         // Memory barrier to ensure transfer queue is done with image upload before mipmapping:
         {
             VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
@@ -280,7 +290,7 @@ namespace vulkanRendererBackend
 			{
 				VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 				barrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-				barrier.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+				barrier.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 				barrier.srcAccessMask = AccessMasks::Transfer::transferRead;
 				barrier.dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -311,7 +321,7 @@ namespace vulkanRendererBackend
 		{
 			VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 			barrier.srcStageMask = VK_PIPELINE_STAGE_2_TRANSFER_BIT;
-			barrier.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT;
+			barrier.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT;
 			barrier.srcAccessMask = AccessMasks::Transfer::transferWrite;
 			barrier.dstAccessMask = AccessMasks::FragmentShader::shaderRead;
 			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;

@@ -1,6 +1,7 @@
 #define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_IN_PLACE
 #include "computeShaderCommon.hlsli"
 #include "deferredRenderingConstants.h"
+#include "reflectionLighting.hlsli"
 
 
 
@@ -140,12 +141,11 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float3 reflectionColor = weightedReflection / totalWeight;
 	float reconstructionConfidence = saturate(totalWeight);
 
-	// Apply material reflectivity at full resolution so the base image and material edges remain sharp:
+	// Apply the material BRDF at full resolution and add indirect specular lighting:
 	float3 albedo = gbufferAlbedoTexture.Load(int3(sourcePixel, 0)).rgb;
-	float metallicity = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0))[DEFERRED_SURFACE_PROPERTIES_METALLICITY_CHANNEL];
-	float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), saturate(albedo), saturate(metallicity));
+	float4 surfaceProperties = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0));
 	float3 cameraRayDirection = Camera_GetRayDirection(worldPosition);
 	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
-	float3 fresnel = reflectivity + (1.0f - reflectivity) * pow(1.0f - nDotV, 5.0f);
-	Scene_SetColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, reconstructionConfidence * fresnel), sourceColor.a));
+	float3 specularResponse = Reflection_GetSpecularResponse(albedo, surfaceProperties, nDotV);
+	Scene_SetColor(sourcePixel, float4(sourceColor.rgb + reconstructionConfidence * reflectionColor * specularResponse, sourceColor.a));
 }

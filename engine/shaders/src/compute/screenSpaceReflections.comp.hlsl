@@ -1,21 +1,13 @@
 #define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_OUT_OF_PLACE
 #include "computeShaderCommon.hlsli"
 #include "deferredRenderingConstants.h"
+#include "reflectionLighting.hlsli"
 #include "screenSpaceReflectionUtility.hlsli"
 
 
 
 // Bindings:
 TextureCube<float4> environmentMap : register(t100, CALL_SET);
-
-
-
-// Helpers:
-float3 GetEnvironmentColor(float3 worldDirection)
-{
-	float3 cubeDirection = mul(mathLinAlg_RotateX3x3(-math_PI_2), worldDirection);
-	return environmentMap.SampleLevel(colorSampler, cubeDirection, 0.0f).rgb;
-}
 
 
 
@@ -58,7 +50,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	bool hasHit = ScreenSpaceRayMarch(sourcePixel, worldRay, screenSize, hitPixel, hitUv);
 
 	// Reflect skybox when ray hit misses:
-	float3 reflectionColor = GetEnvironmentColor(reflectionDirection);
+	float4 surfaceProperties = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0));
+	float roughness = surfaceProperties[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
+	float3 reflectionColor = Reflection_GetEnvironmentColor(environmentMap, reflectionDirection, roughness);
 
 	// Fade reflections near screen boundaries to hide cut off broken reflections:
 	if (hasHit)
@@ -68,12 +62,9 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		reflectionColor = lerp(reflectionColor, Scene_GetColor(hitPixel).rgb, edgeFade);
 	}
 
-	// Physically based reflections:
+	// Add indirect specular lighting. The direct lighting already includes its material BRDF:
 	float3 albedo = gbufferAlbedoTexture.Load(int3(sourcePixel, 0)).rgb;
-	float4 surfaceProperties = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0));
-	float metallicity = surfaceProperties[DEFERRED_SURFACE_PROPERTIES_METALLICITY_CHANNEL];
-	float3 reflectivity = lerp(float3(0.04f, 0.04f, 0.04f), saturate(albedo), saturate(metallicity));
 	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
-	float3 fresnel = reflectivity + (1.0f - reflectivity) * pow(1.0f - nDotV, 5.0f);
-	Scene_SetColor(sourcePixel, float4(lerp(sourceColor.rgb, reflectionColor, fresnel), sourceColor.a));
+	float3 specularResponse = Reflection_GetSpecularResponse(albedo, surfaceProperties, nDotV);
+	Scene_SetColor(sourcePixel, float4(sourceColor.rgb + reflectionColor * specularResponse, sourceColor.a));
 }
