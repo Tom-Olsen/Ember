@@ -15,8 +15,12 @@ namespace emberEditor
 		// Easy access to emberEngine Gui:
 		using Gui = emberCore::Gui;
 
+	private:
+		Float3 m_position;
+		Float3 m_rotation;
+		Float3 m_scale;
 
-
+	public:
 		InspectorEditorWindow()
 		{
 			m_name = "Inspector";
@@ -31,13 +35,35 @@ namespace emberEditor
 			if (emberEditor::EditorSelection::HasSelectedEntity())
 			{
 				emberEcs::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
+				GetData(entity);
 				Gui::TextSelectable("Name", entity.GetName());
-				Gui::TextSelectable("Position", entity.GetTransform()->GetPosition().ToString("%.4f"));
-				Gui::TextSelectable("Rotation", entity.GetTransform()->GetRotation().ToString("%.4f"));
-				Gui::TextSelectable("Scale", entity.GetTransform()->GetScale().ToString("%.4f"));
+				Gui::InputFloat3("Position:", &m_position, 0, 0, "%.4f");
+				Gui::DragFloat3("Rotation:", &m_rotation, 0, 0, "%.4f");
+				Gui::DragFloat3("Scale:", &m_scale, 0, 0, "%.4f");
+				SetData(entity);
 			}
 			else
 				Gui::TextUnformatted("No selection");
+		}
+
+	private:
+		void GetData(emberEcs::Entity entity)
+		{
+			if (entity.GetIsValid())
+			{
+				m_position = entity.GetTransform()->GetPosition();
+				m_rotation = entity.GetTransform()->GetRotation().GetValue();
+				m_scale= entity.GetTransform()->GetScale();
+			}
+		}
+		void SetData(emberEcs::Entity entity)
+		{
+			if (entity.GetIsValid())
+			{
+				entity.GetTransform()->SetPosition(m_position);
+				entity.GetTransform()->SetRotationEuler(EulerDegrees(m_rotation));
+				entity.GetTransform()->SetScale(m_scale);
+			}
 		}
 	};
 }
