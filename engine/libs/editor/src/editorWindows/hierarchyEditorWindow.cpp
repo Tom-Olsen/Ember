@@ -4,6 +4,7 @@
 #include "entity.h"
 #include "gui.h"
 #include "scene.h"
+#include <algorithm>
 
 
 
@@ -40,6 +41,7 @@ namespace emberEditor
 			return;
 
 		std::vector<std::string> entityNames = m_pScene->GetEntityNames();
+		std::sort(entityNames.begin(), entityNames.end());
 		for (const std::string& name : entityNames)
 		{
 			bool isSelected = emberEditor::EditorSelection::HasSelectedEntity()
