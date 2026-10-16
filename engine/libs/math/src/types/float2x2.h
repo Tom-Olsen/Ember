@@ -98,8 +98,8 @@ namespace emberMath
 		friend Float2 operator*(const Float2& a, const Float2x2& b);
 
 		// Logging:
-		std::string ToString() const;
-		std::string ToStringMatrixForm() const;
+		std::string ToString(const char* format = "%g") const;
+		std::string ToStringMatrixForm(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Float2x2& value);
 
 		// Static members:

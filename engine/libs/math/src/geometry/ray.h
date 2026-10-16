@@ -21,7 +21,7 @@ namespace emberMath
 		Float3 GetPoint(float distance) const;
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Ray& ray);
 	};
 }

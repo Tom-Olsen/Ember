@@ -1,12 +1,14 @@
 #include "float2x3.h"
 #include "float2.h"
-#include "float3.h"
 #include "float2x2.h"
+#include "float3.h"
 #include "float3x2.h"
 #include "float3x3.h"
 #include "mathFunctions.h"
 #include <cassert>
-#include <sstream>
+#include <cstdio>
+#include <ostream>
+#include <stdexcept>
 
 
 
@@ -307,21 +309,28 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Float2x3::ToString() const
+	std::string Float2x3::ToString(const char* format) const
 	{
-		std::ostringstream oss;
-		oss <<   "(" << data[0] << ", " << data[1];
-		oss << " | " << data[2] << ", " << data[3];
-		oss << " | " << data[4] << ", " << data[5] << ")";
-		return oss.str();
+		std::string matrixFormat = "(";
+		for (int i = 0; i < 6; ++i)
+		{
+			if (i > 0)
+				matrixFormat += i % 2 == 0 ? " | " : ", ";
+			matrixFormat += format;
+		}
+		matrixFormat += ")";
+
+		int length = std::snprintf(nullptr, 0, matrixFormat.c_str(), data[0], data[1], data[2], data[3], data[4], data[5]);
+		if (length < 0)
+			throw std::runtime_error("Float2x3::ToString(...) failed to format the matrix.");
+
+		std::string text(length, '\0');
+		std::snprintf(text.data(), text.size() + 1, matrixFormat.c_str(), data[0], data[1], data[2], data[3], data[4], data[5]);
+		return text;
 	}
-	std::string Float2x3::ToStringMatrixForm() const
+	std::string Float2x3::ToStringMatrixForm(const char* format) const
 	{
-		std::ostringstream oss;
-		oss << "\n";
-		oss << "(" << data[0] << ", " << data[2] << ", " << data[4] << ")\n";
-		oss << "(" << data[1] << ", " << data[3] << ", " << data[5] << ")";
-		return oss.str();
+		return "\n" + GetRow(0).ToString(format) + "\n" + GetRow(1).ToString(format);
 	}
 	std::ostream& operator<<(std::ostream& os, const Float2x3& value)
 	{

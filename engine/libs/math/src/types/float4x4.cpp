@@ -1,13 +1,15 @@
 #include "float4x4.h"
 #include "float3.h"
-#include "float4.h"
 #include "float3x3.h"
+#include "float4.h"
 #include "geometry3d.h"
 #include "mathFunctions.h"
 #include "uint3.h"
 #include <cassert>
+#include <cstdio>
 #include <optional>
-#include <sstream>
+#include <ostream>
+#include <stdexcept>
 
 
 
@@ -645,24 +647,36 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Float4x4::ToString() const
+	std::string Float4x4::ToString(const char* format) const
 	{
-		std::ostringstream oss;
-		oss <<   "(" << data[ 0] << ", " << data[ 1] << ", " << data[ 2] << ", " << data[ 3];
-		oss << " | " << data[ 4] << ", " << data[ 5] << ", " << data[ 6] << ", " << data[ 7];
-		oss << " | " << data[ 8] << ", " << data[ 9] << ", " << data[10] << ", " << data[11];
-		oss << " | " << data[12] << ", " << data[13] << ", " << data[14] << ", " << data[15] << ")";
-		return oss.str();
+		std::string matrixFormat = "(";
+		for (int i = 0; i < 16; ++i)
+		{
+			if (i > 0)
+				matrixFormat += i % 4 == 0 ? " | " : ", ";
+			matrixFormat += format;
+		}
+		matrixFormat += ")";
+
+		int length = std::snprintf(nullptr, 0, matrixFormat.c_str(),
+			data[0], data[1], data[2], data[3],
+			data[4], data[5], data[6], data[7],
+			data[8], data[9], data[10], data[11],
+			data[12], data[13], data[14], data[15]);
+		if (length < 0)
+			throw std::runtime_error("Float4x4::ToString(...) failed to format the matrix.");
+
+		std::string text(length, '\0');
+		std::snprintf(text.data(), text.size() + 1, matrixFormat.c_str(),
+			data[0], data[1], data[2], data[3],
+			data[4], data[5], data[6], data[7],
+			data[8], data[9], data[10], data[11],
+			data[12], data[13], data[14], data[15]);
+		return text;
 	}
-	std::string Float4x4::ToStringMatrixForm() const
+	std::string Float4x4::ToStringMatrixForm(const char* format) const
 	{
-		std::ostringstream oss;
-		oss << "\n";
-		oss << "(" << data[0] << ", " << data[4] << ", " << data[ 8] << ", " << data[12] << ")\n";
-		oss << "(" << data[1] << ", " << data[5] << ", " << data[ 9] << ", " << data[13] << ")\n";
-		oss << "(" << data[2] << ", " << data[6] << ", " << data[10] << ", " << data[14] << ")\n";
-		oss << "(" << data[3] << ", " << data[7] << ", " << data[11] << ", " << data[15] << ")";
-		return oss.str();
+		return "\n" + GetRow(0).ToString(format) + "\n" + GetRow(1).ToString(format) + "\n" + GetRow(2).ToString(format) + "\n" + GetRow(3).ToString(format);
 	}
 	std::ostream& operator<<(std::ostream& os, const Float4x4& value)
 	{

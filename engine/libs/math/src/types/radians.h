@@ -56,7 +56,7 @@ namespace emberMath
 		friend Radians operator*(float scalar, const Radians& radians);
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Radians& radians);
 	};
 }

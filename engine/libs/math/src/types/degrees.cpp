@@ -3,7 +3,9 @@
 #include "mathFunctions.h"
 #include "radians.h"
 #include <cassert>
-#include <sstream>
+#include <cstdio>
+#include <ostream>
+#include <stdexcept>
 
 
 
@@ -122,11 +124,16 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Degrees::ToString() const
+	std::string Degrees::ToString(const char* format) const
 	{
-		std::ostringstream oss;
-		oss << value << " deg";
-		return oss.str();
+		std::string angleFormat = std::string(format) + " deg";
+		int length = std::snprintf(nullptr, 0, angleFormat.c_str(), value);
+		if (length < 0)
+			throw std::runtime_error("Degrees::ToString(...) failed to format the angle.");
+
+		std::string text(length, '\0');
+		std::snprintf(text.data(), text.size() + 1, angleFormat.c_str(), value);
+		return text;
 	}
 	std::ostream& operator<<(std::ostream& os, const Degrees& degrees)
 	{

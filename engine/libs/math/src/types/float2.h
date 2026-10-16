@@ -95,7 +95,7 @@ namespace emberMath
 		friend Float2 operator/(const Float2& a, float b);
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Float2& value);
 
 		// Static members:

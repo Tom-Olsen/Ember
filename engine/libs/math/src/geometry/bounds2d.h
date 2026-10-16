@@ -44,7 +44,7 @@ namespace emberMath
 		void Expand(const Float2& amount);
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Bounds2d& bounds);
 	};
 }

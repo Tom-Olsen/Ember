@@ -2,7 +2,7 @@
 #include "eulerDegrees.h"
 #include "mathConstants.h"
 #include <cassert>
-#include <sstream>
+#include <ostream>
 
 
 
@@ -99,11 +99,9 @@ namespace emberMath
 
 
 	// Logging:
-	std::string EulerRadians::ToString() const
+	std::string EulerRadians::ToString(const char* format) const
 	{
-		std::ostringstream oss;
-		oss << value << " rad";
-		return oss.str();
+		return value.ToString(format) + " rad";
 	}
 	std::ostream& operator<<(std::ostream& os, const EulerRadians& eulerRadians)
 	{

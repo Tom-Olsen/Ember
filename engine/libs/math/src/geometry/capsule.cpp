@@ -1,7 +1,9 @@
 #include "capsule.h"
 #include "mathFunctions.h"
 #include <cassert>
-#include <sstream>
+#include <cstdio>
+#include <ostream>
+#include <stdexcept>
 
 
 
@@ -171,9 +173,15 @@ namespace emberMath
 
     
 	// Logging:
-	std::string Capsule::ToString() const
+	std::string Capsule::ToString(const char* format) const
 	{
-		return "Capsule(point0: " + point0.ToString() + ", point1: " + point1.ToString() + ", radius: " + std::to_string(radius) + ")";
+		int length = std::snprintf(nullptr, 0, format, radius);
+		if (length < 0)
+			throw std::runtime_error("Capsule::ToString(...) failed to format the radius.");
+
+		std::string radiusText(length, '\0');
+		std::snprintf(radiusText.data(), radiusText.size() + 1, format, radius);
+		return "Capsule(point0: " + point0.ToString(format) + ", point1: " + point1.ToString(format) + ", radius: " + radiusText + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Capsule& capsule)
 	{

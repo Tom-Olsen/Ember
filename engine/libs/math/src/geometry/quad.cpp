@@ -1,7 +1,7 @@
 #include "quad.h"
 #include "mathFunctions.h"
 #include "plane.h"
-#include <sstream>
+#include <ostream>
 
 
 
@@ -79,9 +79,9 @@ namespace emberMath
 
     
 	// Logging:
-	std::string Quad::ToString() const
+	std::string Quad::ToString(const char* format) const
 	{
-		return "Quad(origin: " + origin.ToString() + ", uAxis: " + uAxis.ToString() + ", vAxis: " + vAxis.ToString() + ")";
+		return "Quad(origin: " + origin.ToString(format) + ", uAxis: " + uAxis.ToString(format) + ", vAxis: " + vAxis.ToString(format) + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Quad& quad)
 	{

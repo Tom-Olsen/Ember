@@ -1,7 +1,7 @@
 #include "bounds2d.h"
 #include "mathFunctions.h"
 #include <cassert>
-#include <sstream>
+#include <ostream>
 
 
 
@@ -151,9 +151,9 @@ namespace emberMath
 	}
 
 	// Logging:
-	std::string Bounds2d::ToString() const
+	std::string Bounds2d::ToString(const char* format) const
 	{
-		return "Bounds2d(center: " + center.ToString() + ", extents: " + extents.ToString() + ")";
+		return "Bounds2d(center: " + center.ToString(format) + ", extents: " + extents.ToString(format) + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Bounds2d& bounds)
 	{

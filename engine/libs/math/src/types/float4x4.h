@@ -143,8 +143,8 @@ namespace emberMath
 		friend Float4 operator*(const Float4& a, const Float4x4& b);
 
 		// Logging:
-		std::string ToString() const;
-		std::string ToStringMatrixForm() const;
+		std::string ToString(const char* format = "%g") const;
+		std::string ToStringMatrixForm(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Float4x4& value);
 
 		// Static members:

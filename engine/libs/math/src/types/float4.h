@@ -89,7 +89,7 @@ namespace emberMath
 		friend Float4 operator/(float a, const Float4& b);
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Float4& value);
 
 		// Static members:

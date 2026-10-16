@@ -1,7 +1,7 @@
 #include "ray.h"
 #include "mathFunctions.h"
 #include <cassert>
-#include <sstream>
+#include <ostream>
 
 
 
@@ -26,11 +26,9 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Ray::ToString() const
+	std::string Ray::ToString(const char* format) const
 	{
-		std::ostringstream oss;
-		oss << "origin: " << origin.ToString() << ", direction: " << direction.ToString();
-		return oss.str();
+		return "origin: " + origin.ToString(format) + ", direction: " + direction.ToString(format);
 	}
 	std::ostream& operator<<(std::ostream& os, const Ray& ray)
 	{

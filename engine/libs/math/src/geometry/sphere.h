@@ -30,7 +30,7 @@ namespace emberMath
 		bool operator!=(const Sphere& other) const;
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Sphere& sphere);
 	};
 }

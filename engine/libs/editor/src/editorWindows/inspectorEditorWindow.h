@@ -32,9 +32,9 @@ namespace emberEditor
 			{
 				emberEcs::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
 				Gui::TextSelectable("Name", entity.GetName());
-				Gui::TextSelectable("Position", entity.GetTransform()->GetPosition().ToString());
-				Gui::TextSelectable("Rotation", entity.GetTransform()->GetRotation().ToString());
-				Gui::TextSelectable("Scale", entity.GetTransform()->GetScale().ToString());
+				Gui::TextSelectable("Position", entity.GetTransform()->GetPosition().ToString("%.4f"));
+				Gui::TextSelectable("Rotation", entity.GetTransform()->GetRotation().ToString("%.4f"));
+				Gui::TextSelectable("Scale", entity.GetTransform()->GetScale().ToString("%.4f"));
 			}
 			else
 				Gui::TextUnformatted("No selection");

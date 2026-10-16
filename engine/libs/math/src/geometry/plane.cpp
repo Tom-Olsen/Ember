@@ -1,6 +1,6 @@
 #include "plane.h"
 #include "mathFunctions.h"
-#include <sstream>
+#include <ostream>
 
 
 
@@ -48,9 +48,9 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Plane::ToString() const
+	std::string Plane::ToString(const char* format) const
 	{
-		return "Plane(support: " + support.ToString() + ", normal: " + normal.ToString() + ")";
+		return "Plane(support: " + support.ToString(format) + ", normal: " + normal.ToString(format) + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Plane& plane)
 	{

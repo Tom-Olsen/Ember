@@ -3,7 +3,9 @@
 #include "mathConstants.h"
 #include "mathFunctions.h"
 #include <cassert>
-#include <sstream>
+#include <cstdio>
+#include <ostream>
+#include <stdexcept>
 
 
 
@@ -122,11 +124,16 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Radians::ToString() const
+	std::string Radians::ToString(const char* format) const
 	{
-		std::ostringstream oss;
-		oss << value << " rad";
-		return oss.str();
+		std::string angleFormat = std::string(format) + " rad";
+		int length = std::snprintf(nullptr, 0, angleFormat.c_str(), value);
+		if (length < 0)
+			throw std::runtime_error("Radians::ToString(...) failed to format the angle.");
+
+		std::string text(length, '\0');
+		std::snprintf(text.data(), text.size() + 1, angleFormat.c_str(), value);
+		return text;
 	}
 	std::ostream& operator<<(std::ostream& os, const Radians& radians)
 	{

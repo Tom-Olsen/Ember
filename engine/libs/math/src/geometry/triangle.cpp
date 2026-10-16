@@ -1,6 +1,6 @@
 #include "triangle.h"
 #include "mathFunctions.h"
-#include <sstream>
+#include <ostream>
 
 
 
@@ -134,9 +134,9 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Triangle::ToString() const
+	std::string Triangle::ToString(const char* format) const
 	{
-		return "Triangle(a: " + a.ToString() + ", b: " + b.ToString() + ", c: " + c.ToString() + ")";
+		return "Triangle(a: " + a.ToString(format) + ", b: " + b.ToString(format) + ", c: " + c.ToString(format) + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Triangle& triangle)
 	{

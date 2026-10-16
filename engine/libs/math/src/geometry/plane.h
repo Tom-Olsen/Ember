@@ -28,7 +28,7 @@ namespace emberMath
 		bool operator!=(const Plane& other) const;
 
 		// Logging:
-		std::string ToString() const;
+		std::string ToString(const char* format = "%g") const;
 		friend std::ostream& operator<<(std::ostream& os, const Plane& plane);
 	};
 }

@@ -1,6 +1,8 @@
 #include "sphere.h"
 #include "mathFunctions.h"
-#include <sstream>
+#include <cstdio>
+#include <ostream>
+#include <stdexcept>
 
 
 
@@ -69,9 +71,15 @@ namespace emberMath
 
 
 	// Logging:
-	std::string Sphere::ToString() const
+	std::string Sphere::ToString(const char* format) const
 	{
-		return "Sphere(center: " + center.ToString() + ", radius: " + std::to_string(radius) + ")";
+		int length = std::snprintf(nullptr, 0, format, radius);
+		if (length < 0)
+			throw std::runtime_error("Sphere::ToString(...) failed to format the radius.");
+
+		std::string radiusText(length, '\0');
+		std::snprintf(radiusText.data(), radiusText.size() + 1, format, radius);
+		return "Sphere(center: " + center.ToString(format) + ", radius: " + radiusText + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Sphere& sphere)
 	{

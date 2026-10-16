@@ -2,7 +2,7 @@
 #include "mathConstants.h"
 #include "mathFunctions.h"
 #include <cassert>
-#include <sstream>
+#include <ostream>
 
 
 
@@ -256,9 +256,9 @@ namespace emberMath
 
     
 	// Logging:
-	std::string Bounds::ToString() const
+	std::string Bounds::ToString(const char* format) const
 	{
-		return "Bounds(center: " + center.ToString() + ", extent: " + extent.ToString() + ")";
+		return "Bounds(center: " + center.ToString(format) + ", extent: " + extent.ToString(format) + ")";
 	}
 	std::ostream& operator<<(std::ostream& os, const Bounds& bounds)
 	{
