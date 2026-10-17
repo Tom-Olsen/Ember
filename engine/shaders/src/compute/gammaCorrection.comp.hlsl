@@ -3,6 +3,21 @@
 
 
 
+float3 ToneMapReinhard(float3 linearColor)
+{
+    // Compress each HDR channel into display range without clipping highlights at 1.
+    float3 nonNegativeColor = max(linearColor, 0.0f);
+    return nonNegativeColor / (1.0f + nonNegativeColor);
+}
+float3 ToneMapAcesFitted(float3 linearColor)
+{
+    // Narkowicz's fitted ACES filmic curve, applied in linear RGB before sRGB conversion.
+    // https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+    float3 nonNegativeColor = max(linearColor, 0.0f);
+    float3 numerator = nonNegativeColor * (2.51f * nonNegativeColor + 0.03f);
+    float3 denominator = nonNegativeColor * (2.43f * nonNegativeColor + 0.59f) + 0.14f;
+    return saturate(numerator / denominator);
+}
 float3 LinearToSRGB(float3 linearColor)
 {
     float3 sRGBLo = 12.92f * linearColor;
@@ -24,7 +39,8 @@ void main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x < pc.threadCount.x && threadID.y < pc.threadCount.y)
     {
         float4 color = Scene_GetColor(threadID.xy);
-        float3 correctedRGB = LinearToSRGB(clamp(color.rgb, 0, 1));
+        float3 correctedRGB = LinearToSRGB(ToneMapAcesFitted(color.rgb));
+        //float3 correctedRGB = LinearToSRGB(ToneMapReinhard(color.rgb));
         Scene_SetColor(threadID.xy, float4(correctedRGB, color.a));
     }
 }

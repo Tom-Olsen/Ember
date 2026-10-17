@@ -846,7 +846,7 @@ namespace vulkanRendererBackend
 			pCompositeCallDescriptorSetBinding->SetTexture("outlineMask", pExpandedMask);
 		}
 
-		// Renderer uses linear color space, apply gamma correction is always the final post-render operation:
+		// Renderer uses linear color space, tone mapping + gamma correction is always the final post-render operation:
 		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::Get().GetGammaCorrectionComputeShader(), Uint3::zero) == nullptr)
 			throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the gamma correction compute shader.");
 	}
