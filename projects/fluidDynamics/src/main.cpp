@@ -126,7 +126,7 @@ Scene* Fluid3dScene()
 	{ // Floor:
 		Entity entity = Entity::Create("Floor");
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(Float3(0.0f, 0.0f, -10.0f));
+		pTransform->SetPosition(Float3(0.0f, 0.0f, -9.9f));
 		pTransform->SetScale(60.0f);
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
@@ -149,7 +149,7 @@ Scene* Fluid3dScene()
 	{// Susanne:
 		Entity entity = Entity::Create("Susanne");
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(Float3(-20.0f, 0.0f, -5.0f));
+		pTransform->SetPosition(Float3(-20.2f, 0.0f, -5.0f));
 		pTransform->SetScale(4.0f);
 		pTransform->SetRotationEuler(EulerDegrees(0.0f, 0.0f, 30.0f));
 

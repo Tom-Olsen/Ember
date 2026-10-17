@@ -68,7 +68,7 @@ namespace fluidDynamics
 			SetVolumetricDensityRayStepLength(0.4f);
             SetVolumetricDensityAbsorption(0.0001f);
 			SetVolumetricScattering(Float3(0.02f, 0.035f, 0.06f));
-			SetVolumetricLightMultiplier(6.0f);
+			SetVolumetricLightMultiplier(4.0f);
 			SetRenderVolumetricLight(true);
 			SetVolumetricLightingResolution(Uint3(120));
 			// Water:
