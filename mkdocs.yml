@@ -15,6 +15,8 @@ theme:
 markdown_extensions:
   - admonition
   - attr_list
+  - pymdownx.arithmatex:
+      generic: true
   - pymdownx.details
   - pymdownx.superfences:
       custom_fences:
@@ -22,8 +24,17 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
 
+extra_css:
+  - stylesheets/ssr-comparison.css
+
+extra_javascript:
+  - javascripts/ssr-comparison.js
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
 nav:
   - Overview: index.md
+  - Preview: preview/index.md
   - Vulkan Renderer:
       - Overview: vulkan-renderer/index.md
       - Frame Lifecycle and Render Graph: vulkan-renderer/frame-lifecycle.md
