@@ -43,6 +43,7 @@ namespace emberEditor
 		float m_attractorRadius;
 		float m_attractorStrength;
 		// Visuals:
+		bool m_enableFluidHandle = true;
 		fluidDynamics::SphFluid3dGpu::RenderMode m_renderMode;
 		// Particles:
 		int m_colorMode;
@@ -81,7 +82,7 @@ namespace emberEditor
 		}
 		void PreRender() override
 		{
-			if (m_pScript->GetIsBenchmarking())
+			if (m_pScript->GetIsBenchmarking() || !m_enableFluidHandle)
 				return;
 			m_transformHandle.ConsumeModeHotkeys();
 			m_transformHandle.Update();
@@ -110,23 +111,30 @@ namespace emberEditor
 			// Fluid:
 			Gui::SeparatorText("Fluid");
 			Gui::DragInt("Particle Count:", &m_particleCount);
-			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Mass:", &m_mass, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f, "%.8f");
-			Gui::DragFloat("Near Pressure Ratio:", &m_nearPressureRatio, 0.01f, 0.0f, "%.8f");
-			Gui::DragFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f);
+			Gui::DragFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f);
+			Gui::DragFloat("Mass:", &m_mass, 0.1f, 1.0f);
+			Gui::DragFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f);
+			Gui::DragFloat("Surface Tension:", &m_surfaceTension, 0.1f, 1.0f);
+			Gui::DragFloat("Collision Dampening:", &m_collisionDampening, 0.1f, 1.0f);
+			Gui::DragFloat("Target Density:", &m_targetDensity, 0.1f, 1.0f);
+			Gui::DragFloat("Pressure Multiplier:", &m_pressureMultiplier, 0.1f, 1.0f);
+			Gui::DragFloat("Near Pressure Ratio:", &m_nearPressureRatio, 0.01f, 0.0f);
+			Gui::DragFloat("Max Velocity:", &m_maxVelocity,0.1f, 1.0f);
 			// Forces:
 			Gui::SeparatorText("Forces");
-			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f,"%.8f");
-			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f,"%.8f");
-			Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f,"%.8f");
+			Gui::DragFloat("Gravity:", &m_gravity,0.1f, 1.0f);
+			Gui::DragFloat("Attractor Radius:", &m_attractorRadius,0.1f, 1.0f);
+			Gui::DragFloat("Attractor Strength:", &m_attractorStrength,0.1f, 1.0f);
 			// Visuals:
 			Gui::SeparatorText("Particle Visuals");
+			if (Gui::Checkbox("Enable Fluid Handle:", &m_enableFluidHandle))
+			{
+				if (m_enableFluidHandle)
+					m_transformHandle.SetTarget(&m_boundsHandleTarget);
+				else
+					m_transformHandle.ClearTarget();
+			}
 			if (emberCore::Gui::Selectable("0 - Particles", m_renderMode == fluidDynamics::SphFluid3dGpu::RenderMode::particles))
 				m_renderMode = fluidDynamics::SphFluid3dGpu::RenderMode::particles;
 			if (emberCore::Gui::Selectable("1 - Cloud", m_renderMode == fluidDynamics::SphFluid3dGpu::RenderMode::cloud))
@@ -139,16 +147,16 @@ namespace emberEditor
 				case fluidDynamics::SphFluid3dGpu::RenderMode::particles:
 				{
 					Gui::DragInt("Color Mode:", &m_colorMode);
-					Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f, "%.8f");
+					Gui::DragFloat("Visual Radius:", &m_visualRadius, 0.1f, 1.0f);
 					break;
 				}
 				case fluidDynamics::SphFluid3dGpu::RenderMode::cloud:
 				{
 					Gui::DragUint3("Density Resolution:", &m_volumetricDensityResolution);
 					m_volumetricDensityResolution = Uint3::Max(Uint3::one, m_volumetricDensityResolution);
-					Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f, "%.8f");
-					Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f, "%.8f");
-					Gui::DragFloat3("Scattering:", &m_volumetricScattering, 0.01f, 0.1f, "%.8f");
+					Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f);
+					Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f);
+					Gui::DragFloat3("Scattering:", &m_volumetricScattering, 0.01f, 0.1f);
 					Gui::SeparatorText("Lighting");
 					Gui::Checkbox("Render Volumetric Light:", &m_renderVolumetricLight);
 					if (m_renderVolumetricLight)
@@ -160,12 +168,12 @@ namespace emberEditor
 				}
 				case fluidDynamics::SphFluid3dGpu::RenderMode::water:
 				{
-					Gui::DragFloat("Surface Density:", &m_waterSurfaceDensity, 0.1f, 1.0f, "%.8f");
-					Gui::DragFloat("Index Of Refraction:", &m_waterIndexOfRefraction, 0.01f, 0.1f, "%.8f");
-					Gui::DragFloat3("Absorption:", &m_waterAbsorption, 0.0001f, 0.001f, "%.8f");
+					Gui::DragFloat("Surface Density:", &m_waterSurfaceDensity, 0.1f, 1.0f);
+					Gui::DragFloat("Index Of Refraction:", &m_waterIndexOfRefraction, 0.01f, 0.1f);
+					Gui::DragFloat3("Absorption:", &m_waterAbsorption);
 					Gui::DragUint("Step Count:", &m_waterStepCount);
 					Gui::DragUint("Refinement Step Count:", &m_waterRefinementStepCount);
-					Gui::DragFloat("Step Length:", &m_waterStepLength, 0.01f, 0.1f, "%.8f");
+					Gui::DragFloat("Step Length:", &m_waterStepLength, 0.01f, 0.1f);
 					Gui::DragUint("Surface Interactions:", &m_waterSurfaceInteractions);
 					break;
 				}
