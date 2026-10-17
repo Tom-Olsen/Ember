@@ -13,6 +13,7 @@ cbuffer Values : register(b300, SHADER_SET)
     float rayStepLengthSimulation;
     float4x4 fluidToLightMatrix;
     int renderVolumetricLight;
+    float volumetricLightMultiplier;
 };
 
 
@@ -78,7 +79,7 @@ float4 main(FragmentInput input) : SV_TARGET
 
     // Ray casting:
     float3 incidentLightIntensity = light_dirCount <= 0 ? 0.0f
-        : light_directionData[0].colorIntensity.xyz * light_directionData[0].colorIntensity.w;
+        : light_directionData[0].colorIntensity.xyz * light_directionData[0].colorIntensity.w * volumetricLightMultiplier;
     float3 extinction = absorption + scattering;
     float3 transmittance = 1.0f;
     float3 scatteredLight = 0.0f;
@@ -100,8 +101,9 @@ float4 main(FragmentInput input) : SV_TARGET
         }
 
         // Analytic integration over a constant-density step of the radiative transfer equation:
+		const float phase = 1.0f / (4.0f * math_PI);
         float3 stepTransmittance = exp(-density * extinction * stepLengthSimulation);
-        float3 inScatteredLight = lightIntensity * scattering / extinction * (1.0f - stepTransmittance);
+        float3 inScatteredLight = lightIntensity * phase * scattering / extinction * (1.0f - stepTransmittance);
         scatteredLight += transmittance * inScatteredLight;
         transmittance *= stepTransmittance;
         if (all(transmittance < 0.01f))

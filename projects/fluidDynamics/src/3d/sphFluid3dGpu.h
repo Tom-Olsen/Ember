@@ -79,6 +79,7 @@ namespace fluidDynamics
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
 		Float3 m_volumetricScattering;
+		float m_volumetricLightMultiplier;
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
 		// Water:
@@ -151,6 +152,7 @@ namespace fluidDynamics
 		void SetVolumetricDensityRayStepLength(float volumetricDensityRayStepLength);
 		void SetVolumetricDensityAbsorption(float volumetricDensityAbsorption);
 		void SetVolumetricScattering(const Float3& volumetricScattering);
+		void SetVolumetricLightMultiplier(float volumetricLightMultiplier);
 		void SetRenderVolumetricLight(bool renderVolumetricLight);
 		void SetVolumetricLightingResolution(const Uint3& volumetricLightingResolution);
 		// Water:
@@ -205,6 +207,7 @@ namespace fluidDynamics
 		float GetVolumetricDensityRayStepLength() const;
 		float GetVolumetricDensityAbsorption() const;
 		Float3 GetVolumetricScattering() const;
+		float GetVolumetricLightMultiplier() const;
 		bool GetRenderVolumetricLight() const;
 		Uint3 GetVolumetricLightingResolution() const;
 		// Water:

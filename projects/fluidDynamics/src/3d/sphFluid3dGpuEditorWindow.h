@@ -53,6 +53,7 @@ namespace emberEditor
 		float m_volumetricDensityRayStepLength;
 		float m_volumetricDensityAbsorption;
 		Float3 m_volumetricScattering;
+		float m_volumetricLightMultiplier;
 		bool m_renderVolumetricLight;
 		Uint3 m_volumetricLightingResolution;
 		// Water:
@@ -156,8 +157,9 @@ namespace emberEditor
 					m_volumetricDensityResolution = Uint3::Max(Uint3::one, m_volumetricDensityResolution);
 					Gui::DragFloat("Ray Step Length:", &m_volumetricDensityRayStepLength, 0.1f, 1.0f);
 					Gui::DragFloat("Absorption:", &m_volumetricDensityAbsorption, 0.01f, 0.1f);
-					Gui::DragFloat3("Scattering:", &m_volumetricScattering, 0.01f, 0.1f);
+					Gui::DragFloat3("Scattering:", &m_volumetricScattering);
 					Gui::SeparatorText("Lighting");
+					Gui::DragFloat("Volumetric Light Multiplier:", &m_volumetricLightMultiplier, 0.01f, 0.1f);
 					Gui::Checkbox("Render Volumetric Light:", &m_renderVolumetricLight);
 					if (m_renderVolumetricLight)
 					{
@@ -168,6 +170,8 @@ namespace emberEditor
 				}
 				case fluidDynamics::SphFluid3dGpu::RenderMode::water:
 				{
+					Gui::DragUint3("Density Resolution:", &m_volumetricDensityResolution);
+					m_volumetricDensityResolution = Uint3::Max(Uint3::one, m_volumetricDensityResolution);
 					Gui::DragFloat("Surface Density:", &m_waterSurfaceDensity, 0.1f, 1.0f);
 					Gui::DragFloat("Index Of Refraction:", &m_waterIndexOfRefraction, 0.01f, 0.1f);
 					Gui::DragFloat3("Absorption:", &m_waterAbsorption);
@@ -242,6 +246,7 @@ namespace emberEditor
 			m_volumetricDensityRayStepLength = m_pScript->GetVolumetricDensityRayStepLength();
 			m_volumetricDensityAbsorption = m_pScript->GetVolumetricDensityAbsorption();
 			m_volumetricScattering = m_pScript->GetVolumetricScattering();
+			m_volumetricLightMultiplier = m_pScript->GetVolumetricLightMultiplier();
 			m_renderVolumetricLight = m_pScript->GetRenderVolumetricLight();
 			m_volumetricLightingResolution = m_pScript->GetVolumetricLightingResolution();
 			// Water:
@@ -286,6 +291,7 @@ namespace emberEditor
 			m_pScript->SetVolumetricDensityRayStepLength(m_volumetricDensityRayStepLength);
 			m_pScript->SetVolumetricDensityAbsorption(m_volumetricDensityAbsorption);
 			m_pScript->SetVolumetricScattering(m_volumetricScattering);
+			m_pScript->SetVolumetricLightMultiplier(m_volumetricLightMultiplier);
 			m_pScript->SetRenderVolumetricLight(m_renderVolumetricLight);
 			m_pScript->SetVolumetricLightingResolution(m_volumetricLightingResolution);
 			// Water:

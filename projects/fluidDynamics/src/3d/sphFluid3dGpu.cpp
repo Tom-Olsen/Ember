@@ -67,11 +67,12 @@ namespace fluidDynamics
 			SetVolumetricDensityResolution(Uint3(160, 120, 100));
 			SetVolumetricDensityRayStepLength(0.4f);
             SetVolumetricDensityAbsorption(0.0001f);
-			SetVolumetricScattering(Float3(0.01f, 0.04f, 0.08f));
+			SetVolumetricScattering(Float3(0.02f, 0.035f, 0.06f));
+			SetVolumetricLightMultiplier(6.0f);
 			SetRenderVolumetricLight(true);
 			SetVolumetricLightingResolution(Uint3(120));
 			// Water:
-			SetWaterSurfaceDensity(0.5f * m_settings.targetDensity);
+			SetWaterSurfaceDensity(10.0f);
 			SetWaterIndexOfRefraction(1.333f);
 			SetWaterAbsorption(Float3(0.08f, 0.04f, 0.01f));
 			SetWaterStepCount(128);
@@ -588,6 +589,15 @@ namespace fluidDynamics
 			m_pendingRenderRefresh = true;
 		}
 	}
+	void SphFluid3dGpu::SetVolumetricLightMultiplier(float volumetricLightMultiplier)
+	{
+		volumetricLightMultiplier = math::Max(0.0f, volumetricLightMultiplier);
+		if (m_forceSetters || m_volumetricLightMultiplier != volumetricLightMultiplier)
+		{
+			m_volumetricLightMultiplier = volumetricLightMultiplier;
+			m_volumeRaycastMaterial.SetValue("Values", "volumetricLightMultiplier", m_volumetricLightMultiplier);
+		}
+	}
 	void SphFluid3dGpu::SetRenderVolumetricLight(bool renderVolumetricLight)
 	{
 		if (m_forceSetters || m_renderVolumetricLight != renderVolumetricLight)
@@ -774,6 +784,10 @@ namespace fluidDynamics
     {
         return m_volumetricScattering;
     }
+	float SphFluid3dGpu::GetVolumetricLightMultiplier() const
+	{
+		return m_volumetricLightMultiplier;
+	}
 	bool SphFluid3dGpu::GetRenderVolumetricLight() const
 	{
 		return m_renderVolumetricLight;
