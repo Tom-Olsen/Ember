@@ -69,12 +69,18 @@ Scene* Fluid3dScene()
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
 	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
 	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");
-	DeferredMaterial cube0Material = pbrMaterial.CloneWithDefaultBindings("cube0Material");
-	cube0Material.SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
-	cube0Material.SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
-	cube0Material.SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
-	cube0Material.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
-	cube0Material.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.25f, 2.5f, 0, 0));
+	DeferredMaterial cubeMaterial = pbrMaterial.CloneWithDefaultBindings("cubeMaterial");
+	cubeMaterial.SetTexture("colorMap", TextureManager::GetTexture("bricks1_color"));
+	cubeMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("bricks1_roughness"));
+	cubeMaterial.SetTexture("normalMap", TextureManager::GetTexture("bricks1_normal"));
+	cubeMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+	cubeMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.25f, 2.5f, 0, 0));
+	DeferredMaterial susanneMaterial = pbrMaterial.CloneWithDefaultBindings("wallMaterial");
+	susanneMaterial.SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
+	susanneMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));
+	susanneMaterial.SetTexture("normalMap", TextureManager::GetTexture("bricks0_normal"));
+	susanneMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
+	susanneMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 2, 0, 0));
 
 	{// Camera:
 		Entity entity = Entity::Create("Camera");
@@ -87,6 +93,23 @@ Scene* Fluid3dScene()
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);
+	}
+	{// Directional Light:
+		Entity entity = Entity::Create("DirectionalLight");
+		Float3 pos = 2.0f * Float3(-16.0f, -9.0f, 9.0f);
+		Float3 direction = -pos.Normalize();
+		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
+    
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		pTransform->SetRotationMatrix(matrix);
+    
+		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
+		pDirectionalLight->SetIntensity(5.0f);
+		pDirectionalLight->SetColor(Float3::white);
+		pDirectionalLight->SetDrawFrustum(false);
+		pDirectionalLight->SetShadowCascadeCount(1);
+		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
 	{// Skybox:
 		Entity entity = Entity::Create("Skybox");
@@ -119,26 +142,20 @@ Scene* Fluid3dScene()
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
-		pMeshRenderer->SetMaterial(cube0Material);
+		pMeshRenderer->SetMaterial(cubeMaterial);
 
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
-	{// Directional Light:
-		Entity entity = Entity::Create("DirectionalLight");
-		Float3 pos = 50.0f * Float3(-16.0f, -9.0f, 9.0f);
-		Float3 direction = -pos.Normalize();
-		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
-    
+	{// Susanne:
+		Entity entity = Entity::Create("Susanne");
 		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(pos);
-		pTransform->SetRotationMatrix(matrix);
-    
-		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
-		pDirectionalLight->SetIntensity(5.0f);
-		pDirectionalLight->SetColor(Float3::white);
-		pDirectionalLight->SetDrawFrustum(false);
-		pDirectionalLight->SetShadowCascadeCount(1);
-		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
+		pTransform->SetPosition(Float3(-20.0f, 0.0f, -5.0f));
+		pTransform->SetScale(4.0f);
+		pTransform->SetRotationEuler(EulerDegrees(0.0f, 0.0f, 30.0f));
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("monkey"));
+		pMeshRenderer->SetMaterial(susanneMaterial);
 	}
 	{ // Sph Fluid 3d Gpu:
 		Entity entity = Entity::Create("sphFluid3dGpu");
