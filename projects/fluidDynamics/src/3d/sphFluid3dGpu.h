@@ -96,6 +96,7 @@ namespace fluidDynamics
 		Mesh m_volumetricDensityCube;
 		ForwardMaterial m_particleMaterial;
 		ForwardMaterial m_volumeRaycastMaterial;
+		ForwardMaterial m_transparentMaterial;
 		ComputeShader m_waterComputeShader;
 		CallProperties m_callProperties;
 		Texture m_environmentMap;

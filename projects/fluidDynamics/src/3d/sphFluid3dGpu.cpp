@@ -23,6 +23,10 @@ namespace fluidDynamics
 		m_particleMesh = MeshGenerator::Quad();
 		m_volumetricDensityCube = MeshGenerator::Cube();
 		m_callProperties = CallProperties(m_particleMaterial);
+		m_transparentMaterial = MaterialManager::TryGetForwardMaterial("pbrForwardMaterial").CloneWithDefaultBindings("transparentMaterial");
+		m_transparentMaterial.SetRenderMode(emberCommon::ForwardRenderMode::transparent);
+		m_transparentMaterial.SetValue("SurfaceProperties", "surface_isLit", false);
+		m_transparentMaterial.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 1.0f, 1.0f, 0.125f));
 
 		m_forceSetters = true;
 		{
@@ -42,7 +46,7 @@ namespace fluidDynamics
 			SetMass(1.0f);
 			SetViscosity(2.0f);
 			SetSurfaceTension(0.5f);
-			SetCollisionDampening(0.5f);
+			SetCollisionDampening(0.95f);
 			SetTargetDensity(12.5f);
 			SetPressureMultiplier(300.0f);
 			SetNearPressureRatio(0.01f);
@@ -213,8 +217,7 @@ namespace fluidDynamics
 		if (m_attractor.state != 0)
 		{
 			Float4x4 attractorLocalToWorld = localToWorld * Float4x4::Translate(m_attractor.point);
-			Material attractorMaterial = MaterialManager::TryGetMaterial("transparentMaterial");
-			DrawData drawData(attractorLocalToWorld, m_attractorSphereMesh, attractorMaterial, false, false);
+			DrawData drawData(attractorLocalToWorld, m_attractorSphereMesh, m_transparentMaterial, false, false);
 			CallProperties callProperties = Renderer::DrawMesh(drawData);
 			callProperties.SetValue("SurfaceProperties", "surface_diffuseColor", Float4(1.0f, 0.0f, 0.0f, 0.25f));
 		}
