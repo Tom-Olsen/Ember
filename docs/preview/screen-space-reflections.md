@@ -19,7 +19,7 @@ This allows for the implementation of screen space techniques, such as screen sp
     </div>
   </div>
   <div class="ssr-comparison__viewport">
-    <img class="ssr-comparison__image" data-ssr-image src="../ssrFullResolution.png" width="3840" height="2080" loading="lazy" decoding="async" alt="Scene with full-resolution screen-space reflections enabled">
+    <img class="ssr-comparison__image" data-ssr-image src="../images/ssrFullResolution.png" width="3840" height="2080" loading="lazy" decoding="async" alt="Scene with full-resolution screen-space reflections enabled">
     <img class="ssr-comparison__image ssr-comparison__baseline" src="../ssrOff.png" width="3840" height="2080" loading="lazy" decoding="async" alt="The same scene with screen-space reflections disabled">
     <div class="ssr-comparison__divider" aria-hidden="true">
       <span class="ssr-comparison__handle">
@@ -31,15 +31,15 @@ This allows for the implementation of screen space techniques, such as screen sp
   <fieldset class="ssr-comparison__modes">
     <legend>Right image</legend>
     <label>
-      <input type="radio" name="ssr-mode" value="full-resolution" checked data-image="../ssrFullResolution.png" data-name="Full resolution" data-fps="194.6">
+      <input type="radio" name="ssr-mode" value="full-resolution" checked data-image="../images/ssrFullResolution.png" data-name="Full resolution" data-fps="194.6">
       <span class="ssr-comparison__mode"><span>Full Resolution</span><span class="ssr-comparison__mode-fps">194.6 FPS</span></span>
     </label>
     <label>
-      <input type="radio" name="ssr-mode" value="reflection-map" data-image="../ssrReflectionMap.png" data-name="Reflection map" data-fps="322.9">
+      <input type="radio" name="ssr-mode" value="reflection-map" data-image="../images/ssrReflectionMap.png" data-name="Reflection map" data-fps="322.9">
       <span class="ssr-comparison__mode"><span>Reflection Map</span><span class="ssr-comparison__mode-fps">322.9 FPS</span></span>
     </label>
     <label>
-      <input type="radio" name="ssr-mode" value="reflection-uv-map" data-image="../ssrReflectionUvMap.png" data-name="Reflection UV map" data-fps="317.2">
+      <input type="radio" name="ssr-mode" value="reflection-uv-map" data-image="../images/ssrReflectionUvMap.png" data-name="Reflection UV map" data-fps="317.2">
       <span class="ssr-comparison__mode"><span>Reflection UV Map</span><span class="ssr-comparison__mode-fps">317.2 FPS</span></span>
     </label>
   </fieldset>

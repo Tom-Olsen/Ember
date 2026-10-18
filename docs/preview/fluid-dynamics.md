@@ -9,9 +9,9 @@ The scene used for the different render modes (particle/water/volumetric) uses 1
 Each particle is rendered as a camera facing billboard quad via instanced rendering, reading its position and color (density) from the sph gpu buffers.
 A custom shader turns the quads into 3d looking spheres and updates their depth accordingly.
 
-<video controls playsinline preload="none" poster="../particleShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as individual particles">
-  <source src="../particleShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
-  Your browser does not support embedded WebM video. <a href="../particleShader.webm">Download the particle rendering video</a>.
+<video controls playsinline preload="none" poster="../images/particleShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as individual particles">
+  <source src="../videos/particleShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
+  Your browser does not support embedded WebM video. <a href="../videos/particleShader.webm">Download the particle rendering video</a>.
 </video>
 
 ## Water rendering (80fps - 100fps)
@@ -22,9 +22,9 @@ and combines both paths via the Fresnel equation for unpolarized light, $R = \fr
 The water shader is implemented in the forward transparent render stage, giving it access to the scene color with all opaque geometry already rendered.
 This allows reflecting and refracting the visible scene, similar to screen space reflections, and the full skybox, which also acts as a fallback for any ray that misses all geometry.
 
-<video controls playsinline preload="none" poster="../waterShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as reflective and refractive water">
-  <source src="../waterShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
-  Your browser does not support embedded WebM video. <a href="../waterShader.webm">Download the water rendering video</a>.
+<video controls playsinline preload="none" poster="../images/waterShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as reflective and refractive water">
+  <source src="../videos/waterShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
+  Your browser does not support embedded WebM video. <a href="../videos/waterShader.webm">Download the water rendering video</a>.
 </video>
 
 ## Volumetric rendering (~350fps)
@@ -32,9 +32,9 @@ This allows reflecting and refracting the visible scene, similar to screen space
 Cloud mode uses a volumetric shader which ray marches through the volume and accumulates light through scattering and absorption with every step.
 The directional light similarly renders a optical depth 3d texture which is used for volumetric lighting, allowing the fluid to cast shadows on itself.
 
-<video controls playsinline preload="none" poster="../volumetricShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as a cloud-like volume">
-  <source src="../volumetricShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
-  Your browser does not support embedded WebM video. <a href="../volumetricShader.webm">Download the volumetric rendering video</a>.
+<video controls playsinline preload="none" poster="../images/volumetricShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as a cloud-like volume">
+  <source src="../videos/volumetricShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
+  Your browser does not support embedded WebM video. <a href="../videos/volumetricShader.webm">Download the volumetric rendering video</a>.
 </video>
 
 ## One million particles (~50fps)
@@ -45,7 +45,7 @@ Any time the frame rate drops below 50 the physics compute worklaod is skipped t
 Switching to the volumetric cloud or water rendering reduces the frame rate, to around 40 and 35 fps respectively.
 Pausing the simulation brings rendering performance up to around 200 fps for clouds and 100 fps for water.
 
-<video controls playsinline preload="none" poster="../1Mparticles.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation with one million particles">
-  <source src="../1Mparticles.webm" type='video/webm; codecs="av01.0.13M.10"'>
-  Your browser does not support embedded WebM video. <a href="../1Mparticles.webm">Download the one million particles video</a>.
+<video controls playsinline preload="none" poster="../images/1Mparticles.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation with one million particles">
+  <source src="../videos/1Mparticles.webm" type='video/webm; codecs="av01.0.13M.10"'>
+  Your browser does not support embedded WebM video. <a href="../videos/1Mparticles.webm">Download the one million particles video</a>.
 </video>
