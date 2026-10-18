@@ -109,6 +109,8 @@ The directional light similarly renders a optical depth 3d texture which is used
 Simulation with one million particles rendered in particle mode.
 This is the maximum number of particles ember can currently run in real time, as it pushes the fps down to ~50, which is the update frequency of the physics system.
 Any time the frame rate drops below 50 the physics compute worklaod is skipped to allow previous work to finish, resulting in the simulation to slow down.
+Switching to the volumetric cloud or water rendering reduces the frame rate, to around 40 and 35 fps respectively.
+Pausing the simulation brings rendering performance up to around 200 fps for clouds and 100 fps for water.
 
 <video controls playsinline preload="none" poster="1Mparticles.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation with one million particles">
   <source src="1Mparticles.webm" type='video/webm; codecs="av01.0.13M.10"'>
