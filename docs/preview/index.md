@@ -69,9 +69,10 @@ See the [rendering pipeline](../vulkan-renderer/rendering-pipeline.md) for how r
 ## Fluid dynamics
 
 The fluid dynamics project runs a three-dimensional smoothed-particle hydrodynamics (SPH) simulation on the GPU.
-These recordings show its particle, water, and cloud rendering modes.
+The simulation runs on an async physics compute stage which updates 50 times per second and publishes final results for rendering via tripple buffered state
+The scene used for the different render mode (particle/water/volumetric) uses 100.000 particles, while the last render demonstrates performance with 1.000.000 particles.
 
-### Particle rendering (300fps)
+### Particle rendering (~300fps)
 
 Each particle is rendered as a camera facing billboard quad via instanced rendering, reading its position and color (density) from the sph gpu buffers.
 A custom shader turns the quads into 3d looking spheres and updates their depth according to a sphere.
@@ -93,7 +94,7 @@ This allows reflecting and refracting the visible scene, similar to screen space
   Your browser does not support embedded WebM video. <a href="waterShader.webm">Download the water rendering video</a>.
 </video>
 
-### Volumetric rendering (350fps)
+### Volumetric rendering (~350fps)
 
 Cloud mode uses a volumetric shader which ray marches through the volume and accumulates light through scattering and absorption with every step.
 The directional light similarly renders a optical depth 3d texture which is used for volumetric lighting, allowing the fluid to cast shadows on itself.
@@ -101,4 +102,15 @@ The directional light similarly renders a optical depth 3d texture which is used
 <video controls playsinline preload="none" poster="volumetricShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as a cloud-like volume">
   <source src="volumetricShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
   Your browser does not support embedded WebM video. <a href="volumetricShader.webm">Download the volumetric rendering video</a>.
+</video>
+
+### One million particles (~50fps)
+
+Simulation with one million particles rendered in particle mode.
+This is the maximum number of particles ember can currently run in real time, as it pushes the fps down to ~50, which is the update frequency of the physics system.
+Any time the frame rate drops below 50 the physics compute worklaod is skipped to allow previous work to finish, resulting in the simulation to slow down.
+
+<video controls playsinline preload="none" poster="1Mparticles.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation with one million particles">
+  <source src="1Mparticles.webm" type='video/webm; codecs="av01.0.13M.10"'>
+  Your browser does not support embedded WebM video. <a href="1Mparticles.webm">Download the one million particles video</a>.
 </video>

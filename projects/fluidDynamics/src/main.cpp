@@ -201,7 +201,7 @@ Scene* Fluid3dSceneBig()
 		pDirectionalLight->SetIntensity(5.0f);
 		pDirectionalLight->SetColor(Float3::white);
 		pDirectionalLight->SetDrawFrustum(false);
-		pDirectionalLight->SetShadowCascadeCount(1);
+		pDirectionalLight->SetShadowCascadeCount(3);
 		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
 	{// Skybox:
@@ -260,8 +260,8 @@ int main()
 		appCreateInfo.windowHeight = 2160; //1440; //1080;
 		appCreateInfo.renderWidth  = 2560; //1280;
 		appCreateInfo.renderHeight = 1440; //720;
-		appCreateInfo.maxDirectionalLights = 1; // single directional light.
-		appCreateInfo.maxPositionalLights = 6;  // single point light ot 6 spot lights.
+		appCreateInfo.maxDirectionalLights = 4; // one directional light with four shadow cascades.
+		appCreateInfo.maxPositionalLights = 6;  // single point light or 6 spot lights.
 		appCreateInfo.shadowMapResolution = 1024;
 		emberApplication::Application::Init(appCreateInfo);
 
