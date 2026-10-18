@@ -212,8 +212,10 @@
 
 .ssr-comparison__descriptions {
     display: grid;
-    margin: 0.65rem 0 0.4rem;
-    font-size: 0.7rem;
+    width: 90%;
+    margin: 0.65rem auto 0.4rem;
+    font-size: 0.65rem;
+    text-align: center;
 }
 
 .md-typeset .ssr-comparison__description {

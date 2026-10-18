@@ -12,7 +12,7 @@ This allows for the implementation of screen space techniques, such as screen sp
   <div class="ssr-comparison__summary">
     <div>
       <span class="ssr-comparison__label">SSR off</span>
-      <span class="ssr-comparison__fps">711.0 <span>FPS</span></span>
+      <span class="ssr-comparison__fps">710.0 <span>FPS</span></span>
     </div>
     <button class="ssr-comparison__fullscreen" type="button" data-ssr-fullscreen aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>
@@ -20,11 +20,11 @@ This allows for the implementation of screen space techniques, such as screen sp
     </button>
     <div class="ssr-comparison__selected" aria-live="polite" aria-atomic="true">
       <span class="ssr-comparison__label" data-ssr-name>Full resolution</span>
-      <span class="ssr-comparison__fps"><span data-ssr-fps>184.8</span> <span>FPS</span></span>
+      <span class="ssr-comparison__fps"><span data-ssr-fps>194.6</span> <span>FPS</span></span>
     </div>
   </div>
   <div class="ssr-comparison__viewport">
-    <img class="ssr-comparison__image" data-ssr-image src="ssrFullRes.png" width="3840" height="2080" loading="lazy" decoding="async" alt="Scene with full-resolution screen-space reflections enabled">
+    <img class="ssr-comparison__image" data-ssr-image src="ssrFullResolution.png" width="3840" height="2080" loading="lazy" decoding="async" alt="Scene with full-resolution screen-space reflections enabled">
     <img class="ssr-comparison__image ssr-comparison__baseline" src="ssrOff.png" width="3840" height="2080" loading="lazy" decoding="async" alt="The same scene with screen-space reflections disabled">
     <div class="ssr-comparison__divider" aria-hidden="true">
       <span class="ssr-comparison__handle">
@@ -36,22 +36,29 @@ This allows for the implementation of screen space techniques, such as screen sp
   <fieldset class="ssr-comparison__modes">
     <legend>Right image</legend>
     <label>
-      <input type="radio" name="ssr-mode" value="full-resolution" checked data-image="ssrFullRes.png" data-name="Full resolution" data-fps="184.8">
-      <span class="ssr-comparison__mode"><span>Full Resolution</span><span class="ssr-comparison__mode-fps">184.8 FPS</span></span>
+      <input type="radio" name="ssr-mode" value="full-resolution" checked data-image="ssrFullResolution.png" data-name="Full resolution" data-fps="194.6">
+      <span class="ssr-comparison__mode"><span>Full Resolution</span><span class="ssr-comparison__mode-fps">194.6 FPS</span></span>
     </label>
     <label>
-      <input type="radio" name="ssr-mode" value="reflection-map" data-image="ssrReflMap.png" data-name="Reflection map" data-fps="325.3">
-      <span class="ssr-comparison__mode"><span>Reflection Map</span><span class="ssr-comparison__mode-fps">325.3 FPS</span></span>
+      <input type="radio" name="ssr-mode" value="reflection-map" data-image="ssrReflectionMap.png" data-name="Reflection map" data-fps="322.9">
+      <span class="ssr-comparison__mode"><span>Reflection Map</span><span class="ssr-comparison__mode-fps">322.9 FPS</span></span>
     </label>
     <label>
-      <input type="radio" name="ssr-mode" value="reflection-uv-map" data-image="ssrReflUvMap.png" data-name="Reflection UV map" data-fps="320.4">
-      <span class="ssr-comparison__mode"><span>Reflection UV Map</span><span class="ssr-comparison__mode-fps">320.4 FPS</span></span>
+      <input type="radio" name="ssr-mode" value="reflection-uv-map" data-image="ssrReflectionUvMap.png" data-name="Reflection UV map" data-fps="317.2">
+      <span class="ssr-comparison__mode"><span>Reflection UV Map</span><span class="ssr-comparison__mode-fps">317.2 FPS</span></span>
     </label>
   </fieldset>
   <div class="ssr-comparison__descriptions">
-    <p class="ssr-comparison__description ssr-comparison__description--active" data-ssr-description="full-resolution">Reflections are traced and applied at the scene's full resolution.</p>
-    <p class="ssr-comparison__description" data-ssr-description="reflection-map" aria-hidden="true">Reflected colors are stored in a separate reflection map at half resolution. A second pass composites the reflections into the scene.</p>
-    <p class="ssr-comparison__description" data-ssr-description="reflection-uv-map" aria-hidden="true">Reflection hit coordinates are stored in a UV map at half resolution. A second pass samples the scene color at those coordinates and composites the reflections into the scene.</p>
+    <p class="ssr-comparison__description ssr-comparison__description--active" data-ssr-description="full-resolution">
+	Reflections are traced and applied at the scene's full resolution.</p>
+    <p class="ssr-comparison__description" data-ssr-description="reflection-map" aria-hidden="true">
+	Reflected colors are stored in a separate reflection map at half resolution.
+	A second pass composites the reflections into the scene.
+	Half resolution sampling leads to reflections beeig at half resoluton, which is noticable on flat reflective surfaces.</p>
+    <p class="ssr-comparison__description" data-ssr-description="reflection-uv-map" aria-hidden="true">
+	Reflection hit coordinates are stored in a uv map at half resolution.
+	A second pass samples the scene color at those coordinates and composites the reflections into the scene.
+	Using the sampled uvs to access the scene color texture resolves the reflections at full resolution, but can lead to artifacts on geometry boundaries.</p>
   </div>
   <p class="ssr-comparison__status" data-ssr-status role="alert" hidden></p>
 </figure>
