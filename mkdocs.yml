@@ -34,7 +34,13 @@ extra_javascript:
 
 nav:
   - Overview: index.md
-  - Preview: preview/index.md
+  - Preview:
+      - Screen-Space-Reflections: preview/screen-space-reflections.md
+      - Fluid Dynamics: preview/fluid-dynamics.md
+  - Algorithms:
+      - Bitonic Sort: algorithms/bitonic-sort.md
+      - Smoothed Particle Hydrodynamics: algorithms/smoothed-particle-hydrodynamics.md
+      - Lattice Boltzmann Method: algorithms/lattice-boltzmann-method.md
   - Vulkan Renderer:
       - Overview: vulkan-renderer/index.md
       - Frame Lifecycle and Render Graph: vulkan-renderer/frame-lifecycle.md
