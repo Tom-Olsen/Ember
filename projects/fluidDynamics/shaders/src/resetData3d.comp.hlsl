@@ -6,6 +6,7 @@ cbuffer CallValues : register(b300, CALL_SET)
 {
     uint hashGridSize; // 2 * particleCount rounded up to next prime.
     float initialDistributionRadius;
+    float3 initialDistributionPosition;
 };
 RWStructuredBuffer<uint> cellKeyBuffer : register(u200, CALL_SET);
 RWStructuredBuffer<uint> startIndexBuffer : register(u201, CALL_SET);
@@ -91,7 +92,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
         while (CubeParticleCount(outerShellRadius) < pc.threadCount.x)
             outerShellRadius++;
         float spacing = (outerShellRadius > 0) ? initialDistributionRadius / outerShellRadius : 0.0f;
-        positionBuffer[index] = spacing * float3(CubeShellPosition(index));
+        positionBuffer[index] = initialDistributionPosition + spacing * float3(CubeShellPosition(index));
 
         velocityBuffer[index] = float3(0, 0, 0);
         densityBuffer[index] = 0.0f;

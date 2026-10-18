@@ -10,7 +10,7 @@ namespace fluidDynamics
 {
 	// Public methods:
 	// Constructor/Destructor:
-	SphFluid3dGpu::SphFluid3dGpu(Texture environmentMap)
+	SphFluid3dGpu::SphFluid3dGpu(Texture environmentMap, RotatedBounds bounds)
 		: m_environmentMap(environmentMap)
 	{
 		// Material setup:
@@ -32,7 +32,7 @@ namespace fluidDynamics
 		{
             // Management:
 			SetUseHashGridOptimization(true);
-			SetFluidBounds(RotatedBounds(Float3::zero, Float3(16.0f, 12.0f, 10.0f)));
+			SetFluidBounds(bounds);
 
 			// Time:
 			SetTimeScale(1.0f);
@@ -42,6 +42,7 @@ namespace fluidDynamics
 			// Fluid:
 			SetParticleCount(100000);
 			SetInitialDistributionRadius(9.0f);
+			SetInitialDistributionPosition(Float3::zero);
 			SetEffectRadius(1.0f);
 			SetMass(1.0f);
 			SetViscosity(2.0f);
@@ -402,6 +403,14 @@ namespace fluidDynamics
 			m_reset = true;
 		}
 	}
+	void SphFluid3dGpu::SetInitialDistributionPosition(const Float3& initialDistributionPosition)
+	{
+		if (m_forceSetters || m_initialDistributionPosition != initialDistributionPosition)
+		{
+			m_initialDistributionPosition = initialDistributionPosition;
+			m_reset = true;
+		}
+	}
 	void SphFluid3dGpu::SetEffectRadius(float effectRadius)
 	{
 		effectRadius = math::Max(1e-4f, effectRadius);
@@ -696,6 +705,10 @@ namespace fluidDynamics
 	{
 		return m_initialDistributionRadius;
 	}
+	Float3 SphFluid3dGpu::GetInitialDistributionPosition() const
+	{
+		return m_initialDistributionPosition;
+	}
 	float SphFluid3dGpu::GetEffectRadius() const
 	{
 		return m_settings.effectRadius;
@@ -968,7 +981,7 @@ namespace fluidDynamics
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 		{
-			SphFluid3dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius);
+			SphFluid3dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius, m_initialDistributionPosition);
 			if (m_renderMode == RenderMode::cloud || m_renderMode == RenderMode::water)
 				RecordVolumetricRenderData(m_computeShaders, i);
 			else

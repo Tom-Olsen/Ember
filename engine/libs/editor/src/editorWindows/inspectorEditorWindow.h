@@ -37,7 +37,7 @@ namespace emberEditor
 				emberEcs::Entity entity = emberEditor::EditorSelection::GetSelectedEntity();
 				GetData(entity);
 				Gui::TextSelectable("Name", entity.GetName());
-				Gui::InputFloat3("Position:", &m_position, 0, 0, "%.4f");
+				Gui::DragFloat3("Position:", &m_position, 0, 0, "%.4f");
 				Gui::DragFloat3("Rotation:", &m_rotation, 0, 0, "%.4f");
 				Gui::DragFloat3("Scale:", &m_scale, 0, 0, "%.4f");
 				SetData(entity);

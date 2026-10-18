@@ -9,6 +9,10 @@ static_assert(std::is_constructible_v<EulerDegrees, const Float3&>);
 static_assert(!std::is_convertible_v<Float3, EulerDegrees>);
 static_assert(!std::is_convertible_v<EulerDegrees, Float3>);
 static_assert(sizeof(EulerDegrees) == sizeof(Float3));
+static_assert(std::is_constructible_v<EulerDegrees, const Float3x3&>);
+static_assert(std::is_constructible_v<EulerDegrees, const Float4x4&>);
+static_assert(!std::is_convertible_v<Float3x3, EulerDegrees>);
+static_assert(!std::is_convertible_v<Float4x4, EulerDegrees>);
 
 
 
@@ -38,6 +42,33 @@ TEST(EulerDegrees, RadiansConstructor)
 	EulerDegrees eulerAngles(Radians(math::pi4), Radians(math::pi2), Radians(math::pi));
 	EXPECT_TRUE(eulerAngles.value.IsEpsilonEqual(Float3(45.0f, 90.0f, 180.0f)));
 }
+TEST(EulerDegrees, RotationMatrixConstructors)
+{
+	EXPECT_EQ(EulerDegrees(Float3x3::identity), EulerDegrees());
+	EXPECT_EQ(EulerDegrees(Float4x4::identity), EulerDegrees());
+	EulerDegrees expected(25.0f, -35.0f, 70.0f);
+	Float3x3 rotationMatrix = Float3x3::Rotate(expected.ToRadians());
+	EXPECT_TRUE(EulerDegrees(rotationMatrix).IsEpsilonEqual(expected));
+	EXPECT_TRUE(EulerDegrees{Float4x4(rotationMatrix)}.IsEpsilonEqual(expected));
+}
+TEST(EulerDegrees, RotationMatrixConstructorsGimbalLock)
+{
+	for (float x : {-90.0f, 90.0f})
+	{
+		Float3x3 rotationMatrix = Float3x3::Rotate(EulerDegrees(x, 50.0f, -30.0f).ToRadians());
+		EXPECT_TRUE(Float3x3::Rotate(EulerDegrees(rotationMatrix).ToRadians()).IsEpsilonEqual(rotationMatrix));
+		EXPECT_TRUE(Float3x3::Rotate(EulerDegrees{Float4x4(rotationMatrix)}.ToRadians()).IsEpsilonEqual(rotationMatrix));
+	}
+}
+#ifndef NDEBUG
+TEST(EulerDegrees, RotationMatrixConstructorsRejectInvalidRotations)
+{
+	EXPECT_DEATH((void)EulerDegrees(Float3x3::Scale(2.0f)), "Assertion");
+	EXPECT_DEATH((void)EulerDegrees(Float4x4::Scale(2.0f)), "Assertion");
+	EXPECT_DEATH((void)EulerDegrees(Float3x3::Scale(Float3(-1.0f, 1.0f, 1.0f))), "Assertion");
+	EXPECT_DEATH((void)EulerDegrees(Float4x4::Translate(Float3::one)), "Assertion");
+}
+#endif
 
 
 

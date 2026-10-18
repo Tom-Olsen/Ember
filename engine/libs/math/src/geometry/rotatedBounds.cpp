@@ -1,4 +1,6 @@
 #include "rotatedBounds.h"
+#include "eulerDegrees.h"
+#include "eulerRadians.h"
 
 
 
@@ -35,6 +37,14 @@ namespace emberMath
 
 
 	// Getters:
+	EulerDegrees RotatedBounds::GetRotationEulerDegrees() const
+	{
+		return EulerDegrees(m_rotation);
+	}
+	EulerRadians RotatedBounds::GetRotationEulerRadians() const
+	{
+		return EulerRadians(m_rotation);
+	}
 	Float3x3 RotatedBounds::GetRotation3x3() const
 	{
 		return m_rotation;
@@ -62,6 +72,14 @@ namespace emberMath
 	void RotatedBounds::SetRotationMatrix(const Float3x3& rotation)
 	{
 		m_rotation = rotation;
+	}
+	void RotatedBounds::SetRotationEuler(const EulerDegrees& angles)
+	{
+		SetRotationEuler(angles.ToRadians());
+	}
+	void RotatedBounds::SetRotationEuler(const EulerRadians& angles)
+	{
+		SetRotationMatrix(Float3x3::Rotate(angles));
 	}
 
 

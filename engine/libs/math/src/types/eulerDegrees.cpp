@@ -1,5 +1,7 @@
 #include "eulerDegrees.h"
 #include "eulerRadians.h"
+#include "float3x3.h"
+#include "float4x4.h"
 #include "mathConstants.h"
 #include <cassert>
 #include <ostream>
@@ -12,6 +14,10 @@ namespace emberMath
 	// Constructors:
 	EulerDegrees::EulerDegrees() : value(Float3::zero) {}
 	EulerDegrees::EulerDegrees(const Float3& value) : value(value) {}
+	EulerDegrees::EulerDegrees(const Float3x3& rotationMatrix)
+		: value(EulerRadians(rotationMatrix).ToDegrees().value) {}
+	EulerDegrees::EulerDegrees(const Float4x4& rotationMatrix)
+		: value(EulerRadians(rotationMatrix).ToDegrees().value) {}
 	EulerDegrees::EulerDegrees(float x, float y, float z) : value(x, y, z) {}
 	EulerDegrees::EulerDegrees(Degrees x, Degrees y, Degrees z) : value(x.value, y.value, z.value) {}
 	EulerDegrees::EulerDegrees(Radians x, Radians y, Radians z) : value(x.ToDegrees().value, y.ToDegrees().value, z.ToDegrees().value) {}

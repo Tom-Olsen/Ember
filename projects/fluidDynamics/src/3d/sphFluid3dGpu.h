@@ -45,6 +45,7 @@ namespace fluidDynamics
 		uint32_t m_timeStep = 0;
 		int m_particleCount = -1;
 		float m_initialDistributionRadius;
+		Float3 m_initialDistributionPosition;
 		bool m_forceSetters = false;
 
 		// Benchmark:
@@ -106,7 +107,7 @@ namespace fluidDynamics
 		std::unique_ptr<emberEditor::SphFluid3dGpuEditorWindow> editorWindow;
 
 	public: // Methods:
-		SphFluid3dGpu(Texture environmentMap);
+		SphFluid3dGpu(Texture environmentMap, RotatedBounds bounds);
 		~SphFluid3dGpu();
 
 		// Overrides:
@@ -127,6 +128,7 @@ namespace fluidDynamics
 		// Fluid:
 		void SetParticleCount(int particleCount);
 		void SetInitialDistributionRadius(float initialDistributionRadius);
+		void SetInitialDistributionPosition(const Float3& initialDistributionPosition);
 		void SetEffectRadius(float effectRadius);
 		void SetMass(float mass);
 		void SetViscosity(float viscosity);
@@ -180,6 +182,7 @@ namespace fluidDynamics
 		// Fluid:
 		int GetParticleCount() const;
 		float GetInitialDistributionRadius() const;
+		Float3 GetInitialDistributionPosition() const;
 		float GetEffectRadius() const;
 		float GetMass() const;
 		float GetViscosity() const;

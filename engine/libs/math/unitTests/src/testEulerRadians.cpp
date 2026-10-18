@@ -1,5 +1,6 @@
 #include "emberMath.h"
 #include <gtest/gtest.h>
+#include <limits>
 #include <sstream>
 #include <type_traits>
 
@@ -9,6 +10,10 @@ static_assert(std::is_constructible_v<EulerRadians, const Float3&>);
 static_assert(!std::is_convertible_v<Float3, EulerRadians>);
 static_assert(!std::is_convertible_v<EulerRadians, Float3>);
 static_assert(sizeof(EulerRadians) == sizeof(Float3));
+static_assert(std::is_constructible_v<EulerRadians, const Float3x3&>);
+static_assert(std::is_constructible_v<EulerRadians, const Float4x4&>);
+static_assert(!std::is_convertible_v<Float3x3, EulerRadians>);
+static_assert(!std::is_convertible_v<Float4x4, EulerRadians>);
 
 
 
@@ -38,6 +43,73 @@ TEST(EulerRadians, DegreesConstructor)
 	EulerRadians eulerAngles(Degrees(45.0f), Degrees(90.0f), Degrees(180.0f));
 	EXPECT_TRUE(eulerAngles.value.IsEpsilonEqual(Float3(math::pi4, math::pi2, math::pi)));
 }
+TEST(EulerRadians, RotationMatrixConstructors)
+{
+	EXPECT_EQ(EulerRadians(Float3x3::identity), EulerRadians());
+	EXPECT_EQ(EulerRadians(Float4x4::identity), EulerRadians());
+	for (float x : {-170.0f, -90.0f, -89.999f, -89.99f, -30.0f, 0.0f, 45.0f, 89.99f, 89.999f, 90.0f, 170.0f})
+	{
+		for (float y : {-150.0f, -20.0f, 0.0f, 70.0f, 180.0f})
+		{
+			for (float z : {-180.0f, -80.0f, 0.0f, 35.0f, 160.0f})
+			{
+				SCOPED_TRACE(EulerDegrees(x, y, z).ToString());
+				Float3x3 rotationMatrix = Float3x3::Rotate(EulerDegrees(x, y, z).ToRadians());
+				EulerRadians from3x3(rotationMatrix);
+				EulerRadians from4x4{Float4x4(rotationMatrix)};
+				EXPECT_TRUE(Float3x3::Rotate(from3x3).IsEpsilonEqual(rotationMatrix, 2e-5f, 2e-5f));
+				EXPECT_TRUE(from4x4.IsEpsilonEqual(from3x3));
+			}
+		}
+	}
+}
+TEST(EulerRadians, RotationMatrixConstructorPrincipalAngles)
+{
+	EulerRadians expected(0.4f, -0.7f, 1.2f);
+	Float3x3 rotationMatrix = Float3x3::Rotate(expected);
+	EXPECT_TRUE(EulerRadians(rotationMatrix).IsEpsilonEqual(expected));
+}
+TEST(EulerRadians, RotationMatrixConstructorGimbalLock)
+{
+	for (float x : {-90.0f, 90.0f})
+	{
+		Float3x3 rotationMatrix = Float3x3::Rotate(EulerDegrees(x, 35.0f, -60.0f).ToRadians());
+		EulerRadians angles(rotationMatrix);
+		EXPECT_FLOAT_EQ(angles.GetZ().value, 0.0f);
+		EXPECT_TRUE(Float3x3::Rotate(angles).IsEpsilonEqual(rotationMatrix));
+	}
+}
+
+#ifndef NDEBUG
+TEST(EulerRadians, RotationMatrixConstructorsRejectInvalidRotations)
+{
+	EXPECT_DEATH((void)EulerRadians(Float3x3::zero), "Assertion");
+	EXPECT_DEATH((void)EulerRadians(Float3x3::Scale(2.0f)), "Assertion");
+	// A reflection is orthogonal, but its determinant is -1.
+	EXPECT_DEATH((void)EulerRadians(Float3x3::Scale(Float3(-1.0f, 1.0f, 1.0f))), "Assertion");
+	Float3x3 shearMatrix = Float3x3::identity;
+	shearMatrix.data[3] = 0.25f;
+	EXPECT_DEATH((void)EulerRadians(shearMatrix), "Assertion");
+	Float3x3 invalidMatrix = Float3x3::identity;
+	invalidMatrix.data[0] = std::numeric_limits<float>::quiet_NaN();
+	EXPECT_DEATH((void)EulerRadians(invalidMatrix), "Assertion");
+	invalidMatrix.data[0] = std::numeric_limits<float>::infinity();
+	EXPECT_DEATH((void)EulerRadians(invalidMatrix), "Assertion");
+	EXPECT_DEATH((void)EulerRadians(Float4x4::Scale(2.0f)), "Assertion");
+	EXPECT_DEATH((void)EulerRadians(Float4x4::Scale(Float3(-1.0f, 1.0f, 1.0f))), "Assertion");
+}
+TEST(EulerRadians, RotationMatrixConstructorRejectsNonRotationHomogeneousEntries)
+{
+	for (int index : {3, 7, 11, 12, 13, 14, 15})
+	{
+		Float4x4 invalidMatrix = Float4x4::identity;
+		invalidMatrix.data[index] += 0.5f;
+		EXPECT_DEATH((void)EulerRadians(invalidMatrix), "Assertion");
+		invalidMatrix.data[index] = std::numeric_limits<float>::infinity();
+		EXPECT_DEATH((void)EulerRadians(invalidMatrix), "Assertion");
+	}
+}
+#endif
 
 
 

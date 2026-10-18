@@ -53,3 +53,24 @@ TEST(RotatedBounds, IntersectRay)
 	EXPECT_TRUE(hit.GetPoint().IsEpsilonEqual(Float3(10.0f, 1.0f, 0.0f)));
 	EXPECT_TRUE(hit.GetNormal().IsEpsilonEqual(Float3::forward));
 }
+TEST(RotatedBounds, EulerRotation)
+{
+	Bounds localBounds(Float3(10.0f, 20.0f, 30.0f), Float3(1.0f, 2.0f, 3.0f));
+	RotatedBounds bounds(localBounds);
+	EulerDegrees degrees(25.0f, -40.0f, 65.0f);
+	Float3x3 rotationMatrix = Float3x3::Rotate(degrees.ToRadians());
+	bounds.SetRotationEuler(degrees);
+	EXPECT_TRUE(bounds.GetRotation3x3().IsEpsilonEqual(rotationMatrix));
+	EXPECT_TRUE(bounds.GetRotationEulerDegrees().IsEpsilonEqual(degrees));
+	EXPECT_TRUE(bounds.GetRotationEulerRadians().IsEpsilonEqual(degrees.ToRadians()));
+	EXPECT_EQ(bounds.localBounds, localBounds);
+
+	EulerRadians radians(-0.3f, 0.8f, -1.1f);
+	bounds.SetRotationEuler(radians);
+	EXPECT_TRUE(bounds.GetRotationEulerRadians().IsEpsilonEqual(radians));
+	EXPECT_TRUE(bounds.GetRotationEulerDegrees().IsEpsilonEqual(radians.ToDegrees()));
+	EXPECT_EQ(bounds.localBounds, localBounds);
+
+	bounds.SetRotationMatrix(rotationMatrix);
+	EXPECT_TRUE(bounds.GetRotationEulerDegrees().IsEpsilonEqual(degrees));
+}

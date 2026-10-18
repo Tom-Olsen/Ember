@@ -364,13 +364,14 @@ namespace fluidDynamics
 
 
 	// Data management:
-	void SphFluid3dGpuSolver::ResetData(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex, float initialDistributionRadius)
+	void SphFluid3dGpuSolver::ResetData(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex, float initialDistributionRadius, const Float3& initialDistributionPosition)
 	{
 		int hashGridSize = math::NextPrimeAbove(2 * tripleData.ParticleCount());
 		Uint3 threadCount(tripleData.ParticleCount(), 1, 1);
 		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetDataComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "hashGridSize", hashGridSize);
 		callProperties.SetValue("CallValues", "initialDistributionRadius", initialDistributionRadius);
+		callProperties.SetValue("CallValues", "initialDistributionPosition", initialDistributionPosition);
 		callProperties.SetBuffer("cellKeyBuffer", scratchData.cellKeyBuffer.GetBuffer());
 		callProperties.SetBuffer("startIndexBuffer", scratchData.startIndexBuffer.GetBuffer());
 		callProperties.SetBuffer("sortPermutationBuffer", scratchData.sortPermutationBuffer.GetBuffer());

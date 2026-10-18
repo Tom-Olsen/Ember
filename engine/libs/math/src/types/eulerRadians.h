@@ -11,6 +11,8 @@ namespace emberMath
 {
 	// Forward declarations:
 	struct EulerDegrees;
+	struct Float3x3;
+	struct Float4x4;
 
 
 
@@ -23,6 +25,8 @@ namespace emberMath
 		// Constructors:
 		EulerRadians();
 		explicit EulerRadians(const Float3& value);
+		explicit EulerRadians(const Float3x3& rotationMatrix);
+		explicit EulerRadians(const Float4x4& rotationMatrix);
 		EulerRadians(float x, float y, float z);
 		EulerRadians(Radians x, Radians y, Radians z);
 		EulerRadians(Degrees x, Degrees y, Degrees z);

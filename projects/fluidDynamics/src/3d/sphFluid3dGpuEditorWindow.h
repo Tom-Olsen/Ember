@@ -28,7 +28,9 @@ namespace emberEditor
 		fluidDynamics::SphFluid3dGpuSolver::SolverType m_solverType;
 		// Fluid:
 		int m_particleCount;
+		RotatedBounds m_fluidBounds;
 		float m_initialDistributionRadius;
+		Float3 m_initialDistributionPosition;
 		float m_effectRadius;
 		float m_mass;
 		float m_viscosity;
@@ -64,8 +66,6 @@ namespace emberEditor
 		uint32_t m_waterRefinementStepCount;
 		float m_waterStepLength;
 		uint32_t m_waterSurfaceInteractions;
-		// Internal:
-		RotatedBounds m_fluidBounds;
 
 	public:
 		SphFluid3dGpuEditorWindow(fluidDynamics::SphFluid3dGpu* pScript)
@@ -112,7 +112,9 @@ namespace emberEditor
 			// Fluid:
 			Gui::SeparatorText("Fluid");
 			Gui::DragInt("Particle Count:", &m_particleCount);
+			Gui::DragFloat3("Bounds Position:", &m_fluidBounds.localBounds.center);
 			Gui::DragFloat("Initial Distribution Radius:", &m_initialDistributionRadius, 0.1f, 1.0f);
+			Gui::DragFloat3("Initial Distribution Position:", &m_initialDistributionPosition);
 			Gui::DragFloat("Effect Radius:", &m_effectRadius, 0.1f, 1.0f);
 			Gui::DragFloat("Mass:", &m_mass, 0.1f, 1.0f);
 			Gui::DragFloat("Viscosity:", &m_viscosity, 0.1f, 1.0f);
@@ -222,7 +224,9 @@ namespace emberEditor
 			m_solverType = m_pScript->GetSolverType();
 			// Fluid:
 			m_particleCount = m_pScript->GetParticleCount();
+			m_fluidBounds = m_pScript->GetFluidBounds();
 			m_initialDistributionRadius = m_pScript->GetInitialDistributionRadius();
+			m_initialDistributionPosition = m_pScript->GetInitialDistributionPosition();
 			m_effectRadius = m_pScript->GetEffectRadius();
 			m_mass = m_pScript->GetMass();
 			m_viscosity = m_pScript->GetViscosity();
@@ -267,7 +271,9 @@ namespace emberEditor
 			m_pScript->SetSolverType(m_solverType);
 			// Fluid:
 			m_pScript->SetParticleCount(m_particleCount);
+			m_pScript->SetFluidBounds(m_fluidBounds);
 			m_pScript->SetInitialDistributionRadius(m_initialDistributionRadius);
+			m_pScript->SetInitialDistributionPosition(m_initialDistributionPosition);
 			m_pScript->SetEffectRadius(m_effectRadius);
 			m_pScript->SetMass(m_mass);
 			m_pScript->SetViscosity(m_viscosity);

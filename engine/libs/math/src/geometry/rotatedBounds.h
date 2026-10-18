@@ -7,13 +7,19 @@
 
 namespace emberMath
 {
+	// Forward declarations:
+	struct EulerDegrees;
+	struct EulerRadians;
+
+
+
     struct RotatedBounds
     {
-	public: // Members:
-        Bounds localBounds;
-
 	private: // Members:
         Float3x3 m_rotation;
+
+	public: // Members:
+        Bounds localBounds;
 
     public: // Methods:
         // Constructors:
@@ -24,6 +30,8 @@ namespace emberMath
 		RotatedBounds(const Bounds& bounds, const Float3x3& rotation);
 
         // Getters:
+		EulerDegrees GetRotationEulerDegrees() const;
+		EulerRadians GetRotationEulerRadians() const;
         Float3x3 GetRotation3x3() const;
         Float4x4 GetRotation4x4() const;
 		std::array<Float3, 8> GetCorners() const;
@@ -31,6 +39,8 @@ namespace emberMath
 
         // Setters:
         void SetRotationMatrix(const Float3x3& rotation);
+		void SetRotationEuler(const EulerDegrees& angles);
+		void SetRotationEuler(const EulerRadians& angles);
 
 		// Methods:
 		Float3 ClosestPoint(const Float3& point) const; // point outside => closest point on surface. point inside => point.

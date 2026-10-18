@@ -159,7 +159,81 @@ Scene* Fluid3dScene()
 	}
 	{ // Sph Fluid 3d Gpu:
 		Entity entity = Entity::Create("sphFluid3dGpu");
-		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>(skyboxTexture);
+		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>(skyboxTexture, RotatedBounds(Float3::zero, Float3(16.0f, 12.0f, 10.0f)));
+	}
+	return pScene;
+}
+Scene* Fluid3dSceneBig()
+{
+	Scene* pScene = new Scene();
+	pScene->SetIsEnabled(true);
+
+	// Materials:
+	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
+	Texture skyboxTexture = TextureManager::GetTexture("skybox0");
+	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
+	skyboxMaterial.SetTexture("colorMap", skyboxTexture);
+	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");
+
+	{// Camera:
+		Entity entity = Entity::Create("Camera");
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(Float3(66.5733f, -76.2722f, 35.7424f));
+		pTransform->SetRotationEuler(EulerDegrees(45.6632f, 61.3948f, 68.7260f));
+
+		Camera* pCamera = entity.AddComponent<Camera>();
+		pCamera->SetFarClip(200.0f);
+		CameraController* cameraController = entity.AddComponent<CameraController>();
+
+		pScene->SetActiveCamera(pCamera);
+	}
+	{// Directional Light:
+		Entity entity = Entity::Create("DirectionalLight");
+		Float3 pos = 2.0f * Float3(-16.0f, -9.0f, 9.0f);
+		Float3 direction = -pos.Normalize();
+		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
+    
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(pos);
+		pTransform->SetRotationMatrix(matrix);
+    
+		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
+		pDirectionalLight->SetIntensity(5.0f);
+		pDirectionalLight->SetColor(Float3::white);
+		pDirectionalLight->SetDrawFrustum(false);
+		pDirectionalLight->SetShadowCascadeCount(1);
+		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
+	}
+	{// Skybox:
+		Entity entity = Entity::Create("Skybox");
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
+		pMeshRenderer->SetMaterial(skyboxMaterial);
+		pMeshRenderer->SetCastShadows(false);
+		pMeshRenderer->SetReceiveShadows(false);
+		pMeshRenderer->SetRaycastEnabled(false);
+	}
+	{ // Floor:
+		Entity entity = Entity::Create("Floor");
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(Float3(0.0f, 0.0f, 0.0f));
+		pTransform->SetScale(Float3(140.0f, 100.0f, 1.0f));
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("quad"));
+		pMeshRenderer->SetMaterial(floorMaterial);
+	}
+	{ // Sph Fluid 3d Gpu:
+		Entity entity = Entity::Create("sphFluid3dGpu");
+		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>(skyboxTexture, RotatedBounds(Float3(0.0f, 0.0f, 20.0f), Float3(60.0f, 40.0f, 20.0f)));
+		pSphFluid3dGpu->SetParticleCount(1000000);
+		pSphFluid3dGpu->SetInitialDistributionRadius(19.0f);
+		pSphFluid3dGpu->SetInitialDistributionPosition(Float3(-30.0f, 0.0f, 19.0f));
+		pSphFluid3dGpu->SetRenderMode(SphFluid3dGpu::RenderMode::particles);
+		pSphFluid3dGpu->SetPhysicsTimeScale(1.4f);
 	}
 	return pScene;
 }
@@ -199,7 +273,8 @@ int main()
 		// Create scene:
 		//Scene* pScene = Fluid2dCpuScene();
 		//Scene* pScene = Fluid2dGpuScene();
-		Scene* pScene = Fluid3dScene();
+		//Scene* pScene = Fluid3dScene();
+		Scene* pScene = Fluid3dSceneBig();
 		emberApplication::Application::SetScene(pScene);
 
 		// Run app:
