@@ -1,13 +1,13 @@
 # Fluid Dynamics
 
 The fluid dynamics project runs a three-dimensional smoothed-particle hydrodynamics (SPH) simulation on the GPU.
-The simulation runs on an async physics compute stage which updates 50 times per second and publishes final results for rendering via tripple buffered state
-The scene used for the different render mode (particle/water/volumetric) uses 100.000 particles, while the last render demonstrates performance with 1.000.000 particles.
+The simulation runs in an async physics compute stage which updates 50 times per second and publishes final results for rendering via tripple buffered state.
+The scene used for the different render modes (particle/water/volumetric) uses 100.000 particles, while the last render demonstrates performance with 1.000.000 particles.
 
 ## Particle rendering (~300fps)
 
 Each particle is rendered as a camera facing billboard quad via instanced rendering, reading its position and color (density) from the sph gpu buffers.
-A custom shader turns the quads into 3d looking spheres and updates their depth according to a sphere.
+A custom shader turns the quads into 3d looking spheres and updates their depth accordingly.
 
 <video controls playsinline preload="none" poster="../particleShader.jpg" width="3840" height="2086" style="width: 100%; height: auto;" aria-label="SPH fluid simulation rendered as individual particles">
   <source src="../particleShader.webm" type='video/webm; codecs="av01.0.13M.10"'>
@@ -17,7 +17,8 @@ A custom shader turns the quads into 3d looking spheres and updates their depth 
 ## Water rendering (80fps - 100fps)
 
 The water shader is a ray marching algorithm which reconstructs the fluids surface via marching through the fluid simulation volume and detecting a density threshold.
-At each detected surface, the ray splits into reflected and refracted rays, up to four times following Snell's law, $n_0 \sin(\theta_0) = n_1 \sin(\theta_1)$.
+At each detected surface, the ray splits into reflected and refracted rays, up to four times following Snell's law, $n_0 \sin(\theta_0) = n_1 \sin(\theta_1)$,
+and combines both paths via the Fresnel equation for unpolarized light, $R = \frac{1}{2}\left[\left(\frac{n_0\cos\theta_0 - n_1\cos\theta_1}{n_0\cos\theta_0 + n_1\cos\theta_1}\right)^2 + \left(\frac{n_0\cos\theta_1 - n_1\cos\theta_0}{n_0\cos\theta_1 + n_1\cos\theta_0}\right)^2\right]$, with reflected and refracted weights $R$ and $1-R$, respectively.<br>
 The water shader is implemented in the forward transparent render stage, giving it access to the scene color with all opaque geometry already rendered.
 This allows reflecting and refracting the visible scene, similar to screen space reflections, and the full skybox, which also acts as a fallback for any ray that misses all geometry.
 
@@ -40,7 +41,7 @@ The directional light similarly renders a optical depth 3d texture which is used
 
 Simulation with one million particles rendered in particle mode.
 This is the maximum number of particles ember can currently run in real time, as it pushes the fps down to ~50, which is the update frequency of the physics system.
-Any time the frame rate drops below 50 the physics compute worklaod is skipped to allow previous work to finish, resulting in the simulation to slow down.
+Any time the frame rate drops below 50 the physics compute worklaod is skipped to allow previous work to finish, resulting in the simulation slowing down.<br>
 Switching to the volumetric cloud or water rendering reduces the frame rate, to around 40 and 35 fps respectively.
 Pausing the simulation brings rendering performance up to around 200 fps for clouds and 100 fps for water.
 
