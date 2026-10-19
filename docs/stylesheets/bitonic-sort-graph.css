@@ -1,0 +1,10 @@
+[data-bitonic-sort-graph] {
+    overflow-x: auto;
+    margin: 1em 0;
+    background: white;
+}
+
+[data-bitonic-sort-graph] svg {
+    display: block;
+    max-width: none;
+}

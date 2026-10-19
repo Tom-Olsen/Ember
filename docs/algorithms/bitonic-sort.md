@@ -31,3 +31,11 @@ as it offers insight into more advanced GPU features, such as shared memory and 
 
 
 ## Sorting Network
+
+Javaescript sorting network generation test:
+<!-- Arguments: data-count="32", data-draw-width="1.5", data-gap-width="3", data-figure-height="250" -->
+<div data-bitonic-sort-graph data-count="32" data-draw-width="1.5" data-gap-width="3" data-figure-height="250" tabindex="0">
+  <p>Enable JavaScript to display the bitonic sorting network.</p>
+</div>
+
+Red connections show flip operations; orange connections show disperse operations.

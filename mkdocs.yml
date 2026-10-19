@@ -25,9 +25,11 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
 
 extra_css:
+  - stylesheets/bitonic-sort-graph.css
   - stylesheets/ssr-comparison.css
 
 extra_javascript:
+  - javascripts/bitonic-sort-graph.js
   - javascripts/ssr-comparison.js
   - javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
