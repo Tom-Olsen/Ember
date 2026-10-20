@@ -8,15 +8,15 @@ set(TARGET_NAME VulkanRendererBackend)
 option(VULKAN_RENDERER_BACKEND_BUILD_SHARED "Build ${TARGET_NAME} as a shared library" ON)
 
 # Cache directories:
-get_filename_component(VULKAN_LIBRARY_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)     # vulkan
-get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)               # engine
-get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)                   # commom
-get_filename_component(ENGINE_CMAKE_DIR "${ENGINE_DIR}/cmake" ABSOLUTE)                     # cmake
-get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   # extern
-get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)           # interfaces
-get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       # libs
-get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             # resources
-get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)                 # shaders
+get_filename_component(VULKAN_RENDERER_BACKEND_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)	# vulkan
+get_filename_component(ENGINE_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)               		# engine
+get_filename_component(ENGINE_COMMON_DIR "${ENGINE_DIR}/common" ABSOLUTE)                   		# commom
+get_filename_component(ENGINE_CMAKE_DIR "${ENGINE_DIR}/cmake" ABSOLUTE)                     		# cmake
+get_filename_component(ENGINE_EXTERN_DIR "${ENGINE_DIR}/extern" ABSOLUTE)                   		# extern
+get_filename_component(ENGINE_INTERFACES_DIR "${ENGINE_DIR}/interfaces" ABSOLUTE)           		# interfaces
+get_filename_component(ENGINE_LIBS_DIR "${ENGINE_DIR}/libs" ABSOLUTE)                       		# libs
+get_filename_component(ENGINE_RESOURCES_DIR "${ENGINE_DIR}/resources" ABSOLUTE)             		# resources
+get_filename_component(ENGINE_SHADERS_DIR "${ENGINE_DIR}/shaders" ABSOLUTE)                 		# shaders
 
 if(TARGET ${TARGET_NAME})
     return()
@@ -44,9 +44,6 @@ source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 
 file(GLOB GPU_RESOURCES_FILES "src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
-
-file(GLOB MANAGERS_FILES "src/managers/*.*")
-source_group("Managers" FILES ${MANAGERS_FILES})
 
 file(GLOB BUFFERS_FILES "src/gpuResources/buffers/*.*")
 source_group("Gpu Resources/Buffers" FILES ${BUFFERS_FILES})
@@ -114,7 +111,6 @@ add_library(${TARGET_NAME} ${LIB_TYPE}
     ${DRAW_CALLS_FILES}
     ${GPU_RESOURCE_POOLS_FILES}
     ${GPU_RESOURCES_FILES}
-    ${MANAGERS_FILES}
         ${BUFFERS_FILES}
         ${SAMPLERS_FILES}
         ${TEXTURES_FILES}
@@ -149,7 +145,6 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures/texture2d
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures/texture3d
     ${CMAKE_CURRENT_SOURCE_DIR}/src/gpuResources/textures/textureCube
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/managers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pipelines
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pushConstants
     ${CMAKE_CURRENT_SOURCE_DIR}/src/renderer
@@ -165,7 +160,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
 
 
 # ---------------------- Macros ---------------------
-target_compile_definitions(${TARGET_NAME} PUBLIC VULKAN_LIBRARY_ROOT_PATH="${VULKAN_LIBRARY_ROOT_PATH}")
+target_compile_definitions(${TARGET_NAME} PUBLIC VULKAN_RENDERER_BACKEND_PATH="${VULKAN_RENDERER_BACKEND_PATH}")
 target_compile_definitions(${TARGET_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_SHADERS_DIR}")
 ember_configure_vulkan_validation_layers(${TARGET_NAME})
 
@@ -221,10 +216,8 @@ add_dependencies(${TARGET_NAME} EmberShaderCompiler)
 
 # ------------- Link External Libraries -------------
 # Vulkan (dynamicly linked):
-find_package(Vulkan REQUIRED)           # required to be installed
-target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(${TARGET_NAME} PUBLIC ${Vulkan_LIBRARIES})
-# target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan) can this replace above 2 lines?
+find_package(Vulkan REQUIRED)	# required to be installed
+target_link_libraries(${TARGET_NAME} PUBLIC Vulkan::Vulkan)
 
 # Vulkan Memory Allocator: (header only)
 target_include_directories(${TARGET_NAME} PUBLIC "${ENGINE_EXTERN_DIR}/vma/include")
