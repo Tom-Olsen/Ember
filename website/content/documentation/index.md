@@ -1,10 +1,10 @@
-# Ember Engine
-Ember is a modular C++ game engine and real-time rendering project based on Vulkan. This documentation will describe the engine's big-picture design, its public APIs, and how its systems work together.
+# Documentation
+Ember is a modular C++ game engine and real-time rendering project based on Vulkan. This documentation describes the engine's big-picture design, its public APIs, and how its systems work together.
 
 [View the source code](https://github.com/Tom-Olsen/Ember){ .md-button .md-button--primary }
 
 !!! note "Documentation in progress"
-    This is the initial documentation page. Architecture guides, API concepts, and system walkthroughs will be added as the documentation develops.
+    The current guides focus on the Vulkan renderer. More architecture guides, API concepts, and system walkthroughs will be added as the documentation develops.
 
 ## Architecture at a glance
 ```mermaid
@@ -36,3 +36,5 @@ The [Vulkan Renderer](vulkan-renderer/index.md) section maps the renderer backen
 - Materials, shaders, and compute pipelines
 - Event, window, GUI, and editor integration
 - Public API usage examples
+
+For visual demonstrations, visit the [Ember showcase](../showcase/index.md). General lessons about algorithms and physics are collected separately in [Sparkive](https://tom-olsen.github.io/sparkive/).

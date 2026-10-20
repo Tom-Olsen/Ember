@@ -6,6 +6,4 @@
 **profilingResults.json
 .agents/**
 .vscode/**
-.venv-docs/**
 .codex
-site/

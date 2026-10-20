@@ -1,0 +1,110 @@
+site_name: Ember
+site_description: Showcase and technical documentation for the Ember game engine
+site_url: https://tom-olsen.github.io/Ember/
+repo_url: https://github.com/Tom-Olsen/Ember
+repo_name: Tom-Olsen/Ember
+docs_dir: content
+site_dir: site
+
+theme:
+  name: material
+  custom_dir: overrides
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - stylesheets/ember.css
+  - stylesheets/ssr-comparison.css
+
+extra:
+  header_links:
+    - name: Portfolio
+      url: https://tom-olsen.github.io/Tom-Olsen/
+      icon: material/account-circle-outline
+    - name: GitHub
+      url: https://github.com/Tom-Olsen/Ember
+      icon: fontawesome/brands/github
+    - name: LinkedIn
+      url: https://www.linkedin.com/in/dr-tom-olsen-a1a793238/
+      icon: fontawesome/brands/linkedin
+
+extra_javascript:
+  - javascripts/ssr-comparison.js
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+plugins:
+  - search
+  - redirects:
+      redirect_maps:
+        index.md: overview/index.md
+        docs/index.md: documentation/index.md
+        vulkan-renderer/compute.md: documentation/vulkan-renderer/compute.md
+        vulkan-renderer/context-and-lifetime.md: documentation/vulkan-renderer/context-and-lifetime.md
+        vulkan-renderer/frame-lifecycle.md: documentation/vulkan-renderer/frame-lifecycle.md
+        vulkan-renderer/gpu-resources.md: documentation/vulkan-renderer/gpu-resources.md
+        vulkan-renderer/index.md: documentation/vulkan-renderer/index.md
+        vulkan-renderer/rendering-pipeline.md: documentation/vulkan-renderer/rendering-pipeline.md
+        showcase/fluid-dynamics.md: showcase/fluidDynamics/index.md
+        showcase/screen-space-reflections.md: showcase/screenSpaceReflections/index.md
+        preview/index.md: showcase/index.md
+        preview/screen-space-reflections.md: showcase/screenSpaceReflections/index.md
+        preview/fluid-dynamics.md: showcase/fluidDynamics/index.md
+        algorithms/index.md: https://tom-olsen.github.io/sparkive/
+        algorithms/bitonic-sort.md: https://tom-olsen.github.io/sparkive/algorithms/bitonic-sort/
+        algorithms/smoothed-particle-hydrodynamics.md: https://tom-olsen.github.io/sparkive/physics/smoothed-particle-hydrodynamics/
+        algorithms/lattice-boltzmann-method.md: https://tom-olsen.github.io/sparkive/physics/lattice-boltzmann-method/
+
+nav:
+  - Overview: overview/index.md
+  - Showcase:
+      - showcase/index.md
+      - Screen-Space Reflections: showcase/screenSpaceReflections/index.md
+      - Fluid Dynamics: showcase/fluidDynamics/index.md
+  - Documentation:
+      - documentation/index.md
+      - Vulkan Renderer:
+          - documentation/vulkan-renderer/index.md
+          - Frame Lifecycle and Render Graph: documentation/vulkan-renderer/frame-lifecycle.md
+          - Rendering Pipeline: documentation/vulkan-renderer/rendering-pipeline.md
+          - GPU Resources and Descriptors: documentation/vulkan-renderer/gpu-resources.md
+          - Compute: documentation/vulkan-renderer/compute.md
+          - Context and Lifetime: documentation/vulkan-renderer/context-and-lifetime.md

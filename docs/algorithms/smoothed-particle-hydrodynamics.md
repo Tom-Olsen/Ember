@@ -1,1 +1,0 @@
-# Smoothed Particle Hydrodynamics

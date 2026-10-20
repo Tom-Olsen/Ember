@@ -1,9 +1,10 @@
-# Screen-Space-Reflections
+# Screen-Space Reflections
 
 Ember supports a screen space compute stage, which runs on the graphics queue right after the deferred lighting and before the forward opaque stage.
 This allows for the implementation of screen space techniques, such as screen space reflections, which allow geometry to reflect any of the visibly drawn geometry and the full skybox.
 
 <figure class="ssr-comparison" data-ssr-comparison>
+  <p id="ssr-comparison-help">Drag the divider to compare reflections with the original scene. Choose a mode below to change the image on the right.</p>
   <div class="ssr-comparison__summary">
     <div>
       <span class="ssr-comparison__label">SSR off</span>
@@ -19,8 +20,8 @@ This allows for the implementation of screen space techniques, such as screen sp
     </div>
   </div>
   <div class="ssr-comparison__viewport">
-    <img class="ssr-comparison__image" data-ssr-image src="../images/ssrFullResolution.png" width="3840" height="2080" loading="lazy" decoding="async" alt="Scene with full-resolution screen-space reflections enabled">
-    <img class="ssr-comparison__image ssr-comparison__baseline" src="../ssrOff.png" width="3840" height="2080" loading="lazy" decoding="async" alt="The same scene with screen-space reflections disabled">
+    <img class="ssr-comparison__image" data-ssr-image src="ssrFullResolution.png" width="3840" height="2080" loading="lazy" decoding="async" alt="Scene with full-resolution screen-space reflections enabled">
+    <img class="ssr-comparison__image ssr-comparison__baseline" src="ssrOff.png" width="3840" height="2080" loading="lazy" decoding="async" alt="The same scene with screen-space reflections disabled">
     <div class="ssr-comparison__divider" aria-hidden="true">
       <span class="ssr-comparison__handle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 7-5 5 5 5m8-10 5 5-5 5"/></svg>
@@ -31,15 +32,15 @@ This allows for the implementation of screen space techniques, such as screen sp
   <fieldset class="ssr-comparison__modes">
     <legend>Right image</legend>
     <label>
-      <input type="radio" name="ssr-mode" value="full-resolution" checked data-image="../images/ssrFullResolution.png" data-name="Full resolution" data-fps="194.6">
+      <input type="radio" name="ssr-mode" value="full-resolution" checked data-image="ssrFullResolution.png" data-name="Full resolution" data-fps="194.6">
       <span class="ssr-comparison__mode"><span>Full Resolution</span><span class="ssr-comparison__mode-fps">194.6 FPS</span></span>
     </label>
     <label>
-      <input type="radio" name="ssr-mode" value="reflection-map" data-image="../images/ssrReflectionMap.png" data-name="Reflection map" data-fps="322.9">
+      <input type="radio" name="ssr-mode" value="reflection-map" data-image="ssrReflectionMap.png" data-name="Reflection map" data-fps="322.9">
       <span class="ssr-comparison__mode"><span>Reflection Map</span><span class="ssr-comparison__mode-fps">322.9 FPS</span></span>
     </label>
     <label>
-      <input type="radio" name="ssr-mode" value="reflection-uv-map" data-image="../images/ssrReflectionUvMap.png" data-name="Reflection UV map" data-fps="317.2">
+      <input type="radio" name="ssr-mode" value="reflection-uv-map" data-image="ssrReflectionUvMap.png" data-name="Reflection UV map" data-fps="317.2">
       <span class="ssr-comparison__mode"><span>Reflection UV Map</span><span class="ssr-comparison__mode-fps">317.2 FPS</span></span>
     </label>
   </fieldset>
@@ -59,4 +60,6 @@ This allows for the implementation of screen space techniques, such as screen sp
 </figure>
 
 The 'Reflection Map' and 'Reflection UV Map' achieve very similar results to the 'Full Resolution' approach with twice as many fps.<br>
-See the [rendering pipeline](../vulkan-renderer/rendering-pipeline.md) for how rendering and compute passes fit together.
+See the [rendering pipeline](../../documentation/vulkan-renderer/rendering-pipeline.md) for how rendering and compute passes fit together.
+
+[All showcase features](../index.md)
