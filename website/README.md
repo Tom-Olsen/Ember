@@ -7,7 +7,7 @@ All website sources, configuration, dependencies, and local output live in this 
 - `mkwebsite.yml`: Material for MkDocs configuration; pass it explicitly with `--config-file`.
 - `preview.sh`: starts the live preview and opens Firefox.
 - `requirements.txt`: Python dependencies.
-- `content/`: Overview, Showcase, Documentation, and shared page assets.
+- `content/`: Home, Showcase, Documentation, and shared page assets.
 - `overrides/`: custom theme templates, separate from published content.
 - `.venv/`: ignored local Python environment.
 - `site/`: ignored generated website output.

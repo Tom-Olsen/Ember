@@ -75,7 +75,8 @@ plugins:
   - search
   - redirects:
       redirect_maps:
-        index.md: overview/index.md
+        index.md: home/index.md
+        overview/index.md: home/index.md
         docs/index.md: documentation/index.md
         vulkan-renderer/compute.md: documentation/vulkan-renderer/compute.md
         vulkan-renderer/context-and-lifetime.md: documentation/vulkan-renderer/context-and-lifetime.md
@@ -94,7 +95,7 @@ plugins:
         algorithms/lattice-boltzmann-method.md: https://tom-olsen.github.io/sparkive/physics/lattice-boltzmann-method/
 
 nav:
-  - Overview: overview/index.md
+  - Home: home/index.md
   - Showcase:
       - showcase/index.md
       - Screen-Space Reflections: showcase/screenSpaceReflections/index.md
