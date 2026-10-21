@@ -9,6 +9,7 @@ All website sources, configuration, dependencies, and local output live in this 
 - `requirements.txt`: Python dependencies.
 - `content/`: Home, Showcase, Documentation, and shared page assets.
 - `overrides/`: custom theme templates, separate from published content.
+- `hooks.py`: embeds the shared `../brand/ember-logo.svg` into the header. Edit that shared SVG to update the logo; the preview watches it automatically. The header's SVG stroke color is set in `content/stylesheets/ember.css`.
 - `.venv/`: ignored local Python environment.
 - `site/`: ignored generated website output.
 

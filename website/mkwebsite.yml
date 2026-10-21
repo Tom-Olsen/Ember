@@ -6,6 +6,12 @@ repo_name: Tom-Olsen/Ember
 docs_dir: content
 site_dir: site
 
+hooks:
+  - hooks.py
+
+watch:
+  - ../brand/ember-logo.svg
+
 theme:
   name: material
   custom_dir: overrides

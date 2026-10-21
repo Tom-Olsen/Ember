@@ -3,6 +3,7 @@
   <div class="md-grid">
     <ul class="md-tabs__list">
       <li class="ember-header-brand">
+        <span class="ember-header-logo" aria-hidden="true">{{ emberLogoSvg | safe }}</span>
         <span class="md-ellipsis">{{ config.site_name }}</span>
       </li>
       {% for nav_item in nav.items %}

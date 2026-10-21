@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - website/**
+      - brand/ember-logo.svg
       - .github/workflows/docs.yml
   workflow_dispatch:
 

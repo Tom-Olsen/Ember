@@ -54,6 +54,7 @@
 - `projects/unitTests/`: Project-level GPU sort and compute shader tests using the game application stack.
 - `projects/plotting/`: Small plotting/graphics experiment; much of its CMake setup is currently disabled.
 - `unitTests/`: Top-level test aggregation CMake plus `runAllTests.sh` and `runAllTests.bat`.
+- `brand/`: Project-wide visual identity assets. `brand/ember-logo.svg` is the shared logo source used by the website and other project materials.
 - `website/`: Project website source, including Home, Showcase, Documentation, and shared assets.
 - Root `readme.txt`, `ToDo*.txt`: Project notes and planned work.
 - Generated output is commonly stored in `build/` and backend `bin/` directories. Exclude these directories from source searches unless investigating build artifacts.

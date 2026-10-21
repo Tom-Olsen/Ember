@@ -31,7 +31,10 @@
     --ember-header-transition: 320ms cubic-bezier(0.4, 0, 0.2, 1);
     --ember-header-expanded-height-rem: 4.8;
     --ember-header-brand-size: 3rem;
-    --ember-header-brand-width: calc(3 * var(--ember-header-brand-size) + 1rem);
+    --ember-header-logo-height: var(--ember-header-brand-size);
+    --ember-header-logo-shift: -70%;
+    --ember-header-brand-width: calc(3.85 * var(--ember-header-brand-size) + 1rem);
+    --ember-header-outer-space: 0px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: calc(var(--ember-header-expanded-height-rem) * 1rem);
@@ -43,13 +46,43 @@
 .ember-header-brand {
     flex: 0 0 var(--ember-header-brand-width);
     display: flex;
+    align-items: baseline;
     justify-content: flex-end;
+    gap: 0.15em;
     min-width: 0;
     padding: 0 0.4rem 0 0.6rem;
+    margin-inline-start: calc(-1 * min(var(--ember-header-brand-width), var(--ember-header-outer-space)));
     font-size: var(--ember-header-brand-size);
     font-weight: 700;
     line-height: 1;
-    transition: font-size var(--ember-header-transition);
+    transition: font-size var(--ember-header-transition), gap var(--ember-header-transition);
+}
+
+.ember-header-brand > .md-ellipsis {
+    flex: 0 0 auto;
+}
+
+.ember-header-logo {
+    flex: 0 0 calc(0.74 * var(--ember-header-logo-height));
+    width: calc(0.74 * var(--ember-header-logo-height));
+    height: 0;
+    color: #ffffff;
+    transition: flex-basis var(--ember-header-transition), width var(--ember-header-transition);
+}
+
+.ember-header-logo svg {
+    display: block;
+    position: absolute;
+    top: 50%;
+    width: calc(0.74 * var(--ember-header-logo-height));
+    height: var(--ember-header-logo-height);
+    transform: translateY(var(--ember-header-logo-shift));
+    transition: width var(--ember-header-transition), height var(--ember-header-transition), transform var(--ember-header-transition);
+}
+
+.ember-header-logo path {
+    stroke: currentColor;
+    vector-effect: non-scaling-stroke;
 }
 
 .ember-header-controls {
@@ -80,11 +113,14 @@
 }
 
 .ember-header-layout--compact {
+    --ember-header-logo-height: 1.05rem;
+    --ember-header-logo-shift: -50%;
     grid-template-rows: 2.4rem;
 }
 
 .ember-header-layout--compact .ember-header-brand {
     font-size: 0.7rem;
+    gap: 0.225em;
 }
 
 .ember-header-links {
@@ -121,23 +157,26 @@
     height: 1rem;
 }
 
-/* Use the outer page margin when it can fit the expanded brand. */
-@media screen and (min-width: 112em) {
-    .ember-header-brand {
-        margin-inline-start: calc(-1 * var(--ember-header-brand-width));
-    }
-}
-
 @media screen and (max-width: 76.234375em) {
+    .ember-header-layout {
+        --ember-header-brand-size: 1.9rem;
+    }
+
     .md-tabs {
         display: block;
     }
+
+    .ember-header-link-label {
+        display: none;
+    }
 }
 
-@media screen and (max-width: 44.984375em) {
+@media screen and (max-width: 59.984375em) {
     .ember-header-layout,
     .ember-header-layout--compact {
-        --ember-header-brand-size: 1rem;
+        --ember-header-brand-size: 0.9rem;
+        --ember-header-logo-height: var(--ember-header-brand-size);
+        --ember-header-logo-shift: -50%;
         grid-template-columns: minmax(0, 1fr);
         grid-template-rows: 2.4rem 2.4rem;
         transition: none;
@@ -146,7 +185,13 @@
     .ember-header-layout .ember-header-brand {
         flex: 0 0 auto;
         justify-content: flex-start;
+        gap: 0.225em;
         font-size: var(--ember-header-brand-size);
+        transition: none;
+    }
+
+    .ember-header-logo,
+    .ember-header-logo svg {
         transition: none;
     }
 
@@ -163,7 +208,7 @@
     }
 
     .ember-header-layout > .md-tabs .md-tabs__item {
-        padding: 0 0.2rem;
+        padding: 0 0.1rem;
     }
 
     .md-header__button {
@@ -189,7 +234,9 @@
 
 @media (prefers-reduced-motion: reduce) {
     .ember-header-layout,
-    .ember-header-brand {
+    .ember-header-brand,
+    .ember-header-logo,
+    .ember-header-logo svg {
         transition: none;
     }
 }

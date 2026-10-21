@@ -3,7 +3,7 @@ class EmberHeader {
         this.layout = layout;
         this.observer = null;
         this.isCompact = false;
-        this.phoneViewport = window.matchMedia('(max-width: 44.984375em)');
+        this.phoneViewport = window.matchMedia('(max-width: 59.984375em)');
 
         window.addEventListener('resize', () => this.ObserveHeading());
         document.fonts.ready.then(() => this.ObserveHeading());
@@ -18,6 +18,8 @@ class EmberHeader {
     ObserveHeading() {
         this.observer?.disconnect();
         this.observer = null;
+        const outerSpace = Math.max(0, this.layout.getBoundingClientRect().left);
+        this.layout.style.setProperty('--ember-header-outer-space', `${outerSpace}px`);
         if (this.phoneViewport.matches) {
             this.UpdateCompact(false);
             return;
