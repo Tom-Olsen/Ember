@@ -3,6 +3,7 @@ class EmberHeader {
         this.layout = layout;
         this.observer = null;
         this.isCompact = false;
+        this.phoneViewport = window.matchMedia('(max-width: 44.984375em)');
 
         window.addEventListener('resize', () => this.ObserveHeading());
         document.fonts.ready.then(() => this.ObserveHeading());
@@ -17,6 +18,10 @@ class EmberHeader {
     ObserveHeading() {
         this.observer?.disconnect();
         this.observer = null;
+        if (this.phoneViewport.matches) {
+            this.UpdateCompact(false);
+            return;
+        }
         const heading = document.querySelector('.md-content h1');
         if (!heading) {
             this.UpdateCompact(false);
