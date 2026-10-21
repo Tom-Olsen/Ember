@@ -21,7 +21,7 @@
       <div class="ember-header-links" role="group" aria-label="More from Tom Olsen">
         {% for link in config.extra.header_links %}
           <a class="ember-header-link" href="{{ link.url | e }}" target="_blank" rel="noopener noreferrer" aria-label="{{ link.name | e }} (opens in a new tab)" title="{{ link.name | e }}">
-            <span class="md-icon">{% include ".icons/" ~ link.icon ~ ".svg" %}</span>
+            <span class="md-icon">{% if link.icon in brandIcons %}{{ brandIcons[link.icon] | safe }}{% else %}{% include ".icons/" ~ link.icon ~ ".svg" %}{% endif %}</span>
             <span class="ember-header-link-label">{{ link.name }}</span>
           </a>
         {% endfor %}

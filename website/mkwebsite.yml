@@ -11,6 +11,7 @@ hooks:
 
 watch:
   - ../brand/ember-logo.svg
+  - ../brand/sparkive-logo.svg
 
 theme:
   name: material
@@ -73,7 +74,7 @@ extra:
       icon: fontawesome/brands/linkedin
     - name: Sparkive
       url: https://tom-olsen.github.io/sparkive/
-      icon: material/lightbulb-on-outline
+      icon: brand/sparkive-logo
 
 extra_javascript:
   - javascripts/ember-header.js
