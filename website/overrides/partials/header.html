@@ -1,8 +1,6 @@
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <div class="ember-header-layout md-grid">
-    <div class="ember-header-brand" data-md-component="header-title">
-      <span class="md-ellipsis">{{ config.site_name }}</span>
-    </div>
+    {% include "partials/tabs.html" %}
     <nav class="md-header__inner ember-header-controls" aria-label="{{ lang.t('header') }}">
       <label class="md-header__button md-icon" for="__drawer" aria-label="Open section navigation" title="Open section navigation">
         {% set icon = config.theme.icon.menu or "material/menu" %}
@@ -29,6 +27,5 @@
         {% endfor %}
       </div>
     </nav>
-    {% include "partials/tabs.html" %}
   </div>
 </header>

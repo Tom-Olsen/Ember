@@ -60,13 +60,14 @@ extra:
       url: https://tom-olsen.github.io/Tom-Olsen/
       icon: material/account-circle-outline
     - name: GitHub
-      url: https://github.com/Tom-Olsen/Ember
+      url: https://github.com/Tom-Olsen
       icon: fontawesome/brands/github
     - name: LinkedIn
       url: https://www.linkedin.com/in/dr-tom-olsen-a1a793238/
       icon: fontawesome/brands/linkedin
 
 extra_javascript:
+  - javascripts/ember-header.js
   - javascripts/ssr-comparison.js
   - javascripts/mathjax.js
   - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
