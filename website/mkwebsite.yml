@@ -65,6 +65,9 @@ extra:
     - name: LinkedIn
       url: https://www.linkedin.com/in/dr-tom-olsen-a1a793238/
       icon: fontawesome/brands/linkedin
+    - name: Sparkive
+      url: https://tom-olsen.github.io/sparkive/
+      icon: material/lightbulb-on-outline
 
 extra_javascript:
   - javascripts/ember-header.js

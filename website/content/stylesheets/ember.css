@@ -154,6 +154,7 @@
         grid-column: 1 / -1;
         grid-row: 1;
         min-height: 2.4rem;
+        padding: 0;
     }
 
     .ember-header-layout > .md-tabs {
