@@ -11,8 +11,7 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	Compute::Compute()
 	{
-		uint32_t asyncSessionCount = 10;
-		m_pIAsync = std::make_unique<Async>(asyncSessionCount);
+		m_pIAsync = std::make_unique<Async>();
 		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
 		m_pMidRenderComputeQueue = std::make_unique<ComputeQueue>();
 		m_pScreenSpaceComputeQueue = std::make_unique<ComputeQueue>(true);

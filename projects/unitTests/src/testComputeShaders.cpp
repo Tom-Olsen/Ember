@@ -1,6 +1,10 @@
 #include "application.h"
 #include "emberEngine.h"
+#include "vulkanAsyncCompute.h"
+#include <array>
 #include <gtest/gtest.h>
+#include <set>
+#include <vector>
 
 
 
@@ -170,4 +174,71 @@ TEST_F(TEST_ComputeShaders, BufferTypedSwap)
 			break;
 	}
 	EXPECT_TRUE(allGood);
+}
+
+
+
+TEST_F(TEST_ComputeShaders, AsyncSessionsGrowAndReuse)
+{
+	constexpr uint32_t sessionCount = 33;
+	vulkanRendererBackend::Async async;
+	for (uint32_t batchIndex = 0; batchIndex < 3; batchIndex++)
+	{
+		std::array<uint32_t, sessionCount> sessions;
+		// Keep every slot recording so completed GPU work cannot hide the need to grow.
+		for (uint32_t index = 0; index < sessionCount; index++)
+		{
+			sessions[index] = async.CreateComputeSession();
+			EXPECT_LT(sessions[index], sessionCount);
+		}
+		std::set<uint32_t> uniqueSessions(sessions.begin(), sessions.end());
+		EXPECT_EQ(uniqueSessions.size(), sessionCount);
+
+		for (uint32_t sessionID : sessions)
+			async.DispatchComputeSession(sessionID, 0.0f, 0.0f);
+		for (auto session = sessions.rbegin(); session != sessions.rend(); session++)
+			async.WaitForFinish(*session);
+		for (uint32_t sessionID : sessions)
+			EXPECT_TRUE(async.IsFinished(sessionID));
+	}
+}
+
+
+
+TEST_F(TEST_ComputeShaders, AsyncSessionGrowthPreservesRecordedWork)
+{
+	constexpr uint32_t sessionCount = 33;
+	constexpr uint32_t elementCount = 257;
+	ComputeShader shader = ComputeShaderManager::TryGetComputeShader("initIndexBuffer");
+	std::vector<BufferTyped<uint32_t>> buffers;
+	buffers.reserve(sessionCount);
+	for (uint32_t index = 0; index < sessionCount; index++)
+		buffers.emplace_back(elementCount, "growingAsyncBuffer" + std::to_string(index), BufferUsage::storage);
+
+	for (uint32_t batchIndex = 0; batchIndex < 2; batchIndex++)
+	{
+		std::array<uint32_t, sessionCount> sessions;
+		std::vector<uint32_t> initialValues(elementCount, UINT32_MAX);
+		for (uint32_t index = 0; index < sessionCount; index++)
+		{
+			buffers[index].Upload(initialValues.data(), elementCount);
+			sessions[index] = Compute::Async::CreateComputeSession();
+			CallProperties properties = Compute::Async::RecordComputeShader(sessions[index], shader, Uint3(elementCount, 1, 1));
+			properties.SetBuffer("indexBuffer", buffers[index].GetBuffer());
+		}
+
+		// Growth must preserve the calls and bindings recorded in earlier sessions.
+		for (uint32_t sessionID : sessions)
+			Compute::Async::DispatchComputeSession(sessionID);
+		for (auto session = sessions.rbegin(); session != sessions.rend(); session++)
+			Compute::Async::WaitForFinish(*session);
+
+		for (uint32_t index = 0; index < sessionCount; index++)
+		{
+			std::vector<uint32_t> result(elementCount);
+			buffers[index].Download(result.data(), elementCount);
+			for (uint32_t elementIndex = 0; elementIndex < elementCount; elementIndex++)
+				EXPECT_EQ(result[elementIndex], elementIndex) << "Batch " << batchIndex << ", session " << index;
+		}
+	}
 }

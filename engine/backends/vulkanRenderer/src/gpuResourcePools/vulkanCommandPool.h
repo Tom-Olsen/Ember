@@ -21,9 +21,9 @@ namespace vulkanRendererBackend
 	class CommandPool
 	{
 	private: // Members:
-		VkCommandPool m_primaryPool;
+		VkCommandPool m_primaryPool = nullptr;
 		std::vector<VkCommandPool> m_secondaryPools;
-		VkCommandBuffer m_primaryBuffer;
+		VkCommandBuffer m_primaryBuffer = nullptr;
 		std::vector<VkCommandBuffer> m_secondaryBuffers;
 
 	public: // Methods:

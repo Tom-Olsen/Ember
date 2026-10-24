@@ -31,7 +31,6 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Async : public emberBackendInterface::ICompute::IAsync
 	{
 	private: // Members:
-		uint32_t m_maxSessionCount = 0;
 		uint32_t m_nextQueueIndex = 0;
 		std::vector<CommandPool> m_pCommandPools;
 		std::vector<ComputeSession> m_computeSessions;
@@ -40,7 +39,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		Async(uint32_t sessionCount);
+		Async();
 		~Async();
 
 		// Non-copyable:
@@ -71,6 +70,7 @@ namespace vulkanRendererBackend
 		void MoveFrom(Async& other) noexcept;
 
 		// Helpers:
+		void AddSession();
 		uint32_t SelectQueue();
 		void ResetComputeSession(uint32_t sessionID);
 	};

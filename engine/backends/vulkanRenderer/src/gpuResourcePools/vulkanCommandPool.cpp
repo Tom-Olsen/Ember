@@ -19,38 +19,46 @@ namespace vulkanRendererBackend
 		// Assertions:
 		assert(queue.queue != VK_NULL_HANDLE);
 
-		// Create primary command pool:
-		VkCommandPoolCreateInfo primaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-		primaryCreateInfo.queueFamilyIndex = queue.familyIndex;
-		VKA(vkCreateCommandPool(Context::GetVkDevice(), &primaryCreateInfo, nullptr, &m_primaryPool));
-		NAME_VK_OBJECT(m_primaryPool, "CommandPool" + std::to_string(nameIndex) + "_Primary");
-
-		// Allocate primary command buffer:
-		VkCommandBufferAllocateInfo primaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-		primaryAllocateInfo.commandPool = m_primaryPool;
-		primaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		primaryAllocateInfo.commandBufferCount = 1;
-		VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &primaryAllocateInfo, &m_primaryBuffer));
-		NAME_VK_OBJECT(m_primaryBuffer, "CommandBuffer" + std::to_string(nameIndex) + "_Primary");
-
-		// Secondaries:
-		m_secondaryPools.resize(secondaryBufferCount);
-		m_secondaryBuffers.resize(secondaryBufferCount);
-		for (int i = 0; i < secondaryBufferCount; i++)
+		try
 		{
-			// Create secondary command pools:
-			VkCommandPoolCreateInfo secondaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-			secondaryCreateInfo.queueFamilyIndex = queue.familyIndex;
-			VKA(vkCreateCommandPool(Context::GetVkDevice(), &secondaryCreateInfo, nullptr, &m_secondaryPools[i]));
-			NAME_VK_OBJECT(m_secondaryPools[i], "CommandPool" + std::to_string(nameIndex) + "_Secondary" + std::to_string(i));
+			// Create primary command pool:
+			VkCommandPoolCreateInfo primaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+			primaryCreateInfo.queueFamilyIndex = queue.familyIndex;
+			VKA(vkCreateCommandPool(Context::GetVkDevice(), &primaryCreateInfo, nullptr, &m_primaryPool));
+			NAME_VK_OBJECT(m_primaryPool, "CommandPool" + std::to_string(nameIndex) + "_Primary");
 
-			// Allocate secondary command buffers:
-			VkCommandBufferAllocateInfo secondaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-			secondaryAllocateInfo.commandPool = m_secondaryPools[i];
-			secondaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-			secondaryAllocateInfo.commandBufferCount = 1;
-			VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &secondaryAllocateInfo, &m_secondaryBuffers[i]));
-			NAME_VK_OBJECT(m_secondaryBuffers[i], "CommandBuffer" + std::to_string(nameIndex) + "_Secondary" + std::to_string(i));
+			// Allocate primary command buffer:
+			VkCommandBufferAllocateInfo primaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+			primaryAllocateInfo.commandPool = m_primaryPool;
+			primaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			primaryAllocateInfo.commandBufferCount = 1;
+			VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &primaryAllocateInfo, &m_primaryBuffer));
+			NAME_VK_OBJECT(m_primaryBuffer, "CommandBuffer" + std::to_string(nameIndex) + "_Primary");
+
+			// Secondaries:
+			m_secondaryPools.resize(secondaryBufferCount);
+			m_secondaryBuffers.resize(secondaryBufferCount);
+			for (int i = 0; i < secondaryBufferCount; i++)
+			{
+				// Create secondary command pools:
+				VkCommandPoolCreateInfo secondaryCreateInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+				secondaryCreateInfo.queueFamilyIndex = queue.familyIndex;
+				VKA(vkCreateCommandPool(Context::GetVkDevice(), &secondaryCreateInfo, nullptr, &m_secondaryPools[i]));
+				NAME_VK_OBJECT(m_secondaryPools[i], "CommandPool" + std::to_string(nameIndex) + "_Secondary" + std::to_string(i));
+
+				// Allocate secondary command buffers:
+				VkCommandBufferAllocateInfo secondaryAllocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+				secondaryAllocateInfo.commandPool = m_secondaryPools[i];
+				secondaryAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+				secondaryAllocateInfo.commandBufferCount = 1;
+				VKA(vkAllocateCommandBuffers(Context::GetVkDevice(), &secondaryAllocateInfo, &m_secondaryBuffers[i]));
+				NAME_VK_OBJECT(m_secondaryBuffers[i], "CommandBuffer" + std::to_string(nameIndex) + "_Secondary" + std::to_string(i));
+			}
+		}
+		catch (...)
+		{
+			Cleanup();
+			throw;
 		}
 		nameIndex++;
 	}
@@ -121,13 +129,18 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void CommandPool::Cleanup()
 	{
-		vkFreeCommandBuffers(Context::GetVkDevice(), m_primaryPool, 1, &m_primaryBuffer);
-		vkDestroyCommandPool(Context::GetVkDevice(), m_primaryPool, nullptr);
-		for (int i = 0; i < m_secondaryBuffers.size(); i++)
+		// Destroying a pool also frees all of its command buffers.
+		if (m_primaryPool != VK_NULL_HANDLE)
+			vkDestroyCommandPool(Context::GetVkDevice(), m_primaryPool, nullptr);
+		for (VkCommandPool pool : m_secondaryPools)
 		{
-			vkFreeCommandBuffers(Context::GetVkDevice(), m_secondaryPools[i], 1, &m_secondaryBuffers[i]);
-			vkDestroyCommandPool(Context::GetVkDevice(), m_secondaryPools[i], nullptr);
+			if (pool != VK_NULL_HANDLE)
+				vkDestroyCommandPool(Context::GetVkDevice(), pool, nullptr);
 		}
+		m_primaryPool = VK_NULL_HANDLE;
+		m_primaryBuffer = VK_NULL_HANDLE;
+		m_secondaryPools.clear();
+		m_secondaryBuffers.clear();
 	}
 	void CommandPool::MoveFrom(CommandPool& other) noexcept
 	{

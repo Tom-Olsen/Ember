@@ -23,25 +23,15 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	Async::Async(uint32_t maxSessionCount)
+	Async::Async()
 	{
-		// Set session count:
-		m_maxSessionCount = math::Max((uint32_t)1, maxSessionCount);
+		constexpr uint32_t initialSessionCount = 8;
+		m_pCommandPools.reserve(initialSessionCount);
+		m_computeSessions.reserve(initialSessionCount);
+		m_pendingSessionCounts.resize(Context::GetLogicalDevice()->GetComputeQueues().size());
 
-		// Resize/Reserve vectors:
-		m_pCommandPools.reserve(m_maxSessionCount);
-		m_computeSessions.resize(m_maxSessionCount);
-		const auto& computeQueues = Context::GetLogicalDevice()->GetComputeQueues();
-		m_pendingSessionCounts.resize(computeQueues.size());
-
-		for (uint32_t i = 0; i < m_maxSessionCount; i++)
-		{
-			// Command pools can be used by every compute queue in the same family, so simply use first compute queue:
-			m_pCommandPools.emplace_back(0, *computeQueues.front());
-
-			// Populate index queue:
-			m_freeIndices.push(i);
-		}
+		for (uint32_t sessionIndex = 0; sessionIndex < initialSessionCount; sessionIndex++)
+			AddSession();
 	}
 	Async::~Async()
 	{
@@ -70,8 +60,13 @@ namespace vulkanRendererBackend
 	// Dispatch logic:
 	uint32_t Async::CreateComputeSession()
 	{
+		if (m_pendingSessionCounts.empty())
+			throw std::runtime_error("Async compute has no queues.");
+
 		if (m_freeIndices.empty())
-			throw std::runtime_error("compute::Async::CreateComputeSession(...) has run out of free sessionIDs (maxSessionCount=" + std::to_string(m_maxSessionCount) + "). You can increase maxSessionCount in compute::Async::Init(...).");
+			CollectFinishedSessions();
+		if (m_freeIndices.empty())
+			AddSession();
 
 		uint32_t sessionID = m_freeIndices.front();
 		m_freeIndices.pop();
@@ -81,7 +76,7 @@ namespace vulkanRendererBackend
 	}
 	void Async::DispatchComputeSession(uint32_t sessionID, float time, float deltaTime)
 	{
-		if (sessionID >= m_maxSessionCount)
+		if (sessionID >= m_computeSessions.size())
 			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 		if (m_computeSessions[sessionID].state == ComputeSession::State::recording)
 		{
@@ -103,7 +98,7 @@ namespace vulkanRendererBackend
 	}
 	bool Async::IsFinished(uint32_t sessionID)
 	{
-		if (sessionID >= m_maxSessionCount)
+		if (sessionID >= m_computeSessions.size())
 			throw std::out_of_range("compute::Async::IsFinished(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
 		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
@@ -120,7 +115,7 @@ namespace vulkanRendererBackend
 	}
 	void Async::WaitForFinish(uint32_t sessionID)
 	{
-		if (sessionID >= m_maxSessionCount)
+		if (sessionID >= m_computeSessions.size())
 			throw std::out_of_range("compute::Async::WaitForFinish(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
 		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
@@ -136,12 +131,12 @@ namespace vulkanRendererBackend
 		// Query each active queue once, rather than querying once per session.
 		const auto& computeQueues = Context::GetLogicalDevice()->GetComputeQueues();
 		std::vector<uint64_t> completedValues(computeQueues.size());
-		for (uint32_t queueIndex = 0; queueIndex < computeQueues.size(); queueIndex++)
+		for (uint32_t queueIndex = 0; queueIndex < m_pendingSessionCounts.size(); queueIndex++)
 		{
 			if (m_pendingSessionCounts[queueIndex] > 0)
 				completedValues[queueIndex] = computeQueues[queueIndex]->GetCompletedValue();
 		}
-		for (uint32_t sessionID = 0; sessionID < m_maxSessionCount; sessionID++)
+		for (uint32_t sessionID = 0; sessionID < m_computeSessions.size(); sessionID++)
 		{
 			if (m_computeSessions[sessionID].state != ComputeSession::State::running)
 				continue;
@@ -158,7 +153,7 @@ namespace vulkanRendererBackend
 	emberBackendInterface::IDescriptorSetBinding* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
 		// Record dynamic compute call.
-		if (sessionID >= m_maxSessionCount)
+		if (sessionID >= m_computeSessions.size())
 		{
 			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID '{}' out of range.", sessionID);
 			return nullptr;
@@ -194,7 +189,7 @@ namespace vulkanRendererBackend
 	}
 	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
 	{
-		if (sessionID >= m_maxSessionCount)
+		if (sessionID >= m_computeSessions.size())
 		{
 			LOG_ERROR("compute::Async::RecordBarrier(...) sessionID '{}' out of range.", sessionID);
 			return;
@@ -231,7 +226,7 @@ namespace vulkanRendererBackend
 	void Async::Cleanup()
 	{
 		// Complete running sessions before releasing bindings or command pools.
-		for (uint32_t sessionID = 0; sessionID < m_maxSessionCount; sessionID++)
+		for (uint32_t sessionID = 0; sessionID < m_computeSessions.size(); sessionID++)
 		{
 			if (m_computeSessions[sessionID].state == ComputeSession::State::running)
 				WaitForFinish(sessionID);
@@ -242,12 +237,10 @@ namespace vulkanRendererBackend
 		m_computeSessions.clear();
 		m_pCommandPools.clear();
 		m_freeIndices = {};
-		m_maxSessionCount = 0;
 		m_nextQueueIndex = 0;
 	}
 	void Async::MoveFrom(Async& other) noexcept
 	{
-		m_maxSessionCount = std::exchange(other.m_maxSessionCount, 0);
 		m_nextQueueIndex = std::exchange(other.m_nextQueueIndex, 0);
 		m_pCommandPools = std::move(other.m_pCommandPools);
 		m_computeSessions = std::move(other.m_computeSessions);
@@ -262,6 +255,28 @@ namespace vulkanRendererBackend
 
 
 	// Helpers:
+	void Async::AddSession()
+	{
+		if (m_computeSessions.size() >= UINT32_MAX)
+			throw std::overflow_error("Async compute session IDs exhausted.");
+
+		uint32_t sessionID = static_cast<uint32_t>(m_computeSessions.size());
+		m_computeSessions.emplace_back();
+		try
+		{
+			// All compute queues share a family, so every session can use the first queue's family:
+			m_pCommandPools.emplace_back(0, *Context::GetLogicalDevice()->GetComputeQueues().front());
+			m_freeIndices.push(sessionID);
+		}
+		catch (...)
+		{
+			// Keep the session, command-pool, and free-ID storage consistent if allocation fails.
+			if (m_pCommandPools.size() > sessionID)
+				m_pCommandPools.pop_back();
+			m_computeSessions.pop_back();
+			throw;
+		}
+	}
 	uint32_t Async::SelectQueue()
 	{
 		uint32_t queueCount = static_cast<uint32_t>(m_pendingSessionCounts.size());
