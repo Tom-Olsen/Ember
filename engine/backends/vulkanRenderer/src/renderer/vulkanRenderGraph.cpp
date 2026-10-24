@@ -3,6 +3,7 @@
 #include "profiler.h"
 #include "vulkanCommandPool.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanFrameContext.h"
 #include "vulkanFrameResources.h"
 #include "vulkanLogicalDevice.h"
@@ -48,7 +49,7 @@ namespace vulkanRendererBackend
 
 		// Queues:
 		const VkQueue graphicsQueue = Context::GetLogicalDevice()->GetGraphicsQueue().queue;
-		const VkQueue computeQueue = Context::GetLogicalDevice()->GetComputeQueue().queue;
+		const VkQueue computeQueue = Context::GetLogicalDevice()->GetComputeQueues().front()->queue;
 
 		// Aquire -> ResourceUpdate -> PreRenderCompute + Gizmo:
 		m_resourceUpdateStage.Record(frameContext);

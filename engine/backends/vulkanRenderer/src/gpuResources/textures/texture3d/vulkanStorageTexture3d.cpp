@@ -2,6 +2,7 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
 #include "vulkanStagingBuffer.h"
@@ -68,7 +69,7 @@ namespace vulkanRendererBackend
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_3D;
-		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
+		const DeviceQueue& queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		SetDebugName("StorageTexture3d");

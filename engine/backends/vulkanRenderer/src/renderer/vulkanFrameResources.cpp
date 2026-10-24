@@ -1,5 +1,6 @@
 #include "vulkanFrameResources.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanLogicalDevice.h"
 #include <stdexcept>
 

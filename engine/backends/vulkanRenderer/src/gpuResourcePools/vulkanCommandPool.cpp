@@ -1,9 +1,10 @@
 #include "vulkanCommandPool.h"
 #include "vulkanContext.h"
-#include "vulkanMacros.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanLogicalDevice.h"
-#include <stdexcept>
+#include "vulkanMacros.h"
 #include <assert.h>
+#include <stdexcept>
 #include <vulkan/vulkan.h>
 
 
@@ -12,7 +13,7 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	CommandPool::CommandPool(int secondaryBufferCount, DeviceQueue queue)
+	CommandPool::CommandPool(int secondaryBufferCount, const DeviceQueue& queue)
 	{
 		static uint32_t nameIndex = 0;
 		// Assertions:

@@ -1,6 +1,7 @@
 #include "vulkanGBufferTexture2d.h"
 #include "logger.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanLogicalDevice.h"
 #include <stdexcept>
 #include <string>
@@ -33,7 +34,7 @@ namespace vulkanRendererBackend
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
+		const DeviceQueue& queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		SetDebugName("GBufferTexture2d");

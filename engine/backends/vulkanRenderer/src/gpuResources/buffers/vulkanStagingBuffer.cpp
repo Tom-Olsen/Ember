@@ -3,6 +3,7 @@
 #include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanSingleTimeCommand.h"
 #include "vulkanTexture.h"
 #include <cstring>

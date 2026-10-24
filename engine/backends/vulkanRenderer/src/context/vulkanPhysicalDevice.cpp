@@ -4,6 +4,8 @@
 #include "vulkanMacros.h"
 #include <algorithm>
 #include <assert.h>
+#include <stdexcept>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 
@@ -176,6 +178,7 @@ namespace vulkanRendererBackend
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.fillModeNonSolid);
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.shaderStorageImageExtendedFormats);
 		supportsRequiredFeatures &= DeviceSupportsScalarBlockLayout(device);
+		supportsRequiredFeatures &= DeviceSupportsTimelineSemaphores(device);
 		supportsRequiredFeatures &= DeviceSupportsStorageImageFormat(device, VK_FORMAT_R16G16B16A16_UNORM);
 		if (supportsRequiredFeatures == false)
 			return -1; // negative score = invalid device.
@@ -213,6 +216,14 @@ namespace vulkanRendererBackend
 		deviceFeatures2.pNext = &scalarBlockLayoutFeatures;
 		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
 		return scalarBlockLayoutFeatures.scalarBlockLayout;
+	}
+	bool PhysicalDevice::DeviceSupportsTimelineSemaphores(VkPhysicalDevice device) const
+	{
+		VkPhysicalDeviceTimelineSemaphoreFeatures timelineFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
+		VkPhysicalDeviceFeatures2 deviceFeatures2 = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+		deviceFeatures2.pNext = &timelineFeatures;
+		vkGetPhysicalDeviceFeatures2(device, &deviceFeatures2);
+		return timelineFeatures.timelineSemaphore;
 	}
 	bool PhysicalDevice::DeviceSupportsStorageImageFormat(VkPhysicalDevice device, VkFormat format) const
 	{

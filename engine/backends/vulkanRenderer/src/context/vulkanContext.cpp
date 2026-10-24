@@ -2,6 +2,7 @@
 #include "iWindow.h"
 #include "iVulkanWindow.h"
 #include "vulkanAllocationTracker.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanInstance.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -140,7 +141,9 @@ namespace vulkanRendererBackend
 			NAME_VK_OBJECT(m_pLogicalDevice->GetGraphicsQueue().queue, "Queue_Graphics");
 			NAME_VK_OBJECT(m_pLogicalDevice->GetPresentQueue().queue, "Queue_Present");
 		}
-		NAME_VK_OBJECT(m_pLogicalDevice->GetComputeQueue().queue, "Queue_Compute");
+		const auto& computeQueues = m_pLogicalDevice->GetComputeQueues();
+		for (uint32_t queueIndex = 0; queueIndex < computeQueues.size(); queueIndex++)
+			NAME_VK_OBJECT(computeQueues[queueIndex]->queue, "Queue_Compute" + std::to_string(queueIndex));
 		NAME_VK_OBJECT(m_pLogicalDevice->GetTransferQueue().queue, "Queue_Transfer");
 	}
 	void Context::Clear()

@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "vmaImage.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanMacros.h"
 #include "vulkanLogicalDevice.h"
 
@@ -36,7 +37,7 @@ namespace vulkanRendererBackend
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
-		DeviceQueue queue = Context::GetLogicalDevice()->GetTransferQueue();
+		const DeviceQueue& queue = Context::GetLogicalDevice()->GetTransferQueue();
 		CreateImage(subresourceRange, m_format, usageFlags, imageFlags, memoryFlags, viewType, queue);
 
 		SetDebugName("RenderTexture2d");

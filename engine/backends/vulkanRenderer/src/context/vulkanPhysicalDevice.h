@@ -66,6 +66,7 @@ namespace vulkanRendererBackend
 		void MoveFrom(PhysicalDevice& other) noexcept;
 		int DeviceScore(VkPhysicalDevice device);
 		bool DeviceSupportsScalarBlockLayout(VkPhysicalDevice device) const;
+		bool DeviceSupportsTimelineSemaphores(VkPhysicalDevice device) const;
 		bool DeviceSupportsStorageImageFormat(VkPhysicalDevice device, VkFormat format) const;
 		bool HasGraphicsAndComputeQueueFamily(VkPhysicalDevice device) const;
 		bool HasPresentQueueFamily(VkPhysicalDevice device, VkSurfaceKHR surface) const;

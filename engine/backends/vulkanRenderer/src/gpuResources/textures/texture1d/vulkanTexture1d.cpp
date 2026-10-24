@@ -1,4 +1,5 @@
 #include "vulkanTexture1d.h"
+#include "vulkanDeviceQueue.h"
 
 
 

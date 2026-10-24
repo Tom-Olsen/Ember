@@ -1,5 +1,7 @@
 #pragma once
-#include "vulkanDeviceQueue.h"
+#include <cstdint>
+#include <memory>
+#include <utility>
 #include <vector>
 
 
@@ -14,6 +16,7 @@ typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	struct DeviceQueue;
 	class PhysicalDevice;
 	class Surface;
 
@@ -22,13 +25,15 @@ namespace vulkanRendererBackend
 	class LogicalDevice
 	{
 	private: // Members:
-		VkDevice m_device;
-		DeviceQueue m_graphicsQueue;	// graphics and sync compute queue
-		DeviceQueue m_presentQueue;		// present queue
-		DeviceQueue m_computeQueue;		// async compute queue
-		DeviceQueue m_transferQueue;	// async transfer queue
+		VkDevice m_device = nullptr;
+		std::vector<std::unique_ptr<DeviceQueue>> m_deviceQueues;
+		DeviceQueue* m_pGraphicsQueue = nullptr;
+		DeviceQueue* m_pPresentQueue = nullptr;
+		DeviceQueue* m_pTransferQueue = nullptr;
+		std::vector<DeviceQueue*> m_computeQueues;
 
 	public: // Methods:
+		// Constructor/Destructor:
 		LogicalDevice(PhysicalDevice* pPhysicalDevice, Surface* pSurface, std::vector<const char*>& deviceExtensions);
 		~LogicalDevice();
 
@@ -44,13 +49,13 @@ namespace vulkanRendererBackend
 		const VkDevice& GetVkDevice() const;
 		const DeviceQueue& GetGraphicsQueue() const;
 		const DeviceQueue& GetPresentQueue() const;
-		const DeviceQueue& GetComputeQueue() const;
 		const DeviceQueue& GetTransferQueue() const;
+		const std::vector<DeviceQueue*>& GetComputeQueues() const;
 
 	private: // Methods:
 		void Cleanup();
 		void MoveFrom(LogicalDevice& other) noexcept;
-		std::pair<uint32_t, uint32_t> FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const;
+		std::pair<uint32_t, uint32_t> FindMainQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const;
 		void PrintQueueFamilyInfo(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR);
 	};
 }

@@ -2,6 +2,7 @@
 #include "vmaAllocationCreateInfoToString.h"
 #include "vulkanAllocationTracker.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanImageCreateInfoToString.h"
 #include "vulkanLogicalDevice.h"
@@ -27,7 +28,7 @@ namespace vulkanRendererBackend
 		m_imageInfo = imageInfo;
 		m_allocationInfo = allocationInfo;
 		m_subresourceRange = subresourceRange;
-		m_queue = queue;
+		m_pQueue = &queue;
 		m_layout = m_imageInfo.initialLayout;
 
 		// Create image:
@@ -108,7 +109,9 @@ namespace vulkanRendererBackend
 	}
 	const DeviceQueue& VmaImage::GetDeviceQueue() const
 	{
-		return m_queue;
+		if (m_pQueue == nullptr)
+			throw std::runtime_error("VmaImage has no device queue.");
+		return *m_pQueue;
 	}
 	const VkImageLayout& VmaImage::GetImageLayout() const
 	{
@@ -188,9 +191,9 @@ namespace vulkanRendererBackend
 	}
 	void VmaImage::TransitionLayout(VkImageLayout newLayout, VkPipelineStageFlags2 srcStage, VkPipelineStageFlags2 dstStage, AccessMask srcAccessMask, AccessMask dstAccessMask)
 	{
-		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(m_queue);
+		VkCommandBuffer commandBuffer = SingleTimeCommand::BeginCommand(GetDeviceQueue());
 		TransitionLayout(commandBuffer, newLayout, srcStage, dstStage, srcAccessMask, dstAccessMask);
-		SingleTimeCommand::EndCommand(m_queue);
+		SingleTimeCommand::EndCommand(GetDeviceQueue());
 	}
 	void VmaImage::ClearColor(VkCommandBuffer commandBuffer, const VkClearColorValue& clearColor)
 	{
@@ -418,7 +421,7 @@ namespace vulkanRendererBackend
 		m_imageInfo = other.m_imageInfo;
 		m_allocationInfo = other.m_allocationInfo;
 		m_subresourceRange = other.m_subresourceRange;
-		m_queue = other.m_queue;
+		m_pQueue = other.m_pQueue;
 		m_layout = other.m_layout;
 
 		other.m_image = VK_NULL_HANDLE;
@@ -427,7 +430,7 @@ namespace vulkanRendererBackend
 		other.m_imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
 		other.m_allocationInfo = {};
 		other.m_subresourceRange = {};
-		other.m_queue = {};
+		other.m_pQueue = nullptr;
 		other.m_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	}
 }

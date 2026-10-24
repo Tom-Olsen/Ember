@@ -5,6 +5,7 @@
 #include "vulkanDeferredRenderingContract.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanDepthTexture2dArray.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanGBufferTexture2d.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
@@ -223,7 +224,7 @@ namespace vulkanRendererBackend
 			VmaAllocationCreateInfo allocationInfo = {};
 			allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
+			const DeviceQueue& queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 			VkDeviceSize allocationSize = 8ull * imageInfo.extent.width * imageInfo.extent.height * imageInfo.samples;
 			m_pGizmoMsaaImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, allocationSize, subresourceRange, VK_IMAGE_VIEW_TYPE_2D, queue));
 			NAME_VK_OBJECT(m_pGizmoMsaaImages[frameIndex]->GetVkImage(), "Image_GizmoMsaa_Frame" + std::to_string(frameIndex));
@@ -259,7 +260,7 @@ namespace vulkanRendererBackend
 			VmaAllocationCreateInfo allocationInfo = {};
 			allocationInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-			DeviceQueue queue = Context::GetLogicalDevice()->GetGraphicsQueue();
+			const DeviceQueue& queue = Context::GetLogicalDevice()->GetGraphicsQueue();
 			VkDeviceSize allocationSize = 4ull * imageInfo.extent.width * imageInfo.extent.height * imageInfo.samples;
 			m_pGizmoDepthImages.push_back(std::make_unique<VmaImage>(imageInfo, allocationInfo, allocationSize, subresourceRange, VK_IMAGE_VIEW_TYPE_2D, queue));
 			NAME_VK_OBJECT(m_pGizmoDepthImages[frameIndex]->GetVkImage(), "Image_GizmoDepth_Frame" + std::to_string(frameIndex));

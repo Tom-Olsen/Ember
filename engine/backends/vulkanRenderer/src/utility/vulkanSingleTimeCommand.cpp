@@ -20,10 +20,10 @@ namespace vulkanRendererBackend
 	VkCommandBuffer SingleTimeCommand::s_presentBuffer;
 	VkCommandBuffer SingleTimeCommand::s_computeBuffer;
 	VkCommandBuffer SingleTimeCommand::s_transferBuffer;
-	DeviceQueue SingleTimeCommand::s_graphicsDeviceQueue;
-	DeviceQueue SingleTimeCommand::s_presentDeviceQueue;
-	DeviceQueue SingleTimeCommand::s_computeDeviceQueue;
-	DeviceQueue SingleTimeCommand::s_transferDeviceQueue;
+	const DeviceQueue* SingleTimeCommand::s_graphicsDeviceQueue = nullptr;
+	const DeviceQueue* SingleTimeCommand::s_presentDeviceQueue = nullptr;
+	const DeviceQueue* SingleTimeCommand::s_computeDeviceQueue = nullptr;
+	const DeviceQueue* SingleTimeCommand::s_transferDeviceQueue = nullptr;
 	VkFence SingleTimeCommand::s_graphicsFence;
 	VkFence SingleTimeCommand::s_presentFence;
 	VkFence SingleTimeCommand::s_computeFence;
@@ -39,13 +39,13 @@ namespace vulkanRendererBackend
 			return;
 		s_isInitialized = true;
 
-		s_graphicsDeviceQueue = Context::GetLogicalDevice()->GetGraphicsQueue();
-		s_presentDeviceQueue = Context::GetLogicalDevice()->GetPresentQueue();
-		s_computeDeviceQueue = Context::GetLogicalDevice()->GetComputeQueue();
-		s_transferDeviceQueue = Context::GetLogicalDevice()->GetTransferQueue();
+		s_graphicsDeviceQueue = &Context::GetLogicalDevice()->GetGraphicsQueue();
+		s_presentDeviceQueue = &Context::GetLogicalDevice()->GetPresentQueue();
+		s_computeDeviceQueue = Context::GetLogicalDevice()->GetComputeQueues().front();
+		s_transferDeviceQueue = &Context::GetLogicalDevice()->GetTransferQueue();
 		VkCommandPool* pPools[4] = { &s_graphicsPool , &s_presentPool , &s_computePool , &s_transferPool };
 		VkCommandBuffer* pBuffers[4] = { &s_graphicsBuffer , &s_presentBuffer , &s_computeBuffer , &s_transferBuffer };
-		DeviceQueue* pDeviceQueues[4] = { &s_graphicsDeviceQueue, &s_presentDeviceQueue, &s_computeDeviceQueue, &s_transferDeviceQueue };
+		const DeviceQueue* pDeviceQueues[4] = { s_graphicsDeviceQueue, s_presentDeviceQueue, s_computeDeviceQueue, s_transferDeviceQueue };
 		VkFence* pFences[4] = { &s_graphicsFence, &s_presentFence, &s_computeFence, &s_transferFence };
 
 		for (int i = 0; i < 4; i++)
@@ -109,6 +109,10 @@ namespace vulkanRendererBackend
 		// Destroy semaphore:
 		vkDestroySemaphore(Context::GetVkDevice(), s_semaphore, nullptr);
 
+		s_graphicsDeviceQueue = nullptr;
+		s_presentDeviceQueue = nullptr;
+		s_computeDeviceQueue = nullptr;
+		s_transferDeviceQueue = nullptr;
 		s_isInitialized = false;
 	}
 
@@ -205,39 +209,39 @@ namespace vulkanRendererBackend
 	// Private methods:
 	VkCommandBuffer* SingleTimeCommand::FindCommandBuffer(const DeviceQueue& queue)
 	{
-		if (queue.queue == s_graphicsDeviceQueue.queue)
+		if (queue.queue == s_graphicsDeviceQueue->queue)
 			return &s_graphicsBuffer;
-		else if (queue.queue == s_presentDeviceQueue.queue)
+		else if (queue.queue == s_presentDeviceQueue->queue)
 			return &s_presentBuffer;
-		else if (queue.queue == s_computeDeviceQueue.queue)
+		else if (queue.queue == s_computeDeviceQueue->queue)
 			return &s_computeBuffer;
-		else if (queue.queue == s_transferDeviceQueue.queue)
+		else if (queue.queue == s_transferDeviceQueue->queue)
 			return &s_transferBuffer;
 		else throw std::out_of_range("Invalid device queue.");
 		return nullptr;
 	}
 	VkCommandPool* SingleTimeCommand::FindCommandPool(const DeviceQueue& queue)
 	{
-		if (queue.queue == s_graphicsDeviceQueue.queue)
+		if (queue.queue == s_graphicsDeviceQueue->queue)
 			return &s_graphicsPool;
-		else if (queue.queue == s_presentDeviceQueue.queue)
+		else if (queue.queue == s_presentDeviceQueue->queue)
 			return &s_presentPool;
-		else if (queue.queue == s_computeDeviceQueue.queue)
+		else if (queue.queue == s_computeDeviceQueue->queue)
 			return &s_computePool;
-		else if (queue.queue == s_transferDeviceQueue.queue)
+		else if (queue.queue == s_transferDeviceQueue->queue)
 			return &s_transferPool;
 		else throw std::out_of_range("Invalid device queue.");
 		return nullptr;
 	}
 	VkFence* SingleTimeCommand::FindFence(const DeviceQueue& queue)
 	{
-		if (queue.queue == s_graphicsDeviceQueue.queue)
+		if (queue.queue == s_graphicsDeviceQueue->queue)
 			return &s_graphicsFence;
-		else if (queue.queue == s_presentDeviceQueue.queue)
+		else if (queue.queue == s_presentDeviceQueue->queue)
 			return &s_presentFence;
-		else if (queue.queue == s_computeDeviceQueue.queue)
+		else if (queue.queue == s_computeDeviceQueue->queue)
 			return &s_computeFence;
-		else if (queue.queue == s_transferDeviceQueue.queue)
+		else if (queue.queue == s_transferDeviceQueue->queue)
 			return &s_transferFence;
 		else throw std::out_of_range("Invalid device queue.");
 		return nullptr;

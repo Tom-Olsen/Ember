@@ -2,7 +2,6 @@
 #include "emberMath.h"
 #include "vk_mem_alloc.h"
 #include "vulkanAccessMask.h"
-#include "vulkanDeviceQueue.h"
 #include <vulkan/vulkan.h>
 
 
@@ -15,6 +14,11 @@ typedef struct VkImageView_T* VkImageView;
 
 namespace vulkanRendererBackend
 {
+	// Forward declarations:
+	struct DeviceQueue;
+
+
+
 	/// <summary>
 	/// Manages VkImage and VkImageView resource: creation, allocation, destruction, queue ownership, layout.
 	/// Usually further abstracted by texture class which wraps around it.
@@ -31,7 +35,7 @@ namespace vulkanRendererBackend
 		VkImageCreateInfo m_imageInfo;
 		VmaAllocationCreateInfo m_allocationInfo;
 		VkImageSubresourceRange m_subresourceRange;
-		DeviceQueue m_queue;
+		const DeviceQueue* m_pQueue = nullptr;
 		VkImageLayout m_layout;
 
 	public: // Methods:

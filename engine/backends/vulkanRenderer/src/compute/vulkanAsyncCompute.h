@@ -8,7 +8,6 @@
 
 
 // Forward declaration:
-typedef struct VkFence_T* VkFence;
 namespace emberBackendInterface
 {
 	class IComputeShader;
@@ -32,10 +31,11 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API Async : public emberBackendInterface::ICompute::IAsync
 	{
 	private: // Members:
-		uint32_t m_sessionCount;
+		uint32_t m_maxSessionCount = 0;
+		uint32_t m_nextQueueIndex = 0;
 		std::vector<CommandPool> m_pCommandPools;
 		std::vector<ComputeSession> m_computeSessions;
-		std::vector<VkFence> m_fences;
+		std::vector<uint32_t> m_pendingSessionCounts;
 		std::queue<uint32_t> m_freeIndices;
 
 	public: // Methods:
@@ -66,6 +66,12 @@ namespace vulkanRendererBackend
 		void PrintSessionsState();
 
 	private: // Methods:
+		// Cleanup:
+		void Cleanup();
+		void MoveFrom(Async& other) noexcept;
+
+		// Helpers:
+		uint32_t SelectQueue();
 		void ResetComputeSession(uint32_t sessionID);
 	};
 }

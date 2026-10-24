@@ -31,10 +31,10 @@ namespace vulkanRendererBackend
 		static VkCommandBuffer s_presentBuffer;
 		static VkCommandBuffer s_computeBuffer;
 		static VkCommandBuffer s_transferBuffer;
-		static DeviceQueue s_graphicsDeviceQueue;
-		static DeviceQueue s_presentDeviceQueue;
-		static DeviceQueue s_computeDeviceQueue;
-		static DeviceQueue s_transferDeviceQueue;
+		static const DeviceQueue* s_graphicsDeviceQueue;
+		static const DeviceQueue* s_presentDeviceQueue;
+		static const DeviceQueue* s_computeDeviceQueue;
+		static const DeviceQueue* s_transferDeviceQueue;
 		static VkFence s_graphicsFence;
 		static VkFence s_presentFence;
 		static VkFence s_computeFence;

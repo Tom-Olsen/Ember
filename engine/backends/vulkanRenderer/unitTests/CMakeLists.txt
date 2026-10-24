@@ -52,6 +52,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC ENGINE_SHADERS_DIR="${ENGINE_S
 
 # ------------------- Link Backend ------------------
 # Vulkan Renderer:
+set(VULKAN_RENDERER_BACKEND_BUILD_SHARED OFF)	# Linking backend statically allows access to all its classes, not just exported ones.
 add_subdirectory("${ENGINE_BACKENDS_DIR}/vulkanRenderer" VulkanRendererBackend)
 target_link_libraries(${PROJECT_NAME} PRIVATE VulkanRendererBackend)
 # ---------------------------------------------------

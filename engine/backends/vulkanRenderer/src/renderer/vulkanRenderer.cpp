@@ -22,6 +22,7 @@
 #include "vulkanDepthTexture2d.h"
 #include "vulkanDescriptorPoolManager.h"
 #include "vulkanDescriptorSetBinding.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanForwardDrawCall.h"
 #include "vulkanFrameContext.h"
 #include "vulkanFrameDescriptorSetLayout.h"

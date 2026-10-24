@@ -28,7 +28,7 @@ namespace vulkanRendererBackend
 
 	public: // Methods:
 		// Constructor/Destructor:
-		CommandPool(int secondaryBufferCount, DeviceQueue queue);
+		CommandPool(int secondaryBufferCount, const DeviceQueue& queue);
 		~CommandPool();
 
 		// Non-copyable:

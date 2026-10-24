@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "vmaBuffer.h"
 #include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanGpuResourceRegistry.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanStagingBuffer.h"

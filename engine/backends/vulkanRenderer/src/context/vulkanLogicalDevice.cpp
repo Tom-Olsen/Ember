@@ -1,14 +1,14 @@
 #include "vulkanLogicalDevice.h"
 #include "logger.h"
-#include "vulkanInstance.h"
-#include "vulkanContext.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanMacros.h"
 #include "vulkanPhysicalDevice.h"
 #include "vulkanSurface.h"
 #include <assert.h>
 #include <cstring>
-#include <set>
 #include <sstream>
+#include <stdexcept>
+#include <utility>
 #include <vulkan/vulkan.h>
 
 
@@ -24,18 +24,10 @@ namespace vulkanRendererBackend
 		//PrintQueueFamilyInfo(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
 
 		// Find queue family indices:
-		auto [queueFamilyIndex, queueCount] = FindGraphicsComputeTransferQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
-		m_graphicsQueue.familyIndex = queueFamilyIndex;
-		m_presentQueue.familyIndex = queueFamilyIndex;
-		m_computeQueue.familyIndex = queueFamilyIndex;
-		m_transferQueue.familyIndex = queueFamilyIndex;
+		auto [queueFamilyIndex, queueCount] = FindMainQueueFamilyIndex(pPhysicalDevice->GetVkPhysicalDevice(), pSurface->GetVkSurfaceKHR());
 
 		// Queue priorities:
-		std::vector<float> queuePriorities;
-		if (queueCount >= 4)
-			queuePriorities.assign(4, 1.0f);
-		else
-			queuePriorities.assign(1, 1.0f);
+		std::vector<float> queuePriorities(queueCount, 1.0f);
 
 		bool enableExtendedDynamicStateExtension = false;
 		for (const char* extension : deviceExtensions)
@@ -44,16 +36,21 @@ namespace vulkanRendererBackend
 		// Vector of queue create infos:
 		VkDeviceQueueCreateInfo queueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
 		queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
-		queueCreateInfo.queueCount = queuePriorities.size();
+		queueCreateInfo.queueCount = static_cast<uint32_t>(queuePriorities.size());
 		queueCreateInfo.pQueuePriorities = queuePriorities.data();
 
 		// Sync2 feature: Allows for src/dst stage to be 0 (VK_PIPELINE_STAGE_NONE).
 		VkPhysicalDeviceSynchronization2FeaturesKHR sync2Features = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
 		sync2Features.synchronization2 = VK_TRUE;
 
+		// Timeline semaphores track completion independently on each async compute queue.
+		VkPhysicalDeviceTimelineSemaphoreFeatures timelineFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES };
+		timelineFeatures.pNext = &sync2Features;
+		timelineFeatures.timelineSemaphore = VK_TRUE;
+
 		// Scalar block layout: Allows packed Float3 buffers to use the same 12 byte stride in C++ and shaders.
 		VkPhysicalDeviceScalarBlockLayoutFeatures scalarBlockLayoutFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES };
-		scalarBlockLayoutFeatures.pNext = &sync2Features;
+		scalarBlockLayoutFeatures.pNext = &timelineFeatures;
 		scalarBlockLayoutFeatures.scalarBlockLayout = VK_TRUE;
 
 		// Extended dynamic state: Allows dynamic cull mode on Vulkan 1.2 extension paths.
@@ -82,21 +79,45 @@ namespace vulkanRendererBackend
 		deviceCreateInfo.pNext = &deviceFeatures2;
 		VKA(vkCreateDevice(pPhysicalDevice->GetVkPhysicalDevice(), &deviceCreateInfo, nullptr, &m_device));
 
-		// Aquire queues:
-		if (queueCount >= 4)
+		// Create device queues:
+		try
 		{
-			vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
-			vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 1, &m_presentQueue.queue);
-			vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 2, &m_computeQueue.queue);
-			vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 3, &m_transferQueue.queue);
+			m_deviceQueues.reserve(queueCount);
+			for (uint32_t queueIndex = 0; queueIndex < queueCount; queueIndex++)
+				m_deviceQueues.push_back(std::make_unique<DeviceQueue>(m_device, queueFamilyIndex, queueIndex));
+
+			// Assign queue roles explicitly for each supported queue count.
+			if (queueCount >= 4)
+			{
+				m_pGraphicsQueue = m_deviceQueues[0].get();
+				m_pPresentQueue = m_deviceQueues[1].get();
+				m_pTransferQueue = m_deviceQueues[2].get();
+				m_computeQueues.reserve(queueCount - 3);
+				for (uint32_t queueIndex = 3; queueIndex < queueCount; queueIndex++)
+					m_computeQueues.push_back(m_deviceQueues[queueIndex].get());
+			}
+			else if (queueCount >= 2)
+			{
+				m_pGraphicsQueue = m_deviceQueues[0].get();
+				m_pPresentQueue = m_pGraphicsQueue;
+				m_pTransferQueue = m_pGraphicsQueue;
+				m_computeQueues.reserve(queueCount - 1);
+				for (uint32_t queueIndex = 1; queueIndex < queueCount; queueIndex++)
+					m_computeQueues.push_back(m_deviceQueues[queueIndex].get());
+			}
+			else
+			{
+				LOG_WARN("Your device exposes one queue. Graphics, presentation, transfer, and async compute share it.");
+				m_pGraphicsQueue = m_deviceQueues[0].get();
+				m_pPresentQueue = m_pGraphicsQueue;
+				m_pTransferQueue = m_pGraphicsQueue;
+				m_computeQueues.push_back(m_pGraphicsQueue);
+			}
 		}
-		else
+		catch (...)
 		{
-			LOG_WARN("Your device does not supports enough (4) queues. Async compute will not work.");
-			vkGetDeviceQueue(m_device, m_graphicsQueue.familyIndex, 0, &m_graphicsQueue.queue);
-			vkGetDeviceQueue(m_device, m_presentQueue.familyIndex, 0, &m_presentQueue.queue);
-			vkGetDeviceQueue(m_device, m_computeQueue.familyIndex, 0, &m_computeQueue.queue);
-			vkGetDeviceQueue(m_device, m_transferQueue.familyIndex, 0, &m_transferQueue.queue);
+			Cleanup();
+			throw;
 		}
 	}
 	LogicalDevice::~LogicalDevice()
@@ -105,7 +126,7 @@ namespace vulkanRendererBackend
 	}
 
 
-	// Move semantics:
+	// Movable:
 	LogicalDevice::LogicalDevice(LogicalDevice&& other) noexcept
 	{
 		MoveFrom(other);
@@ -130,19 +151,27 @@ namespace vulkanRendererBackend
 	}
 	const DeviceQueue& LogicalDevice::GetGraphicsQueue() const
 	{
-		return m_graphicsQueue;
+		if (m_pGraphicsQueue == nullptr)
+			throw std::runtime_error("LogicalDevice has no graphics queue.");
+		return *m_pGraphicsQueue;
 	}
 	const DeviceQueue& LogicalDevice::GetPresentQueue() const
 	{
-		return m_presentQueue;
-	}
-	const DeviceQueue& LogicalDevice::GetComputeQueue() const
-	{
-		return m_computeQueue;
+		if (m_pPresentQueue == nullptr)
+			throw std::runtime_error("LogicalDevice has no present queue.");
+		return *m_pPresentQueue;
 	}
 	const DeviceQueue& LogicalDevice::GetTransferQueue() const
 	{
-		return m_transferQueue;
+		if (m_pTransferQueue == nullptr)
+			throw std::runtime_error("LogicalDevice has no transfer queue.");
+		return *m_pTransferQueue;
+	}
+	const std::vector<DeviceQueue*>& LogicalDevice::GetComputeQueues() const
+	{
+		if (m_computeQueues.empty())
+			throw std::runtime_error("LogicalDevice::GetComputeQueues() has no compute queues.");
+		return m_computeQueues;
 	}
 
 
@@ -150,24 +179,29 @@ namespace vulkanRendererBackend
 	// Private methods:
 	void LogicalDevice::Cleanup()
 	{
+		if (m_device == VK_NULL_HANDLE)
+			return;
 		VKA(vkDeviceWaitIdle(m_device));
+		m_pGraphicsQueue = nullptr;
+		m_pPresentQueue = nullptr;
+		m_pTransferQueue = nullptr;
+		m_computeQueues.clear();
+		m_deviceQueues.clear();
 		vkDestroyDevice(m_device, nullptr);
+		m_device = VK_NULL_HANDLE;
 	}
 	void LogicalDevice::MoveFrom(LogicalDevice& other) noexcept
 	{
-		m_device = other.m_device;
-		m_graphicsQueue = other.m_graphicsQueue;
-		m_presentQueue = other.m_presentQueue;
-		m_computeQueue = other.m_computeQueue;
-		m_transferQueue = other.m_transferQueue;
-
-		other.m_device = VK_NULL_HANDLE;
-		other.m_graphicsQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
-		other.m_presentQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
-		other.m_computeQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
-		other.m_transferQueue = DeviceQueue{VK_NULL_HANDLE, (uint32_t)-1};
+		m_device = std::exchange(other.m_device, VK_NULL_HANDLE);
+		m_deviceQueues = std::move(other.m_deviceQueues);
+		m_pGraphicsQueue = std::exchange(other.m_pGraphicsQueue, nullptr);
+		m_pPresentQueue = std::exchange(other.m_pPresentQueue, nullptr);
+		m_pTransferQueue = std::exchange(other.m_pTransferQueue, nullptr);
+		m_computeQueues = std::move(other.m_computeQueues);
+		other.m_deviceQueues.clear();
+		other.m_computeQueues.clear();
 	}
-	std::pair<uint32_t, uint32_t> LogicalDevice::FindGraphicsComputeTransferQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const
+	std::pair<uint32_t, uint32_t> LogicalDevice::FindMainQueueFamilyIndex(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR) const
 	{
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, &queueFamilyCount, nullptr);
@@ -182,15 +216,14 @@ namespace vulkanRendererBackend
 				&& (queueFamilyProperty.queueFlags & VK_QUEUE_COMPUTE_BIT)
 				&& (queueFamilyProperty.queueFlags & VK_QUEUE_TRANSFER_BIT))
 			{
-				VkBool32 supportPresentMode = VK_FALSE;
-				vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, queueFamilyIndex, vkSurfaceKHR, &supportPresentMode);
-				if (supportPresentMode == VK_TRUE)
+				VkBool32 supportsPresent = VK_FALSE;
+				VKA(vkGetPhysicalDeviceSurfaceSupportKHR(vkPhysicalDevice, queueFamilyIndex, vkSurfaceKHR, &supportsPresent));
+				if (supportsPresent == VK_TRUE)
 					return { queueFamilyIndex, queueFamilyProperty.queueCount };
 			}
 		}
 
-		throw std::runtime_error("Terminating! No queue family found with GRAPHICS | COMPUTE | TRANSFER capabilities.");
-		return  { -1, 0 };
+		throw std::runtime_error("No main queue family found with graphics, compute, transfer, and presentation support for the surface.");
 	}
 	void LogicalDevice::PrintQueueFamilyInfo(VkPhysicalDevice vkPhysicalDevice, VkSurfaceKHR vkSurfaceKHR)
 	{

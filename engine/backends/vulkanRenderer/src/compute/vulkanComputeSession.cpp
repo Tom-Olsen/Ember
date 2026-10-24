@@ -6,7 +6,7 @@
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
 #include "vulkanDescriptorSetBinding.h"
-#include "vulkanLogicalDevice.h"
+#include "vulkanDeviceQueue.h"
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderer.h"
@@ -21,7 +21,7 @@ namespace vulkanRendererBackend
 	{
 		m_computeCalls.push_back(computeCall);
 	}
-	void ComputeSession::Dispatch(VkCommandBuffer commandBuffer, VkFence fence, float time, float deltaTime)
+	uint64_t ComputeSession::Dispatch(VkCommandBuffer commandBuffer, const DeviceQueue& queue, float time, float deltaTime)
 	{
 		// Record command buffer:
 		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -92,17 +92,15 @@ namespace vulkanRendererBackend
 		VKA(vkEndCommandBuffer(commandBuffer));
 
 		// Submit command buffer:
-		VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
-		submitInfo.waitSemaphoreCount = 0;
-		submitInfo.pWaitSemaphores = VK_NULL_HANDLE;
-		submitInfo.pWaitDstStageMask = nullptr;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-		submitInfo.signalSemaphoreCount = 0;
-		submitInfo.pSignalSemaphores = nullptr;
-		VKA(vkResetFences(Context::GetVkDevice(), 1, &fence));
-		VKA(vkQueueSubmit(Context::GetLogicalDevice()->GetComputeQueue().queue, 1, &submitInfo, fence));
+		VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+		commandBufferInfo.commandBuffer = commandBuffer;
+
+		VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+		submitInfo.commandBufferInfoCount = 1;
+		submitInfo.pCommandBufferInfos = &commandBufferInfo;
+		uint64_t signalValue = queue.Submit(submitInfo);
 		Context::MarkDeviceBusy();
+		return signalValue;
 	}
 	void ComputeSession::ResetComputeCalls()
 	{
