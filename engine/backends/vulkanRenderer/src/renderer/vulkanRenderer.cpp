@@ -181,6 +181,7 @@ namespace vulkanRendererBackend
 			m_pIVulkanGui,
 			m_pCompute->GetPreRenderCompute()->GetComputeCalls(),
 			m_pCompute->GetPostOutlineCompute()->GetComputeCalls(),
+			m_pCompute->GetPostGeometryCompute()->GetComputeCalls(),
 			m_pCompute->GetPostLightingCompute()->GetComputeCalls(),
 			m_pCompute->GetPostRenderCompute()->GetComputeCalls());
 		m_pRenderGraph->RecordAndSubmit(frameContext);

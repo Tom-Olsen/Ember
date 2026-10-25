@@ -25,7 +25,7 @@ namespace vulkanRendererBackend
 
 
 	/// <summary>
-	/// Class for different compute queues: preRender, postOutline, postLighting, postRender.
+	/// Class for different compute queues: preRender, postOutline, postGeometry, postLighting, postRender.
 	/// </summary>
 	class VULKAN_RENDERER_API ComputeQueue : public virtual emberBackendInterface::ICompute::IQueue
 	{

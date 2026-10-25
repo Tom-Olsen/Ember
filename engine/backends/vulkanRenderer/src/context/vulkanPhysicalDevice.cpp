@@ -179,6 +179,7 @@ namespace vulkanRendererBackend
 		supportsRequiredFeatures &= static_cast<bool>(deviceFeatures.shaderStorageImageExtendedFormats);
 		supportsRequiredFeatures &= DeviceSupportsScalarBlockLayout(device);
 		supportsRequiredFeatures &= DeviceSupportsTimelineSemaphores(device);
+		supportsRequiredFeatures &= DeviceSupportsStorageImageFormat(device, VK_FORMAT_R8G8B8A8_UNORM);
 		supportsRequiredFeatures &= DeviceSupportsStorageImageFormat(device, VK_FORMAT_R16G16B16A16_UNORM);
 		if (supportsRequiredFeatures == false)
 			return -1; // negative score = invalid device.

@@ -47,7 +47,7 @@ bool TryGetSurfaceData(uint2 pixel, float2 screenSize, out float3 worldPosition,
 	worldPosition = ScreenPositionToWorld(float3(float2(pixel) + 0.5f, ndcDepth), screenSize);
 	viewDepth = Camera_GetDepth(worldPosition);
 	worldNormal = normalize(2.0f * gbufferNormalTexture.Load(int3(pixel, 0)).xyz - 1.0f);
-	roughness = gbufferSurfacePropertiesTexture.Load(int3(pixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
+	roughness = gbufferSurfacePropertiesSampleTexture.Load(int3(pixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
 	return true;
 }
 
@@ -161,7 +161,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 
 	// Apply the material BRDF at full resolution and add indirect specular lighting:
 	float3 albedo = gbufferAlbedoTexture.Load(int3(sourcePixel, 0)).rgb;
-	float4 surfaceProperties = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0));
+	float4 surfaceProperties = gbufferSurfacePropertiesSampleTexture.Load(int3(sourcePixel, 0));
 	float nDotV = saturate(dot(worldNormal, -cameraRayDirection));
 	float3 specularResponse = Reflection_GetSpecularResponse(albedo, surfaceProperties, nDotV);
 	float reconstructionConfidence = saturate(totalWeight);

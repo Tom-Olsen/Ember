@@ -182,6 +182,54 @@ namespace emberCore
 
 
 	
+	// Compute::PostGeometry subclass:
+	emberBackendInterface::ICompute::IQueue* Compute::PostGeometry::s_pIPostGeometry;
+	// Public:
+	// Constructor/Destructor:
+	void Compute::PostGeometry::Init(emberBackendInterface::ICompute::IQueue* pIPostGeometry)
+	{
+		s_pIPostGeometry = pIPostGeometry;
+	}
+	void Compute::PostGeometry::Clear()
+	{
+
+	}
+
+	// Workload recording:
+	CallProperties Compute::PostGeometry::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	{
+		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostGeometry->RecordComputeShader(pIComputeShader, threadCount);
+		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
+		return callProperties;
+	}
+	void Compute::PostGeometry::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
+	{
+		s_pIPostGeometry->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+	}
+	void Compute::PostGeometry::RecordBarrierWaitShaderWriteBeforeRead()
+	{
+		RecordBarrier(ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
+	}
+	void Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeRead()
+	{
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
+	}
+	void Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeWrite()
+	{
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
+	}
+	void Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeReadWrite()
+	{
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
+	}
+	void Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
+	{
+		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
+	}
+
+
+
 	// Compute::PostLighting subclass:
 	emberBackendInterface::ICompute::IQueue* Compute::PostLighting::s_pIPostLighting;
 	// Public:
@@ -466,6 +514,7 @@ namespace emberCore
 		Compute::Async::Init(s_pICompute->GetAsyncComputeInterfaceHandle());
 		Compute::PreRender::Init(s_pICompute->GetPreRenderComputeInterfaceHandle());
 		Compute::PostOutline::Init(s_pICompute->GetPostOutlineComputeInterfaceHandle());
+		Compute::PostGeometry::Init(s_pICompute->GetPostGeometryComputeInterfaceHandle());
 		Compute::PostLighting::Init(s_pICompute->GetPostLightingComputeInterfaceHandle());
 		Compute::PostRender::Init(s_pICompute->GetPostRenderComputeInterfaceHandle());
 		Compute::Physics::Init();
@@ -475,6 +524,7 @@ namespace emberCore
 		Compute::Physics::Clear();
 		Compute::PostRender::Clear();
 		Compute::PostLighting::Clear();
+		Compute::PostGeometry::Clear();
 		Compute::PostOutline::Clear();
 		Compute::PreRender::Clear();
 		Compute::Async::Clear();
@@ -497,6 +547,9 @@ namespace emberCore
 				break;
 			case ComputeType::postOutline:
 				return PostOutline::RecordComputeShader(computeShader, threadCount);
+				break;
+			case ComputeType::postGeometry:
+				return PostGeometry::RecordComputeShader(computeShader, threadCount);
 				break;
 			case ComputeType::postLighting:
 				return PostLighting::RecordComputeShader(computeShader, threadCount);
@@ -523,6 +576,9 @@ namespace emberCore
 			case ComputeType::postOutline:
 				PostOutline::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 				break;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+				break;
 			case ComputeType::postLighting:
 				PostLighting::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 				break;
@@ -546,6 +602,9 @@ namespace emberCore
 				break;
 			case ComputeType::postOutline:
 				PostOutline::RecordBarrierWaitShaderWriteBeforeRead();
+				break;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBarrierWaitShaderWriteBeforeRead();
 				break;
 			case ComputeType::postLighting:
 				PostLighting::RecordBarrierWaitShaderWriteBeforeRead();
@@ -571,6 +630,9 @@ namespace emberCore
 			case ComputeType::postOutline:
 				PostOutline::RecordBarrierWaitStorageWriteBeforeRead();
 				break;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBarrierWaitStorageWriteBeforeRead();
+				break;
 			case ComputeType::postLighting:
 				PostLighting::RecordBarrierWaitStorageWriteBeforeRead();
 				break;
@@ -594,6 +656,9 @@ namespace emberCore
 				break;
 			case ComputeType::postOutline:
 				PostOutline::RecordBarrierWaitStorageWriteBeforeWrite();
+				break;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBarrierWaitStorageWriteBeforeWrite();
 				break;
 			case ComputeType::postLighting:
 				PostLighting::RecordBarrierWaitStorageWriteBeforeWrite();
@@ -619,6 +684,9 @@ namespace emberCore
 			case ComputeType::postOutline:
 				PostOutline::RecordBarrierWaitStorageWriteBeforeReadWrite();
 				break;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBarrierWaitStorageWriteBeforeReadWrite();
+				break;
 			case ComputeType::postLighting:
 				PostLighting::RecordBarrierWaitStorageWriteBeforeReadWrite();
 				break;
@@ -642,6 +710,9 @@ namespace emberCore
 				break;
 			case ComputeType::postOutline:
 				PostOutline::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+				break;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 				break;
 			case ComputeType::postLighting:
 				PostLighting::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();

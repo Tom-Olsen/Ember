@@ -28,7 +28,7 @@ public:
 		appCreateInfo.windowHeight = 900;
 		appCreateInfo.renderWidth = 1600;
 		appCreateInfo.renderHeight = 900;
-		emberApplication::Application::Init(appCreateInfo);
+		ASSERT_TRUE(emberApplication::Application::Init(appCreateInfo));
 	}
 	static void TearDownTestSuite()
 	{

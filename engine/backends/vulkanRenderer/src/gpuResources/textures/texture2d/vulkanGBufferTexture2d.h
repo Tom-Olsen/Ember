@@ -7,7 +7,7 @@ namespace vulkanRendererBackend
 {
 	/// <summary>
 	/// Texture2d specialization: <para/>
-	/// -VkImageUsageFlags = sample, color attachment <para/>
+	/// -VkImageUsageFlags = sample, color attachment, optional storage <para/>
 	/// -VkImageCreateFlags = 0 <para/>
 	/// -VkImageViewType = 2d
 	/// </summary>
@@ -15,7 +15,7 @@ namespace vulkanRendererBackend
 	{
 	public: // Methods:
 		// Constructor/Destructor:
-		GBufferTexture2d(VkFormat format, int width, int height);
+		GBufferTexture2d(VkFormat format, int width, int height, bool storageEnabled = false);
 		~GBufferTexture2d();
 
 		// Non-copyable:

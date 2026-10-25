@@ -2,6 +2,7 @@
 #include "descriptorSetMacros.h"
 #include "logger.h"
 #include "profiler.h"
+#include "vmaImage.h"
 #include "vulkanAccessMask.h"
 #include "vulkanCommandPool.h"
 #include "vulkanComputePushConstant.h"
@@ -9,6 +10,7 @@
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameContext.h"
 #include "vulkanFrameResources.h"
+#include "vulkanGBufferTexture2d.h"
 #include "vulkanMacros.h"
 #include "vulkanPipeline.h"
 #include "vulkanRenderTargetResources.h"
@@ -25,7 +27,7 @@ namespace vulkanRendererBackend
 	template<RenderStage stage>
 	void ComputeStage<stage>::Record(const FrameContext& frameContext, std::span<const ComputeCall> computeCalls)
 	{
-		static_assert(stage == RenderStage::preRenderCompute || stage == RenderStage::postOutlineCompute || stage == RenderStage::postLightingCompute || stage == RenderStage::postRenderCompute);
+		static_assert(stage == RenderStage::preRenderCompute || stage == RenderStage::postOutlineCompute || stage == RenderStage::postGeometryCompute || stage == RenderStage::postLightingCompute || stage == RenderStage::postRenderCompute);
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
@@ -40,6 +42,10 @@ namespace vulkanRendererBackend
 			// These stages may read or write sceneColor textures and must transition them to general layout first:
 			if constexpr(stage == RenderStage::postLightingCompute || stage == RenderStage::postRenderCompute)
 				frameContext.renderTargets.GetSceneColorPair().TransitionLayoutForCompute(commandBuffer, frameContext.frameExecutionData.frameIndex);
+
+			if constexpr(stage == RenderStage::postGeometryCompute)
+				if (!computeCalls.empty())
+					RecordInitialPostGeometryComputeBarrier(commandBuffer, frameContext);
 
 			// Pipeline:
 			VkPipeline pipeline = VK_NULL_HANDLE;
@@ -99,6 +105,10 @@ namespace vulkanRendererBackend
 					RecordComputeToComputeShaderBarrier(commandBuffer, computeCallIndex);
 			}
 
+			if constexpr(stage == RenderStage::postGeometryCompute)
+				if (!computeCalls.empty())
+					RecordFinalPostGeometryComputeBarrier(commandBuffer, frameContext);
+
 			// Dispatch:
 			if constexpr(stage == RenderStage::preRenderCompute)
 				if (!computeCalls.empty())
@@ -155,12 +165,37 @@ namespace vulkanRendererBackend
 		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
 		DEBUG_LOG_TRACE("Memory barrier: pre-render compute to vertex");
 	}
+	template<RenderStage stage>
+	void ComputeStage<stage>::RecordInitialPostGeometryComputeBarrier(VkCommandBuffer commandBuffer, const FrameContext& frameContext) const
+	{
+		VmaImage* pImage = frameContext.renderTargets.GetSurfacePropertiesTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage();
+		pImage->TransitionLayout(
+			commandBuffer,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+			AccessMasks::ColorAttachmentOutput::colorAttachmentWrite,
+			AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite);
+	}
+	template<RenderStage stage>
+	void ComputeStage<stage>::RecordFinalPostGeometryComputeBarrier(VkCommandBuffer commandBuffer, const FrameContext& frameContext) const
+	{
+		VmaImage* pImage = frameContext.renderTargets.GetSurfacePropertiesTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage();
+		pImage->TransitionLayout(
+			commandBuffer,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+			VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
+			AccessMasks::ComputeShader::shaderRead | AccessMasks::ComputeShader::shaderWrite,
+			AccessMasks::FragmentShader::sampledRead);
+	}
 
 
 
     // Explicit template instantiation:
 	template class ComputeStage<RenderStage::preRenderCompute>;
 	template class ComputeStage<RenderStage::postOutlineCompute>;
+	template class ComputeStage<RenderStage::postGeometryCompute>;
 	template class ComputeStage<RenderStage::postLightingCompute>;
 	template class ComputeStage<RenderStage::postRenderCompute>;
 }

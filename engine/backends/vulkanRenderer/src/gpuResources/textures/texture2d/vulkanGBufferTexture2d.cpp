@@ -12,7 +12,7 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	GBufferTexture2d::GBufferTexture2d(VkFormat format, int width, int height)
+	GBufferTexture2d::GBufferTexture2d(VkFormat format, int width, int height, bool storageEnabled)
 	{
 		if (!IsValidImageFormat(format))
 			throw std::runtime_error("GBufferTexture2d::GBufferTexture2d(...) failed. Unsupported format: " + std::to_string(static_cast<int>(format)));
@@ -31,6 +31,8 @@ namespace vulkanRendererBackend
 		subresourceRange.levelCount = 1;
 
 		VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		if (storageEnabled)
+			usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
 		VkImageCreateFlags imageFlags = 0;
 		VkMemoryPropertyFlags memoryFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;

@@ -4,7 +4,7 @@
 
 namespace vulkanRendererBackend
 {
-	FrameContext::FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowMapCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IVulkanGui* pVulkanGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> postOutlineComputeCalls, std::span<const ComputeCall> postLightingComputeCalls, std::span<const ComputeCall> postRenderComputeCalls)
+	FrameContext::FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowMapCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IVulkanGui* pVulkanGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> postOutlineComputeCalls, std::span<const ComputeCall> postGeometryComputeCalls, std::span<const ComputeCall> postLightingComputeCalls, std::span<const ComputeCall> postRenderComputeCalls)
 		: frameExecutionData(frameExecutionData)
 		, shadowMapResolution(shadowMapResolution)
 		, shadowMapCount(shadowMapCount)
@@ -17,6 +17,7 @@ namespace vulkanRendererBackend
 		, pVulkanGui(pVulkanGui)
 		, preRenderComputeCalls(preRenderComputeCalls)
 		, postOutlineComputeCalls(postOutlineComputeCalls)
+		, postGeometryComputeCalls(postGeometryComputeCalls)
 		, postLightingComputeCalls(postLightingComputeCalls)
 		, postRenderComputeCalls(postRenderComputeCalls)
 	{

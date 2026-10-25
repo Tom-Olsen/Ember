@@ -96,18 +96,24 @@ namespace vulkanRendererBackend
 		VkSemaphoreSubmitInfo shadowSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
 		SubmitStage(frameContext, RenderStage::shadow, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&shadowWait, 1), std::span<const VkSemaphoreSubmitInfo>(&shadowSignal, 1));
 
-		// PreRenderCompute -> DeferredGeometry -> DeferredLighting:
+		// PreRenderCompute -> DeferredGeometry -> PostGeometryCompute:
 		m_deferredGeometryStage.Record(frameContext);
 		VkSemaphoreSubmitInfo deferredGeometryWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToDeferredGeometry), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-		VkSemaphoreSubmitInfo deferredGeometrySignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToDeferredLighting), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
+		VkSemaphoreSubmitInfo deferredGeometrySignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToPostGeometryCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
 		SubmitStage(frameContext, RenderStage::deferredGeometry, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&deferredGeometryWait, 1), std::span<const VkSemaphoreSubmitInfo>(&deferredGeometrySignal, 1));
 
-		// Shadow + DeferredGeometry -> DeferredLighting -> PostLightingCompute:
+		// DeferredGeometry -> PostGeometryCompute -> DeferredLighting:
+		m_postGeometryComputeStage.Record(frameContext, frameContext.postGeometryComputeCalls);
+		VkSemaphoreSubmitInfo postGeometryComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToPostGeometryCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+		VkSemaphoreSubmitInfo postGeometryComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postGeometryComputeToDeferredLighting), VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
+		SubmitStage(frameContext, RenderStage::postGeometryCompute, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&postGeometryComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&postGeometryComputeSignal, 1));
+
+		// Shadow + PostGeometryCompute -> DeferredLighting -> PostLightingCompute:
 		m_deferredLightingStage.Record(frameContext);
 		std::array<VkSemaphoreSubmitInfo, 2> deferredLightingWaits =
 		{
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT),
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postGeometryComputeToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 		};
 		VkSemaphoreSubmitInfo deferredLightingSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToPostLightingCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 		SubmitStage(frameContext, RenderStage::deferredLighting, graphicsQueue, deferredLightingWaits, std::span<const VkSemaphoreSubmitInfo>(&deferredLightingSignal, 1));
@@ -316,7 +322,8 @@ namespace vulkanRendererBackend
 			case Dependency::outlineToPostOutlineCompute: return "OutlineToPostOutlineCompute";
 			case Dependency::postOutlineComputeToPostRenderCompute: return "PostOutlineComputeToPostRenderCompute";
 			case Dependency::shadowToDeferredLighting: return "ShadowToDeferredLighting";
-			case Dependency::deferredGeometryToDeferredLighting: return "DeferredGeometryToDeferredLighting";
+			case Dependency::deferredGeometryToPostGeometryCompute: return "DeferredGeometryToPostGeometryCompute";
+			case Dependency::postGeometryComputeToDeferredLighting: return "PostGeometryComputeToDeferredLighting";
 			case Dependency::deferredLightingToPostLightingCompute: return "DeferredLightingToPostLightingCompute";
 			case Dependency::postLightingComputeToForwardOpaque: return "PostLightingComputeToForwardOpaque";
 			case Dependency::forwardOpaqueToForwardTransparent: return "ForwardOpaqueToForwardTransparent";

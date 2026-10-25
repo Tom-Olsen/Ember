@@ -21,6 +21,7 @@ namespace vulkanRendererBackend
 		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
 		std::unique_ptr<ComputeQueue> m_pPreRenderComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pPostOutlineComputeQueue;
+		std::unique_ptr<ComputeQueue> m_pPostGeometryComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pPostLightingComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pPostRenderComputeQueue;
 
@@ -41,11 +42,13 @@ namespace vulkanRendererBackend
 		Async* GetAsyncCompute();
 		ComputeQueue* GetPreRenderCompute();
 		ComputeQueue* GetPostOutlineCompute();
+		ComputeQueue* GetPostGeometryCompute();
 		ComputeQueue* GetPostLightingCompute();
 		ComputeQueue* GetPostRenderCompute();
 		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPreRenderComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPostOutlineComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IQueue* GetPostGeometryComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPostLightingComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPostRenderComputeInterfaceHandle() override;
 

@@ -1,4 +1,4 @@
-#define EMBER_ENABLE_FRAME_SET_RENDER_TARGETS // exposes sceneColorTexture0, sceneColorTexture1, and sceneDepthTexture to compute shaders.
+#define EMBER_ENABLE_FRAME_SET_RENDER_TARGETS // exposes sceneColorStorageTexture0, sceneColorStorageTexture1, and sceneDepthTexture to compute shaders.
 #include "descriptorSetMacros.h"
 #include "computePushConstant.hlsli"
 #include "math.hlsli"
@@ -72,8 +72,8 @@ float Scene_GetDistance(float2 pixelCenter, math_Ray worldRay, float2 screenSize
 float4 Scene_GetColor(uint2 pixel)
 {
 	if (pc.sceneColorIndex == 0)
-		return sceneColorTexture0[pixel];
-	return sceneColorTexture1[pixel];
+		return sceneColorStorageTexture0[pixel];
+	return sceneColorStorageTexture1[pixel];
 }
 #if EMBER_SCENE_COLOR_ACCESS == EMBER_SCENE_COLOR_ACCESS_READ || EMBER_SCENE_COLOR_ACCESS == EMBER_SCENE_COLOR_ACCESS_OUT_OF_PLACE
 float4 Scene_SampleColor(float2 uv)
@@ -91,7 +91,7 @@ void Scene_SetColor(uint2 pixel, float4 color)
 	uint sceneColorIndex = pc.sceneColorIndex;
 	#endif
 	if (sceneColorIndex == 0)
-		sceneColorTexture0[pixel] = color;
+		sceneColorStorageTexture0[pixel] = color;
 	else
-		sceneColorTexture1[pixel] = color;
+		sceneColorStorageTexture1[pixel] = color;
 }

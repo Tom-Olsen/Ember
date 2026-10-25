@@ -24,5 +24,7 @@ namespace vulkanRendererBackend
 		void RecordBarrier(VkCommandBuffer commandBuffer, const ComputeCall& computeCall, size_t computeCallIndex) const;
 		void RecordComputeToComputeShaderBarrier(VkCommandBuffer commandBuffer, size_t computeCallIndex) const;
 		void RecordFinalPreRenderComputeBarrier(VkCommandBuffer commandBuffer) const;
+		void RecordInitialPostGeometryComputeBarrier(VkCommandBuffer commandBuffer, const FrameContext& frameContext) const;
+		void RecordFinalPostGeometryComputeBarrier(VkCommandBuffer commandBuffer, const FrameContext& frameContext) const;
 	};
 }

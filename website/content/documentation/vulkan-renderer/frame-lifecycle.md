@@ -31,7 +31,8 @@ flowchart LR
     Pre --> Shadow[Shadow]
     Pre --> Geometry[Deferred geometry]
     Shadow --> Lighting[Deferred lighting]
-    Geometry --> Lighting
+    Geometry --> PostGeometry[Post-geometry compute]
+    PostGeometry --> Lighting
     Lighting --> PostLighting[Post-lighting compute]
     PostLighting --> Opaque[Forward opaque]
     Opaque --> Transparent[Forward transparent]

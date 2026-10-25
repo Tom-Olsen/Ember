@@ -51,13 +51,13 @@ namespace vulkanRendererBackend
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colorAttachmentReference;
 
-		// Deferred geometry pass -> deferred lighting pass:
+		// Post-geometry compute -> deferred lighting pass:
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
 		dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;
+		dependency.srcAccessMask = AccessMasks::ComputeShader::shaderWrite;
 		dependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite;
 		dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 

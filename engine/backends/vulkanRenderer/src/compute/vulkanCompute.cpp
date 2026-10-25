@@ -14,6 +14,7 @@ namespace vulkanRendererBackend
 		m_pIAsync = std::make_unique<Async>();
 		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
 		m_pPostOutlineComputeQueue = std::make_unique<ComputeQueue>();
+		m_pPostGeometryComputeQueue = std::make_unique<ComputeQueue>();
 		m_pPostLightingComputeQueue = std::make_unique<ComputeQueue>(true);
 		m_pPostRenderComputeQueue = std::make_unique<ComputeQueue>(true);
 	}
@@ -43,6 +44,10 @@ namespace vulkanRendererBackend
 	{
 		return m_pPostOutlineComputeQueue.get();
 	}
+	ComputeQueue* Compute::GetPostGeometryCompute()
+	{
+		return m_pPostGeometryComputeQueue.get();
+	}
 	ComputeQueue* Compute::GetPostLightingCompute()
 	{
 		return m_pPostLightingComputeQueue.get();
@@ -63,6 +68,10 @@ namespace vulkanRendererBackend
 	{
 		return m_pPostOutlineComputeQueue.get();
 	}
+	emberBackendInterface::ICompute::IQueue* Compute::GetPostGeometryComputeInterfaceHandle()
+	{
+		return m_pPostGeometryComputeQueue.get();
+	}
 	emberBackendInterface::ICompute::IQueue* Compute::GetPostLightingComputeInterfaceHandle()
 	{
 		return m_pPostLightingComputeQueue.get();
@@ -79,6 +88,7 @@ namespace vulkanRendererBackend
 	{
 		GetPreRenderCompute()->UpdateShaderData(frameIndex);
 		GetPostOutlineCompute()->UpdateShaderData(frameIndex);
+		GetPostGeometryCompute()->UpdateShaderData(frameIndex);
 		GetPostLightingCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
 		uint32_t sceneColorTextureIndex = sceneColorPair.GetCurrentTextureIndex(frameIndex);
 		GetPostRenderCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
@@ -88,6 +98,7 @@ namespace vulkanRendererBackend
 	{
 		GetPreRenderCompute()->CommitComputeCalls(frameIndex);
 		GetPostOutlineCompute()->CommitComputeCalls(frameIndex);
+		GetPostGeometryCompute()->CommitComputeCalls(frameIndex);
 		GetPostLightingCompute()->CommitComputeCalls(frameIndex);
 		GetPostRenderCompute()->CommitComputeCalls(frameIndex);
 	}
@@ -95,6 +106,7 @@ namespace vulkanRendererBackend
 	{
 		GetPreRenderCompute()->RetireComputeCalls(frameIndex);
 		GetPostOutlineCompute()->RetireComputeCalls(frameIndex);
+		GetPostGeometryCompute()->RetireComputeCalls(frameIndex);
 		GetPostLightingCompute()->RetireComputeCalls(frameIndex);
 		GetPostRenderCompute()->RetireComputeCalls(frameIndex);
 	}
@@ -102,6 +114,7 @@ namespace vulkanRendererBackend
 	{
 		GetPreRenderCompute()->RetireAllComputeCalls();
 		GetPostOutlineCompute()->RetireAllComputeCalls();
+		GetPostGeometryCompute()->RetireAllComputeCalls();
 		GetPostLightingCompute()->RetireAllComputeCalls();
 		GetPostRenderCompute()->RetireAllComputeCalls();
 	}
@@ -109,6 +122,7 @@ namespace vulkanRendererBackend
 	{
 		GetPreRenderCompute()->ResetComputeCalls();
 		GetPostOutlineCompute()->ResetComputeCalls();
+		GetPostGeometryCompute()->ResetComputeCalls();
 		GetPostLightingCompute()->ResetComputeCalls();
 		GetPostRenderCompute()->ResetComputeCalls();
 	}

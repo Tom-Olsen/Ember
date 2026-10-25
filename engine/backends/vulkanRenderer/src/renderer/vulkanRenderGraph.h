@@ -28,10 +28,10 @@ namespace vulkanRendererBackend
 	/// Owns the render stages and the synchronization that connects them.
 	/// Aquire
 	/// └>ResourceUpdate
-	///   ├> Gizmo ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
-	///   └> PreRenderCompute ┬> Outline ──────────> PostOutlineCompute  ───────────────────────────────────────────────────────────┬> PostRenderCompute ┘
-	///                       ├> Shadow ──────────┬> DeferredLighting ─> PostLightingCompute ─> ForwardOpaque ─> ForwardTransparent ┘
-	///                       └> DeferredGeometry ┘
+	///   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
+	///   └> PreRenderCompute ┬> Outline ──────────> PostOutlineCompute  ──────────────────────────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
+	///                       ├> Shadow ─────────────────────────────────┬> DeferredLighting ─> PostLightingCompute ─> ForwardOpaque ─> ForwardTransparent ┘
+	///                       └> DeferredGeometry ─> PostGeometryCompute ┘
 	/// </summary>
 	class RenderGraph
 	{
@@ -48,7 +48,8 @@ namespace vulkanRendererBackend
 			outlineToPostOutlineCompute,
 			postOutlineComputeToPostRenderCompute,
 			shadowToDeferredLighting,
-			deferredGeometryToDeferredLighting,
+			deferredGeometryToPostGeometryCompute,
+			postGeometryComputeToDeferredLighting,
 			deferredLightingToPostLightingCompute,
 			postLightingComputeToForwardOpaque,
 			forwardOpaqueToForwardTransparent,
@@ -71,6 +72,7 @@ namespace vulkanRendererBackend
 		ComputeStage<RenderStage::postOutlineCompute> m_postOutlineComputeStage;
 		ShadowStage m_shadowStage;
 		DeferredGeometryStage m_deferredGeometryStage;
+		ComputeStage<RenderStage::postGeometryCompute> m_postGeometryComputeStage;
 		DeferredLightingStage m_deferredLightingStage;
 		ComputeStage<RenderStage::postLightingCompute> m_postLightingComputeStage;
 		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;

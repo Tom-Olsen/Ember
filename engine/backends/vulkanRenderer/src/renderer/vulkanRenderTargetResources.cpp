@@ -43,7 +43,7 @@ namespace vulkanRendererBackend
 			m_pSceneDepthTextures.push_back(std::make_unique<DepthTexture2d>(deferredRenderingContract::depthFormat, renderWidth, renderHeight));
 			m_pAlbedoTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::albedoFormat, renderWidth, renderHeight));
 			m_pNormalTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::normalFormat, renderWidth, renderHeight));
-			m_pSurfacePropertiesTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::surfacePropertiesFormat, renderWidth, renderHeight));
+			m_pSurfacePropertiesTextures.push_back(std::make_unique<GBufferTexture2d>(deferredRenderingContract::surfacePropertiesFormat, renderWidth, renderHeight, true));
 			m_pOutlineTextures.push_back(std::make_unique<RenderTexture2d>(VK_FORMAT_R8_UNORM, renderWidth, renderHeight));
 			m_pGizmoTextures.push_back(std::make_unique<RenderTexture2d>(VK_FORMAT_R16G16B16A16_SFLOAT, renderWidth, renderHeight));
 			m_pExpandedOutlineMaskTextures.push_back(std::make_unique<StorageTexture2d>(VK_FORMAT_R8_UNORM, renderWidth, renderHeight));

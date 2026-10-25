@@ -23,6 +23,7 @@ namespace emberCore
 		async,
 		preRender,
 		postOutline,
+		postGeometry,
 		postLighting,
 		postRender,
 		physics
@@ -133,6 +134,37 @@ namespace emberCore
 
 
 		
+		class EMBER_CORE_API PostGeometry
+		{
+		private: // Members:
+			static emberBackendInterface::ICompute::IQueue* s_pIPostGeometry;
+
+		public: // Methods:
+			// Constructor/Destructor:
+			static void Init(emberBackendInterface::ICompute::IQueue* pIPostGeometry);
+			static void Clear();
+
+			// Workload recording:
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
+			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBarrierWaitShaderWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeRead();
+			static void RecordBarrierWaitStorageWriteBeforeWrite();
+			static void RecordBarrierWaitStorageWriteBeforeReadWrite();
+			static void RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+
+		private: // Methods
+			// Delete all constructors:
+			PostGeometry() = delete;
+			PostGeometry(const PostGeometry&) = delete;
+			PostGeometry& operator=(const PostGeometry&) = delete;
+			PostGeometry(PostGeometry&&) = delete;
+			PostGeometry& operator=(PostGeometry&&) = delete;
+			~PostGeometry() = delete;
+		};
+
+
+
 		class EMBER_CORE_API PostLighting
 		{
 		private: // Members:

@@ -57,7 +57,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	bool hasHit = ScreenSpaceRayMarch(sourcePixel, worldRay, screenSize, hitPixel, hitUv);
 
 	// Reflect skybox when ray hit misses:
-	float roughness = gbufferSurfacePropertiesTexture.Load(int3(sourcePixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
+	float roughness = gbufferSurfacePropertiesSampleTexture.Load(int3(sourcePixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
 	float3 reflectionColor = Reflection_GetEnvironmentColor(environmentMap, reflectionDirection, roughness);
 
 	// Fade reflections near screen boundaries to hide cut off broken reflections:

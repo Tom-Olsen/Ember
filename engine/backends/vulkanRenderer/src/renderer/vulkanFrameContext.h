@@ -45,10 +45,11 @@ namespace vulkanRendererBackend
 		// Frame compute calls:
 		std::span<const ComputeCall> preRenderComputeCalls;
 		std::span<const ComputeCall> postOutlineComputeCalls;
+		std::span<const ComputeCall> postGeometryComputeCalls;
 		std::span<const ComputeCall> postLightingComputeCalls;
 		std::span<const ComputeCall> postRenderComputeCalls;
 
 	public: // Methods:
-		FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IVulkanGui* pVulkanGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> postOutlineComputeCalls, std::span<const ComputeCall> postLightingComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
+		FrameContext(const FrameExecutionData& frameExecutionData, uint32_t shadowMapResolution, uint32_t shadowLightCount, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor, FrameResources& resources, FrameRenderData& frameRenderData, RenderTargetResources& renderTargets, emberBackendInterface::IVulkanGui* pVulkanGui, std::span<const ComputeCall> preRenderComputeCalls, std::span<const ComputeCall> postOutlineComputeCalls, std::span<const ComputeCall> postGeometryComputeCalls, std::span<const ComputeCall> postLightingComputeCalls, std::span<const ComputeCall> postRenderComputeCalls);
 	};
 }
