@@ -20,8 +20,8 @@ namespace vulkanRendererBackend
 	private: // Members:
 		std::unique_ptr<emberBackendInterface::ICompute::IAsync> m_pIAsync;
 		std::unique_ptr<ComputeQueue> m_pPreRenderComputeQueue;
-		std::unique_ptr<ComputeQueue> m_pMidRenderComputeQueue;
-		std::unique_ptr<ComputeQueue> m_pScreenSpaceComputeQueue;
+		std::unique_ptr<ComputeQueue> m_pPostOutlineComputeQueue;
+		std::unique_ptr<ComputeQueue> m_pPostLightingComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pPostRenderComputeQueue;
 
 	public: // Methods:
@@ -40,13 +40,13 @@ namespace vulkanRendererBackend
 		// Getters:
 		Async* GetAsyncCompute();
 		ComputeQueue* GetPreRenderCompute();
-		ComputeQueue* GetMidRenderCompute();
-		ComputeQueue* GetScreenSpaceCompute();
+		ComputeQueue* GetPostOutlineCompute();
+		ComputeQueue* GetPostLightingCompute();
 		ComputeQueue* GetPostRenderCompute();
 		emberBackendInterface::ICompute::IAsync* GetAsyncComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPreRenderComputeInterfaceHandle() override;
-		emberBackendInterface::ICompute::IQueue* GetMidRenderComputeInterfaceHandle() override;
-		emberBackendInterface::ICompute::IQueue* GetScreenSpaceComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IQueue* GetPostOutlineComputeInterfaceHandle() override;
+		emberBackendInterface::ICompute::IQueue* GetPostLightingComputeInterfaceHandle() override;
 		emberBackendInterface::ICompute::IQueue* GetPostRenderComputeInterfaceHandle() override;
 
 		// Frame lifecycle:

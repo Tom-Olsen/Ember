@@ -43,7 +43,7 @@ namespace emberEcs
 			return;
 		if (ssrMode == SsrMode::fullResolution)
 		{
-			CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrComputeShader);
+			CallProperties callProperties = Compute::PostLighting::RecordComputeShader(m_ssrComputeShader);
 			callProperties.SetTexture("environmentMap", m_environmentMap);
 		}
 		// sceneColorA (read) -> reflectionTexture
@@ -52,13 +52,13 @@ namespace emberEcs
 		else if (ssrMode == SsrMode::reflectionMap)
 		{
 			{
-				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrReflectionMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
+				CallProperties callProperties = Compute::PostLighting::RecordComputeShader(m_ssrReflectionMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
 				callProperties.SetTexture("environmentMap", m_environmentMap);
 				callProperties.SetTexture("reflectionMap", m_ssrReflectionTexture.GetTexture());
 			}
-			Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeRead();
+			Compute::PostLighting::RecordBarrierWaitStorageWriteBeforeRead();
 			{
-				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrCompositComputeShader);
+				CallProperties callProperties = Compute::PostLighting::RecordComputeShader(m_ssrCompositComputeShader);
 				callProperties.SetTexture("reflectionMap", m_ssrReflectionTexture.GetTexture());
 			}
 		}
@@ -68,12 +68,12 @@ namespace emberEcs
 		else if (ssrMode == SsrMode::reflectionUVMap)
 		{
 			{
-				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrReflectionUvMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
+				CallProperties callProperties = Compute::PostLighting::RecordComputeShader(m_ssrReflectionUvMapComputeShader, Uint3(m_reflectionWidth, m_reflectionHeight, 1));
 				callProperties.SetTexture("reflectionUvMap", m_ssrReflectionUvTexture.GetTexture());
 			}
-			Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeRead();
+			Compute::PostLighting::RecordBarrierWaitStorageWriteBeforeRead();
 			{
-				CallProperties callProperties = Compute::ScreenSpace::RecordComputeShader(m_ssrUvCompositComputeShader);
+				CallProperties callProperties = Compute::PostLighting::RecordComputeShader(m_ssrUvCompositComputeShader);
 				callProperties.SetTexture("environmentMap", m_environmentMap);
 				callProperties.SetTexture("reflectionUvMap", m_ssrReflectionUvTexture.GetTexture());
 			}

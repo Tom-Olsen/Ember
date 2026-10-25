@@ -25,15 +25,15 @@ flowchart LR
 
     Update --> Pre[Pre-render compute]
     Pre --> Outline[Outline]
-    Outline --> Mid[Mid-render compute]
-    Mid --> Post[Post-render compute]
+    Outline --> PostOutline[Post-outline compute]
+    PostOutline --> Post[Post-render compute]
 
     Pre --> Shadow[Shadow]
     Pre --> Geometry[Deferred geometry]
     Shadow --> Lighting[Deferred lighting]
     Geometry --> Lighting
-    Lighting --> Screen[Screen-space compute]
-    Screen --> Opaque[Forward opaque]
+    Lighting --> PostLighting[Post-lighting compute]
+    PostLighting --> Opaque[Forward opaque]
     Opaque --> Transparent[Forward transparent]
     Transparent --> Post
 

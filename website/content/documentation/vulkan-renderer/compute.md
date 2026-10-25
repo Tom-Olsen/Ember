@@ -7,9 +7,9 @@ Four queues place compute work at defined points in the frame:
 | Queue | Position and purpose |
 | --- | --- |
 | Pre-render | Runs after resource updates and before the main graphics branches consume their inputs. |
-| Mid-render | Runs after outline rendering and can prepare results needed later in the frame. |
-| Screen-space | Runs after deferred lighting and before forward rendering continues. |
-| Post-render | Joins the mid-render and main scene branches before presentation. |
+| Post-outline | Runs after outline rendering and can prepare results needed later in the frame. |
+| Post-lighting | Runs after deferred lighting and before forward rendering continues. |
+| Post-render | Joins the post-outline and main scene branches before presentation. |
 
 Each queue collects dispatches and explicit barriers from the engine. At frame submission, its calls become part of the frame context and are recorded by the matching compute stage. Call resources remain associated with their frame-in-flight slot until that slot is retired.
 

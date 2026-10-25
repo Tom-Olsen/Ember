@@ -124,8 +124,8 @@ namespace emberBackendInterface
 		// Getters:
 		virtual ICompute::IAsync* GetAsyncComputeInterfaceHandle() = 0;
 		virtual ICompute::IQueue* GetPreRenderComputeInterfaceHandle() = 0;
-		virtual ICompute::IQueue* GetMidRenderComputeInterfaceHandle() = 0;
-		virtual ICompute::IQueue* GetScreenSpaceComputeInterfaceHandle() = 0;
+		virtual ICompute::IQueue* GetPostOutlineComputeInterfaceHandle() = 0;
+		virtual ICompute::IQueue* GetPostLightingComputeInterfaceHandle() = 0;
 		virtual ICompute::IQueue* GetPostRenderComputeInterfaceHandle() = 0;
     };
 }

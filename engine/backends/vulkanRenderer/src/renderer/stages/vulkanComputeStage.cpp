@@ -25,7 +25,7 @@ namespace vulkanRendererBackend
 	template<RenderStage stage>
 	void ComputeStage<stage>::Record(const FrameContext& frameContext, std::span<const ComputeCall> computeCalls)
 	{
-		static_assert(stage == RenderStage::preRenderCompute || stage == RenderStage::midRenderCompute || stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute);
+		static_assert(stage == RenderStage::preRenderCompute || stage == RenderStage::postOutlineCompute || stage == RenderStage::postLightingCompute || stage == RenderStage::postRenderCompute);
 		PROFILE_FUNCTION();
 
 		// Prepare command recording:
@@ -38,7 +38,7 @@ namespace vulkanRendererBackend
 		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 		{
 			// These stages may read or write sceneColor textures and must transition them to general layout first:
-			if constexpr(stage == RenderStage::screenSpaceCompute || stage == RenderStage::postRenderCompute)
+			if constexpr(stage == RenderStage::postLightingCompute || stage == RenderStage::postRenderCompute)
 				frameContext.renderTargets.GetSceneColorPair().TransitionLayoutForCompute(commandBuffer, frameContext.frameExecutionData.frameIndex);
 
 			// Pipeline:
@@ -160,7 +160,7 @@ namespace vulkanRendererBackend
 
     // Explicit template instantiation:
 	template class ComputeStage<RenderStage::preRenderCompute>;
-	template class ComputeStage<RenderStage::midRenderCompute>;
-	template class ComputeStage<RenderStage::screenSpaceCompute>;
+	template class ComputeStage<RenderStage::postOutlineCompute>;
+	template class ComputeStage<RenderStage::postLightingCompute>;
 	template class ComputeStage<RenderStage::postRenderCompute>;
 }

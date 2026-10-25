@@ -180,8 +180,8 @@ namespace vulkanRendererBackend
 			*m_pRenderTargets,
 			m_pIVulkanGui,
 			m_pCompute->GetPreRenderCompute()->GetComputeCalls(),
-			m_pCompute->GetMidRenderCompute()->GetComputeCalls(),
-			m_pCompute->GetScreenSpaceCompute()->GetComputeCalls(),
+			m_pCompute->GetPostOutlineCompute()->GetComputeCalls(),
+			m_pCompute->GetPostLightingCompute()->GetComputeCalls(),
 			m_pCompute->GetPostRenderCompute()->GetComputeCalls());
 		m_pRenderGraph->RecordAndSubmit(frameContext);
 		m_pCompute->CommitFrame(m_frameExecutionData.frameIndex);
@@ -807,7 +807,7 @@ namespace vulkanRendererBackend
 	void Renderer::QueueRendererOwnedComputeShaders()
 	{
 		// Outline mask:
-		ComputeQueue* pMidRenderCompute = m_pCompute->GetMidRenderCompute();
+		ComputeQueue* pPostOutlineCompute = m_pCompute->GetPostOutlineCompute();
 		ComputeQueue* pPostRenderCompute = m_pCompute->GetPostRenderCompute();
 		if (!m_frameRenderData[m_frameExecutionData.frameIndex].outlineDrawCalls.empty())
 		{
@@ -816,22 +816,22 @@ namespace vulkanRendererBackend
 			StorageTexture2d* pHorizontalExpandedMask = &m_pRenderTargets->GetHorizontalExpandedOutlineMaskTexture(m_frameExecutionData.frameIndex);
 			StorageTexture2d* pExpandedMask = &m_pRenderTargets->GetExpandedOutlineMaskTexture(m_frameExecutionData.frameIndex);
 
-			// Expand mask horizontally (midRenderCompute):
+			// Expand mask horizontally (postOutlineCompute):
 			Uint3 threadCount = { pInputMask->GetWidth(), pInputMask->GetHeight(), 1 };
 			ComputeShader* pHorizontalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineHorizontalMaskExpansionComputeShader();
 			pHorizontalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
-			DescriptorSetBinding* pHorizontalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pMidRenderCompute->RecordComputeShader(pHorizontalExpansionComputeShader, threadCount));
+			DescriptorSetBinding* pHorizontalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostOutlineCompute->RecordComputeShader(pHorizontalExpansionComputeShader, threadCount));
 			if (!pHorizontalExpansionCallDescriptorSetBinding)
 				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the horizontal outline mask expansion compute shader.");
 			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pInputMask);
 			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pHorizontalExpandedMask);
 
-			pMidRenderCompute->RecordBarrier(emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead);
+			pPostOutlineCompute->RecordBarrier(emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead);
 
-			// Expand mask vertically and remove the original mask (midRenderCompute):
+			// Expand mask vertically and remove the original mask (postOutlineCompute):
 			ComputeShader* pVerticalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineVerticalMaskExpansionComputeShader();
 			pVerticalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
-			DescriptorSetBinding* pVerticalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pMidRenderCompute->RecordComputeShader(pVerticalExpansionComputeShader, threadCount));
+			DescriptorSetBinding* pVerticalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostOutlineCompute->RecordComputeShader(pVerticalExpansionComputeShader, threadCount));
 			if (!pVerticalExpansionCallDescriptorSetBinding)
 				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the vertical outline mask expansion compute shader.");
 			pVerticalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pHorizontalExpandedMask);

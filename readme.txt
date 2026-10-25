@@ -76,9 +76,9 @@ Implemented features:
 - Vulkan render graph with explicit synchronization across graphics and compute queues:
  Acquire
  └>ResourceUpdate
-   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
-   └> PreRenderCompute ┬> Outline ──────────> MidRenderCompute  ────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
-                       ├> Shadow ──────────┬> DeferredLighting ─> ForwardOpaque ─> ScreenSpaceCompute ─> ForwardTransparent ┘
+   ├> Gizmo ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
+   └> PreRenderCompute ┬> Outline ──────────> PostOutlineCompute  ───────────────────────────────────────────────────────────┬> PostRenderCompute ┘
+                       ├> Shadow ──────────┬> DeferredLighting ─> PostLightingCompute ─> ForwardOpaque ─> ForwardTransparent ┘
                        └> DeferredGeometry ┘
 - Rendering features:
     - Deferred geometry and lighting, forward opaque and transparent rendering, shadow maps, object outlines, gizmos, and presentation/post-processing passes.
@@ -86,7 +86,7 @@ Implemented features:
     - Configurable VSync, frames in flight, render resolution, and MSAA sample count.
     - Interleaved and separate vertex-buffer layouts, indexed meshes, instanced rendering, and transparent draw sorting.
 - Compute features:
-    - Pre-render, mid-render, screen-space, and post-render compute queues integrated into the render graph.
+    - Pre-render, post-outline, post-lighting, and post-render compute queues integrated into the render graph.
     - Asynchronous compute sessions with explicit barriers, completion polling, and a triple-buffered physics workflow.
     - GPU bitonic sorting with optional permutation generation and application.
 - GPU resources and asset management:

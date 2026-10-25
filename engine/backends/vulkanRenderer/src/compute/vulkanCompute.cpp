@@ -13,8 +13,8 @@ namespace vulkanRendererBackend
 	{
 		m_pIAsync = std::make_unique<Async>();
 		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
-		m_pMidRenderComputeQueue = std::make_unique<ComputeQueue>();
-		m_pScreenSpaceComputeQueue = std::make_unique<ComputeQueue>(true);
+		m_pPostOutlineComputeQueue = std::make_unique<ComputeQueue>();
+		m_pPostLightingComputeQueue = std::make_unique<ComputeQueue>(true);
 		m_pPostRenderComputeQueue = std::make_unique<ComputeQueue>(true);
 	}
 	Compute::~Compute()
@@ -39,13 +39,13 @@ namespace vulkanRendererBackend
 	{
 		return m_pPreRenderComputeQueue.get();
 	}
-	ComputeQueue* Compute::GetMidRenderCompute()
+	ComputeQueue* Compute::GetPostOutlineCompute()
 	{
-		return m_pMidRenderComputeQueue.get();
+		return m_pPostOutlineComputeQueue.get();
 	}
-	ComputeQueue* Compute::GetScreenSpaceCompute()
+	ComputeQueue* Compute::GetPostLightingCompute()
 	{
-		return m_pScreenSpaceComputeQueue.get();
+		return m_pPostLightingComputeQueue.get();
 	}
 	ComputeQueue* Compute::GetPostRenderCompute()
 	{
@@ -59,13 +59,13 @@ namespace vulkanRendererBackend
 	{
 		return m_pPreRenderComputeQueue.get();
 	}
-	emberBackendInterface::ICompute::IQueue* Compute::GetMidRenderComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IQueue* Compute::GetPostOutlineComputeInterfaceHandle()
 	{
-		return m_pMidRenderComputeQueue.get();
+		return m_pPostOutlineComputeQueue.get();
 	}
-	emberBackendInterface::ICompute::IQueue* Compute::GetScreenSpaceComputeInterfaceHandle()
+	emberBackendInterface::ICompute::IQueue* Compute::GetPostLightingComputeInterfaceHandle()
 	{
-		return m_pScreenSpaceComputeQueue.get();
+		return m_pPostLightingComputeQueue.get();
 	}
 	emberBackendInterface::ICompute::IQueue* Compute::GetPostRenderComputeInterfaceHandle()
 	{
@@ -78,8 +78,8 @@ namespace vulkanRendererBackend
 	uint32_t Compute::UpdateShaderData(uint32_t frameIndex, SceneColorPair& sceneColorPair)
 	{
 		GetPreRenderCompute()->UpdateShaderData(frameIndex);
-		GetMidRenderCompute()->UpdateShaderData(frameIndex);
-		GetScreenSpaceCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
+		GetPostOutlineCompute()->UpdateShaderData(frameIndex);
+		GetPostLightingCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
 		uint32_t sceneColorTextureIndex = sceneColorPair.GetCurrentTextureIndex(frameIndex);
 		GetPostRenderCompute()->UpdateShaderData(frameIndex, &sceneColorPair);
 		return sceneColorTextureIndex;
@@ -87,29 +87,29 @@ namespace vulkanRendererBackend
 	void Compute::CommitFrame(uint32_t frameIndex)
 	{
 		GetPreRenderCompute()->CommitComputeCalls(frameIndex);
-		GetMidRenderCompute()->CommitComputeCalls(frameIndex);
-		GetScreenSpaceCompute()->CommitComputeCalls(frameIndex);
+		GetPostOutlineCompute()->CommitComputeCalls(frameIndex);
+		GetPostLightingCompute()->CommitComputeCalls(frameIndex);
 		GetPostRenderCompute()->CommitComputeCalls(frameIndex);
 	}
 	void Compute::RetireFrame(uint32_t frameIndex)
 	{
 		GetPreRenderCompute()->RetireComputeCalls(frameIndex);
-		GetMidRenderCompute()->RetireComputeCalls(frameIndex);
-		GetScreenSpaceCompute()->RetireComputeCalls(frameIndex);
+		GetPostOutlineCompute()->RetireComputeCalls(frameIndex);
+		GetPostLightingCompute()->RetireComputeCalls(frameIndex);
 		GetPostRenderCompute()->RetireComputeCalls(frameIndex);
 	}
 	void Compute::RetireAllFrames()
 	{
 		GetPreRenderCompute()->RetireAllComputeCalls();
-		GetMidRenderCompute()->RetireAllComputeCalls();
-		GetScreenSpaceCompute()->RetireAllComputeCalls();
+		GetPostOutlineCompute()->RetireAllComputeCalls();
+		GetPostLightingCompute()->RetireAllComputeCalls();
 		GetPostRenderCompute()->RetireAllComputeCalls();
 	}
 	void Compute::DiscardPendingCalls()
 	{
 		GetPreRenderCompute()->ResetComputeCalls();
-		GetMidRenderCompute()->ResetComputeCalls();
-		GetScreenSpaceCompute()->ResetComputeCalls();
+		GetPostOutlineCompute()->ResetComputeCalls();
+		GetPostLightingCompute()->ResetComputeCalls();
 		GetPostRenderCompute()->ResetComputeCalls();
 	}
 }

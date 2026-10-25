@@ -50,11 +50,11 @@ namespace vulkanRendererBackend
 			// Color attachment description:
 			attachments[0].format = renderTargets.GetSceneColorPair().GetRenderTargetTexture(0, 0).GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;						// load results after screen space compute.
+			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;						// load results after post-lighting compute.
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;					// store final image for post processing + presenting.
 			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;			// we do not use stencils.
 			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;		// we do not use stencils.
-			attachments[0].initialLayout = VK_IMAGE_LAYOUT_GENERAL;					// layout used by screen space compute shaders.
+			attachments[0].initialLayout = VK_IMAGE_LAYOUT_GENERAL;					// layout used by post-lighting compute shaders.
 			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;					// layout for post processing compute shaders.
 
 			// Depth attachment description (transparent materials only read scene depth):

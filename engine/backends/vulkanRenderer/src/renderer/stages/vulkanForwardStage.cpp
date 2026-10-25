@@ -56,7 +56,7 @@ namespace vulkanRendererBackend
 			pDrawCallPointers = &frameContext.frameRenderData.sortedForwardTransparentDrawCallPointers;
 		}
 
-		// Both forward passes continue on the scene color selected by screen-space compute.
+		// Both forward passes continue on the scene color selected by post-lighting compute.
 		// Their framebuffer arrays are ordered by frame index, then scene color index.
 		const uint32_t frameIndex = frameContext.frameExecutionData.frameIndex;
 		const uint32_t sceneColorIndex = frameContext.frameExecutionData.forwardSceneColorIndex;

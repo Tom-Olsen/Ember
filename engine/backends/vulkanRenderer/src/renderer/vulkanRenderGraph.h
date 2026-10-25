@@ -28,9 +28,9 @@ namespace vulkanRendererBackend
 	/// Owns the render stages and the synchronization that connects them.
 	/// Aquire
 	/// └>ResourceUpdate
-	///   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
-	///   └> PreRenderCompute ┬> Outline ──────────> MidRenderCompute  ────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
-	///                       ├> Shadow ──────────┬> DeferredLighting ─> ScreenSpaceCompute ─> ForwardOpaque ─> ForwardTransparent ┘
+	///   ├> Gizmo ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
+	///   └> PreRenderCompute ┬> Outline ──────────> PostOutlineCompute  ───────────────────────────────────────────────────────────┬> PostRenderCompute ┘
+	///                       ├> Shadow ──────────┬> DeferredLighting ─> PostLightingCompute ─> ForwardOpaque ─> ForwardTransparent ┘
 	///                       └> DeferredGeometry ┘
 	/// </summary>
 	class RenderGraph
@@ -45,12 +45,12 @@ namespace vulkanRendererBackend
 			preRenderComputeToOutline,
 			preRenderComputeToShadow,
 			preRenderComputeToDeferredGeometry,
-			outlineToMidRenderCompute,
-			midRenderComputeToPostRenderCompute,
+			outlineToPostOutlineCompute,
+			postOutlineComputeToPostRenderCompute,
 			shadowToDeferredLighting,
 			deferredGeometryToDeferredLighting,
-			deferredLightingToScreenSpaceCompute,
-			screenSpaceComputeToForwardOpaque,
+			deferredLightingToPostLightingCompute,
+			postLightingComputeToForwardOpaque,
 			forwardOpaqueToForwardTransparent,
 			forwardTransparentToPostRenderCompute,
 			postRenderComputeToPresent,
@@ -68,11 +68,11 @@ namespace vulkanRendererBackend
 		GizmoStage m_gizmoStage;
 		ComputeStage<RenderStage::preRenderCompute> m_preRenderComputeStage;
 		OutlineStage m_outlineStage;
-		ComputeStage<RenderStage::midRenderCompute> m_midRenderComputeStage;
+		ComputeStage<RenderStage::postOutlineCompute> m_postOutlineComputeStage;
 		ShadowStage m_shadowStage;
 		DeferredGeometryStage m_deferredGeometryStage;
 		DeferredLightingStage m_deferredLightingStage;
-		ComputeStage<RenderStage::screenSpaceCompute> m_screenSpaceComputeStage;
+		ComputeStage<RenderStage::postLightingCompute> m_postLightingComputeStage;
 		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;
 		ForwardStage<RenderStage::forwardTransparent> m_forwardTransparentStage;
 		ComputeStage<RenderStage::postRenderCompute> m_postRenderComputeStage;

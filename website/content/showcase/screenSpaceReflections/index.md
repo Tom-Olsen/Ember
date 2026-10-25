@@ -1,6 +1,6 @@
 # Screen-Space Reflections
 
-Ember supports a screen space compute stage, which runs on the graphics queue right after the deferred lighting and before the forward opaque stage.
+Ember supports a post-lighting compute stage, which runs on the graphics queue right after the deferred lighting and before the forward opaque stage.
 This allows for the implementation of screen space techniques, such as screen space reflections, which allow geometry to reflect any of the visibly drawn geometry and the full skybox.
 
 <figure class="ssr-comparison" data-ssr-comparison>

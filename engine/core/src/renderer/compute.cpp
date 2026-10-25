@@ -134,96 +134,96 @@ namespace emberCore
 
 
 
-	// Compute::MidRender subclass:
-	emberBackendInterface::ICompute::IQueue* Compute::MidRender::s_pIMidRender;
+	// Compute::PostOutline subclass:
+	emberBackendInterface::ICompute::IQueue* Compute::PostOutline::s_pIPostOutline;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::MidRender::Init(emberBackendInterface::ICompute::IQueue* pIMidRender)
+	void Compute::PostOutline::Init(emberBackendInterface::ICompute::IQueue* pIPostOutline)
 	{
-		s_pIMidRender = pIMidRender;
+		s_pIPostOutline = pIPostOutline;
 	}
-	void Compute::MidRender::Clear()
+	void Compute::PostOutline::Clear()
 	{
 
 	}
 
 	// Workload recording:
-	CallProperties Compute::MidRender::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::PostOutline::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIMidRender->RecordComputeShader(pIComputeShader, threadCount);
+		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostOutline->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
 	}
-	void Compute::MidRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
+	void Compute::PostOutline::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
-		s_pIMidRender->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+		s_pIPostOutline->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 	}
-	void Compute::MidRender::RecordBarrierWaitShaderWriteBeforeRead()
+	void Compute::PostOutline::RecordBarrierWaitShaderWriteBeforeRead()
 	{
 		RecordBarrier(ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
 	}
-	void Compute::MidRender::RecordBarrierWaitStorageWriteBeforeRead()
+	void Compute::PostOutline::RecordBarrierWaitStorageWriteBeforeRead()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
 	}
-	void Compute::MidRender::RecordBarrierWaitStorageWriteBeforeWrite()
+	void Compute::PostOutline::RecordBarrierWaitStorageWriteBeforeWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
 	}
-	void Compute::MidRender::RecordBarrierWaitStorageWriteBeforeReadWrite()
+	void Compute::PostOutline::RecordBarrierWaitStorageWriteBeforeReadWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
 	}
-	void Compute::MidRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
+	void Compute::PostOutline::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
 	}
 
 
 	
-	// Compute::ScreenSpace subclass:
-	emberBackendInterface::ICompute::IQueue* Compute::ScreenSpace::s_pIScreenSpace;
+	// Compute::PostLighting subclass:
+	emberBackendInterface::ICompute::IQueue* Compute::PostLighting::s_pIPostLighting;
 	// Public:
 	// Constructor/Destructor:
-	void Compute::ScreenSpace::Init(emberBackendInterface::ICompute::IQueue* pIScreenSpace)
+	void Compute::PostLighting::Init(emberBackendInterface::ICompute::IQueue* pIPostLighting)
 	{
-		s_pIScreenSpace = pIScreenSpace;
+		s_pIPostLighting = pIPostLighting;
 	}
-	void Compute::ScreenSpace::Clear()
+	void Compute::PostLighting::Clear()
 	{
 
 	}
 
 	// Workload recording:
-	CallProperties Compute::ScreenSpace::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
+	CallProperties Compute::PostLighting::RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIScreenSpace->RecordComputeShader(pIComputeShader, threadCount);
+		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostLighting->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
 	}
-	void Compute::ScreenSpace::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
+	void Compute::PostLighting::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
-		s_pIScreenSpace->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+		s_pIPostLighting->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 	}
-	void Compute::ScreenSpace::RecordBarrierWaitShaderWriteBeforeRead()
+	void Compute::PostLighting::RecordBarrierWaitShaderWriteBeforeRead()
 	{
 		RecordBarrier(ComputeBarrierFlag::shaderWrite, ComputeBarrierFlag::shaderRead);
 	}
-	void Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeRead()
+	void Compute::PostLighting::RecordBarrierWaitStorageWriteBeforeRead()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead);
 	}
-	void Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeWrite()
+	void Compute::PostLighting::RecordBarrierWaitStorageWriteBeforeWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageWrite);
 	}
-	void Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeReadWrite()
+	void Compute::PostLighting::RecordBarrierWaitStorageWriteBeforeReadWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::storageRead | ComputeBarrierFlag::storageWrite);
 	}
-	void Compute::ScreenSpace::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
+	void Compute::PostLighting::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
 	}
@@ -465,8 +465,8 @@ namespace emberCore
 		s_pICompute = pICompute;
 		Compute::Async::Init(s_pICompute->GetAsyncComputeInterfaceHandle());
 		Compute::PreRender::Init(s_pICompute->GetPreRenderComputeInterfaceHandle());
-		Compute::MidRender::Init(s_pICompute->GetMidRenderComputeInterfaceHandle());
-		Compute::ScreenSpace::Init(s_pICompute->GetScreenSpaceComputeInterfaceHandle());
+		Compute::PostOutline::Init(s_pICompute->GetPostOutlineComputeInterfaceHandle());
+		Compute::PostLighting::Init(s_pICompute->GetPostLightingComputeInterfaceHandle());
 		Compute::PostRender::Init(s_pICompute->GetPostRenderComputeInterfaceHandle());
 		Compute::Physics::Init();
 	}
@@ -474,8 +474,8 @@ namespace emberCore
 	{
 		Compute::Physics::Clear();
 		Compute::PostRender::Clear();
-		Compute::ScreenSpace::Clear();
-		Compute::MidRender::Clear();
+		Compute::PostLighting::Clear();
+		Compute::PostOutline::Clear();
 		Compute::PreRender::Clear();
 		Compute::Async::Clear();
 		s_pICompute = nullptr;
@@ -495,11 +495,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				return PreRender::RecordComputeShader(computeShader, threadCount);
 				break;
-			case ComputeType::midRender:
-				return MidRender::RecordComputeShader(computeShader, threadCount);
+			case ComputeType::postOutline:
+				return PostOutline::RecordComputeShader(computeShader, threadCount);
 				break;
-			case ComputeType::screenSpace:
-				return ScreenSpace::RecordComputeShader(computeShader, threadCount);
+			case ComputeType::postLighting:
+				return PostLighting::RecordComputeShader(computeShader, threadCount);
 				break;
 			case ComputeType::postRender:
 				return PostRender::RecordComputeShader(computeShader, threadCount);
@@ -520,11 +520,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				PreRender::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 				break;
-			case ComputeType::midRender:
-				MidRender::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+			case ComputeType::postOutline:
+				PostOutline::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 				break;
-			case ComputeType::screenSpace:
-				ScreenSpace::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
+			case ComputeType::postLighting:
+				PostLighting::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 				break;
 			case ComputeType::postRender:
 				PostRender::RecordBarrier(srcBarrierFlags, dstBarrierFlags);
@@ -544,11 +544,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitShaderWriteBeforeRead();
 				break;
-			case ComputeType::midRender:
-				MidRender::RecordBarrierWaitShaderWriteBeforeRead();
+			case ComputeType::postOutline:
+				PostOutline::RecordBarrierWaitShaderWriteBeforeRead();
 				break;
-			case ComputeType::screenSpace:
-				ScreenSpace::RecordBarrierWaitShaderWriteBeforeRead();
+			case ComputeType::postLighting:
+				PostLighting::RecordBarrierWaitShaderWriteBeforeRead();
 				break;
 			case ComputeType::postRender:
 				PostRender::RecordBarrierWaitShaderWriteBeforeRead();
@@ -568,11 +568,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitStorageWriteBeforeRead();
 				break;
-			case ComputeType::midRender:
-				MidRender::RecordBarrierWaitStorageWriteBeforeRead();
+			case ComputeType::postOutline:
+				PostOutline::RecordBarrierWaitStorageWriteBeforeRead();
 				break;
-			case ComputeType::screenSpace:
-				ScreenSpace::RecordBarrierWaitStorageWriteBeforeRead();
+			case ComputeType::postLighting:
+				PostLighting::RecordBarrierWaitStorageWriteBeforeRead();
 				break;
 			case ComputeType::postRender:
 				PostRender::RecordBarrierWaitStorageWriteBeforeRead();
@@ -592,11 +592,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitStorageWriteBeforeWrite();
 				break;
-			case ComputeType::midRender:
-				MidRender::RecordBarrierWaitStorageWriteBeforeWrite();
+			case ComputeType::postOutline:
+				PostOutline::RecordBarrierWaitStorageWriteBeforeWrite();
 				break;
-			case ComputeType::screenSpace:
-				ScreenSpace::RecordBarrierWaitStorageWriteBeforeWrite();
+			case ComputeType::postLighting:
+				PostLighting::RecordBarrierWaitStorageWriteBeforeWrite();
 				break;
 			case ComputeType::postRender:
 				PostRender::RecordBarrierWaitStorageWriteBeforeWrite();
@@ -616,11 +616,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitStorageWriteBeforeReadWrite();
 				break;
-			case ComputeType::midRender:
-				MidRender::RecordBarrierWaitStorageWriteBeforeReadWrite();
+			case ComputeType::postOutline:
+				PostOutline::RecordBarrierWaitStorageWriteBeforeReadWrite();
 				break;
-			case ComputeType::screenSpace:
-				ScreenSpace::RecordBarrierWaitStorageWriteBeforeReadWrite();
+			case ComputeType::postLighting:
+				PostLighting::RecordBarrierWaitStorageWriteBeforeReadWrite();
 				break;
 			case ComputeType::postRender:
 				PostRender::RecordBarrierWaitStorageWriteBeforeReadWrite();
@@ -640,11 +640,11 @@ namespace emberCore
 			case ComputeType::preRender:
 				PreRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 				break;
-			case ComputeType::midRender:
-				MidRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+			case ComputeType::postOutline:
+				PostOutline::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 				break;
-			case ComputeType::screenSpace:
-				ScreenSpace::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
+			case ComputeType::postLighting:
+				PostLighting::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();
 				break;
 			case ComputeType::postRender:
 				PostRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite();

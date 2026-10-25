@@ -37,11 +37,11 @@ namespace vulkanRendererBackend
 			// Color attachment description:
 			attachments[0].format = renderTargets.GetSceneColorPair().GetRenderTargetTexture(0, 0).GetFormat();
 			attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
-			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;							// load screen-space compute results.
+			attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;							// load post-lighting compute results.
 			attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// store opaque scene color for forward transparent rendering.
 			attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;				// we do not use stencils.
 			attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;			// we do not use stencils.
-			attachments[0].initialLayout = VK_IMAGE_LAYOUT_GENERAL;						// layout used by screen-space compute.
+			attachments[0].initialLayout = VK_IMAGE_LAYOUT_GENERAL;						// layout used by post-lighting compute.
 			attachments[0].finalLayout = VK_IMAGE_LAYOUT_GENERAL;						// preserve layout for forward transparent rendering.
 
 			// Depth attachment description:
@@ -72,14 +72,14 @@ namespace vulkanRendererBackend
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
 
 		// Synchronization dependencies of individual subpasses:
-		VkSubpassDependency screenSpaceComputeToForwardOpaqueDependency = {};
-		screenSpaceComputeToForwardOpaqueDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		screenSpaceComputeToForwardOpaqueDependency.dstSubpass = 0;
-		screenSpaceComputeToForwardOpaqueDependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		screenSpaceComputeToForwardOpaqueDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		screenSpaceComputeToForwardOpaqueDependency.srcAccessMask = AccessMasks::ComputeShader::shaderWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;
-		screenSpaceComputeToForwardOpaqueDependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead | AccessMasks::EarlyFragmentTest::depthStencilAttachmentWrite;
-		screenSpaceComputeToForwardOpaqueDependency.dependencyFlags = 0;
+		VkSubpassDependency postLightingComputeToForwardOpaqueDependency = {};
+		postLightingComputeToForwardOpaqueDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		postLightingComputeToForwardOpaqueDependency.dstSubpass = 0;
+		postLightingComputeToForwardOpaqueDependency.srcStageMask = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		postLightingComputeToForwardOpaqueDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		postLightingComputeToForwardOpaqueDependency.srcAccessMask = AccessMasks::ComputeShader::shaderWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;
+		postLightingComputeToForwardOpaqueDependency.dstAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead | AccessMasks::EarlyFragmentTest::depthStencilAttachmentWrite;
+		postLightingComputeToForwardOpaqueDependency.dependencyFlags = 0;
 		VkSubpassDependency forwardOpaqueToForwardTransparentDependency = {};
 		forwardOpaqueToForwardTransparentDependency.srcSubpass = 0;
 		forwardOpaqueToForwardTransparentDependency.dstSubpass = VK_SUBPASS_EXTERNAL;
@@ -87,7 +87,7 @@ namespace vulkanRendererBackend
 		forwardOpaqueToForwardTransparentDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 		forwardOpaqueToForwardTransparentDependency.srcAccessMask = AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::LateFragmentTest::depthStencilAttachmentWrite;
 		forwardOpaqueToForwardTransparentDependency.dstAccessMask = AccessMasks::FragmentShader::shaderRead | AccessMasks::ColorAttachmentOutput::colorAttachmentRead | AccessMasks::ColorAttachmentOutput::colorAttachmentWrite | AccessMasks::EarlyFragmentTest::depthStencilAttachmentRead;
-		std::array<VkSubpassDependency, 2> dependencies = { screenSpaceComputeToForwardOpaqueDependency, forwardOpaqueToForwardTransparentDependency };
+		std::array<VkSubpassDependency, 2> dependencies = { postLightingComputeToForwardOpaqueDependency, forwardOpaqueToForwardTransparentDependency };
 
 		VkRenderPassCreateInfo renderPassInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO };
 		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());

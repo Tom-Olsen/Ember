@@ -22,8 +22,8 @@ namespace emberCore
 	{
 		async,
 		preRender,
-		midRender,
-		screenSpace,
+		postOutline,
+		postLighting,
 		postRender,
 		physics
 	};
@@ -102,14 +102,14 @@ namespace emberCore
 
 
 
-		class EMBER_CORE_API MidRender
+		class EMBER_CORE_API PostOutline
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IQueue* s_pIMidRender;
+			static emberBackendInterface::ICompute::IQueue* s_pIPostOutline;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IQueue* pIMidRender);
+			static void Init(emberBackendInterface::ICompute::IQueue* pIPostOutline);
 			static void Clear();
 
 			// Workload recording:
@@ -123,24 +123,24 @@ namespace emberCore
 
 		private: // Methods
 			// Delete all constructors:
-			MidRender() = delete;
-			MidRender(const MidRender&) = delete;
-			MidRender& operator=(const MidRender&) = delete;
-			MidRender(MidRender&&) = delete;
-			MidRender& operator=(MidRender&&) = delete;
-			~MidRender() = delete;
+			PostOutline() = delete;
+			PostOutline(const PostOutline&) = delete;
+			PostOutline& operator=(const PostOutline&) = delete;
+			PostOutline(PostOutline&&) = delete;
+			PostOutline& operator=(PostOutline&&) = delete;
+			~PostOutline() = delete;
 		};
 
 
 		
-		class EMBER_CORE_API ScreenSpace
+		class EMBER_CORE_API PostLighting
 		{
 		private: // Members:
-			static emberBackendInterface::ICompute::IQueue* s_pIScreenSpace;
+			static emberBackendInterface::ICompute::IQueue* s_pIPostLighting;
 
 		public: // Methods:
 			// Constructor/Destructor:
-			static void Init(emberBackendInterface::ICompute::IQueue* pIScreenSpace);
+			static void Init(emberBackendInterface::ICompute::IQueue* pIPostLighting);
 			static void Clear();
 
 			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
@@ -154,12 +154,12 @@ namespace emberCore
 
 		private: // Methods
 			// Delete all constructors:
-			ScreenSpace() = delete;
-			ScreenSpace(const ScreenSpace&) = delete;
-			ScreenSpace& operator=(const ScreenSpace&) = delete;
-			ScreenSpace(ScreenSpace&&) = delete;
-			ScreenSpace& operator=(ScreenSpace&&) = delete;
-			~ScreenSpace() = delete;
+			PostLighting() = delete;
+			PostLighting(const PostLighting&) = delete;
+			PostLighting& operator=(const PostLighting&) = delete;
+			PostLighting(PostLighting&&) = delete;
+			PostLighting& operator=(PostLighting&&) = delete;
+			~PostLighting() = delete;
 		};
 
 
