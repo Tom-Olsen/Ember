@@ -14,11 +14,13 @@ using namespace emberEngine;
 
 inline Scene* DefaultScene()
 {
-	bool directionalLightsActive = false;
 	bool showLightFrustums = false;
 
 	Scene* pScene = new Scene();
 	pScene->SetIsEnabled(true);
+
+	// Ambient light:
+	emberCore::Renderer::SetAmbientLight(Float3(1.0f, 1.0f, 1.0f), 0.35f);
 
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
@@ -94,29 +96,30 @@ inline Scene* DefaultScene()
 		pCamera->SetFarClip(1000.0f);
 
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
+		ScreenSpaceAmbientOcclusionDispatcher* pScreenSpaceAmbientOcclusionDispatcher = entity.AddComponent<ScreenSpaceAmbientOcclusionDispatcher>();
 		ScreenSpaceReflectionDispatcher* pScreenSpaceReflectionDispatcher = entity.AddComponent<ScreenSpaceReflectionDispatcher>(skyboxTexture);
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);
 	}
-	{// Directional Light:
-		Entity entity = Entity::Create("DirectionalLight");
-		Float3 pos = Float3(0.0f, 3.0f, 0.0f);
-		Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
-		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
-	
-		Transform* pTransform = entity.GetTransform();
-		pTransform->SetPosition(pos);
-		pTransform->SetRotationMatrix(matrix);
-	
-		DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
-		pDirectionalLight->SetIntensity(0.2f);
-		pDirectionalLight->SetColor(Float3::white);
-		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
-		pDirectionalLight->SetShadowCascadeCount(2);
-		pDirectionalLight->SetDistributionFactor(0.5f);
-		pDirectionalLight->SetDrawFrustum(false);
-	}
+	//{// Directional Light:
+	//	Entity entity = Entity::Create("DirectionalLight");
+	//	Float3 pos = Float3(0.0f, 3.0f, 0.0f);
+	//	Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
+	//	Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
+	//
+	//	Transform* pTransform = entity.GetTransform();
+	//	pTransform->SetPosition(pos);
+	//	pTransform->SetRotationMatrix(matrix);
+	//
+	//	DirectionalLight* pDirectionalLight = entity.AddComponent<DirectionalLight>();
+	//	pDirectionalLight->SetIntensity(0.2f);
+	//	pDirectionalLight->SetColor(Float3::white);
+	//	pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
+	//	pDirectionalLight->SetShadowCascadeCount(2);
+	//	pDirectionalLight->SetDistributionFactor(0.5f);
+	//	pDirectionalLight->SetDrawFrustum(false);
+	//}
 	{// PointLight:
 		Entity entity = Entity::Create("PointLight");
 		Transform* pTransform = entity.GetTransform();

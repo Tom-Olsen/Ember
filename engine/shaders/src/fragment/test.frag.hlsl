@@ -7,7 +7,7 @@ Texture2D colorMap : register(t100, SHADER_SET);                       // format
 Texture2D normalMap : register(t101, SHADER_SET);                      // format = VK_FORMAT_R8G8B8A8_UNORM, OpenGL-style normal map
 Texture2D<float> metallicityMap : register(t102, SHADER_SET);          // format = VK_FORMAT_R8_UNORM
 Texture2D<float> roughnessMap : register(t103, SHADER_SET);            // format = VK_FORMAT_R8_UNORM
-Texture2D<float> ambientOcclusionMap : register(t104, SHADER_SET);     // format = VK_FORMAT_R8_UNORM, reserved for indirect lighting
+Texture2D<float> ambientOcclusionMap : register(t104, SHADER_SET);     // format = VK_FORMAT_R8_UNORM
 
 
 
@@ -49,8 +49,9 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 worldNormal = normalize(mul(tangentToWorldMatrix, localNormal));
     float finalMetallicity = saturate(surface_metallicity * metallicityMap.Sample(colorSampler, uv));
     float finalRoughness = saturate(surface_roughness * roughnessMap.Sample(colorSampler, uv));
+    float ambientOcclusion = saturate(surface_ambientOcclusion * ambientOcclusionMap.Sample(colorSampler, uv));
 
     // Lighting:
-    float3 finalColor = PhysicalLighting(input.worldPosition, worldNormal, albedo.rgb, finalRoughness, finalMetallicity, pc.receiveShadows != 0);
+    float3 finalColor = PhysicalLighting(input.worldPosition, worldNormal, albedo.rgb, finalRoughness, finalMetallicity, pc.receiveShadows != 0, ambientOcclusion);
     return float4(finalColor, 1.0f);
 }

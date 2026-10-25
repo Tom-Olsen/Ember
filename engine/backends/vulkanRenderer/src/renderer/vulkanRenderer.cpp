@@ -199,7 +199,11 @@ namespace vulkanRendererBackend
 	}
 
 
-	// Add lightsources:
+	// Lightsources:
+	void Renderer::SetAmbientLight(const Float3& color, float intensity)
+	{
+		m_ambientLightColorIntensity = Float4(color, intensity);
+	}
 	void Renderer::AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix)
 	{
 		if (m_directionalLightsCount == m_maxDirectionalLights)
@@ -855,7 +859,7 @@ namespace vulkanRendererBackend
 	void Renderer::UpdateShaderData()
 	{
 		// Scene descriptor set:
-		SceneDescriptorSetLayout::SetLightData(m_directionalLights, m_directionalLightsCount, m_positionalLights, m_positionalLightsCount);
+		SceneDescriptorSetLayout::SetLightData(m_directionalLights, m_directionalLightsCount, m_positionalLights, m_positionalLightsCount, m_ambientLightColorIntensity);
 		SceneDescriptorSetLayout::UpdateShaderData(m_frameExecutionData.frameIndex);
 
 		// Frame descriptor set:

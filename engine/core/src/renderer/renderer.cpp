@@ -69,6 +69,10 @@ namespace emberCore
 
 
 	// Lightsources:
+	void Renderer::SetAmbientLight(const Float3& color, float intensity)
+	{
+		s_pIRenderer->SetAmbientLight(color, intensity);
+	}
 	void Renderer::AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix)
 	{
 		s_pIRenderer->AddDirectionalLight(direction, intensity, color, shadowType, worldToClipMatrix);

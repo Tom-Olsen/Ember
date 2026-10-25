@@ -29,6 +29,7 @@ namespace emberBackendInterface
         virtual void RenderFrame(float time, float deltaTime) = 0;
 
         // Lightsources:
+        virtual void SetAmbientLight(const Float3& color, float intensity) = 0;
         virtual void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix) = 0;
         virtual void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) = 0;
 

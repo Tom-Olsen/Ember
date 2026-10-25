@@ -8,8 +8,9 @@
 
 cbuffer LightProperties : register(b2300, SCENE_SET)
 {
-    int light_dirCount;   // number of active directional lights in the scene.
-    int light_posCount;   // number of active positional lights in the scene.
+    float4 light_ambientColorIntensity; // linear RGB color and diffuse ambient intensity.
+    int light_dirCount;					// number of active directional lights in the scene.
+    int light_posCount;					// number of active positional lights in the scene.
     DirectionalLightData light_directionData[MAX_DIR_LIGHTS];
     PositionalLightData light_positionData[MAX_POS_LIGHTS];
 };

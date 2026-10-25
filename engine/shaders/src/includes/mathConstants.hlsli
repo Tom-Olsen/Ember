@@ -13,6 +13,7 @@ static const float math_SQRT2 = 1.41421356237309504880f;
 static const float math_SQRT2_INV = 0.70710678118654752440f;
 static const float math_SQRT3 = 1.73205080756887729353f;
 static const float math_SQRT3_INV = 0.57735026918962576451f;
+static const float math_GOLDEN_ANGLE = 2.39996323f;
 
 // Zero and One:
 static const float2 math_zero2 = float2(0, 0);

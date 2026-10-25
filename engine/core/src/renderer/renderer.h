@@ -67,6 +67,7 @@ namespace emberCore
 		static void RenderFrame();
 
 		// Lightsources:
+		static void SetAmbientLight(const Float3& color, float intensity);
 		static void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix);
 		static void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix);
 

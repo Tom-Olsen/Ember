@@ -205,7 +205,7 @@ float3 PhysicalPositionalLights(float3 worldPos, float3 normal, float3 color, fl
 
 
 
-float3 PhysicalLighting(float3 worldPos, float3 worldNormal, float3 albedo, float roughness, float metallicity, bool receiveShadows)
+float3 PhysicalLighting(float3 worldPos, float3 worldNormal, float3 albedo, float roughness, float metallicity, bool receiveShadows, float ambientOcclusion)
 {
     albedo = saturate(albedo);
     roughness = max(saturate(roughness), 0.04f); // zero roughness causes a singularity in the specular BRDF.
@@ -214,7 +214,10 @@ float3 PhysicalLighting(float3 worldPos, float3 worldNormal, float3 albedo, floa
 
     float3 directionalLight = PhysicalDirectionalLights(worldPos, worldNormal, albedo, roughness, reflectivity, metallicity, receiveShadows);
     float3 positionalLight  = PhysicalPositionalLights (worldPos, worldNormal, albedo, roughness, reflectivity, metallicity, receiveShadows);
-    return directionalLight + positionalLight;
+    // AO attenuates the uniform diffuse environment contribution; direct lights have their own shadowing.
+    float3 ambientLight = max(light_ambientColorIntensity.rgb, 0.0f) * max(light_ambientColorIntensity.w, 0.0f);
+    float3 ambientDiffuse = ambientLight * albedo * (1.0f - metallicity) * saturate(ambientOcclusion);
+    return directionalLight + positionalLight + ambientDiffuse;
 }
 
 

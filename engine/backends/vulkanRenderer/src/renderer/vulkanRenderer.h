@@ -66,6 +66,7 @@ namespace vulkanRendererBackend
 		bool m_rebuildSwapchain;
 
 		// Shadow/Light system:
+		Float4 m_ambientLightColorIntensity = Float4(1.0f, 1.0f, 1.0f, 0.0f);
 		float m_depthBiasConstantFactor;
 		float m_depthBiasClamp;
 		float m_depthBiasSlopeFactor;
@@ -108,6 +109,7 @@ namespace vulkanRendererBackend
 		void RenderFrame(float time, float deltaTime) override;
 
 		// Lightsources:
+		void SetAmbientLight(const Float3& color, float intensity) override;
 		void AddDirectionalLight(const Float3& direction, float intensity, const Float3& color, emberCommon::ShadowType shadowType, const Float4x4& worldToClipMatrix) override;
 		void AddPositionalLight(const Float3& position, float intensity, const Float3& color, emberCommon::ShadowType shadowType, float blendStart, float blendEnd, const Float4x4& worldToClipMatrix) override;
 

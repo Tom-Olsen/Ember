@@ -49,6 +49,7 @@ float4 main(FragmentInput input) : SV_TARGET
     float3 worldNormal = normalize(normalData.rgb * 2.0f - 1.0f);
     float metallicity = surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_METALLICITY_CHANNEL];
     float roughness = surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
+    float ambientOcclusion = surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_AMBIENT_OCCLUSION_CHANNEL];
     uint flagBitMask = uint(round(surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_FLAG_BIT_MASK_CHANNEL] * DEFERRED_SURFACE_FLAG_BIT_MASK_MAX));
     bool receiveShadows = (flagBitMask & DEFERRED_SURFACE_FLAG_RECEIVE_SHADOWS) != 0;
 	bool lit = (flagBitMask & DEFERRED_SURFACE_FLAG_LIT) != 0;
@@ -56,7 +57,7 @@ float4 main(FragmentInput input) : SV_TARGET
 	{
 		// Lighting:
 		float3 worldPosition = ReconstructWorldPosition(pixelPosition, depth);
-    	float3 lighting = PhysicalLighting(worldPosition, worldNormal, albedo, roughness, metallicity, receiveShadows);
+        float3 lighting = PhysicalLighting(worldPosition, worldNormal, albedo, roughness, metallicity, receiveShadows, ambientOcclusion);
     	return float4(lighting, 1.0f);
 	}
 	else

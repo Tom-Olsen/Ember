@@ -56,6 +56,8 @@ namespace vulkanRendererBackend
         // Create uniform light properties buffer:
         {
             uint32_t offset = 0;
+            emberBufferLayout::BufferMember lightAmbientColorIntensity("light_ambientColorIntensity", offset, sizeof(Float4));
+            offset += sizeof(Float4);
             emberBufferLayout::BufferMember lightDirCount("light_dirCount", offset, sizeof(int));
             offset += sizeof(int);
             emberBufferLayout::BufferMember lightPosCount("light_posCount", offset, sizeof(int));
@@ -110,6 +112,7 @@ namespace vulkanRendererBackend
             lightPositionalData.SetSize(offset - lightPositionalData.GetOffset());
 
             emberBufferLayout::BufferLayout bufferLayout("LightProperties");
+            bufferLayout.AddMember(lightAmbientColorIntensity);
             bufferLayout.AddMember(lightDirCount);
             bufferLayout.AddMember(lightPosCount);
             bufferLayout.AddMember(lightDirectionData);
@@ -161,8 +164,9 @@ namespace vulkanRendererBackend
 
 
     // Setters:
-    void SceneDescriptorSetLayout::SetLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount, const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount)
+    void SceneDescriptorSetLayout::SetLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount, const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount, const Float4& ambientColorIntensity)
     {
+        s_pUniformLightPropertiesBuffer->SetFloat4("light_ambientColorIntensity", ambientColorIntensity);
         SetDirectionalLightData(directionalLights, directionalLightCount);
         SetPositionalLightData(positionalLights, positionalLightCount);
     }

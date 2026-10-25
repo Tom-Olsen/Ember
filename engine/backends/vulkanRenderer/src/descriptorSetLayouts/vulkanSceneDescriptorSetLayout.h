@@ -29,7 +29,7 @@ namespace vulkanRendererBackend
         static void Clear();
 
         // Setters:
-        static void SetLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount, const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount);
+        static void SetLightData(const std::vector<emberCommon::DirectionalLight>& directionalLights, uint32_t directionalLightCount, const std::vector<emberCommon::PositionalLight>& positionalLights, uint32_t positionalLightCount, const Float4& ambientColorIntensity);
 
         // Getters:
         static VkDescriptorSetLayout GetVkDescriptorSetLayout();

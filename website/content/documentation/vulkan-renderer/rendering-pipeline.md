@@ -16,6 +16,13 @@ The graphics pipeline combines deferred rendering for the main opaque scene with
 
 Compute stages are interleaved with these graphics stages and are summarized in [Compute](compute.md).
 
+## Ambient lighting and SSAO
+`Renderer::SetAmbientLight(color, intensity)` sets a uniform diffuse ambient contribution using a linear RGB color. Its initial intensity is zero; the default scene enables white ambient lighting at `0.35`.
+
+Ambient occlusion attenuates this diffuse ambient contribution. Direct lights retain their existing shadowing, and unlit materials return their albedo. Metals have no diffuse ambient contribution. Forward materials use their material AO, while deferred lighting reads AO from the surface-properties G-buffer.
+
+`ScreenSpaceAmbientOcclusionDispatcher` records the SSAO shader in post-geometry compute using the current render dimensions. It replaces the material AO channel before deferred lighting. Disable the component with `SetIsEnabled(false)` to compare against material AO, or set ambient intensity to zero to inspect direct lighting alone.
+
 ## Execution layers
 The backend separates four related responsibilities:
 
