@@ -1,6 +1,7 @@
 #ifndef __INCLUDE_GUARD_screenSpaceAmbientOcclusion_hlsli__
 #define __INCLUDE_GUARD_screenSpaceAmbientOcclusion_hlsli__
 #include "descriptorSetMacros.h"
+#include "ssaoConstants.h"
 
 
 
@@ -11,6 +12,14 @@ cbuffer SsaoSamplingParameters : register(b300, SHADER_SET)
 	float sampleRadius;	// in world units.
 	float sampleBias;	// in world units.
 	float occlusionStrength;
+};
+
+
+
+// Cosine weighted local hemisphere, regenerated on the CPU when sampleCount changes:
+cbuffer SsaoSamplingKernel : register(b301, SHADER_SET)
+{
+	float3 sampleDirections[SSAO_MAX_SAMPLE_COUNT];
 };
 
 
@@ -27,19 +36,17 @@ float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSi
 
 	// Keep the rotation fixed between frames to avoid temporal flicker without a history buffer:
 	float rotation = 2.0f * math_PI * mathRandom_Uniform01(sourcePixel.x, sourcePixel.y, 0.0f);
+	float sinRotation;
+	float cosRotation;
+	sincos(rotation, sinRotation, cosRotation);
+	float3 rotatedTangent = cosRotation * tangent + sinRotation * bitangent;
+	float3 rotatedBitangent = -sinRotation * tangent + cosRotation * bitangent;
 	float occlusion = 0.0f;
 	for (uint i = 0; i < sampleCount; i++)
 	{
-		// Fibonacci spiral angles:
-		float directionFraction = (float(i) + 0.5f) / float(sampleCount);
-		float angle = rotation + math_GOLDEN_ANGLE * float(i);
-		float sinAngle;
-		float cosAngle;
-		sincos(angle, sinAngle, cosAngle);
-
-		// Construct cosine weighted half hemisphere orthogonal to surface normal:
-		float diskRadius = sqrt(directionFraction);
-		float3 direction = diskRadius * (cosAngle * tangent + sinAngle * bitangent) + sqrt(1.0f - directionFraction) * worldNormal;
+		// Transform the precomputed local direction into the rotated world-space hemisphere:
+		float3 localDirection = sampleDirections[i];
+		float3 direction = localDirection.x * rotatedTangent + localDirection.y * rotatedBitangent + localDirection.z * worldNormal;
 
 		// Sample distance independently from direction, keeping the quadratic bias toward the source:
 		float distanceFraction = mathRandom_Uniform01(sourcePixel.x, sourcePixel.y, i, 1u, 0.0f);

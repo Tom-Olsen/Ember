@@ -2,6 +2,7 @@
 #include "callProperties.h"
 #include "compute.h"
 #include "computeShaderManager.h"
+#include "emberMath.h"
 #include "renderer.h"
 using namespace emberCore;
 
@@ -34,6 +35,7 @@ namespace emberEcs
 	{
 		if (ssaoMode == SsaoMode::off)
 			return;
+		UpdateSamplingKernel();
 		if (ssaoMode == SsaoMode::fullResolution)
 		{
 			SetSamplingParameters(m_ssaoComputeShader);
@@ -62,6 +64,24 @@ namespace emberEcs
 
 
 	// Private methods:
+	void ScreenSpaceAmbientOcclusionDispatcher::UpdateSamplingKernel()
+	{
+		sampleCount = math::Clamp(sampleCount, 1, SSAO_MAX_SAMPLE_COUNT);
+		if (m_kernelSampleCount == sampleCount)
+			return;
+
+		// Fibonacci spiral on a cosine weighted hemisphere around local +Z:
+		for (int i = 0; i < sampleCount; i++)
+		{
+			float directionFraction = (float(i) + 0.5f) / float(sampleCount);
+			Radians angle = Radians(math::goldenAngle * float(i));
+			float diskRadius = math::Sqrt(directionFraction);
+			Float3 direction(diskRadius * math::Cos(angle), diskRadius * math::Sin(angle), math::Sqrt(1.0f - directionFraction));
+			m_ssaoComputeShader.SetValue("SsaoSamplingKernel", "sampleDirections", uint32_t(i), direction);
+			m_ssaoMapComputeShader.SetValue("SsaoSamplingKernel", "sampleDirections", uint32_t(i), direction);
+		}
+		m_kernelSampleCount = sampleCount;
+	}
 	void ScreenSpaceAmbientOcclusionDispatcher::SetSamplingParameters(ComputeShader& computeShader) const
 	{
 		computeShader.SetValue("SsaoSamplingParameters", "sampleCount", sampleCount);

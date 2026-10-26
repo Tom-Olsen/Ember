@@ -4,16 +4,18 @@
 
 
 // Irrationals:
-static const float math_PI = 3.14159265358979323846f;
-static const float math_PI_2 = 0.50f * math_PI;
-static const float math_PI_4 = 0.25f * math_PI;
+static const float math_PI = 3.1415927f;
+static const float math_PI_2 = 0.500f * math_PI;
+static const float math_PI_4 = 0.250f * math_PI;
+static const float math_PI_8 = 0.125f * math_PI;
 static const float math_PI_INV = 1.0f / math_PI;
-static const float math_E = 2.71828182845904523536f;
-static const float math_SQRT2 = 1.41421356237309504880f;
-static const float math_SQRT2_INV = 0.70710678118654752440f;
-static const float math_SQRT3 = 1.73205080756887729353f;
-static const float math_SQRT3_INV = 0.57735026918962576451f;
-static const float math_GOLDEN_ANGLE = 2.39996323f;
+static const float math_PHI = 1.618034f;
+static const float math_E = 2.7182818f;
+static const float math_GOLDEN_ANGLE = 2.3999632f;
+static const float math_SQRT2 = 1.41421356f;
+static const float math_SQRT2_INV = 0.70710678f;
+static const float math_SQRT3 = 1.7320508f;
+static const float math_SQRT3_INV = 0.57735027f;
 
 // Zero and One:
 static const float2 math_zero2 = float2(0, 0);
