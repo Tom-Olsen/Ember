@@ -846,14 +846,14 @@ namespace vulkanRendererBackend
 			// Composite outline into render texture (postRenderCompute):
 			ComputeShader* pOutlineCompositeComputeShader = DefaultGpuResources::Get().GetOutlineCompositeComputeShader();
 			pOutlineCompositeComputeShader->GetDescriptorSetBinding()->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
-			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordComputeShader(pOutlineCompositeComputeShader, Uint3::zero));
+			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordComputeShader(pOutlineCompositeComputeShader, Uint3(GetRenderWidth(), GetRenderHeight(), 1)));
 			if (!pCompositeCallDescriptorSetBinding)
 				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the outline composite compute shader.");
 			pCompositeCallDescriptorSetBinding->SetTexture("outlineMask", pExpandedMask);
 		}
 
 		// Renderer uses linear color space, tone mapping + gamma correction is always the final post-render operation:
-		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::Get().GetGammaCorrectionComputeShader(), Uint3::zero) == nullptr)
+		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::Get().GetGammaCorrectionComputeShader(), Uint3(GetRenderWidth(), GetRenderHeight(), 1)) == nullptr)
 			throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the gamma correction compute shader.");
 	}
 	void Renderer::UpdateShaderData()

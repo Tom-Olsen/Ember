@@ -15,8 +15,8 @@ namespace vulkanRendererBackend
 		m_pPreRenderComputeQueue = std::make_unique<ComputeQueue>();
 		m_pPostOutlineComputeQueue = std::make_unique<ComputeQueue>();
 		m_pPostGeometryComputeQueue = std::make_unique<ComputeQueue>();
-		m_pPostLightingComputeQueue = std::make_unique<ComputeQueue>(true);
-		m_pPostRenderComputeQueue = std::make_unique<ComputeQueue>(true);
+		m_pPostLightingComputeQueue = std::make_unique<ComputeQueue>();
+		m_pPostRenderComputeQueue = std::make_unique<ComputeQueue>();
 	}
 	Compute::~Compute()
 	{

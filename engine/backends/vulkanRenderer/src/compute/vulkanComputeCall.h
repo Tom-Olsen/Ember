@@ -22,7 +22,6 @@ namespace vulkanRendererBackend
 		DescriptorSetBindingHandle callDescriptorSetBindingHandle;	// Borrowed from pool for dispatch calls, empty for barriers.
 		AccessMask srcAccessMask;									// Only applies to barriers.
 		AccessMask dstAccessMask;									// Only applies to barriers.
-		bool useRenderTextureSize = false; 							// Determines whether this call provides its own threadCount or uses the render texture size.
 		bool flipSceneColors = false; 								// Determines whether this call writes the alternate scene color texture.
 		uint32_t sceneColorIndex = 0;								// Current scene color texture index before this call runs.
 

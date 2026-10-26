@@ -21,7 +21,11 @@ Compute stages are interleaved with these graphics stages and are summarized in 
 
 Ambient occlusion attenuates this diffuse ambient contribution. Direct lights retain their existing shadowing, and unlit materials return their albedo. Metals have no diffuse ambient contribution. Forward materials use their material AO, while deferred lighting reads AO from the surface-properties G-buffer.
 
-`ScreenSpaceAmbientOcclusionDispatcher` records the SSAO shader in post-geometry compute using the current render dimensions. It replaces the material AO channel before deferred lighting. Disable the component with `SetIsEnabled(false)` to compare against material AO, or set ambient intensity to zero to inspect direct lighting alone.
+`ScreenSpaceAmbientOcclusionDispatcher` records SSAO in post-geometry compute and replaces the material AO channel before deferred lighting. Its `ssaoMode` selects `off`, `fullResolution`, or `halfResolution`. The editor application's **Screen Space Ambient Occlusion** window exposes the same choices. Both implementations use the same 32-sample estimator so resolution and reconstruction can be compared directly.
+
+The default half-resolution mode evaluates AO at half the render width and height, rounding up for odd dimensions. It stores the occlusion estimate in a single-channel floating-point texture with one image per frame-in-flight slot. After a compute write/read barrier, a full-resolution pass reconstructs AO with a 3×3 depth- and normal-aware filter, applies strength, and writes the G-buffer AO channel. The source-pixel mapping and geometry weights are shared with SSR through `bilateralUpsampling.hlsli`; AO does not use SSR's roughness or reflection-confidence weights. Pixels without compatible reconstruction samples receive an AO value of one.
+
+Select `off` or disable the component with `SetIsEnabled(false)` to compare against material AO, or set ambient intensity to zero to inspect direct lighting alone.
 
 ## Execution layers
 The backend separates four related responsibilities:

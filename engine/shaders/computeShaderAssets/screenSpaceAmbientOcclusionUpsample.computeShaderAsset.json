@@ -1,0 +1,10 @@
+{
+    "computeShaderName": "screenSpaceAmbientOcclusionUpsample",
+    "sourcePath": "../src/compute/screenSpaceAmbientOcclusionUpsample.comp.hlsl",
+    "binaryPath": "../bin/screenSpaceAmbientOcclusionUpsample.comp.spv",
+    "accessRights": {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

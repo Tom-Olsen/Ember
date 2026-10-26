@@ -12,9 +12,10 @@ namespace emberEditor
 	struct ScreenSpaceReflectionDispatcherEditorWindow : public emberCore::EditorWindow
 	{
 	private: // Members:
-		emberEcs::Scene* m_pScene;
+		emberEcs::Scene* m_pScene = nullptr;
 
 	public: // Methods:
+		// Constructor:
 		ScreenSpaceReflectionDispatcherEditorWindow()
 		{
 			m_name = "Screen Space Reflections";
@@ -25,11 +26,13 @@ namespace emberEditor
 			m_pScene = nullptr;
 		}
 
+		// Setters:
 		void SetScene(emberEcs::Scene* pScene)
 		{
 			m_pScene = pScene;
 		}
 
+		// Overrides:
 		void Render() override
 		{
 			if (m_pScene == nullptr)

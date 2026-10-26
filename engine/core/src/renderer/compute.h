@@ -175,8 +175,8 @@ namespace emberCore
 			static void Init(emberBackendInterface::ICompute::IQueue* pIPostLighting);
 			static void Clear();
 
-			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
-			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero);
+			// Workload recording:
+			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
@@ -206,9 +206,9 @@ namespace emberCore
 			static void Init(emberBackendInterface::ICompute::IQueue* pIPostRender);
 			static void Clear();
 
-			// Workload recording (threadCount=Uint3::zero uses the current render texture dimensions):
+			// Workload recording:
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static CallProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount = Uint3::zero);
+			static CallProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount);
 			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();

@@ -1,5 +1,6 @@
 #define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_NONE
 #include "computeShaderCommon.hlsli"
+#include "bilateralUpsampling.hlsli"
 #include "screenSpaceReflectionUtility.hlsli"
 
 
@@ -28,9 +29,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float2 screenSize = float2(screenWidth, screenHeight);
 
 	// Reflection texel mapped to full resolution source pixel:
-	uint2 maxScenePixel = uint2(screenWidth - 1, screenHeight - 1);
-	float2 sourcePosition = (float2(threadID.xy) + 0.5f) * screenSize / reflectionSize;
-	uint2 sourcePixel = min(uint2(sourcePosition), maxScenePixel);
+	uint2 sourcePixel = Bilateral_LowResolutionPixelToScreenPixel(threadID.xy, uint2(screenWidth, screenHeight), reflectionSize);
 
 	// Sky rays:
 	float3 worldPosition;

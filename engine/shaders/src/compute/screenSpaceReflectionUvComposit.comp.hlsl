@@ -1,5 +1,6 @@
 #define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_OUT_OF_PLACE
 #include "computeShaderCommon.hlsli"
+#include "bilateralUpsampling.hlsli"
 #include "deferredRenderingConstants.h"
 #include "reflectionLighting.hlsli"
 
@@ -19,37 +20,6 @@ static const float relativeDepthTolerance = 0.02f;
 static const float minimumNormalWeightExponent = 8.0f;
 static const float maximumNormalWeightExponent = 48.0f;
 static const float roughnessWeightScale = 8.0f;
-
-
-
-// Helpers:
-float3 ScreenPositionToWorld(float3 screenPosition, float2 screenSize)
-{
-	float2 uv = screenPosition.xy / screenSize;
-	float4 clipPosition = float4(2.0f * uv - 1.0f, screenPosition.z, 1.0f);
-	float4 worldPosition = mul(camera_clipToWorldMatrix, clipPosition);
-	return worldPosition.xyz / worldPosition.w;
-}
-bool TryGetSurfaceData(uint2 pixel, float2 screenSize, out float3 worldPosition, out float viewDepth, out float3 worldNormal, out float roughness)
-{
-	float ndcDepth = Scene_GetNdcDepth(pixel);
-
-	// No geometry:
-	if (ndcDepth >= 1.0f)
-	{
-		worldPosition = 0.0f;
-		viewDepth = 0.0f;
-		worldNormal = 0.0f;
-		roughness = 0.0f;
-		return false;
-	}
-
-	worldPosition = ScreenPositionToWorld(float3(float2(pixel) + 0.5f, ndcDepth), screenSize);
-	viewDepth = Camera_GetDepth(worldPosition);
-	worldNormal = normalize(2.0f * gbufferNormalTexture.Load(int3(pixel, 0)).xyz - 1.0f);
-	roughness = gbufferSurfacePropertiesSampleTexture.Load(int3(pixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
-	return true;
-}
 
 
 
@@ -75,7 +45,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float viewDepth;
 	float3 worldNormal;
 	float roughness;
-	if (TryGetSurfaceData(sourcePixel, screenSize, worldPosition, viewDepth, worldNormal, roughness) == false)
+	if (Bilateral_TryGetSurfaceData(sourcePixel, screenSize, worldPosition, viewDepth, worldNormal, roughness) == false)
 	{
 		Scene_SetColor(sourcePixel, sourceColor);
 		return;
@@ -87,9 +57,10 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	reflectionUvMap.GetDimensions(reflectionWidth, reflectionHeight);
 	float2 reflectionSize = float2(reflectionWidth, reflectionHeight);
 
-	// Map reflection position to nearest reflection pixel:
-	float2 reflectionPosition = (float2(sourcePixel) + 0.5f) * reflectionSize / screenSize - 0.5f;
-	int2 nearestReflectionPixel = int2(floor(reflectionPosition + 0.5f));
+	// Map the screen pixel center to the reflection texture:
+	float2 screenPosition = float2(sourcePixel) + 0.5f;
+	float2 reflectionPosition = screenPosition * reflectionSize / screenSize;
+	int2 nearestReflectionPixel = Bilateral_ScreenPixelToLowResolutionPixel(sourcePixel, screenSize, reflectionSize);
 
 	// Loop over upsample neighbourhood:
 	float2 weightedHitUv = 0.0f;
@@ -102,10 +73,11 @@ void main(uint3 threadID : SV_DispatchThreadID)
 		for (int x = -upsampleRadius; x <= upsampleRadius; x++)
 		{
 			// Skip out of image pixels:
-			int2 reflectionPixel = nearestReflectionPixel + int2(x, y);
-			if (reflectionPixel.x < 0 || reflectionPixel.x >= int(reflectionWidth) ||
-				reflectionPixel.y < 0 || reflectionPixel.y >= int(reflectionHeight))
+			int2 samplePixel = nearestReflectionPixel + int2(x, y);
+			if (samplePixel.x < 0 || samplePixel.x >= int(reflectionWidth) ||
+				samplePixel.y < 0 || samplePixel.y >= int(reflectionHeight))
 				continue;
+			uint2 reflectionPixel = uint2(samplePixel);
 
 			// Sky rays:
 			float4 reflectionUvSample = reflectionUvMap[reflectionPixel];
@@ -113,22 +85,20 @@ void main(uint3 threadID : SV_DispatchThreadID)
 				continue;
 
 			// Recover the full-resolution source pixel represented by this reflection texel.
-			float2 sampleScreenPosition = (float2(reflectionPixel) + 0.5f) * screenSize / reflectionSize;
-			uint2 sampleScreenPixel = min(uint2(sampleScreenPosition), screenSizeUint - 1);
+			uint2 sampleScreenPixel = Bilateral_LowResolutionPixelToScreenPixel(reflectionPixel, screenSizeUint, reflectionSize);
 			float3 sampleWorldPosition;
 			float sampleViewDepth;
 			float3 sampleWorldNormal;
 			float sampleRoughness;
-			if (TryGetSurfaceData(sampleScreenPixel, screenSize, sampleWorldPosition, sampleViewDepth, sampleWorldNormal, sampleRoughness) == false)
+			if (Bilateral_TryGetSurfaceData(sampleScreenPixel, screenSize, sampleWorldPosition, sampleViewDepth, sampleWorldNormal, sampleRoughness) == false)
 				continue;
 
 			// Weighting:
-			float2 pixelOffset = float2(reflectionPixel) - reflectionPosition;
-			float spatialWeight = exp(-spatialWeightScale * dot(pixelOffset, pixelOffset));
-			float normalizedDepthDifference = abs(sampleViewDepth - viewDepth) / depthTolerance;
-			float depthWeight = exp(-normalizedDepthDifference * normalizedDepthDifference);
-			float normalWeight = pow(saturate(dot(worldNormal, sampleWorldNormal)), normalWeightExponent);
-			float roughnessWeight = exp(-roughnessWeightScale * abs(sampleRoughness - roughness));
+			float2 pixelOffset = float2(reflectionPixel) + 0.5f - reflectionPosition;
+			float spatialWeight = Bilateral_SpatialWeight(pixelOffset, spatialWeightScale);
+			float depthWeight = Bilateral_DepthWeight(viewDepth, sampleViewDepth, depthTolerance);
+			float normalWeight = Bilateral_NormalWeight(worldNormal, sampleWorldNormal, normalWeightExponent);
+			float roughnessWeight = Bilateral_RoughnessWeight(roughness, sampleRoughness, roughnessWeightScale);
 			float weight = spatialWeight * depthWeight * normalWeight * roughnessWeight * saturate(reflectionUvSample.a);
 
 			// Accumulate:

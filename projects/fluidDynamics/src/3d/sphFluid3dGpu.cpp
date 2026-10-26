@@ -290,7 +290,7 @@ namespace fluidDynamics
 					* fluidBounds.GetRotation4x4();
 				Float3 fluidHalfSize = 0.5f * fluidBounds.localBounds.GetSize();
 
-				CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(m_waterComputeShader);
+				CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(m_waterComputeShader, Uint3(emberCore::Renderer::GetRenderWidth(), emberCore::Renderer::GetRenderHeight(), 1));
 				callProperties.SetValue("CallValues", "worldToFluidMatrix", fluidToWorld.Inverse());
 				callProperties.SetValue("CallValues", "fluidBoundsMin", -fluidHalfSize);
 				callProperties.SetValue("CallValues", "fluidBoundsMax", fluidHalfSize);

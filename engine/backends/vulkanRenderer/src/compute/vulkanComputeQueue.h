@@ -31,11 +31,10 @@ namespace vulkanRendererBackend
 	{
 	private: // Members:
 		ComputeCallQueue m_computeCallQueue;
-		bool m_allowRenderTextureSize;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ComputeQueue(bool allowRenderTextureSize = false);
+		ComputeQueue();
 		~ComputeQueue() override;
 
 		// Non-copyable:

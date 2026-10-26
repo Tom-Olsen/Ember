@@ -17,9 +17,8 @@ namespace vulkanRendererBackend
 {
 	// Public methods:
 	// Constructor/Destructor:
-	ComputeQueue::ComputeQueue(bool allowRenderTextureSize)
+	ComputeQueue::ComputeQueue()
 		: m_computeCallQueue(Context::GetFramesInFlight())
-		, m_allowRenderTextureSize(allowRenderTextureSize)
 	{
 		
 	}
@@ -48,20 +47,14 @@ namespace vulkanRendererBackend
 			LOG_ERROR("compute::ComputeQueue::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
 			return nullptr;
 		}
-		bool useRenderTextureSize = threadCount[0] == 0 && threadCount[1] == 0 && threadCount[2] == 0;
-		if (useRenderTextureSize && !m_allowRenderTextureSize)
-		{
-			LOG_ERROR("compute::ComputeQueue::RecordComputeShader(...) failed. threadCount can only be Uint3::zero for render-texture-sized compute queues.");
-			return nullptr;
-		}
-		if (!useRenderTextureSize && (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0))
+		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
 		{
 			LOG_ERROR("compute::ComputeQueue::RecordComputeShader(...) failed. threadCount has 0 entry.");
 			return nullptr;
 		}
 
 		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
-		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), DescriptorSetBindingHandle(), AccessMasks::None::none, AccessMasks::None::none, useRenderTextureSize, pComputeShader->GetFeatures().FlipsSceneColor() };
+		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), DescriptorSetBindingHandle(), AccessMasks::None::none, AccessMasks::None::none, pComputeShader->GetFeatures().FlipsSceneColor() };
 		return RecordComputeCall(computeCall);
 	}
 	void ComputeQueue::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
@@ -100,14 +93,6 @@ namespace vulkanRendererBackend
 			// Skip barriers:
 			if (computeCall.IsBarrier())
 				continue;
-
-			// Override thread count for compute calls that use render texture size:
-			if (computeCall.useRenderTextureSize)
-			{
-				if (!pSceneColorPair)
-					throw std::runtime_error("ComputeQueue::UpdateShaderData(...) failed. Render texture size was requested, but no scene color texture pair was provided.");
-				computeCall.threadCount = { pSceneColorPair->GetWidth(), pSceneColorPair->GetHeight(), 1 };
-			}
 
 			// Error on required but missing scene color texture:
 			ComputeShader* pComputeShader = computeCall.GetComputeShader();
