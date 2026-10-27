@@ -68,7 +68,7 @@ float4x4 Model_GetLocalToClipMatrix(uint instanceID)
 {
     return mul(camera_worldToClipMatrix, Model_GetLocalToWorldMatrix(instanceID));
 }
-float4x4 Model_GetLocalToClipMatrix(uint instanceID, float4x4 localToWorldMatrix)
+float4x4 Model_GetLocalToClipMatrix(float4x4 localToWorldMatrix)
 {
     return mul(camera_worldToClipMatrix, localToWorldMatrix);
 }

@@ -29,7 +29,7 @@ VertexOutput main(VertexInput input)
     float4 normal = float4(input.normal, 0.0f);
     float4 tangent = float4(input.tangent, 0.0f);
     float4x4 localToWorldMatrix = Model_GetLocalToWorldMatrix(input.instanceID);
-    float4x4 localToClipMatrix = Model_GetLocalToClipMatrix(input.instanceID, localToWorldMatrix);
+    float4x4 localToClipMatrix = Model_GetLocalToClipMatrix(localToWorldMatrix);
     float4x4 normalMatrix = mathLinAlg_NormalMatrix(localToWorldMatrix);
     
     VertexOutput output;

@@ -18,7 +18,7 @@ VertexOutput main(VertexInput input)
 {
     float4 pos = float4(input.position, 1.0);
     float4x4 localToWorldMatrix = Model_GetLocalToWorldMatrix(input.instanceID);
-    float4x4 localToClipMatrix = Model_GetLocalToClipMatrix(input.instanceID, localToWorldMatrix);
+    float4x4 localToClipMatrix = Model_GetLocalToClipMatrix(localToWorldMatrix);
     
     VertexOutput output;
     output.clipPosition = mul(localToClipMatrix, pos);
