@@ -3,6 +3,7 @@
 #include "entity.inl"
 #include "gui.h"
 #include "screenSpaceAmbientOcclusionDispatcher.h"
+#include "ssaoConstants.h"
 #include <algorithm>
 #include <string>
 
@@ -68,7 +69,7 @@ namespace emberEditor
 			// Shared SSAO sampling parameters:
 			emberCore::Gui::SeparatorText("Sampling parameters");
 			if (emberCore::Gui::DragInt("Sample count", &pDispatcher->sampleCount, 1))
-				pDispatcher->sampleCount = std::clamp(pDispatcher->sampleCount, 1, emberEcs::ScreenSpaceAmbientOcclusionDispatcher::maxSampleCount);
+				pDispatcher->sampleCount = std::clamp(pDispatcher->sampleCount, 1, SSAO_MAX_SAMPLE_COUNT);
 			if (emberCore::Gui::DragFloat("Sample radius (world units)", &pDispatcher->sampleRadius, 0.01f, 0.1f))
 				pDispatcher->sampleRadius = std::max(0.0001f, pDispatcher->sampleRadius);
 			if (emberCore::Gui::DragFloat("Sample bias (world units)", &pDispatcher->sampleBias, 0.001f, 0.01f))

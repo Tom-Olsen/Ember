@@ -45,7 +45,7 @@ inline Scene* DefaultScene()
 	floorMaterial.SetTexture("normalMap", TextureManager::GetTexture("ground0_normal"));
 	floorMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 10, 0, 0));
 	floorMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
-	floorMaterial.SetValue("SurfaceProperties", "surface_metallicity", 0.5f);
+	floorMaterial.SetValue("SurfaceProperties", "surface_metallicity", 0.0f);
 	DeferredMaterial wallMaterial = pbrMaterial.CloneWithDefaultBindings("wallMaterial");
 	wallMaterial.SetTexture("colorMap", TextureManager::GetTexture("bricks0_color"));
 	wallMaterial.SetTexture("roughnessMap", TextureManager::GetTexture("bricks0_roughness"));

@@ -31,9 +31,9 @@ namespace emberEcs
 	public: // Members:
 		SsaoMode ssaoMode = SsaoMode::halfResolution;
 		int sampleCount = 32;
-		float sampleRadius = 1.0f;
+		float sampleRadius = 2.0f;
 		float sampleBias = 0.01f;
-		float occlusionStrength = 5.0f;
+		float occlusionStrength = 3.0f;
 
 	public: // Methods:
 		// Constructor/Destructor:

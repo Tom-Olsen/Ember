@@ -30,8 +30,8 @@ int main()
 		appCreateInfo.vSyncEnabled = false;
 		appCreateInfo.framesInFlight = 2;
 		appCreateInfo.msaaSampleCount = emberCommon::MsaaSampleCount::sampleCount04;
-		appCreateInfo.windowWidth = 2560;//1600; //1920; // 2560;
-		appCreateInfo.windowHeight = 1440;// 900; //1080; // 1440;
+		appCreateInfo.windowWidth = 3840;//2560;//1600; //1920; // 2560;
+		appCreateInfo.windowHeight = 2160;//1440;// 900; //1080; // 1440;
 		appCreateInfo.renderWidth = 2560;//1280; //1280; // 2560;
 		appCreateInfo.renderHeight = 1440;// 720; // 720; // 1440;
 		bool initialized = emberApplication::Application::Init(appCreateInfo);
