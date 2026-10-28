@@ -75,7 +75,8 @@ namespace vulkanRendererBackend
 	/// - DescriptorPoolManager:    VkDescriptorPool allocation. <para/>
 	/// - Swapchain:			    VkSwapchainKHR, swapchain images, image views, and recreation. <para/>
 	/// - framesInFlight:		    Number of frames in flight for synchronization. <para/>
-	/// - frameIndex:			    Current frame index for synchronization. <para/>
+	/// - frameIndex:			    Current frame in flight frame index (repeats 0,1,2,0,1,2,...). <para/>
+	/// - absoluteFrameIndex:       Number of submitted render graphs, including frames that could not be presented. <para/>
 	/// - msaaSamples:			    Msaa level, clamped to the maximum supported by the physical device. <para/>
 	/// </summary>
 	class Context

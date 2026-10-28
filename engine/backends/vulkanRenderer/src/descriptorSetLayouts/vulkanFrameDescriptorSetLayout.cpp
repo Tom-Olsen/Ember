@@ -59,16 +59,23 @@ namespace vulkanRendererBackend
             gbufferSurfacePropertiesSampleBinding.descriptorCount = 1;
             gbufferSurfacePropertiesSampleBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-			// Texture2D<float4> sceneColorSampleTexture0 : register(t1104, FRAME_SET);
+			// Texture2D<float2> gbufferVelocitySampleTexture : register(t1104, FRAME_SET);
+            VkDescriptorSetLayoutBinding gbufferVelocityBinding{};
+            gbufferVelocityBinding.binding = 1104;
+            gbufferVelocityBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+            gbufferVelocityBinding.descriptorCount = 1;
+            gbufferVelocityBinding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+			// Texture2D<float4> sceneColorSampleTexture0 : register(t1105, FRAME_SET);
             VkDescriptorSetLayoutBinding sceneColorSampleBinding0{};
-            sceneColorSampleBinding0.binding = 1104;
+            sceneColorSampleBinding0.binding = 1105;
             sceneColorSampleBinding0.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             sceneColorSampleBinding0.descriptorCount = 1;
             sceneColorSampleBinding0.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
 
-			// Texture2D<float4> sceneColorSampleTexture1 : register(t1105, FRAME_SET);
+			// Texture2D<float4> sceneColorSampleTexture1 : register(t1106, FRAME_SET);
             VkDescriptorSetLayoutBinding sceneColorSampleBinding1{};
-            sceneColorSampleBinding1.binding = 1105;
+            sceneColorSampleBinding1.binding = 1106;
             sceneColorSampleBinding1.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
             sceneColorSampleBinding1.descriptorCount = 1;
             sceneColorSampleBinding1.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
@@ -104,12 +111,13 @@ namespace vulkanRendererBackend
             cameraBinding.stageFlags = VK_SHADER_STAGE_ALL;
             cameraBinding.pImmutableSamplers = nullptr;
 
-            std::array<VkDescriptorSetLayoutBinding, 10> bindings =
+            std::array<VkDescriptorSetLayoutBinding, 11> bindings =
 			{
 				sceneDepthBinding,
 				gbufferNormalBinding,
 				gbufferAlbedoBinding,
 				gbufferSurfacePropertiesSampleBinding,
+				gbufferVelocityBinding,
 				sceneColorSampleBinding0,
 				sceneColorSampleBinding1,
 				gbufferSurfacePropertiesStorageBinding,
@@ -146,16 +154,25 @@ namespace vulkanRendererBackend
             offset += sizeof(Float4x4);
             emberBufferLayout::BufferMember cameraProjMatrix("camera_projMatrix", offset, sizeof(Float4x4));
             offset += sizeof(Float4x4);
+            emberBufferLayout::BufferMember cameraWorldToClipMatrixOld("camera_worldToClipMatrixOld", offset, sizeof(Float4x4));
+            offset += sizeof(Float4x4);
+            emberBufferLayout::BufferMember cameraClipToWorldMatrixOld("camera_clipToWorldMatrixOld", offset, sizeof(Float4x4));
+            offset += sizeof(Float4x4);
             emberBufferLayout::BufferMember cameraWorldToClipMatrix("camera_worldToClipMatrix", offset, sizeof(Float4x4));
             offset += sizeof(Float4x4);
             emberBufferLayout::BufferMember cameraClipToWorldMatrix("camera_clipToWorldMatrix", offset, sizeof(Float4x4));
+            offset += sizeof(Float4x4);
+            emberBufferLayout::BufferMember cameraScreenSize("camera_screenSize", offset, sizeof(Float2));
 
             emberBufferLayout::BufferLayout bufferLayout("CameraProperties");
             bufferLayout.AddMember(cameraPosition);
             bufferLayout.AddMember(cameraViewMatrix);
             bufferLayout.AddMember(cameraProjMatrix);
+            bufferLayout.AddMember(cameraWorldToClipMatrixOld);
+            bufferLayout.AddMember(cameraClipToWorldMatrixOld);
             bufferLayout.AddMember(cameraWorldToClipMatrix);
             bufferLayout.AddMember(cameraClipToWorldMatrix);
+            bufferLayout.AddMember(cameraScreenSize);
 
             s_pUniformCameraBuffer = std::make_unique<UniformBuffer>(bufferLayout);
             s_pUniformCameraBuffer->SetDebugName("UniformBuffer_FrameCameraProperties");
@@ -202,15 +219,32 @@ namespace vulkanRendererBackend
 
 
     // Setters:
-    void FrameDescriptorSetLayout::SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix)
+    void FrameDescriptorSetLayout::SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix, const Float2& screenSize)
     {
         Float4x4 worldToClipMatrix = projMatrix * viewMatrix;
         Float4x4 clipToWorldMatrix = worldToClipMatrix.Inverse();
         s_pUniformCameraBuffer->SetFloat4("camera_position", cameraPosition);
         s_pUniformCameraBuffer->SetFloat4x4("camera_viewMatrix", viewMatrix);
         s_pUniformCameraBuffer->SetFloat4x4("camera_projMatrix", projMatrix);
+
+		// Get old camera matrizes:
+		Float4x4 worldToClipMatrixOld = s_pUniformCameraBuffer->GetFloat4x4("camera_worldToClipMatrix");
+		Float4x4 clipToWorldMatrixOld = s_pUniformCameraBuffer->GetFloat4x4("camera_clipToWorldMatrix");
+		if (worldToClipMatrixOld == Float4x4::zero)
+		{
+			worldToClipMatrixOld = worldToClipMatrix;
+			clipToWorldMatrixOld = worldToClipMatrixOld.Inverse();
+		}
+
+		// Set old camera matrizes:
+		s_pUniformCameraBuffer->SetFloat4x4("camera_worldToClipMatrixOld", worldToClipMatrixOld);
+		s_pUniformCameraBuffer->SetFloat4x4("camera_clipToWorldMatrixOld", clipToWorldMatrixOld);
+
+		// Set new camera matrizes:
         s_pUniformCameraBuffer->SetFloat4x4("camera_worldToClipMatrix", worldToClipMatrix);
         s_pUniformCameraBuffer->SetFloat4x4("camera_clipToWorldMatrix", clipToWorldMatrix);
+
+        s_pUniformCameraBuffer->SetFloat2("camera_screenSize", screenSize);
     }
     void FrameDescriptorSetLayout::SetRenderTargetData(uint32_t frameIndex, const RenderTargetResources& renderTargets)
     {
@@ -218,8 +252,9 @@ namespace vulkanRendererBackend
         UpdateTextureDescriptor(frameIndex, 1101, renderTargets.GetNormalTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         UpdateTextureDescriptor(frameIndex, 1102, renderTargets.GetAlbedoTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         UpdateTextureDescriptor(frameIndex, 1103, renderTargets.GetSurfacePropertiesTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-        UpdateTextureDescriptor(frameIndex, 1104, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
-        UpdateTextureDescriptor(frameIndex, 1105, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+        UpdateTextureDescriptor(frameIndex, 1104, renderTargets.GetVelocityTexture(frameIndex), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        UpdateTextureDescriptor(frameIndex, 1105, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
+        UpdateTextureDescriptor(frameIndex, 1106, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
         UpdateTextureDescriptor(frameIndex, 1200, renderTargets.GetSurfacePropertiesTexture(frameIndex), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
         UpdateTextureDescriptor(frameIndex, 1201, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 0), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);
         UpdateTextureDescriptor(frameIndex, 1202, renderTargets.GetSceneColorPair().GetRenderTargetTexture(frameIndex, 1), VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_IMAGE_LAYOUT_GENERAL);

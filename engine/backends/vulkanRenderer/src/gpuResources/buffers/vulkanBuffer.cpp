@@ -6,6 +6,7 @@
 #include "vulkanGpuResourceRegistry.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanStagingBuffer.h"
+#include <algorithm>
 #include <assert.h>
 #include <stdexcept>
 #include <utility>
@@ -87,6 +88,12 @@ namespace vulkanRendererBackend
 	void Buffer::Upload(const void* pSrc, uint64_t size)
 	{
 		size = std::min(size, m_size);
+		if (size == 0)
+			return;
+		if (!pSrc)
+			throw std::invalid_argument("Buffer::Upload(...) source is nullptr.");
+		if (!Context::IsDeviceIdle())
+			Context::WaitDeviceIdle();
 		StagingBuffer stagingBuffer(size);
 		stagingBuffer.SetData(pSrc, size);
 		stagingBuffer.UploadToBuffer(this, Context::GetLogicalDevice()->GetTransferQueue());
@@ -94,6 +101,12 @@ namespace vulkanRendererBackend
 	void Buffer::Download(void* pDst, uint64_t size)
 	{
 		size = std::min(size, m_size);
+		if (size == 0)
+			return;
+		if (!pDst)
+			throw std::invalid_argument("Buffer::Download(...) destination is nullptr.");
+		if (!Context::IsDeviceIdle())
+			Context::WaitDeviceIdle();
 		StagingBuffer stagingBuffer(size);
 		stagingBuffer.DownloadFromBuffer(this, Context::GetLogicalDevice()->GetTransferQueue());
 		stagingBuffer.GetData(pDst, size);

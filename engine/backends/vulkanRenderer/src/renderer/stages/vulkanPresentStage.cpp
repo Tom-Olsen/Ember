@@ -24,12 +24,17 @@
 namespace vulkanRendererBackend
 {
 	// Public methods:
-	void PresentStage::Record(const FrameContext& frameContext)
+	void PresentStage::Record(const FrameContext& frameContext, bool hasSwapchainImage)
 	{
-		if (!Context::DockSpaceEnabled())
-			RecordFullScreenPresent(frameContext);
+		if (hasSwapchainImage)
+		{
+			if (!Context::DockSpaceEnabled())
+				RecordFullScreenPresent(frameContext);
+			else
+				RecordImGuiPresent(frameContext);
+		}
 		else
-			RecordImGuiPresent(frameContext);
+			RecordSkipPresent(frameContext);
 	}
 
 
@@ -140,6 +145,20 @@ namespace vulkanRendererBackend
 			vkCmdEndRenderPass(commandBuffer);
 
 		}
+		VKA(vkEndCommandBuffer(commandBuffer));
+	}
+	void PresentStage::RecordSkipPresent(const FrameContext& frameContext)
+	{
+		PROFILE_FUNCTION();
+
+		CommandPool& commandPool = frameContext.resources.GetCommandPool(RenderStage::present);
+		VkCommandBuffer& commandBuffer = commandPool.GetPrimaryVkCommandBuffer();
+		VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+		// Publish offscreen scene color without accessing a swapchain image:
+		frameContext.renderTargets.GetSceneColorPair().TransitionLayoutOfCurrentForSampling(commandBuffer, frameContext.frameExecutionData.frameIndex);
 		VKA(vkEndCommandBuffer(commandBuffer));
 	}
 }

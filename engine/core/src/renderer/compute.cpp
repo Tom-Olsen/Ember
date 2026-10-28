@@ -1,4 +1,5 @@
 #include "compute.h"
+#include "buffer.h"
 #include "callProperties.h"
 #include "computeShader.h"
 #include "emberTime.h"
@@ -11,7 +12,7 @@
 
 namespace emberCore
 {
-	using ComputeBarrierFlag = emberBackendInterface::ComputeBarrierFlag;
+	using ComputeBarrierFlag = emberCommon::ComputeBarrierFlag;
 
 
 
@@ -55,13 +56,21 @@ namespace emberCore
 	CallProperties Compute::Async::RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount)
 	{
 		emberBackendInterface::IComputeShader* pIComputeShader = computeShader.TryGetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = s_pIAsync->RecordComputeShader(sessionID, pIComputeShader, threadCount);
+		emberBackendInterface::IDescriptorSetBinding* pIDescriptorSetBinding = s_pIAsync->GetRecordingQueue(sessionID).RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIDescriptorSetBinding);
 		return callProperties;
 	}
+	void Compute::Async::RecordBufferCopy(uint32_t sessionID, Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		s_pIAsync->GetRecordingQueue(sessionID).RecordBufferCopy(source.GetInterfaceHandle(), destination.GetInterfaceHandle(), size, sourceOffset, destinationOffset);
+	}
+	void Compute::Async::RecordBufferBarrier(uint32_t sessionID, Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		s_pIAsync->GetRecordingQueue(sessionID).RecordBufferBarrier(buffer.GetInterfaceHandle(), sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+	}
 	void Compute::Async::RecordBarrier(uint32_t sessionID, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
-		s_pIAsync->RecordBarrier(sessionID, srcBarrierFlags, dstBarrierFlags);
+		s_pIAsync->GetRecordingQueue(sessionID).RecordBarrier(srcBarrierFlags, dstBarrierFlags);
 	}
 	void Compute::Async::RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID)
 	{
@@ -106,6 +115,14 @@ namespace emberCore
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPreRender->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
+	}
+	void Compute::PreRender::RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		s_pIPreRender->RecordBufferCopy(source.GetInterfaceHandle(), destination.GetInterfaceHandle(), size, sourceOffset, destinationOffset);
+	}
+	void Compute::PreRender::RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		s_pIPreRender->RecordBufferBarrier(buffer.GetInterfaceHandle(), sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
 	}
 	void Compute::PreRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -155,6 +172,14 @@ namespace emberCore
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
 	}
+	void Compute::PostOutline::RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		s_pIPostOutline->RecordBufferCopy(source.GetInterfaceHandle(), destination.GetInterfaceHandle(), size, sourceOffset, destinationOffset);
+	}
+	void Compute::PostOutline::RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		s_pIPostOutline->RecordBufferBarrier(buffer.GetInterfaceHandle(), sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+	}
 	void Compute::PostOutline::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
 		s_pIPostOutline->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
@@ -202,6 +227,14 @@ namespace emberCore
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostGeometry->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
+	}
+	void Compute::PostGeometry::RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		s_pIPostGeometry->RecordBufferCopy(source.GetInterfaceHandle(), destination.GetInterfaceHandle(), size, sourceOffset, destinationOffset);
+	}
+	void Compute::PostGeometry::RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		s_pIPostGeometry->RecordBufferBarrier(buffer.GetInterfaceHandle(), sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
 	}
 	void Compute::PostGeometry::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -251,6 +284,14 @@ namespace emberCore
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
 	}
+	void Compute::PostLighting::RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		s_pIPostLighting->RecordBufferCopy(source.GetInterfaceHandle(), destination.GetInterfaceHandle(), size, sourceOffset, destinationOffset);
+	}
+	void Compute::PostLighting::RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		s_pIPostLighting->RecordBufferBarrier(buffer.GetInterfaceHandle(), sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+	}
 	void Compute::PostLighting::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
 		s_pIPostLighting->RecordBarrier(srcBarrierFlags, dstBarrierFlags);
@@ -288,7 +329,7 @@ namespace emberCore
 	}
 	void Compute::PostRender::Clear()
 	{
-
+		s_pIPostRender = nullptr;
 	}
 
 	// Workload recording:
@@ -305,6 +346,14 @@ namespace emberCore
 		emberBackendInterface::IDescriptorSetBinding* pIComputeCallDescriptorSetBinding = s_pIPostRender->RecordComputeShader(pIComputeShader, threadCount);
 		CallProperties callProperties = CallProperties(pIComputeCallDescriptorSetBinding);
 		return callProperties;
+	}
+	void Compute::PostRender::RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		GetInterfaceHandle()->RecordBufferCopy(source.GetInterfaceHandle(), destination.GetInterfaceHandle(), size, sourceOffset, destinationOffset);
+	}
+	void Compute::PostRender::RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		GetInterfaceHandle()->RecordBufferBarrier(buffer.GetInterfaceHandle(), sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
 	}
 	void Compute::PostRender::RecordBarrier(ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags)
 	{
@@ -329,6 +378,17 @@ namespace emberCore
 	void Compute::PostRender::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite()
 	{
 		RecordBarrier(ComputeBarrierFlag::storageWrite, ComputeBarrierFlag::sampledRead | ComputeBarrierFlag::storageWrite);
+	}
+
+
+
+	// Compute::PostRender private methods:
+	// Interface handle:
+	emberBackendInterface::ICompute::IQueue* Compute::PostRender::GetInterfaceHandle()
+	{
+		if (!s_pIPostRender)
+			throw std::runtime_error("Compute::PostRender is not initialized.");
+		return s_pIPostRender;
 	}
 
 
@@ -464,7 +524,25 @@ namespace emberCore
 		}
 		return Async::RecordComputeShader(s_recordingAsyncSessionID, computeShader, threadCount);
 	}
-	void Compute::Physics::RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
+	void Compute::Physics::RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	{
+		if (!s_isRecording)
+		{
+			LOG_ERROR("Compute::Physics::RecordBufferCopy called outside BeginRecording/EndRecording.");
+			return;
+		}
+		Async::RecordBufferCopy(s_recordingAsyncSessionID, source, destination, size, sourceOffset, destinationOffset);
+	}
+	void Compute::Physics::RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	{
+		if (!s_isRecording)
+		{
+			LOG_ERROR("Compute::Physics::RecordBufferBarrier called outside BeginRecording/EndRecording.");
+			return;
+		}
+		Async::RecordBufferBarrier(s_recordingAsyncSessionID, buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+	}
+	void Compute::Physics::RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags)
 	{
 		if (!s_isRecording)
 		{
@@ -562,6 +640,62 @@ namespace emberCore
 				break;
 		}
 		throw std::runtime_error("Compute::RecordComputeShader: invalid ComputeType.");
+	}
+	void Compute::RecordBufferCopy(ComputeType computeType, Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBufferCopy(sessionID, source, destination, size, sourceOffset, destinationOffset);
+				return;
+			case ComputeType::preRender:
+				PreRender::RecordBufferCopy(source, destination, size, sourceOffset, destinationOffset);
+				return;
+			case ComputeType::postOutline:
+				PostOutline::RecordBufferCopy(source, destination, size, sourceOffset, destinationOffset);
+				return;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBufferCopy(source, destination, size, sourceOffset, destinationOffset);
+				return;
+			case ComputeType::postLighting:
+				PostLighting::RecordBufferCopy(source, destination, size, sourceOffset, destinationOffset);
+				return;
+			case ComputeType::postRender:
+				PostRender::RecordBufferCopy(source, destination, size, sourceOffset, destinationOffset);
+				return;
+			case ComputeType::physics:
+				Physics::RecordBufferCopy(source, destination, size, sourceOffset, destinationOffset);
+				return;
+		}
+		throw std::runtime_error("Compute::RecordBufferCopy: invalid ComputeType.");
+	}
+	void Compute::RecordBufferBarrier(ComputeType computeType, Buffer& buffer, emberCommon::PipelineStage sourceStages, ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size, uint32_t sessionID)
+	{
+		switch (computeType)
+		{
+			case ComputeType::async:
+				Async::RecordBufferBarrier(sessionID, buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+			case ComputeType::preRender:
+				PreRender::RecordBufferBarrier(buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+			case ComputeType::postOutline:
+				PostOutline::RecordBufferBarrier(buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+			case ComputeType::postGeometry:
+				PostGeometry::RecordBufferBarrier(buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+			case ComputeType::postLighting:
+				PostLighting::RecordBufferBarrier(buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+			case ComputeType::postRender:
+				PostRender::RecordBufferBarrier(buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+			case ComputeType::physics:
+				Physics::RecordBufferBarrier(buffer, sourceStages, sourceAccess, destinationStages, destinationAccess, offset, size);
+				return;
+		}
+		throw std::runtime_error("Compute::RecordBufferBarrier: invalid ComputeType.");
 	}
 	void Compute::RecordBarrier(ComputeType computeType, ComputeBarrierFlag srcBarrierFlags, ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID)
 	{

@@ -243,7 +243,7 @@ namespace fluidDynamics
 		BufferView<Float3>& orderedVelocityBufferView = settings.useHashGridOptimization ? scratchData.tempBuffer1.GetBufferView() : tempVelocityBufferView;
 
 		// First Leap Frog step:
-		Compute::RecordBarrier(computeShaders.computeType, emberBackendInterface::ComputeBarrierFlag::storageRead | emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead | emberBackendInterface::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
+		Compute::RecordBarrier(computeShaders.computeType, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
 		ComputeLeapFrogStep1(computeShaders, dt, sourcePositionBufferView, sourceVelocityBufferView, tempPositionBufferView, tempVelocityBufferView);
 		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
 
@@ -608,7 +608,7 @@ namespace fluidDynamics
 		BufferView<uint32_t>& sortPermutationBufferView = scratchData.sortPermutationBuffer.GetBufferView();
 
 		// Scratch buffers are reused across force evaluations and simulation substeps:
-		Compute::RecordBarrier(computeShaders.computeType, emberBackendInterface::ComputeBarrierFlag::storageRead | emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead | emberBackendInterface::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
+		Compute::RecordBarrier(computeShaders.computeType, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
 		if (settings.useHashGridOptimization)
 		{
 			ComputeCellKeys(computeShaders, cellKeyBufferView, positionBufferView);

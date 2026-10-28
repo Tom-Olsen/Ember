@@ -34,6 +34,7 @@ namespace emberCore
 	class CallProperties;
 	class ComputeShaderManager;
 	class Core;
+	class InstanceBuffer;
 	class MaterialManager;
 	class MaterialShaderManager;
 	class Mesh;
@@ -52,6 +53,7 @@ namespace emberCore
 		friend class CallProperties;
 		friend class ComputeShaderManager;
 		friend class Core;
+		friend class InstanceBuffer;
 		friend class MaterialManager;
 		friend class MaterialShaderManager;
 		friend class Mesh;
@@ -76,6 +78,7 @@ namespace emberCore
 		static emberBackendInterface::IMaterial* CreateMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const emberCommon::MaterialCreateInfo& createInfo);
 		static emberBackendInterface::IMaterial* CloneMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const emberCommon::MaterialCloneInfo& cloneInfo);
 		static emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage);
+		static emberBackendInterface::IBuffer* CreateInstanceBuffer(uint32_t count);
 		static emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);
 		static emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);
 		static emberBackendInterface::ITexture* CreateTextureCube(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data);

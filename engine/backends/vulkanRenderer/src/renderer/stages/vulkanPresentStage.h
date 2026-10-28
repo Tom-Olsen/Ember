@@ -12,10 +12,12 @@ namespace vulkanRendererBackend
 	class PresentStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		PresentStage() = delete;
+		static void Record(const FrameContext& frameContext, bool hasSwapchainImage);
 
 	private: // Methods:
-		void RecordFullScreenPresent(const FrameContext& frameContext);
-		void RecordImGuiPresent(const FrameContext& frameContext);
+		static void RecordFullScreenPresent(const FrameContext& frameContext);
+		static void RecordImGuiPresent(const FrameContext& frameContext);
+		static void RecordSkipPresent(const FrameContext& frameContext);
 	};
 }

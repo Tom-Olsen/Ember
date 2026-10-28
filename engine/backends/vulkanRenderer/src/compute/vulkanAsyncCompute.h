@@ -1,18 +1,10 @@
 #pragma once
 #include "iCompute.h"
-#include "emberMath.h"
+#include "vulkanComputeQueue.h"
 #include "vulkanRendererExport.h"
+#include <memory>
 #include <queue>
 #include <vector>
-
-
-
-// Forward declaration:
-namespace emberBackendInterface
-{
-	class IComputeShader;
-	class IDescriptorSetBinding;
-}
 
 
 
@@ -22,18 +14,26 @@ namespace vulkanRendererBackend
 	class CommandPool;
 
 
-	// Forward declarations:
-	class ComputeCall;
-	struct ComputeSession;
-
-
 
 	class VULKAN_RENDERER_API Async : public emberBackendInterface::ICompute::IAsync
 	{
+	private: // Structs:
+		struct Session
+		{
+		public: // Enums:
+			enum class State { idle, running, recording };
+
+		public: // Members:
+			ComputeQueue computeQueue;
+			State state = State::idle;
+			uint32_t queueIndex = UINT32_MAX;
+			uint64_t completionValue = 0;
+		};
+
 	private: // Members:
 		uint32_t m_nextQueueIndex = 0;
 		std::vector<CommandPool> m_pCommandPools;
-		std::vector<ComputeSession> m_computeSessions;
+		std::vector<std::unique_ptr<Session>> m_computeSessions;
 		std::vector<uint32_t> m_pendingSessionCounts;
 		std::queue<uint32_t> m_freeIndices;
 
@@ -58,8 +58,7 @@ namespace vulkanRendererBackend
 		void CollectFinishedSessions();
 
 		// Workload recording:
-		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount) override;
-		void RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
+		emberBackendInterface::ICompute::IQueue& GetRecordingQueue(uint32_t sessionID) override;
 
 		// Debugging:
 		void PrintSessionsState();

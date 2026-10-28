@@ -22,7 +22,7 @@ namespace emberCore
 	{
 
 	}
-	DrawData::DrawData(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, uint32_t instanceCount, Buffer* pInstanceBuffer)
+	DrawData::DrawData(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, uint32_t instanceCount, InstanceBuffer* pInstanceBuffer)
 		: localToWorldMatrix(localToWorldMatrix)
 		, mesh(mesh)
 		, material(material)
@@ -31,7 +31,7 @@ namespace emberCore
 	{
 		
 	}
-	DrawData::DrawData(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, uint32_t instanceCount, Buffer* pInstanceBuffer, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
+	DrawData::DrawData(const Float4x4& localToWorldMatrix, const Mesh& mesh, const Material& material, uint32_t instanceCount, InstanceBuffer* pInstanceBuffer, bool receiveShadows, bool castShadows, emberCommon::CullMode cullMode)
 		: localToWorldMatrix(localToWorldMatrix)
 		, mesh(mesh)
 		, material(material)

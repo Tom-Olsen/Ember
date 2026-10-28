@@ -1,13 +1,5 @@
 #pragma once
-#include "vulkanComputeStage.h"
-#include "vulkanDeferredGeometryStage.h"
-#include "vulkanDeferredLightingStage.h"
-#include "vulkanForwardStage.h"
-#include "vulkanGizmoStage.h"
-#include "vulkanOutlineStage.h"
-#include "vulkanPresentStage.h"
-#include "vulkanResourceUpdateStage.h"
-#include "vulkanShadowStage.h"
+#include "vulkanRenderStage.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -25,20 +17,24 @@ namespace vulkanRendererBackend
 
 
 	/// <summary>
-	/// Owns the render stages and the synchronization that connects them.
-	/// Aquire
-	/// └>ResourceUpdate
-	///   ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬> Present ─> Release
-	///   └> PreRenderCompute ┬> Outline ──────────> PostOutlineCompute  ──────────────────────────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
-	///                       ├> Shadow ─────────────────────────────────┬> DeferredLighting ─> PostLightingCompute ─> ForwardOpaque ─> ForwardTransparent ┘
-	///                       └> DeferredGeometry ─> PostGeometryCompute ┘
+	/// Coordinates render stage recording and owns the synchronization that connects the stages.
+	/// Acquire ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+	/// ResourceUpdate                                                                                                                                                        │
+	/// ├> Gizmo ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼> (Skip)Present ─> FrameFence
+	/// └> PreRenderCompute ┬> Outline ──────────> PostOutlineCompute  ──────────────────────────────────────────────────────────────────────────────────┬> PostRenderCompute ┘
+	///                     ├> Shadow ─────────────────────────────────┬> DeferredLighting ─> PostLightingCompute ─> ForwardOpaque ─> ForwardTransparent ┘
+	///                     └> DeferredGeometry ─> PostGeometryCompute ┘
+	///
+	/// PresentStage with image: Acquire ─> Record ─> Release ─> QueuePresent
+	/// PresentStage without image: SkipPresent (no acquisition wait or release signal)
+	/// Both paths wait for Gizmo and PostRenderCompute and signal FrameFence.
 	/// </summary>
 	class RenderGraph
 	{
 	private: // Types:
 		enum class Dependency : uint8_t
 		{
-			aquireToResourceUpdate,
+			acquireToPresent,
 			resourceUpdateToGizmo,
 			resourceUpdateToPreRenderCompute,
 			gizmoToPresent,
@@ -64,22 +60,6 @@ namespace vulkanRendererBackend
 		};
 
 	private: // Members:
-		// Render stages:
-		ResourceUpdateStage m_resourceUpdateStage;
-		GizmoStage m_gizmoStage;
-		ComputeStage<RenderStage::preRenderCompute> m_preRenderComputeStage;
-		OutlineStage m_outlineStage;
-		ComputeStage<RenderStage::postOutlineCompute> m_postOutlineComputeStage;
-		ShadowStage m_shadowStage;
-		DeferredGeometryStage m_deferredGeometryStage;
-		ComputeStage<RenderStage::postGeometryCompute> m_postGeometryComputeStage;
-		DeferredLightingStage m_deferredLightingStage;
-		ComputeStage<RenderStage::postLightingCompute> m_postLightingComputeStage;
-		ForwardStage<RenderStage::forwardOpaque> m_forwardOpaqueStage;
-		ForwardStage<RenderStage::forwardTransparent> m_forwardTransparentStage;
-		ComputeStage<RenderStage::postRenderCompute> m_postRenderComputeStage;
-		PresentStage m_presentStage;
-
 		// Synchronization:
 		std::vector<FrameSyncObjects> m_frameSyncObjects;	// one per frame in flight.
 		std::vector<VkSemaphore> m_releaseSemaphores;		// one per swapchain image.
@@ -99,7 +79,7 @@ namespace vulkanRendererBackend
 
 		// Frame lifecycle:
 		VkResult AcquireImage(uint32_t frameIndex, uint32_t& imageIndex) const;
-		void RecordAndSubmit(const FrameContext& frameContext);
+		void RecordAndSubmit(const FrameContext& frameContext, bool hasSwapchainImage);
 		VkResult Present(uint32_t imageIndex) const;
 		void RecreateSyncObjects();
 		void ResetFrameFence(uint32_t frameIndex) const;

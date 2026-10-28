@@ -14,6 +14,7 @@ namespace vulkanRendererBackend
 	class ForwardStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		ForwardStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

@@ -10,6 +10,7 @@
 // Forward decleration:
 namespace emberBackendInterface
 {
+	class IBuffer;
 	class IDescriptorSetBinding;
 }
 
@@ -33,10 +34,10 @@ namespace emberCore
 		friend class Compute;
 
 	private: // Members:
-		bool m_ownsICallDescriptorSetBinding;
-		bool m_callDescriptorSetBindingExpired;
-		uint64_t m_callDescriptorSetBindingGeneration;
-		emberBackendInterface::IDescriptorSetBinding* m_pICallDescriptorSetBinding; // conditional ownership, depending on usecase.
+		mutable bool m_ownsICallDescriptorSetBinding;
+		mutable bool m_callDescriptorSetBindingExpired;
+		mutable uint64_t m_callDescriptorSetBindingGeneration;
+		mutable emberBackendInterface::IDescriptorSetBinding* m_pICallDescriptorSetBinding; // conditional ownership, depending on usecase.
 		std::unique_ptr<CallProperties> m_pShadowProperties;	// callProperties of associated shadow draw call.
 
 	public: // Methods:
@@ -91,10 +92,44 @@ namespace emberCore
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4& value);
 		void SetValue(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex, const Float4x4& value);
 
-		// Getters
+		// Getters:
 		bool HasBinding(const std::string& name);
 		bool HasShadowProperties();
 		CallProperties& GetShadowProperties();
+
+		// Uniform Buffer Getters:
+		// Simple members:
+		int GetInt(const std::string& bufferName, const std::string& memberName) const;
+		bool GetBool(const std::string& bufferName, const std::string& memberName) const;
+		float GetFloat(const std::string& bufferName, const std::string& memberName) const;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& memberName) const;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& memberName) const;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& memberName) const;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& memberName) const;
+		// Array members:
+		int GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		bool GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		float GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const;
+		// Array of structs members:
+		int GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		bool GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		float GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const;
+		// Array of arrays members:
+		int GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		bool GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		float GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		Float2 GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		Float3 GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		Float4 GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
+		Float4x4 GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const;
 
 		// Debugging:
 		void Print() const;
@@ -104,9 +139,12 @@ namespace emberCore
 		// Pooling constructor:
 		// Wraps non-owned call descriptor set bindings supplied by Renderer/Compute call pools.
 		CallProperties(emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding);
-		void ValidateCallDescriptorSetBinding();
+		void ValidateCallDescriptorSetBinding() const;
 		void SetShadowProperties(CallProperties&& shadowProperties);
 		emberBackendInterface::IDescriptorSetBinding* GetCallInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* GetValidCallInterfaceHandle();
+		emberBackendInterface::IDescriptorSetBinding* GetValidCallInterfaceHandle() const;
+
+		// Setters:
+		void SetBuffer(const std::string& name, emberBackendInterface::IBuffer& buffer);
 	};
 }

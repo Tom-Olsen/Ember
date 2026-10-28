@@ -5,6 +5,7 @@
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanGarbageCollector.h"
 #include "vulkanIndexBuffer.h"
+#include "vulkanInstanceBuffer.h"
 #include "vulkanMaterial.h"
 #include "vulkanMaterialShader.h"
 #include "vulkanMesh.h"
@@ -172,6 +173,10 @@ namespace vulkanRendererBackend
 			throw std::runtime_error("vulkanRendererBackend::GpuResourceFactory::CreateBuffer(...) failed. Unknown invalid BufferUsage type: " + std::string(emberCommon::BufferUsageToString(usage)));
 		}
 		return pIBuffer;
+	}
+	emberBackendInterface::IBuffer* GpuResourceFactory::CreateInstanceBuffer(uint32_t count)
+	{
+		return new InstanceBuffer(count);
 	}
 	//emberBackendInterface::ITexture* GpuResourceFactory::CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage)
 	//{

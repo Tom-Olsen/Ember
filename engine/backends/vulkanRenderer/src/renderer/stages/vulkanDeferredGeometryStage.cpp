@@ -9,6 +9,7 @@
 #include "vulkanDefaultPushConstant.h"
 #include "vulkanDeferredDrawCall.h"
 #include "vulkanDeferredGeometryRenderPass.h"
+#include "vulkanDeferredRenderingContract.h"
 #include "vulkanDepthTexture2d.h"
 #include "vulkanDescriptorSetBinding.h"
 #include "vulkanFrameContext.h"
@@ -59,11 +60,10 @@ namespace vulkanRendererBackend
 			vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 			// Render pass info:
-			std::array<VkClearValue, 4> clearValues{};
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f };
-			clearValues[1].color = { 0.0f, 0.0f, 0.0f, 0.0f };
-			clearValues[2].color = { 0.0f, 0.0f, 0.0f, 0.0f };
-			clearValues[3].depthStencil = { 1.0f, 0 };
+			std::array<VkClearValue, deferredRenderingContract::attachmentCount> clearValues{};
+			for (uint32_t attachmentIndex = 0; attachmentIndex < deferredRenderingContract::colorAttachmentCount; attachmentIndex++)
+				clearValues[attachmentIndex].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+			clearValues[deferredRenderingContract::depthAttachmentIndex].depthStencil = { 1.0f, 0 };
 			VkRenderPassBeginInfo renderPassBeginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
 			renderPassBeginInfo.renderPass = pDeferredGeometryRenderPass->GetVkRenderPass();
 			renderPassBeginInfo.framebuffer = pDeferredGeometryRenderPass->GetFramebuffer(frameContext.frameExecutionData.frameIndex);
@@ -145,6 +145,7 @@ namespace vulkanRendererBackend
 			frameContext.renderTargets.GetAlbedoTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			frameContext.renderTargets.GetNormalTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			frameContext.renderTargets.GetSurfacePropertiesTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			frameContext.renderTargets.GetVelocityTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 			frameContext.renderTargets.GetSceneDepthTexture(frameContext.frameExecutionData.frameIndex).GetVmaImage()->SetLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		}
 		VKA(vkEndCommandBuffer(commandBuffer));

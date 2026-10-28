@@ -29,6 +29,7 @@ namespace vulkanRendererBackend
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pAlbedoTextures;
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pNormalTextures;
 		std::vector<std::unique_ptr<GBufferTexture2d>> m_pSurfacePropertiesTextures;
+		std::vector<std::unique_ptr<GBufferTexture2d>> m_pVelocityTextures;
 		std::vector<std::unique_ptr<RenderTexture2d>> m_pOutlineTextures;
 		std::vector<std::unique_ptr<RenderTexture2d>> m_pGizmoTextures;
 		std::vector<std::unique_ptr<VmaImage>> m_pGizmoMsaaImages;
@@ -65,6 +66,8 @@ namespace vulkanRendererBackend
 		const GBufferTexture2d& GetNormalTexture(uint32_t frameIndex) const;
 		GBufferTexture2d& GetSurfacePropertiesTexture(uint32_t frameIndex);
 		const GBufferTexture2d& GetSurfacePropertiesTexture(uint32_t frameIndex) const;
+		GBufferTexture2d& GetVelocityTexture(uint32_t frameIndex);
+		const GBufferTexture2d& GetVelocityTexture(uint32_t frameIndex) const;
 		RenderTexture2d& GetOutlineTexture(uint32_t frameIndex);
 		const RenderTexture2d& GetOutlineTexture(uint32_t frameIndex) const;
 		RenderTexture2d& GetGizmoTexture(uint32_t frameIndex);

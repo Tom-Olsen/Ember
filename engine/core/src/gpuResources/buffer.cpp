@@ -1,6 +1,7 @@
 #include "buffer.h"
-#include "iBuffer.h"
 #include "gpuResourceFactory.h"
+#include "iBuffer.h"
+#include <stdexcept>
 
 
 
@@ -71,5 +72,17 @@ namespace emberCore
 	void Buffer::Download(void* pDst, uint64_t size)
 	{
 		m_pIBuffer->Download(pDst, size);
+	}
+
+
+
+	// Protected methods:
+	// Constructor/Destructor:
+	Buffer::Buffer(emberBackendInterface::IBuffer* pIBuffer, const std::string& name)
+		: m_name(name), m_pIBuffer(pIBuffer)
+	{
+		if (!m_pIBuffer)
+			throw std::runtime_error("Buffer constructor failed. Backend buffer is nullptr.");
+		m_pIBuffer->SetDebugName(m_name);
 	}
 }

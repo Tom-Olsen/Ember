@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
 	class OutlineStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		OutlineStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

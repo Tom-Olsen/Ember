@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
 	class ShadowStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		ShadowStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

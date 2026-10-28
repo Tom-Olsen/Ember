@@ -52,6 +52,10 @@ namespace emberCore
 	{
 		return s_pIGpuResourceFactory->CreateBuffer(count, elementSize, usage);
 	}
+	emberBackendInterface::IBuffer* GpuResourceFactory::CreateInstanceBuffer(uint32_t count)
+	{
+		return s_pIGpuResourceFactory->CreateInstanceBuffer(count);
+	}
 	emberBackendInterface::ITexture* GpuResourceFactory::CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data)
 	{
 		return s_pIGpuResourceFactory->CreateTexture2d(width, height, format, usage, imageCountMode, data);

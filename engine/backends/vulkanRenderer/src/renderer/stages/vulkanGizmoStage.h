@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
 	class GizmoStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		GizmoStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

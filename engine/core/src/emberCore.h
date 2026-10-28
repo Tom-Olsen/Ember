@@ -28,6 +28,7 @@
 
 // Gpu resources:
 #include "buffer.h"
+#include "instanceBuffer.h"
 #include "bufferView.h"
 #include "bufferTyped.h"
 #include "callProperties.h"

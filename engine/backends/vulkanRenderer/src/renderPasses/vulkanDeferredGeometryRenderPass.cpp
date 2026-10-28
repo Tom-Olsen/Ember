@@ -39,6 +39,7 @@ namespace vulkanRendererBackend
 				renderTargets.GetAlbedoTexture(0).GetFormat(),
 				renderTargets.GetNormalTexture(0).GetFormat(),
 				renderTargets.GetSurfacePropertiesTexture(0).GetFormat(),
+				renderTargets.GetVelocityTexture(0).GetFormat(),
 				renderTargets.GetSceneDepthTexture(0).GetFormat()
 			};
 
@@ -113,6 +114,7 @@ namespace vulkanRendererBackend
 				renderTargets.GetAlbedoTexture(frameIndex).GetVkImageView(),
 				renderTargets.GetNormalTexture(frameIndex).GetVkImageView(),
 				renderTargets.GetSurfacePropertiesTexture(frameIndex).GetVkImageView(),
+				renderTargets.GetVelocityTexture(frameIndex).GetVkImageView(),
 				renderTargets.GetSceneDepthTexture(frameIndex).GetVkImageView()
 			};
 

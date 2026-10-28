@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
 	class DeferredLightingStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		DeferredLightingStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

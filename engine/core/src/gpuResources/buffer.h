@@ -19,8 +19,10 @@ namespace emberCore
 	class EMBER_CORE_API Buffer
 	{
 		friend class Renderer;
+		friend class Compute;
 		friend class Shader;
 		friend class CallProperties;
+		friend class InstanceBuffer;
 
 	private: // Members:
         std::string m_name;
@@ -31,7 +33,7 @@ namespace emberCore
 		// Constructor/Destructor:
 		Buffer();
 		Buffer(uint32_t count, uint32_t elementSize, const std::string& name, emberCommon::BufferUsage usage);
-		~Buffer();
+		virtual ~Buffer();
 
 		// Non-copyable:
 		Buffer(const Buffer&) = delete;
@@ -51,5 +53,9 @@ namespace emberCore
 		// Upload/Download:
 		void Upload(const void* pSrc, uint64_t size);
 		void Download(void* pDst, uint64_t size);
+
+	protected: // Methods:
+		// Constructor/Destructor:
+		Buffer(emberBackendInterface::IBuffer* pIBuffer, const std::string& name);
 	};
 }

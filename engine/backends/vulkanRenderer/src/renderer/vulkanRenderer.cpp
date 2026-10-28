@@ -13,6 +13,7 @@
 #include "vulkanAsyncCompute.h"
 #include "vulkanCommandPool.h"
 #include "vulkanCompute.h"
+#include "vulkanComputeCall.h"
 #include "vulkanComputeQueue.h"
 #include "vulkanComputeShader.h"
 #include "vulkanContext.h"
@@ -126,23 +127,6 @@ namespace vulkanRendererBackend
 		m_frameExecutionData.time = time;
 		m_frameExecutionData.deltaTime = deltaTime;
 
-		// Defer swapchain rebuild until the resize event stream settles.
-		if (m_pIWindow->GetIsResizing())
-		{
-			m_pIWindow->ResetIsResizing();
-			m_rebuildSwapchain = true;
-			ResetFrameCalls();
-			return;
-		}
-
-		// Resize swapchain:
-		if (m_rebuildSwapchain)
-		{
-			m_rebuildSwapchain = false;
-			Context::ResetFrameIndex();
-			RebuildSwapchain();
-		}
-
 		// Wait for previous frame fence:
 		{
 			PROFILE_SCOPE("Renderer::WaitForFrameFence");
@@ -152,12 +136,8 @@ namespace vulkanRendererBackend
 		// Return frame compute shaders callDescriptorSetBindings and decrement their usage count of previous submission with this frame index:
 		m_pCompute->RetireFrame(m_frameExecutionData.frameIndex);
 
-		// Cancel current frame on failed acquisition:
-		if (!AcquireImage())
-		{
-			ResetFrameCalls();
-			return;
-		}
+		// Acquisition controls presentation; offscreen work always executes.
+		bool hasSwapchainImage = AcquireImage();
 
 		// Begin next frame:
 		m_pRenderGraph->ResetFrameFence(m_frameExecutionData.frameIndex);
@@ -184,18 +164,16 @@ namespace vulkanRendererBackend
 			m_pCompute->GetPostGeometryCompute()->GetComputeCalls(),
 			m_pCompute->GetPostLightingCompute()->GetComputeCalls(),
 			m_pCompute->GetPostRenderCompute()->GetComputeCalls());
-		m_pRenderGraph->RecordAndSubmit(frameContext);
+		m_pRenderGraph->RecordAndSubmit(frameContext, hasSwapchainImage);
 		m_pCompute->CommitFrame(m_frameExecutionData.frameIndex);
 
 		// Finalize frame:
 		sceneColorPair.FinalizeFrame(m_frameExecutionData.frameIndex);
 		ResetFrameCalls();
-
-		// Cancel current frame on failed presentation (e.g. window resize):
-		if (!PresentImage())
-			return;
-
 		Context::UpdateFrameIndex();
+
+		if (hasSwapchainImage)
+			PresentImage();
 	}
 
 
@@ -748,8 +726,6 @@ namespace vulkanRendererBackend
 	// Reset render state:
 	void Renderer::ResetFrameCalls()
 	{
-		// Compute calls:
-		m_pCompute->DiscardPendingCalls();
 		// Light data:
 		m_previousDirectionalLightsCount = m_directionalLightsCount;
 		m_previousPositionalLightsCount = m_positionalLightsCount;
@@ -780,6 +756,7 @@ namespace vulkanRendererBackend
 	}
 	bool Renderer::AcquireImage()
 	{
+		// Window resizing:
 		if (m_pIWindow->GetIsResizing())
 		{
 			m_pIWindow->ResetIsResizing();
@@ -787,14 +764,37 @@ namespace vulkanRendererBackend
 			return false;
 		}
 
-		// Sets m_frameExecutionData.imageIndex by reference:
-		VkResult result = m_pRenderGraph->AcquireImage(m_frameExecutionData.frameIndex, m_frameExecutionData.imageIndex);
+		// Window minimized:
+		Int2 windowSize = m_pIWindow->GetSizeInPixels();
+		if (m_pIWindow->GetIsMinimized() || windowSize.x <= 0 || windowSize.y <= 0)
+		{
+			m_rebuildSwapchain = true;
+			return false;
+		}
+		Uint2 surfaceExtent = GetSurfaceExtent();
+		if (surfaceExtent.x == 0 || surfaceExtent.y == 0)
+		{
+			m_rebuildSwapchain = true;
+			return false;
+		}
+
+		// Defer rebuilding until resize events settle and the surface is usable:
+		if (m_rebuildSwapchain)
+		{
+			RebuildSwapchain();
+			m_rebuildSwapchain = false;
+		}
+
+		uint32_t imageIndex = 0;
+		VkResult result = m_pRenderGraph->AcquireImage(m_frameExecutionData.frameIndex, imageIndex);
 
 		switch (result)
 		{
 		case VK_SUCCESS:
+			m_frameExecutionData.imageIndex = imageIndex;
 			return true;
 		case VK_SUBOPTIMAL_KHR:
+			m_frameExecutionData.imageIndex = imageIndex;
 			m_rebuildSwapchain = true;
 			return true;
 		case VK_ERROR_OUT_OF_DATE_KHR:
@@ -831,7 +831,7 @@ namespace vulkanRendererBackend
 			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pInputMask);
 			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pHorizontalExpandedMask);
 
-			pPostOutlineCompute->RecordBarrier(emberBackendInterface::ComputeBarrierFlag::storageWrite, emberBackendInterface::ComputeBarrierFlag::storageRead);
+			pPostOutlineCompute->RecordBarrier(emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead);
 
 			// Expand mask vertically and remove the original mask (postOutlineCompute):
 			ComputeShader* pVerticalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineVerticalMaskExpansionComputeShader();
@@ -863,7 +863,7 @@ namespace vulkanRendererBackend
 		SceneDescriptorSetLayout::UpdateShaderData(m_frameExecutionData.frameIndex);
 
 		// Frame descriptor set:
-		FrameDescriptorSetLayout::SetCameraData(Float4(m_activeCamera.position, 1.0f), m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix);
+		FrameDescriptorSetLayout::SetCameraData(Float4(m_activeCamera.position, 1.0f), m_activeCamera.viewMatrix, m_activeCamera.projectionMatrix, Float2(GetRenderWidth(), GetRenderHeight()));
 		FrameDescriptorSetLayout::SetRenderTargetData(m_frameExecutionData.frameIndex, *m_pRenderTargets);
 		FrameDescriptorSetLayout::UpdateShaderData(m_frameExecutionData.frameIndex);
 

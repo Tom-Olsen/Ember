@@ -1,11 +1,18 @@
 #pragma once
-#include "buffer.h"
+#include "component.h"
 #include "callProperties.h"
 #include "commonCullMode.h"
-#include "component.h"
+#include "instanceBuffer.h"
 #include "material.h"
-#include "mesh.h"
 #include <cstdint>
+
+
+
+// Forward declarations:
+namespace emberCore
+{
+	class Mesh;
+}
 
 
 
@@ -14,17 +21,17 @@ namespace emberEcs
 	class InstancedMeshRenderer : public Component
 	{
 	private: // Members:
-		uint32_t m_instanceCount;
 		bool m_castShadows;
 		bool m_receiveShadows;
 		emberCommon::CullMode m_cullMode;
 		emberCore::Mesh* m_pMesh;
 		emberCore::Material m_material;
-		emberCore::Buffer* m_pInstanceBuffer;
+		emberCore::InstanceBuffer m_instanceBuffer;
 		emberCore::CallProperties m_callProperties;
 
 	public: // Methods:
-		InstancedMeshRenderer();
+		// Constructor/Destructor:
+		explicit InstancedMeshRenderer(uint32_t instanceCount);
 		~InstancedMeshRenderer();
 		
 		// Setter:
@@ -34,16 +41,15 @@ namespace emberEcs
 		void SetCullMode(emberCommon::CullMode cullMode);
 		void SetMesh(emberCore::Mesh& mesh);
 		void SetMaterial(const emberCore::Material& material);
-		void SetInstanceBuffer(emberCore::Buffer& instanceBuffer);
 
-		// Forward render pass getters:
+		// Getters:
 		uint32_t GetInstanceCount() const;
 		bool GetCastShadows() const;
 		bool GetReceiveShadows() const;
 		emberCommon::CullMode GetCullMode() const;
 		emberCore::Mesh& GetMesh();
 		emberCore::Material& GetMaterial();
-		emberCore::Buffer& GetInstanceBuffer();
+		emberCore::InstanceBuffer& GetInstanceBuffer();
 		emberCore::CallProperties& GetCallProperties();
 
 		// Overrides:

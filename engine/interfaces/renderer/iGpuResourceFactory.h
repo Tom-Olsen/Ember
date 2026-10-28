@@ -36,6 +36,7 @@ namespace emberBackendInterface
 		virtual IMaterial* CreateMaterial(IMaterialShader* pMaterialShader, const emberCommon::MaterialCreateInfo& createInfo) = 0;
 		virtual IMaterial* CloneMaterial(IMaterial* pSourceMaterial, const emberCommon::MaterialCloneInfo& cloneInfo) = 0;
 		virtual IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) = 0;
+		virtual IBuffer* CreateInstanceBuffer(uint32_t count) = 0;
 		//virtual ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) = 0;
 		virtual ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) = 0;
 		virtual ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) = 0;

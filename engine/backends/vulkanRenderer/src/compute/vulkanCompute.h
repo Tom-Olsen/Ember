@@ -1,8 +1,11 @@
 #pragma once
 #include "iCompute.h"
+#include "vulkanComputeQueue.h"
 #include "vulkanRendererExport.h"
+#include <array>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 
 
@@ -10,7 +13,6 @@ namespace vulkanRendererBackend
 {
 	// Forward declarations:
 	class Async;
-	class ComputeQueue;
 	class SceneColorPair;
 
 
@@ -24,6 +26,7 @@ namespace vulkanRendererBackend
 		std::unique_ptr<ComputeQueue> m_pPostGeometryComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pPostLightingComputeQueue;
 		std::unique_ptr<ComputeQueue> m_pPostRenderComputeQueue;
+		std::vector<std::array<ComputeQueue, 5>> m_submittedQueues;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -57,6 +60,8 @@ namespace vulkanRendererBackend
 		void CommitFrame(uint32_t frameIndex);
 		void RetireFrame(uint32_t frameIndex);
 		void RetireAllFrames();
-		void DiscardPendingCalls();
+
+	private: // Methods:
+		std::array<ComputeQueue*, 5> GetRecordingQueues();
 	};
 }

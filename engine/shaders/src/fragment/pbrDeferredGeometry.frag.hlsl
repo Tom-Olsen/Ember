@@ -14,7 +14,8 @@ Texture2D<float> ambientOcclusionMap : register(t104, SHADER_SET);	// format = V
 
 struct FragmentInput
 {
-    float4 clipPosition : SV_POSITION;  // position in clip space: x,y in [-1,1] z in [0,1]
+    float4 clipPositionOld : POS_OLD;	// previous homogeneous clip position
+    float4 clipPosition : SV_POSITION;	// framebuffer position
     float3 worldNormal : NORMAL;        // normal in world space
     float3 worldTangent : TANGENT;      // tangent in world space
     float4 vertexColor : COLOR;         // vertex color
@@ -22,9 +23,10 @@ struct FragmentInput
 };
 struct FragmentOutput
 {
-    float4 albedo : SV_TARGET0;          // R8G8B8A8_SRGB
-    float4 normal : SV_TARGET1;          // A2B10G10R10_UNORM_PACK32, encoded world-space normal
-    float4 surfaceProperties : SV_TARGET2; // R8G8B8A8_UNORM: metallicity, roughness, ambient occlusion, flags
+    float4 albedo : SV_TARGET0;          	// R8G8B8A8_SRGB
+    float4 normal : SV_TARGET1;          	// A2B10G10R10_UNORM_PACK32, encoded world-space normal
+    float4 surfaceProperties : SV_TARGET2;	// R8G8B8A8_UNORM: metallicity, roughness, ambient occlusion, flags
+	float2 velocity: SV_TARGET3;			// R16G16_SFLOAT
 };
 
 
@@ -51,9 +53,15 @@ FragmentOutput main(FragmentInput input)
 	flagBitMask |= surface_isLit != 0 ? DEFERRED_SURFACE_FLAG_LIT : 0u;
     float encodedFlagBitMask = float(flagBitMask) / float(DEFERRED_SURFACE_FLAG_BIT_MASK_MAX);
 
+	// Previous frame to the current frame screen uv velocity:
+	float2 currentUv = input.clipPosition.xy / camera_screenSize;
+	float2 previousUv = input.clipPositionOld.xy / input.clipPositionOld.w * 0.5f + 0.5f;
+	float2 velocity = currentUv - previousUv;
+
     FragmentOutput output;
     output.albedo = albedo;
     output.normal = float4(0.5f * worldNormal + 0.5f, 0.0f);
     output.surfaceProperties = float4(metallicity, roughness, ambientOcclusion, encodedFlagBitMask);
+	output.velocity = velocity;
     return output;
 }

@@ -98,7 +98,7 @@ namespace vulkanRendererBackend
 		VkBufferCopy copyRegion = {};
 		copyRegion.srcOffset = 0;
 		copyRegion.dstOffset = 0;
-		copyRegion.size = pDstBuffer->GetSize();
+		copyRegion.size = std::min(m_size, pDstBuffer->GetSize());
 
 		vkCmdCopyBuffer(
 			vkCommandBuffer,

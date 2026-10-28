@@ -11,8 +11,9 @@ Texture2D<float> sceneDepthTexture : register(t1100, FRAME_SET);
 Texture2D<float4> gbufferNormalTexture : register(t1101, FRAME_SET);
 Texture2D<float4> gbufferAlbedoTexture : register(t1102, FRAME_SET);
 Texture2D<float4> gbufferSurfacePropertiesSampleTexture : register(t1103, FRAME_SET);
-Texture2D<float4> sceneColorSampleTexture0 : register(t1104, FRAME_SET);
-Texture2D<float4> sceneColorSampleTexture1 : register(t1105, FRAME_SET);
+Texture2D<float2> gbufferVelocityTexture : register(t1104, FRAME_SET);
+Texture2D<float4> sceneColorSampleTexture0 : register(t1105, FRAME_SET);
+Texture2D<float4> sceneColorSampleTexture1 : register(t1106, FRAME_SET);
 [[vk::image_format("rgba8")]] RWTexture2D<float4> gbufferSurfacePropertiesStorageTexture : register(u1200, FRAME_SET);
 [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorStorageTexture0 : register(u1201, FRAME_SET);
 [[vk::image_format("rgba16f")]] RWTexture2D<float4> sceneColorStorageTexture1 : register(u1202, FRAME_SET);
@@ -23,11 +24,14 @@ Texture2D<float4> sceneColorSampleTexture1 : register(t1105, FRAME_SET);
 // Camera:
 cbuffer CameraProperties : register(b1300, FRAME_SET)
 {
-    float4 camera_position;             // camera position.
-    float4x4 camera_viewMatrix;         // world to camera matrix.
-    float4x4 camera_projMatrix;         // camera projection matrix (HDC => NDC after w division, which happens automatically).
-    float4x4 camera_worldToClipMatrix;  // world to camera clip space matrix: (projection * view)
-    float4x4 camera_clipToWorldMatrix;  // camera clip space to world matrix: inverse(projection * view)
+    float4 camera_position;             	// camera position.
+    float4x4 camera_viewMatrix;         	// world to camera matrix.
+    float4x4 camera_projMatrix;         	// camera projection matrix (HDC => NDC after w division, which happens automatically).
+    float4x4 camera_worldToClipMatrixOld;	// previous world to camera clip space matrix: (projection * view)
+    float4x4 camera_clipToWorldMatrixOld;	// previous camera clip space to world matrix: inverse(projection * view)
+    float4x4 camera_worldToClipMatrix;  	// world to camera clip space matrix: (projection * view)
+    float4x4 camera_clipToWorldMatrix;  	// camera clip space to world matrix: inverse(projection * view)
+    float2 camera_screenSize;				// render-target width and height in pixels.
 };
 
 

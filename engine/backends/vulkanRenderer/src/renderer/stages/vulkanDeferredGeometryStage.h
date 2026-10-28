@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
 	class DeferredGeometryStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		DeferredGeometryStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

@@ -1,13 +1,9 @@
 #include "computeShaderCommon.hlsli"
+#include "instanceData.h"
 
 
 
-struct InstanceData
-{
-    float4x4 localToWorldMatrix;
-    float4 color;
-};
-RWStructuredBuffer<InstanceData> instanceBuffer : register(u200, SHADER_SET);
+RWStructuredBuffer<InstanceData> instanceBuffer : register(u200, CALL_SET);
 
 
 

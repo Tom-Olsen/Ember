@@ -239,6 +239,126 @@ namespace emberCore
 
 
 
+	// Uniform Buffer Getters:
+	// Simple members:
+	int CallProperties::GetInt(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetInt(bufferName, memberName);
+	}
+	bool CallProperties::GetBool(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetBool(bufferName, memberName);
+	}
+	float CallProperties::GetFloat(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat(bufferName, memberName);
+	}
+	Float2 CallProperties::GetFloat2(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat2(bufferName, memberName);
+	}
+	Float3 CallProperties::GetFloat3(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat3(bufferName, memberName);
+	}
+	Float4 CallProperties::GetFloat4(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4(bufferName, memberName);
+	}
+	Float4x4 CallProperties::GetFloat4x4(const std::string& bufferName, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4x4(bufferName, memberName);
+	}
+	// Array members:
+	int CallProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetInt(bufferName, arrayName, arrayIndex);
+	}
+	bool CallProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetBool(bufferName, arrayName, arrayIndex);
+	}
+	float CallProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat(bufferName, arrayName, arrayIndex);
+	}
+	Float2 CallProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat2(bufferName, arrayName, arrayIndex);
+	}
+	Float3 CallProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat3(bufferName, arrayName, arrayIndex);
+	}
+	Float4 CallProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4(bufferName, arrayName, arrayIndex);
+	}
+	Float4x4 CallProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4x4(bufferName, arrayName, arrayIndex);
+	}
+	// Array of structs members:
+	int CallProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetInt(bufferName, arrayName, arrayIndex, memberName);
+	}
+	bool CallProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetBool(bufferName, arrayName, arrayIndex, memberName);
+	}
+	float CallProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float2 CallProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat2(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float3 CallProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat3(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float4 CallProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4(bufferName, arrayName, arrayIndex, memberName);
+	}
+	Float4x4 CallProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& memberName) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4x4(bufferName, arrayName, arrayIndex, memberName);
+	}
+	// Array of arrays members:
+	int CallProperties::GetInt(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetInt(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	bool CallProperties::GetBool(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetBool(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	float CallProperties::GetFloat(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float2 CallProperties::GetFloat2(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat2(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float3 CallProperties::GetFloat3(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat3(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float4 CallProperties::GetFloat4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+	Float4x4 CallProperties::GetFloat4x4(const std::string& bufferName, const std::string& arrayName, uint32_t arrayIndex, const std::string& subArrayName, uint32_t subArrayIndex) const
+	{
+		return GetValidCallInterfaceHandle()->GetFloat4x4(bufferName, arrayName, arrayIndex, subArrayName, subArrayIndex);
+	}
+
+
+
 	// Debugging:
 	void CallProperties::Print() const
 	{
@@ -261,7 +381,7 @@ namespace emberCore
 		m_pICallDescriptorSetBinding = pICallDescriptorSetBinding;
 		m_callDescriptorSetBindingGeneration = m_pICallDescriptorSetBinding ? m_pICallDescriptorSetBinding->GetGeneration() : 0;
 	}
-	void CallProperties::ValidateCallDescriptorSetBinding()
+	void CallProperties::ValidateCallDescriptorSetBinding() const
 	{
 		if (!m_pICallDescriptorSetBinding)
 			return;
@@ -288,7 +408,7 @@ namespace emberCore
 		ValidateCallDescriptorSetBinding();
 		return m_pICallDescriptorSetBinding;
 	}
-	emberBackendInterface::IDescriptorSetBinding* CallProperties::GetValidCallInterfaceHandle()
+	emberBackendInterface::IDescriptorSetBinding* CallProperties::GetValidCallInterfaceHandle() const
 	{
 		ValidateCallDescriptorSetBinding();
 		if (m_pICallDescriptorSetBinding)
@@ -296,5 +416,13 @@ namespace emberCore
 		if (m_callDescriptorSetBindingExpired)
 			throw std::runtime_error("CallProperties: call descriptor set binding has expired.");
 		throw std::runtime_error("CallProperties: call descriptor set binding not available.");
+	}
+
+
+
+	// Setters:
+	void CallProperties::SetBuffer(const std::string& name, emberBackendInterface::IBuffer& buffer)
+	{
+		GetValidCallInterfaceHandle()->SetBuffer(name, &buffer);
 	}
 }

@@ -1,18 +1,12 @@
 #include "vulkanAsyncCompute.h"
-#include "emberMath.h"
 #include "logger.h"
-#include "vulkanAccessMask.h"
 #include "vulkanCommandPool.h"
-#include "vulkanComputeCall.h"
-#include "vulkanComputeSession.h"
-#include "vulkanComputeShader.h"
+#include "vulkanComputeStage.h"
 #include "vulkanContext.h"
-#include "vulkanConvertComputeAccessMask.h"
-#include "vulkanDescriptorSetBinding.h"
 #include "vulkanDeviceQueue.h"
 #include "vulkanLogicalDevice.h"
-#include "vulkanMacros.h"
-#include "vulkanPoolManager.h"
+#include "vulkanRenderer.h"
+#include <span>
 #include <stdexcept>
 #include <utility>
 #include <vulkan/vulkan.h>
@@ -70,7 +64,8 @@ namespace vulkanRendererBackend
 
 		uint32_t sessionID = m_freeIndices.front();
 		m_freeIndices.pop();
-		m_computeSessions[sessionID].state = ComputeSession::State::recording;
+		m_computeSessions[sessionID]->computeQueue.Reset();
+		m_computeSessions[sessionID]->state = Session::State::recording;
 
 		return sessionID;
 	}
@@ -78,22 +73,43 @@ namespace vulkanRendererBackend
 	{
 		if (sessionID >= m_computeSessions.size())
 			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
-		if (m_computeSessions[sessionID].state == ComputeSession::State::recording)
+		if (m_computeSessions[sessionID]->state == Session::State::recording)
 		{
 			CollectFinishedSessions();
+
+			// Select least busy compute queue:
 			uint32_t queueIndex = SelectQueue();
-			ComputeSession& session = m_computeSessions[sessionID];
+			Session& session = *m_computeSessions[sessionID];
 			const DeviceQueue& queue = *Context::GetLogicalDevice()->GetComputeQueues()[queueIndex];
-			uint64_t signalValue = session.Dispatch(m_pCommandPools[sessionID].GetPrimaryVkCommandBuffer(), queue, time, deltaTime);
+
+			// Update descriptor set bindings:
+			session.computeQueue.UpdateShaderData(0);
+
+			// Record commands:
+			VkCommandBuffer commandBuffer = m_pCommandPools[sessionID].GetPrimaryVkCommandBuffer();
+			const auto& staticDescriptorSets = Context::GetRenderer()->GetStaticDescriptorSets(0);
+			ComputeStage::Record(commandBuffer, session.computeQueue.GetComputeCalls(), 0, time, deltaTime, std::span<const VkDescriptorSet>(staticDescriptorSets.data(), 1));
+			session.computeQueue.Close();
+
+			// Submit commands:
+			VkCommandBufferSubmitInfo commandBufferInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO };
+			commandBufferInfo.commandBuffer = commandBuffer;
+			VkSubmitInfo2 submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO_2 };
+			submitInfo.commandBufferInfoCount = 1;
+			submitInfo.pCommandBufferInfos = &commandBufferInfo;
+			uint64_t signalValue = queue.Submit(submitInfo);
+
+			// Session and queue management:
+			Context::MarkDeviceBusy();
 			m_pendingSessionCounts[queueIndex]++;
 			session.queueIndex = queueIndex;
 			session.completionValue = signalValue;
-			session.state = ComputeSession::State::running;
+			session.state = Session::State::running;
 			m_nextQueueIndex = (queueIndex + 1) % static_cast<uint32_t>(m_pendingSessionCounts.size());
 		}
-		else if (m_computeSessions[sessionID].state == ComputeSession::State::idle)
+		else if (m_computeSessions[sessionID]->state == Session::State::idle)
 			LOG_WARN("Trying to dispatch compute session which is still in idle state (forgot to call CreateComputeSession() first).");
-		else // (m_computeSessions[sessionID].state == ComputeSession::State::running)
+		else // (m_computeSessions[sessionID]->state == Session::State::running)
 			LOG_WARN("Trying to dispatch compute session which is still in running state (already dispatched).");
 	}
 	bool Async::IsFinished(uint32_t sessionID)
@@ -101,10 +117,10 @@ namespace vulkanRendererBackend
 		if (sessionID >= m_computeSessions.size())
 			throw std::out_of_range("compute::Async::IsFinished(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
-		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
+		if (m_computeSessions[sessionID]->state != Session::State::running)
 			return true;	// not running => finished=true, and no reset required.
 
-		const ComputeSession& session = m_computeSessions[sessionID];
+		const Session& session = *m_computeSessions[sessionID];
 		const DeviceQueue& queue = *Context::GetLogicalDevice()->GetComputeQueues()[session.queueIndex];
 		bool isFinished = queue.GetCompletedValue() >= session.completionValue;
 
@@ -118,10 +134,10 @@ namespace vulkanRendererBackend
 		if (sessionID >= m_computeSessions.size())
 			throw std::out_of_range("compute::Async::WaitForFinish(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
 
-		if (m_computeSessions[sessionID].state != ComputeSession::State::running)
+		if (m_computeSessions[sessionID]->state != Session::State::running)
 			return;	// not running => finished, no reset required.
 
-		const ComputeSession& session = m_computeSessions[sessionID];
+		const Session& session = *m_computeSessions[sessionID];
 		const DeviceQueue& queue = *Context::GetLogicalDevice()->GetComputeQueues()[session.queueIndex];
 		queue.WaitForValue(session.completionValue);
 		ResetComputeSession(sessionID);
@@ -138,10 +154,10 @@ namespace vulkanRendererBackend
 		}
 		for (uint32_t sessionID = 0; sessionID < m_computeSessions.size(); sessionID++)
 		{
-			if (m_computeSessions[sessionID].state != ComputeSession::State::running)
+			if (m_computeSessions[sessionID]->state != Session::State::running)
 				continue;
 
-			const ComputeSession& session = m_computeSessions[sessionID];
+			const Session& session = *m_computeSessions[sessionID];
 			if (completedValues[session.queueIndex] >= session.completionValue)
 				ResetComputeSession(sessionID);
 		}
@@ -150,58 +166,14 @@ namespace vulkanRendererBackend
 
 
 	// Workload recording:
-	emberBackendInterface::IDescriptorSetBinding* Async::RecordComputeShader(uint32_t sessionID, emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
-	{
-		// Record dynamic compute call.
-		if (sessionID >= m_computeSessions.size())
-		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) sessionID '{}' out of range.", sessionID);
-			return nullptr;
-		}
-		if (!pIComputeShader)
-		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. pIComputeShader is nullptr.");
-			return nullptr;
-		}
-		ComputeShader* pComputeShader = static_cast<ComputeShader*>(pIComputeShader);
-		if (pComputeShader->GetFeatures().ReadsSceneColor() || pComputeShader->GetFeatures().WritesSceneColor())
-		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. Async compute shaders cannot access scene color textures.", pComputeShader->GetDebugName());
-			return nullptr;
-		}
-		if (threadCount[0] == 0 || threadCount[1] == 0 || threadCount[2] == 0)
-		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) '{}' failed. threadCount has 0 entry.", pComputeShader->GetDebugName());
-			return nullptr;
-		}
-		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
-		{
-			LOG_ERROR("compute::Async::RecordComputeShader(...) failed. sessionID: {} is not in recording state.", sessionID);
-			return nullptr;
-		}
-
-		// Setup compute call:
-		DescriptorSetBindingHandle descriptorSetBindingHandle = PoolManager::CheckOutCallDescriptorSetBindingHandle(static_cast<Shader*>(pComputeShader));
-		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), descriptorSetBindingHandle, AccessMasks::None::none, AccessMasks::None::none };
-		m_computeSessions[sessionID].RecordComputeCall(computeCall);
-		pComputeShader->AddPendingUse();
-		return static_cast<emberBackendInterface::IDescriptorSetBinding*>(descriptorSetBindingHandle.Get());
-	}
-	void Async::RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags)
+	emberBackendInterface::ICompute::IQueue& Async::GetRecordingQueue(uint32_t sessionID)
 	{
 		if (sessionID >= m_computeSessions.size())
-		{
-			LOG_ERROR("compute::Async::RecordBarrier(...) sessionID '{}' out of range.", sessionID);
-			return;
-		}
-		if (m_computeSessions[sessionID].state != ComputeSession::State::recording)
-		{
-			LOG_ERROR("compute::Async::RecordBarrier(...) failed. sessionID: {} is not in recording state.", sessionID);
-			return;
-		}
-		
-		ComputeCall computeCall = { Uint3::zero, ShaderHandle(), DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
-		m_computeSessions[sessionID].RecordComputeCall(computeCall);
+			throw std::out_of_range("Async::GetRecordingQueue(...) sessionID is out of range.");
+		Session& session = *m_computeSessions[sessionID];
+		if (session.state != Session::State::recording)
+			throw std::logic_error("Async::GetRecordingQueue(...) session is not recording.");
+		return session.computeQueue;
 	}
 
 
@@ -228,9 +200,9 @@ namespace vulkanRendererBackend
 		// Complete running sessions before releasing bindings or command pools.
 		for (uint32_t sessionID = 0; sessionID < m_computeSessions.size(); sessionID++)
 		{
-			if (m_computeSessions[sessionID].state == ComputeSession::State::running)
+			if (m_computeSessions[sessionID]->state == Session::State::running)
 				WaitForFinish(sessionID);
-			else if (m_computeSessions[sessionID].state == ComputeSession::State::recording)
+			else if (m_computeSessions[sessionID]->state == Session::State::recording)
 				ResetComputeSession(sessionID);
 		}
 		m_pendingSessionCounts.clear();
@@ -261,7 +233,7 @@ namespace vulkanRendererBackend
 			throw std::overflow_error("Async compute session IDs exhausted.");
 
 		uint32_t sessionID = static_cast<uint32_t>(m_computeSessions.size());
-		m_computeSessions.emplace_back();
+		m_computeSessions.push_back(std::make_unique<Session>());
 		try
 		{
 			// All compute queues share a family, so every session can use the first queue's family:
@@ -299,22 +271,15 @@ namespace vulkanRendererBackend
 	}
 	void Async::ResetComputeSession(uint32_t sessionID)
 	{
-		// Return all bindings back to the corresponding pool:
-		for (ComputeCall& computeCall : m_computeSessions[sessionID].GetComputeCalls())
-		{
-			PoolManager::ReturnCallDescriptorSetBinding(computeCall.callDescriptorSetBindingHandle);
-			if (!computeCall.IsBarrier())
-				computeCall.GetComputeShader()->RemovePendingUse();
-		}
-
+		Session& session = *m_computeSessions[sessionID];
+		session.computeQueue.Reset();
+		session.computeQueue.Close();
 		m_pCommandPools[sessionID].ResetPools();
-		ComputeSession& session = m_computeSessions[sessionID];
-		if (session.state == ComputeSession::State::running)
+		if (session.state == Session::State::running)
 			m_pendingSessionCounts[session.queueIndex]--;
-		session.state = ComputeSession::State::idle;
+		session.state = Session::State::idle;
 		session.queueIndex = UINT32_MAX;
 		session.completionValue = 0;
-		session.ResetComputeCalls();
 		m_freeIndices.push(sessionID);
 	}
 }

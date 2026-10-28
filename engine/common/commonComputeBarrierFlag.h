@@ -1,0 +1,81 @@
+#pragma once
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <type_traits>
+
+
+
+namespace emberCommon
+{
+    enum class ComputeBarrierFlag : uint16_t
+    {
+        none = 0,
+        uniformRead = 1 << 0,
+        shaderRead = 1 << 1,
+        shaderWrite = 1 << 2,
+        sampledRead = 1 << 3,
+        storageRead = 1 << 4,
+        storageWrite = 1 << 5,
+        memoryRead = 1 << 6,
+        memoryWrite = 1 << 7,
+        accelerationStructureRead = 1 << 8,
+        descriptorBufferRead = 1 << 9,
+        transferRead = 1 << 10,
+        transferWrite = 1 << 11
+    };
+
+
+
+    inline constexpr ComputeBarrierFlag operator|(ComputeBarrierFlag lhs, ComputeBarrierFlag rhs)
+    {
+        using T = std::underlying_type_t<ComputeBarrierFlag>;
+        return static_cast<ComputeBarrierFlag>(static_cast<T>(lhs) | static_cast<T>(rhs));
+    }
+    inline constexpr ComputeBarrierFlag operator&(ComputeBarrierFlag lhs, ComputeBarrierFlag rhs)
+    {
+        using T = std::underlying_type_t<ComputeBarrierFlag>;
+        return static_cast<ComputeBarrierFlag>(static_cast<T>(lhs) & static_cast<T>(rhs));
+    }
+    inline constexpr ComputeBarrierFlag& operator|=(ComputeBarrierFlag& lhs, ComputeBarrierFlag rhs)
+    {
+        lhs = lhs | rhs;
+        return lhs;
+    }
+
+
+
+    inline constexpr bool HasFlag(ComputeBarrierFlag flags, ComputeBarrierFlag flag)
+    {
+        return (flags & flag) != ComputeBarrierFlag::none;
+    }
+    inline std::string ComputeBarrierFlagsToString(ComputeBarrierFlag barrierFlags)
+    {
+        if (barrierFlags == ComputeBarrierFlag::none)
+            return "none";
+
+        std::string result;
+        auto appendFlag = [&result, barrierFlags](ComputeBarrierFlag flag, std::string_view name)
+        {
+            if (!HasFlag(barrierFlags, flag))
+                return;
+            if (!result.empty())
+                result += "|";
+            result += name;
+        };
+
+        appendFlag(ComputeBarrierFlag::uniformRead, "uniformRead");
+        appendFlag(ComputeBarrierFlag::shaderRead, "shaderRead");
+        appendFlag(ComputeBarrierFlag::shaderWrite, "shaderWrite");
+        appendFlag(ComputeBarrierFlag::sampledRead, "sampledRead");
+        appendFlag(ComputeBarrierFlag::storageRead, "storageRead");
+        appendFlag(ComputeBarrierFlag::storageWrite, "storageWrite");
+        appendFlag(ComputeBarrierFlag::memoryRead, "memoryRead");
+        appendFlag(ComputeBarrierFlag::memoryWrite, "memoryWrite");
+        appendFlag(ComputeBarrierFlag::accelerationStructureRead, "accelerationStructureRead");
+        appendFlag(ComputeBarrierFlag::descriptorBufferRead, "descriptorBufferRead");
+        appendFlag(ComputeBarrierFlag::transferRead, "transferRead");
+        appendFlag(ComputeBarrierFlag::transferWrite, "transferWrite");
+        return result.empty() ? "unknown" : result;
+    }
+}

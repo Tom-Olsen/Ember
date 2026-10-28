@@ -3,6 +3,7 @@
 
 ## Design Goals
 - No hacky solutions. If something needs fixing it must be fixed properly and not with a workaround.
+- Do not add unit tests unless i explicitly ask for it.
 
 ## Coding Style
 - Use camelCase for variables/members and PascalCase for functions/methods
@@ -21,8 +22,6 @@
 	private: // Methods:
 	only those that have entries should be listed. If a section is empty it should be omitted.
 - The order of methods in .h and .cpp files should be the same. The .cpp must always contain the same header comments above the methods as the .h file.
-- GetX should always return a proper valid value, or throw if they cant.
-- TryGetX should always return a "invalid" value (nullptr/-1/etc case dependent) on failure that the user can check for success. Log warning on failure.
 
 ## Architecture
 - For each class/struct use a .h and .cpp file. Only exceptions are helper structs within other classes/structs which can be defined in the same file as the class/struct they are helping.

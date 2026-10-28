@@ -37,6 +37,7 @@ namespace vulkanRendererBackend
 		emberBackendInterface::IMaterial* CreateMaterial(emberBackendInterface::IMaterialShader* pMaterialShader, const emberCommon::MaterialCreateInfo& createInfo) override;
 		emberBackendInterface::IMaterial* CloneMaterial(emberBackendInterface::IMaterial* pSourceMaterial, const emberCommon::MaterialCloneInfo& cloneInfo) override;
 		emberBackendInterface::IBuffer* CreateBuffer(uint32_t count, uint32_t elementSize, emberCommon::BufferUsage usage) override;
+		emberBackendInterface::IBuffer* CreateInstanceBuffer(uint32_t count) override;
 		//emberBackendInterface::ITexture* CreateTexture1d(int width, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture2d(int width, int height, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;
 		emberBackendInterface::ITexture* CreateTexture3d(int width, int height, int depth, const emberCommon::TextureFormat& format, emberCommon::TextureUsage usage, emberCommon::TextureImageCountMode imageCountMode, void* data) override;

@@ -9,9 +9,9 @@ using namespace emberCore;
 namespace emberEcs
 {
 	// Constructor/Destructor:
-	InstancedMeshRenderer::InstancedMeshRenderer()
+	InstancedMeshRenderer::InstancedMeshRenderer(uint32_t instanceCount)
+		: m_instanceBuffer(instanceCount, "InstancedMeshRenderer")
 	{
-		m_instanceCount = 1;
 		m_castShadows = true;
 		m_receiveShadows = true;
 		m_cullMode = emberCommon::CullMode::materialDefault;
@@ -31,7 +31,9 @@ namespace emberEcs
 	// Setter:
 	void InstancedMeshRenderer::SetInstanceCount(uint32_t instanceCount)
 	{
-		m_instanceCount = instanceCount;
+		if (instanceCount == m_instanceBuffer.GetCount())
+			return;
+		m_instanceBuffer = InstanceBuffer(instanceCount, m_instanceBuffer.GetName());
 	}
 	void InstancedMeshRenderer::SetCastShadows(bool castShadows)
 	{
@@ -57,17 +59,13 @@ namespace emberEcs
 			m_callProperties = CallProperties{ material };
 		}
 	}
-	void InstancedMeshRenderer::SetInstanceBuffer(Buffer& instanceBuffer)
-	{
-		m_pInstanceBuffer = &instanceBuffer;
-	}
 
 
 
 	// Getters:
 	uint32_t InstancedMeshRenderer::GetInstanceCount() const
 	{
-		return math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
+		return m_instanceBuffer.GetCount();
 	}
 	bool InstancedMeshRenderer::GetCastShadows() const
 	{
@@ -89,9 +87,9 @@ namespace emberEcs
 	{
 		return m_material;
 	}
-	Buffer& InstancedMeshRenderer::GetInstanceBuffer()
+	InstanceBuffer& InstancedMeshRenderer::GetInstanceBuffer()
 	{
-		return *m_pInstanceBuffer;
+		return m_instanceBuffer;
 	}
 	CallProperties& InstancedMeshRenderer::GetCallProperties()
 	{
@@ -100,9 +98,11 @@ namespace emberEcs
 	// Overrides:
 	void InstancedMeshRenderer::Update()
 	{
-		uint32_t instanceCount = math::Min(m_instanceCount, m_pInstanceBuffer->GetCount());
+		if (!m_pMesh)
+			return;
+
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
-		DrawData drawData(localToWorldMatrix, *m_pMesh, m_material, instanceCount, m_pInstanceBuffer, m_receiveShadows, m_castShadows, m_cullMode);
+		DrawData drawData(localToWorldMatrix, *m_pMesh, m_material, m_instanceBuffer.GetCount(), &m_instanceBuffer, m_receiveShadows, m_castShadows, m_cullMode);
 		Renderer::DrawMesh(drawData, m_callProperties);
 	}
 }

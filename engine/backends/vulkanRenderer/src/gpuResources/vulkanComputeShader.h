@@ -14,8 +14,6 @@
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
-	class Async;
-	class ComputeCallQueue;
 	class ComputeQueue;
 	class DescriptorSetBinding;
 	class GpuResourceFactory;
@@ -27,8 +25,6 @@ namespace vulkanRendererBackend
 	class VULKAN_RENDERER_API ComputeShader : public Shader, public emberBackendInterface::IComputeShader
 	{
 		// Friends:
-		friend class Async;
-		friend class ComputeCallQueue;
 		friend class ComputeQueue;
 		friend class GpuResourceFactory;
 		friend class Renderer;

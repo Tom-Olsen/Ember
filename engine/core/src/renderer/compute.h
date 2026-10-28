@@ -1,5 +1,6 @@
 #pragma once
 #include "iCompute.h"
+#include "commonPipelineStage.h"
 #include "commonRendererCreateInfo.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
@@ -12,6 +13,7 @@ namespace emberCore
 {
 	// Forward decleration:
 	class ComputeShader;
+	class Buffer;
 	class Renderer;
 	class CallProperties;
 
@@ -53,7 +55,9 @@ namespace emberCore
 
 			// Workload recording:
 			static CallProperties RecordComputeShader(uint32_t sessionID, ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(uint32_t sessionID, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(uint32_t sessionID, Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(uint32_t sessionID, Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(uint32_t sessionID, emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead(uint32_t sessionID);
 			static void RecordBarrierWaitStorageWriteBeforeRead(uint32_t sessionID);
 			static void RecordBarrierWaitStorageWriteBeforeWrite(uint32_t sessionID);
@@ -84,7 +88,9 @@ namespace emberCore
 
 			// Workload recording:
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
@@ -115,7 +121,9 @@ namespace emberCore
 
 			// Workload recording:
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
@@ -146,7 +154,9 @@ namespace emberCore
 
 			// Workload recording:
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
@@ -177,7 +187,9 @@ namespace emberCore
 
 			// Workload recording:
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
@@ -198,6 +210,8 @@ namespace emberCore
 
 		class EMBER_CORE_API PostRender
 		{
+			friend class Renderer;
+
 		private: // Members:
 			static emberBackendInterface::ICompute::IQueue* s_pIPostRender;
 
@@ -209,7 +223,9 @@ namespace emberCore
 			// Workload recording:
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
 			static CallProperties RecordPostProcessingShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
@@ -224,6 +240,9 @@ namespace emberCore
 			PostRender(PostRender&&) = delete;
 			PostRender& operator=(PostRender&&) = delete;
 			~PostRender() = delete;
+
+			// Interface handle:
+			static emberBackendInterface::ICompute::IQueue* GetInterfaceHandle();
 		};
 
 
@@ -261,7 +280,9 @@ namespace emberCore
 			static void EndRecording();
 			static uint64_t GetRecordingSessionID();
 			static CallProperties RecordComputeShader(ComputeShader& computeShader, Uint3 threadCount);
-			static void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags);
+			static void RecordBufferCopy(Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0);
+			static void RecordBufferBarrier(Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX);
+			static void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags);
 			static void RecordBarrierWaitShaderWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeRead();
 			static void RecordBarrierWaitStorageWriteBeforeWrite();
@@ -291,7 +312,9 @@ namespace emberCore
 
 		// Workload recording (delegates to given computeType):
 		static CallProperties RecordComputeShader(ComputeType computeType, ComputeShader& computeShader, Uint3 threadCount, uint32_t sessionID = -1);
-		static void RecordBarrier(ComputeType computeType, emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID = -1);
+		static void RecordBufferCopy(ComputeType computeType, Buffer& source, Buffer& destination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0, uint32_t sessionID = -1);
+		static void RecordBufferBarrier(ComputeType computeType, Buffer& buffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX, uint32_t sessionID = -1);
+		static void RecordBarrier(ComputeType computeType, emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags, uint32_t sessionID = -1);
 		static void RecordBarrierWaitShaderWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeRead(ComputeType computeType, uint32_t sessionID = -1);
 		static void RecordBarrierWaitStorageWriteBeforeWrite(ComputeType computeType, uint32_t sessionID = -1);

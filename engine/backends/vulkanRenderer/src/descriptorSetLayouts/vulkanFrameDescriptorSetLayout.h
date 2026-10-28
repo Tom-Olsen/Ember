@@ -30,7 +30,7 @@ namespace vulkanRendererBackend
         static void Clear();
 
         // Setters:
-        static void SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix);
+        static void SetCameraData(const Float4& cameraPosition, const Float4x4& viewMatrix, const Float4x4& projMatrix, const Float2& screenSize);
         static void SetRenderTargetData(uint32_t frameIndex, const RenderTargetResources& renderTargets);
         
         // Getters:

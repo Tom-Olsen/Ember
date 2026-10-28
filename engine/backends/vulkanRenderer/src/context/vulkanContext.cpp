@@ -260,7 +260,7 @@ namespace vulkanRendererBackend
 	{
 		return m_enableDockSpace;
 	}
-	// Public frame logic:
+	// Frame logic:
 	void Context::UpdateFrameIndex()
 	{
 		m_frameIndex = (m_frameIndex + 1) % m_framesInFlight;

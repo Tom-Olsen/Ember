@@ -1,11 +1,15 @@
 #include "renderer.h"
-#include "buffer.h"
 #include "callProperties.h"
 #include "commonMaterialPass.h"
+#include "compute.h"
 #include "emberTime.h"
 #include "gpuResourceFactory.h"
+#include "iBuffer.h"
+#include "iDescriptorSetBinding.h"
+#include "iInstanceBuffer.h"
 #include "iMaterial.h"
 #include "iRenderer.h"
+#include "instanceBuffer.h"
 #include "logger.h"
 #include "material.h"
 #include "materialManager.h"
@@ -391,6 +395,20 @@ namespace emberCore
 		if (!callProperties.HasBinding("ModelMatrizes"))
 			return;
 
+		// Get old model matrizes:
+		Float4x4 localToWorldMatrixOld = callProperties.GetFloat4x4("ModelMatrizes", "model_localToWorldMatrix");
+		Float4x4 worldToLocalMatrixOld = callProperties.GetFloat4x4("ModelMatrizes", "model_worldToLocalMatrix");
+		if (localToWorldMatrixOld == Float4x4::zero)
+		{
+			localToWorldMatrixOld = localToWorldMatrix;
+			worldToLocalMatrixOld = localToWorldMatrix.Inverse();
+		}
+		
+		// Set old model matrizes:
+		callProperties.SetValue("ModelMatrizes", "model_localToWorldMatrixOld", localToWorldMatrixOld);
+		callProperties.SetValue("ModelMatrizes", "model_worldToLocalMatrixOld", worldToLocalMatrixOld);
+		
+		// Set new model matrizes:
 		callProperties.SetValue("ModelMatrizes", "model_localToWorldMatrix", localToWorldMatrix);
 		callProperties.SetValue("ModelMatrizes", "model_worldToLocalMatrix", localToWorldMatrix.Inverse());
 	}
@@ -404,6 +422,10 @@ namespace emberCore
 			return;
 		}
 		callProperties.SetBuffer("instanceBuffer", *drawData.pInstanceBuffer);
+		emberBackendInterface::IInstanceBuffer& instanceBuffer = dynamic_cast<emberBackendInterface::IInstanceBuffer&>(*drawData.pInstanceBuffer->GetInterfaceHandle());
+		if (callProperties.HasBinding("instanceBufferOld"))
+			callProperties.SetBuffer("instanceBufferOld", instanceBuffer.GetBufferOld());
+		instanceBuffer.RecordCopyToOldBuffer(*Compute::PostRender::GetInterfaceHandle());
 	}
 
 

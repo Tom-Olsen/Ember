@@ -12,6 +12,7 @@ namespace vulkanRendererBackend
 	class ResourceUpdateStage
 	{
 	public: // Methods:
-		void Record(const FrameContext& frameContext);
+		ResourceUpdateStage() = delete;
+		static void Record(const FrameContext& frameContext);
 	};
 }

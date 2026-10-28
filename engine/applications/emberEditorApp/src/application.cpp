@@ -160,12 +160,6 @@ namespace emberApplication
 				Renderer::CollectGarbage();
 				running = EventSystem::ProcessEvents();
 
-				// If window is minimized or width/height is zero, delay loop to reduce CPU usage:
-				Int2 windowSize = Window::GetSize();
-				Uint2 surfaceExtent = Renderer::GetSurfaceExtent();
-				if (Window::GetIsMinimized() || windowSize.x == 0 || windowSize.y == 0 || surfaceExtent.x == 0 || surfaceExtent.y == 0)
-					continue;
-
 				// Frame update loop:
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::scene);

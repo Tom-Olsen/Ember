@@ -11,9 +11,15 @@ namespace vulkanRendererBackend
 	// Constructor/Destructor:
 	StorageBuffer::StorageBuffer(uint32_t count, uint32_t elementSize)
 	{
+		// Error handling:
+		if (count == 0)
+			throw std::invalid_argument("StorageBuffer requires a non-zero count.");
+		if (elementSize == 0)
+			throw std::invalid_argument("StorageBuffer requires a non-zero elementSize.");
+		
 		m_count = count;
-		m_elementSize = Std430Alignment(elementSize);
-		m_size = m_count * m_elementSize;
+		m_elementSize = elementSize;
+		m_size = static_cast<uint64_t>(m_count) * m_elementSize;
 
 		// Create buffer:
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -39,22 +45,4 @@ namespace vulkanRendererBackend
 	// Movable:
 	StorageBuffer::StorageBuffer(StorageBuffer&&) noexcept = default;
 	StorageBuffer& StorageBuffer::operator=(StorageBuffer&&) noexcept = default;
-
-
-
-	// Private methods:
-	uint32_t StorageBuffer::Std430Alignment(uint32_t elementSize)
-	{
-	    switch (elementSize)
-	    {
-	        case sizeof(int):         return sizeof(int); // also works for float as int and float both have size 4.
-	        case 2 * sizeof(float):   return 2 * sizeof(float);
-	        case 3 * sizeof(float):   return 4 * sizeof(float);
-	        case 4 * sizeof(float):   return 4 * sizeof(float);
-	        case 16 * sizeof(float):  return 16 * sizeof(float);
-	        default: 
-	            throw std::runtime_error("StorageBuffer uses unsupported elementSize '" + std::to_string(elementSize) + "' in std430 layout!");
-				return 0;
-	    }
-	}
 }

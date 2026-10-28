@@ -1,40 +1,29 @@
 #pragma once
 #include "iCompute.h"
-#include "emberMath.h"
-#include "vulkanComputeCallQueue.h"
 #include "vulkanRendererExport.h"
 #include <cstdint>
 #include <vector>
 
 
 
-// Forward declarations:
-namespace emberBackendInterface
-{
-	class IComputeShader;
-	class IDescriptorSetBinding;
-}
-
-
-
 namespace vulkanRendererBackend
 {
 	// Forward declarations:
+	struct ComputeCall;
 	class SceneColorPair;
 
 
 
-	/// <summary>
-	/// Class for different compute queues: preRender, postOutline, postGeometry, postLighting, postRender.
-	/// </summary>
-	class VULKAN_RENDERER_API ComputeQueue : public virtual emberBackendInterface::ICompute::IQueue
+	class VULKAN_RENDERER_API ComputeQueue : public emberBackendInterface::ICompute::IQueue
 	{
 	private: // Members:
-		ComputeCallQueue m_computeCallQueue;
+		std::vector<ComputeCall> m_computeCalls;
+		bool m_supportsSceneColor;
+		bool m_isRecording;
 
 	public: // Methods:
 		// Constructor/Destructor:
-		ComputeQueue();
+		explicit ComputeQueue(bool supportsSceneColor = false);
 		~ComputeQueue() override;
 
 		// Non-copyable:
@@ -47,17 +36,20 @@ namespace vulkanRendererBackend
 
 		// Workload recording:
 		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
-		void RecordBarrier(emberBackendInterface::ComputeBarrierFlag srcBarrierFlags, emberBackendInterface::ComputeBarrierFlag dstBarrierFlags) override;
+		void RecordBufferCopy(emberBackendInterface::IBuffer* pSource, emberBackendInterface::IBuffer* pDestination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0) override;
+		void RecordBufferBarrier(emberBackendInterface::IBuffer* pBuffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX) override;
+		void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags) override;
 
 		// Management:
-		void CommitComputeCalls(uint32_t frameIndex);
-		void RetireComputeCalls(uint32_t frameIndex);
-		void RetireAllComputeCalls();
-		std::vector<ComputeCall>& GetComputeCalls();
-		void ResetComputeCalls();
-		void UpdateShaderData(uint32_t frameIndex, SceneColorPair* pSceneColorTexturePair = nullptr);
+		void Close();
+		void Reset();
+		void UpdateShaderData(uint32_t frameIndex, SceneColorPair* pSceneColorPair = nullptr);
 
-	protected: // Methods:
-		emberBackendInterface::IDescriptorSetBinding* RecordComputeCall(ComputeCall computeCall);
+		// Getters:
+		const std::vector<ComputeCall>& GetComputeCalls() const;
+		bool IsEmpty() const;
+
+	private: // Methods:
+		void ValidateRecording() const;
 	};
 }

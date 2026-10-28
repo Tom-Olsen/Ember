@@ -2,12 +2,21 @@
 #include "logger.h"
 #include "profiler.h"
 #include "vulkanCommandPool.h"
+#include "vulkanComputeStage.h"
 #include "vulkanContext.h"
+#include "vulkanDeferredGeometryStage.h"
+#include "vulkanDeferredLightingStage.h"
 #include "vulkanDeviceQueue.h"
+#include "vulkanForwardStage.h"
 #include "vulkanFrameContext.h"
 #include "vulkanFrameResources.h"
+#include "vulkanGizmoStage.h"
 #include "vulkanLogicalDevice.h"
 #include "vulkanMacros.h"
+#include "vulkanOutlineStage.h"
+#include "vulkanPresentStage.h"
+#include "vulkanResourceUpdateStage.h"
+#include "vulkanShadowStage.h"
 #include "vulkanSwapchain.h"
 #include <array>
 #include <stdexcept>
@@ -34,9 +43,9 @@ namespace vulkanRendererBackend
 	{
 		if (frameIndex >= m_frameSyncObjects.size())
 			throw std::out_of_range("RenderGraph::AcquireImage(...) failed. frameIndex is out of range.");
-		return vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, GetDependencySemaphore(frameIndex, Dependency::aquireToResourceUpdate), VK_NULL_HANDLE, &imageIndex);
+		return vkAcquireNextImageKHR(Context::GetVkDevice(), Context::GetVkSwapchainKHR(), UINT64_MAX, GetDependencySemaphore(frameIndex, Dependency::acquireToPresent), VK_NULL_HANDLE, &imageIndex);
 	}
-	void RenderGraph::RecordAndSubmit(const FrameContext& frameContext)
+	void RenderGraph::RecordAndSubmit(const FrameContext& frameContext, bool hasSwapchainImage)
 	{
 		PROFILE_FUNCTION();
 		DEBUG_LOG_TRACE("Recording frame {}", frameContext.frameExecutionData.frameIndex);
@@ -44,117 +53,123 @@ namespace vulkanRendererBackend
 		const uint32_t frameIndex = frameContext.frameExecutionData.frameIndex;
 		if (frameIndex >= m_frameSyncObjects.size())
 			throw std::out_of_range("RenderGraph::RecordAndSubmit(...) failed. frameIndex is out of range.");
-		if (frameContext.frameExecutionData.imageIndex >= m_releaseSemaphores.size())
+		if (hasSwapchainImage && frameContext.frameExecutionData.imageIndex >= m_releaseSemaphores.size())
 			throw std::out_of_range("RenderGraph::RecordAndSubmit(...) failed. imageIndex is out of range.");
 
 		// Queues:
 		const VkQueue graphicsQueue = Context::GetLogicalDevice()->GetGraphicsQueue().queue;
 		const VkQueue computeQueue = Context::GetLogicalDevice()->GetComputeQueues().front()->queue;
 
-		// Aquire -> ResourceUpdate -> PreRenderCompute + Gizmo:
-		m_resourceUpdateStage.Record(frameContext);
-		VkSemaphoreSubmitInfo resourceUpdateWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::aquireToResourceUpdate), VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+		// ResourceUpdate -> PreRenderCompute + Gizmo:
+		ResourceUpdateStage::Record(frameContext);
 		std::array<VkSemaphoreSubmitInfo, 2> resourceUpdateSignals =
 		{
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToPreRenderCompute), VK_PIPELINE_STAGE_2_TRANSFER_BIT),
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToGizmo), VK_PIPELINE_STAGE_2_TRANSFER_BIT)
 		};
-		SubmitStage(frameContext, RenderStage::resourceUpdate, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&resourceUpdateWait, 1), resourceUpdateSignals);
+		SubmitStage(frameContext, RenderStage::resourceUpdate, graphicsQueue, {}, resourceUpdateSignals);
 
 		// ResourceUpdate -> Gizmo -> Present:
-		m_gizmoStage.Record(frameContext);
-		VkSemaphoreSubmitInfo gizmoWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToGizmo), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-		VkSemaphoreSubmitInfo gizmoSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::gizmoToPresent), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		GizmoStage::Record(frameContext);
+		VkSemaphoreSubmitInfo gizmoWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToGizmo), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT);
+		VkSemaphoreSubmitInfo gizmoSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::gizmoToPresent), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
 		SubmitStage(frameContext, RenderStage::gizmo, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&gizmoWait, 1), std::span<const VkSemaphoreSubmitInfo>(&gizmoSignal, 1));
 
 		// ResourceUpdate -> PreRenderCompute -> Outline + Shadow + DeferredGeometry:
-		m_preRenderComputeStage.Record(frameContext, frameContext.preRenderComputeCalls);
-		VkSemaphoreSubmitInfo preRenderComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToPreRenderCompute), VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT);
+		ComputeStage::Record<RenderStage::preRenderCompute>(frameContext, frameContext.preRenderComputeCalls);
+		VkSemaphoreSubmitInfo preRenderComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::resourceUpdateToPreRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT);
 		std::array<VkSemaphoreSubmitInfo, 3> preRenderComputeSignals =
 		{
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToShadow), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT),
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToDeferredGeometry), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT),
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToOutline), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT)
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToShadow), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT),
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToDeferredGeometry), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT),
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToOutline), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT)
 		};
 		SubmitStage(frameContext, RenderStage::preRenderCompute, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&preRenderComputeWait, 1), preRenderComputeSignals);
 
 		// PreRenderCompute -> Outline -> PostOutlineCompute:
-		m_outlineStage.Record(frameContext);
+		OutlineStage::Record(frameContext);
 		VkSemaphoreSubmitInfo outlineWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToOutline), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-		VkSemaphoreSubmitInfo outlineSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::outlineToPostOutlineCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo outlineSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::outlineToPostOutlineCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
 		SubmitStage(frameContext, RenderStage::outline, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&outlineWait, 1), std::span<const VkSemaphoreSubmitInfo>(&outlineSignal, 1));
 
 		// Outline -> PostOutlineCompute -> PostRenderCompute:
-		m_postOutlineComputeStage.Record(frameContext, frameContext.postOutlineComputeCalls);
-		VkSemaphoreSubmitInfo postOutlineComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::outlineToPostOutlineCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
-		VkSemaphoreSubmitInfo postOutlineComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postOutlineComputeToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+		ComputeStage::Record<RenderStage::postOutlineCompute>(frameContext, frameContext.postOutlineComputeCalls);
+		VkSemaphoreSubmitInfo postOutlineComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::outlineToPostOutlineCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT);
+		VkSemaphoreSubmitInfo postOutlineComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postOutlineComputeToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT);
 		SubmitStage(frameContext, RenderStage::postOutlineCompute, computeQueue, std::span<const VkSemaphoreSubmitInfo>(&postOutlineComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&postOutlineComputeSignal, 1));
 
 		// PreRenderCompute -> Shadow -> DeferredLighting:
-		m_shadowStage.Record(frameContext);
+		ShadowStage::Record(frameContext);
 		VkSemaphoreSubmitInfo shadowWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToShadow), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
-		VkSemaphoreSubmitInfo shadowSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
+		VkSemaphoreSubmitInfo shadowSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
 		SubmitStage(frameContext, RenderStage::shadow, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&shadowWait, 1), std::span<const VkSemaphoreSubmitInfo>(&shadowSignal, 1));
 
 		// PreRenderCompute -> DeferredGeometry -> PostGeometryCompute:
-		m_deferredGeometryStage.Record(frameContext);
+		DeferredGeometryStage::Record(frameContext);
 		VkSemaphoreSubmitInfo deferredGeometryWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::preRenderComputeToDeferredGeometry), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-		VkSemaphoreSubmitInfo deferredGeometrySignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToPostGeometryCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
+		VkSemaphoreSubmitInfo deferredGeometrySignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToPostGeometryCompute), VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
 		SubmitStage(frameContext, RenderStage::deferredGeometry, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&deferredGeometryWait, 1), std::span<const VkSemaphoreSubmitInfo>(&deferredGeometrySignal, 1));
 
 		// DeferredGeometry -> PostGeometryCompute -> DeferredLighting:
-		m_postGeometryComputeStage.Record(frameContext, frameContext.postGeometryComputeCalls);
-		VkSemaphoreSubmitInfo postGeometryComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToPostGeometryCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
-		VkSemaphoreSubmitInfo postGeometryComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postGeometryComputeToDeferredLighting), VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
+		ComputeStage::Record<RenderStage::postGeometryCompute>(frameContext, frameContext.postGeometryComputeCalls);
+		VkSemaphoreSubmitInfo postGeometryComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredGeometryToPostGeometryCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo postGeometryComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postGeometryComputeToDeferredLighting), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT);
 		SubmitStage(frameContext, RenderStage::postGeometryCompute, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&postGeometryComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&postGeometryComputeSignal, 1));
 
 		// Shadow + PostGeometryCompute -> DeferredLighting -> PostLightingCompute:
-		m_deferredLightingStage.Record(frameContext);
+		DeferredLightingStage::Record(frameContext);
 		std::array<VkSemaphoreSubmitInfo, 2> deferredLightingWaits =
 		{
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT),
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::shadowToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT),
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postGeometryComputeToDeferredLighting), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 		};
 		VkSemaphoreSubmitInfo deferredLightingSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToPostLightingCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 		SubmitStage(frameContext, RenderStage::deferredLighting, graphicsQueue, deferredLightingWaits, std::span<const VkSemaphoreSubmitInfo>(&deferredLightingSignal, 1));
 
 		// DeferredLighting -> PostLightingCompute -> ForwardOpaque:
-		m_postLightingComputeStage.Record(frameContext, frameContext.postLightingComputeCalls);
-		VkSemaphoreSubmitInfo postLightingComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToPostLightingCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
-		VkSemaphoreSubmitInfo postLightingComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postLightingComputeToForwardOpaque), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+		ComputeStage::Record<RenderStage::postLightingCompute>(frameContext, frameContext.postLightingComputeCalls);
+		VkSemaphoreSubmitInfo postLightingComputeWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::deferredLightingToPostLightingCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo postLightingComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postLightingComputeToForwardOpaque), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT);
 		SubmitStage(frameContext, RenderStage::postLightingCompute, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&postLightingComputeWait, 1), std::span<const VkSemaphoreSubmitInfo>(&postLightingComputeSignal, 1));
 
 		// PostLightingCompute -> ForwardOpaque -> ForwardTransparent:
-		m_forwardOpaqueStage.Record(frameContext);
+		ForwardStage<RenderStage::forwardOpaque>::Record(frameContext);
 		VkSemaphoreSubmitInfo forwardOpaqueWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postLightingComputeToForwardOpaque), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
 		VkSemaphoreSubmitInfo forwardOpaqueSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToForwardTransparent), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT);
 		SubmitStage(frameContext, RenderStage::forwardOpaque, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardOpaqueSignal, 1));
 
 		// ForwardOpaque -> ForwardTransparent -> PostRenderCompute:
-		m_forwardTransparentStage.Record(frameContext);
-		VkSemaphoreSubmitInfo forwardTransparentWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToForwardTransparent), VK_PIPELINE_STAGE_2_INDEX_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_ATTRIBUTE_INPUT_BIT | VK_PIPELINE_STAGE_2_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
-		VkSemaphoreSubmitInfo forwardTransparentSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardTransparentToPostRenderCompute), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		ForwardStage<RenderStage::forwardTransparent>::Record(frameContext);
+		VkSemaphoreSubmitInfo forwardTransparentWait = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardOpaqueToForwardTransparent), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT);
+		VkSemaphoreSubmitInfo forwardTransparentSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardTransparentToPostRenderCompute), VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
 		SubmitStage(frameContext, RenderStage::forwardTransparent, graphicsQueue, std::span<const VkSemaphoreSubmitInfo>(&forwardTransparentWait, 1), std::span<const VkSemaphoreSubmitInfo>(&forwardTransparentSignal, 1));
 
 		// PostOutlineCompute + ForwardTransparent -> PostRenderCompute  -> Present:
-		m_postRenderComputeStage.Record(frameContext, frameContext.postRenderComputeCalls);
+		ComputeStage::Record<RenderStage::postRenderCompute>(frameContext, frameContext.postRenderComputeCalls);
 		std::array<VkSemaphoreSubmitInfo, 2> postRenderComputeWaits =
 		{
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postOutlineComputeToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT),
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardTransparentToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT)
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postOutlineComputeToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT),
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::forwardTransparentToPostRenderCompute), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT | VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 		};
-		VkSemaphoreSubmitInfo postRenderComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postRenderComputeToPresent), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT);
+		VkSemaphoreSubmitInfo postRenderComputeSignal = CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postRenderComputeToPresent), VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_2_COPY_BIT);
 		SubmitStage(frameContext, RenderStage::postRenderCompute, graphicsQueue, postRenderComputeWaits, std::span<const VkSemaphoreSubmitInfo>(&postRenderComputeSignal, 1));
 
-		// Gizmo + PostRenderCompute -> Present -> Release:
-		m_presentStage.Record(frameContext);
-		std::array<VkSemaphoreSubmitInfo, 2> presentWaits =
+		// Aquire + Gizmo + PostRenderCompute -> Present -> (optional)Release:
+		PresentStage::Record(frameContext, hasSwapchainImage);
+		std::array<VkSemaphoreSubmitInfo, 3> presentWaits =
 		{
 			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::postRenderComputeToPresent), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT),
-			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::gizmoToPresent), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT)
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::gizmoToPresent), VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT),
+			CreateSemaphoreSubmitInfo(GetDependencySemaphore(frameIndex, Dependency::acquireToPresent), VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT)
 		};
-		VkSemaphoreSubmitInfo presentSignal = CreateSemaphoreSubmitInfo(m_releaseSemaphores[frameContext.frameExecutionData.imageIndex], VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
-		SubmitStage(frameContext, RenderStage::present, graphicsQueue, presentWaits, std::span<const VkSemaphoreSubmitInfo>(&presentSignal, 1), m_frameSyncObjects[frameIndex].frameFence);
+		std::span<const VkSemaphoreSubmitInfo> waits(presentWaits.data(), hasSwapchainImage ? 3 : 2);	// no swapchain image = skip acquireToPresent semaphore
+		if (hasSwapchainImage)
+		{
+			VkSemaphoreSubmitInfo presentSignal = CreateSemaphoreSubmitInfo(m_releaseSemaphores[frameContext.frameExecutionData.imageIndex], VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT);
+			SubmitStage(frameContext, RenderStage::present, graphicsQueue, waits, std::span<const VkSemaphoreSubmitInfo>(&presentSignal, 1), m_frameSyncObjects[frameIndex].frameFence);
+		}
+		else
+			SubmitStage(frameContext, RenderStage::present, graphicsQueue, waits, {}, m_frameSyncObjects[frameIndex].frameFence);
 	}
 	VkResult RenderGraph::Present(uint32_t imageIndex) const
 	{
@@ -312,7 +327,7 @@ namespace vulkanRendererBackend
 	{
 		switch (dependency)
 		{
-			case Dependency::aquireToResourceUpdate: return "AquireToResourceUpdate";
+			case Dependency::acquireToPresent: return "AcquireToPresent";
 			case Dependency::resourceUpdateToGizmo: return "ResourceUpdateToGizmo";
 			case Dependency::resourceUpdateToPreRenderCompute: return "ResourceUpdateToPreRenderCompute";
 			case Dependency::gizmoToPresent: return "GizmoToPresent";

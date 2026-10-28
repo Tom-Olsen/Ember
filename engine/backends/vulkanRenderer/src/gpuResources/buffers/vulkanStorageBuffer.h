@@ -26,8 +26,5 @@ namespace vulkanRendererBackend
 		// Movable:
 		StorageBuffer(StorageBuffer&&) noexcept;
 		StorageBuffer& operator=(StorageBuffer&&) noexcept;
-
-	private: // Methods:
-		uint32_t Std430Alignment(uint32_t elementSize);
 	};
 }
