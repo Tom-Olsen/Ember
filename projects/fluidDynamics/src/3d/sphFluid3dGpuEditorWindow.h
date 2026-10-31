@@ -15,8 +15,6 @@ namespace emberEditor
 		// Easy access to emberEngine Gui:
 		using Gui = emberCore::Gui;
 
-
-
 	private:
 		TransformHandle m_transformHandle;
 		RotatedBoundsHandleTarget m_boundsHandleTarget;

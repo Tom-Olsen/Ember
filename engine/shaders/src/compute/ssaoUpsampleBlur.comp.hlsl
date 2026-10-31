@@ -1,7 +1,6 @@
 #include "computeShaderCommon.hlsli"
 #include "bilateralUpsampling.hlsli"
 #include "deferredRenderingConstants.h"
-#include "screenSpaceAmbientOcclusion.hlsli"
 
 
 
@@ -10,18 +9,25 @@
 
 
 
-// Bilateral upsampling parameters:
-static const int upsampleRadius = 1;
-static const float spatialWeightScale = 0.5f;
-static const float minimumDepthTolerance = 0.05f;
-static const float relativeDepthTolerance = 0.02f;
-static const float normalWeightExponent = 32.0f;
+// Bilateral blur and reconstruction parameters:
+cbuffer SsaoReconstructionParameters : register(b300, CALL_SET)
+{
+	int blurRadius;                 // in AO texels.
+	float spatialWeightScale;
+	float minimumDepthTolerance;    // in world units.
+	float relativeDepthTolerance;
+	float normalWeightExponent;
+	float occlusionStrength;
+};
 
 
 
 [numthreads(8, 8, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
+	// Note:
+	// The gaussian blur loop computes blurred pixel at sourcePixel from aoMap texels (upsampling).
+
 	if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
 		return;
 
@@ -54,12 +60,12 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	int2 nearestAoPixel = Bilateral_ScreenPixelToLowResolutionPixel(sourcePixel, screenSize, aoSize);
 	float depthTolerance = max(minimumDepthTolerance, relativeDepthTolerance * viewDepth);
 
-	// Loop over upsample neighbourhood:
+	// Depth/Normal aware gaussian blur:
 	float weightedOcclusion = 0.0f;
 	float totalWeight = 0.0f;
-	for (int y = -upsampleRadius; y <= upsampleRadius; y++)
+	for (int y = -blurRadius; y <= blurRadius; y++)
 	{
-		for (int x = -upsampleRadius; x <= upsampleRadius; x++)
+		for (int x = -blurRadius; x <= blurRadius; x++)
 		{
 			// Skip out of image pixels:
 			int2 samplePixel = nearestAoPixel + int2(x, y);
@@ -91,6 +97,6 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	// No compatible surface samples means no screen-space occlusion at this pixel:
 	float occlusion = totalWeight > 1.0e-5f ? weightedOcclusion / totalWeight : 0.0f;
 	float4 surfaceProperties = gbufferSurfacePropertiesStorageTexture[sourcePixel];
-	surfaceProperties[DEFERRED_SURFACE_PROPERTIES_AMBIENT_OCCLUSION_CHANNEL] = Ssao_GetAmbientOcclusion(occlusion);
+	surfaceProperties[DEFERRED_SURFACE_PROPERTIES_AMBIENT_OCCLUSION_CHANNEL] = saturate(1.0f - occlusionStrength * occlusion);
 	gbufferSurfacePropertiesStorageTexture[sourcePixel] = surfaceProperties;
 }

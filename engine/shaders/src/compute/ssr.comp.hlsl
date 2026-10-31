@@ -2,7 +2,7 @@
 #include "computeShaderCommon.hlsli"
 #include "deferredRenderingConstants.h"
 #include "reflectionLighting.hlsli"
-#include "screenSpaceReflectionUtility.hlsli"
+#include "ssrUtility.hlsli"
 
 
 

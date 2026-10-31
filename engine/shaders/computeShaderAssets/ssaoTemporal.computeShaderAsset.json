@@ -1,0 +1,10 @@
+{
+    "computeShaderName": "ssaoTemporal",
+    "sourcePath": "../src/compute/ssaoTemporal.comp.hlsl",
+    "binaryPath": "../bin/ssaoTemporal.comp.spv",
+    "accessRights": {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

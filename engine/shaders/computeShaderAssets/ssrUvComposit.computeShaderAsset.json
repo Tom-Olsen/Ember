@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "ssrUvComposit",
+    "sourcePath": "../src/compute/ssrUvComposit.comp.hlsl",
+    "binaryPath": "../bin/ssrUvComposit.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

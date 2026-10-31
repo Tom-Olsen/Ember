@@ -95,8 +95,8 @@ inline Scene* DefaultScene()
 		pCamera->SetFarClip(1000.0f);
 
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
-		ScreenSpaceAmbientOcclusionDispatcher* pScreenSpaceAmbientOcclusionDispatcher = entity.AddComponent<ScreenSpaceAmbientOcclusionDispatcher>();
-		ScreenSpaceReflectionDispatcher* pScreenSpaceReflectionDispatcher = entity.AddComponent<ScreenSpaceReflectionDispatcher>(skyboxTexture);
+		SsaoDispatcher* pSsaoDispatcher = entity.AddComponent<SsaoDispatcher>();
+		SsrDispatcher* pSsrDispatcher = entity.AddComponent<SsrDispatcher>(skyboxTexture);
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
 		pScene->SetActiveCamera(pCamera);

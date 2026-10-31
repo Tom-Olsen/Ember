@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "ssao",
+    "sourcePath": "../src/compute/ssao.comp.hlsl",
+    "binaryPath": "../bin/ssao.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

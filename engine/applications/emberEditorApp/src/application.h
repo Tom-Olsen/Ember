@@ -26,8 +26,8 @@ namespace emberEditor
 	class OutlineEditorWindow;
 	class ProjectEditorWindow;
 	class SceneEditorWindow;
-	class ScreenSpaceAmbientOcclusionDispatcherEditorWindow;
-	class ScreenSpaceReflectionDispatcherEditorWindow;
+	class SsaoDispatcherEditorWindow;
+	class SsrDispatcherEditorWindow;
 }
 
 
@@ -63,8 +63,8 @@ namespace emberApplication
 		static std::unique_ptr<emberEditor::OutlineEditorWindow> m_pOutlineEditorWindow;
 		static std::unique_ptr<emberEditor::ProjectEditorWindow> m_pProjectEditorWindow;
 		static std::unique_ptr<emberEditor::SceneEditorWindow> m_pSceneEditorWindow;
-		static std::unique_ptr<emberEditor::ScreenSpaceAmbientOcclusionDispatcherEditorWindow> m_pScreenSpaceAmbientOcclusionDispatcherEditorWindow;
-		static std::unique_ptr<emberEditor::ScreenSpaceReflectionDispatcherEditorWindow> m_pScreenSpaceReflectionDispatcherEditorWindow;
+		static std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> m_pSsaoDispatcherEditorWindow;
+		static std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> m_pSsrDispatcherEditorWindow;
 
 	public: // Methods:
 		static bool Init(const CreateInfo& createInfo);
@@ -88,8 +88,8 @@ namespace emberApplication
 		static emberEditor::OutlineEditorWindow* GetOutlineEditorWindow();
 		static emberEditor::ProjectEditorWindow* GetProjectEditorWindow();
 		static emberEditor::SceneEditorWindow* GetSceneEditorWindow();
-		static emberEditor::ScreenSpaceAmbientOcclusionDispatcherEditorWindow* GetScreenSpaceAmbientOcclusionDispatcherEditorWindow();
-		static emberEditor::ScreenSpaceReflectionDispatcherEditorWindow* GetScreenSpaceReflectionDispatcherEditorWindow();
+		static emberEditor::SsaoDispatcherEditorWindow* GetSsaoDispatcherEditorWindow();
+		static emberEditor::SsrDispatcherEditorWindow* GetSsrDispatcherEditorWindow();
 
 	private: // Methods
 		// Delete all constructors:

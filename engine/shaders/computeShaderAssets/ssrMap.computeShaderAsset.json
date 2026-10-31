@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "ssrMap",
+    "sourcePath": "../src/compute/ssrMap.comp.hlsl",
+    "binaryPath": "../bin/ssrMap.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

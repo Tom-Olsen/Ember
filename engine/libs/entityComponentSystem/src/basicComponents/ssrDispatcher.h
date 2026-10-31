@@ -8,7 +8,7 @@
 
 namespace emberEcs
 {
-	class ScreenSpaceReflectionDispatcher : public Component
+	class SsrDispatcher : public Component
 	{
 	public: // Enums:
 		enum class SsrMode
@@ -35,8 +35,8 @@ namespace emberEcs
 		SsrMode ssrMode;
 
 	public: // Methods:
-		ScreenSpaceReflectionDispatcher(emberCore::Texture environmentMap);
-		~ScreenSpaceReflectionDispatcher();
+		SsrDispatcher(emberCore::Texture environmentMap);
+		~SsrDispatcher();
 
 		// Overrides:
 		void LateUpdate() override;

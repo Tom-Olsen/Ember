@@ -1,0 +1,10 @@
+{
+    "computeShaderName": "ssaoUpsampleBlur",
+    "sourcePath": "../src/compute/ssaoUpsampleBlur.comp.hlsl",
+    "binaryPath": "../bin/ssaoUpsampleBlur.comp.spv",
+    "accessRights": {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

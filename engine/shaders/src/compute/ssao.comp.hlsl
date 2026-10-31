@@ -1,6 +1,6 @@
 #include "computeShaderCommon.hlsli"
 #include "bilateralUpsampling.hlsli"
-#include "screenSpaceAmbientOcclusion.hlsli"
+#include "ssao.hlsli"
 
 
 
@@ -28,7 +28,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
 	uint2 sourcePixel = Bilateral_LowResolutionPixelToScreenPixel(threadID.xy, uint2(screenWidth, screenHeight), float2(aoWidth, aoHeight));
 
-	// Always initialize the texel, including sky. Validity is determined from scene depth during reconstruction.
+	// Compute ambient occlusion:
 	float occlusion = 0.0f;
 	float sourceNdcDepth = Scene_GetNdcDepth(sourcePixel);
 	if (sourceNdcDepth < 1.0f)

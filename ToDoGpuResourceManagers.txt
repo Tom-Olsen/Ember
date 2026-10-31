@@ -100,14 +100,14 @@ Backend registry
 Motivating lifetime problem
 ---------------------------
 
-ScreenSpaceReflectionDispatcher currently stores:
+SsrDispatcher currently stores:
 
     emberCore::Texture* m_pEnvironmentMap;
 
 See:
 
-- engine/libs/entityComponentSystem/src/basicComponents/screenSpaceReflectionDispatcher.h
-- engine/libs/entityComponentSystem/src/basicComponents/screenSpaceReflectionDispatcher.cpp
+- engine/libs/entityComponentSystem/src/basicComponents/ssrDispatcher.h
+- engine/libs/entityComponentSystem/src/basicComponents/ssrDispatcher.cpp
 
 The dispatcher receives Texture& and saves its address. LateUpdate dereferences that pointer when binding environmentMap.
 
@@ -122,7 +122,7 @@ It is not generally safe:
 
 The desired result is for the dispatcher to store a Texture value containing TextureId. Copying the value copies only the handle. If the manager deletes the texture, later resolution detects an expired generation instead of dereferencing freed memory.
 
-Note that converting the environment-map member alone would not make ScreenSpaceReflectionDispatcher copyable. It also owns m_ssrReflectionTexture, which is currently a non-copyable Texture2d. Decide separately whether that render target remains exclusive or also becomes a managed handle.
+Note that converting the environment-map member alone would not make SsrDispatcher copyable. It also owns m_ssrReflectionTexture, which is currently a non-copyable Texture2d. Decide separately whether that render target remains exclusive or also becomes a managed handle.
 
 
 Target architecture
@@ -385,7 +385,7 @@ Do not attempt all resources in one unverified rewrite. Preserve working behavio
 - Make Texture a copyable TextureId wrapper.
 - Remove conditional public-wrapper ownership once all ownership categories have explicit representations.
 - Update texture subclasses/creation APIs as needed. Decide whether Texture2d/3d/Cube remain public typed handles or become creation helpers returning Texture.
-- Update ScreenSpaceReflectionDispatcher to store a Texture handle instead of Texture*.
+- Update SsrDispatcher to store a Texture handle instead of Texture*.
 - Account for renderer-owned render targets and other borrowed textures explicitly.
 
 6. Refactor BufferManager and Buffer
@@ -547,7 +547,7 @@ Queued work and retirement:
 
 Original motivating consumer:
 
-- engine/libs/entityComponentSystem/src/basicComponents/screenSpaceReflectionDispatcher.*
+- engine/libs/entityComponentSystem/src/basicComponents/ssrDispatcher.*
 - projects/defaultProject/src/scenes/defaultScene.h
 
 

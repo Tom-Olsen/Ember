@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_screenSpaceReflectionUtility_hlsli__
-#define __INCLUDE_GUARD_screenSpaceReflectionUtility_hlsli__
+#ifndef __INCLUDE_GUARD_ssrUtility_hlsli__
+#define __INCLUDE_GUARD_ssrUtility_hlsli__
 #include "mathRay.hlsli"
 
 
@@ -225,4 +225,4 @@ bool ScreenSpaceRayMarch(uint2 sourcePixel, math_Ray worldRay, float2 screenSize
 
 
 
-#endif // __INCLUDE_GUARD_screenSpaceReflectionUtility_hlsli__
+#endif // __INCLUDE_GUARD_ssrUtility_hlsli__

@@ -1,5 +1,5 @@
-#ifndef __INCLUDE_GUARD_screenSpaceAmbientOcclusion_hlsli__
-#define __INCLUDE_GUARD_screenSpaceAmbientOcclusion_hlsli__
+#ifndef __INCLUDE_GUARD_ssao_hlsli__
+#define __INCLUDE_GUARD_ssao_hlsli__
 #include "descriptorSetMacros.h"
 #include "ssaoConstants.h"
 
@@ -11,7 +11,7 @@ cbuffer SsaoSamplingParameters : register(b300, SHADER_SET)
 	uint sampleCount;
 	float sampleRadius;	// in world units.
 	float sampleBias;	// in world units.
-	float occlusionStrength;
+	uint rngSeed;
 };
 
 
@@ -24,7 +24,7 @@ cbuffer SsaoSamplingKernel : register(b301, SHADER_SET)
 
 
 
-// Shared estimator for full- and half-resolution AO:
+// Screen space ambient occlusion algorithm:
 float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSize)
 {
 	// Reconstruct the source surface and orient the sampling hemisphere along its world-space normal:
@@ -34,8 +34,8 @@ float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSi
 	float3 bitangent = cross(worldNormal, tangent);
 	float3 sampleOrigin = worldPosition + sampleBias * worldNormal;
 
-	// Keep the rotation fixed between frames to avoid temporal flicker without a history buffer:
-	float rotation = 2.0f * math_PI * mathRandom_Uniform01(sourcePixel.x, sourcePixel.y, 0.0f);
+	// Only temporal smoothing advances the rngSeed; otherwise sampling stays fixed.
+	float rotation = 2.0f * math_PI * mathRandom_Uniform01(sourcePixel.x, sourcePixel.y, rngSeed, 0.0f);
 	float sinRotation;
 	float cosRotation;
 	sincos(rotation, sinRotation, cosRotation);
@@ -49,7 +49,7 @@ float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSi
 		float3 direction = localDirection.x * rotatedTangent + localDirection.y * rotatedBitangent + localDirection.z * worldNormal;
 
 		// Sample distance independently from direction, keeping the quadratic bias toward the source:
-		float distanceFraction = mathRandom_Uniform01(sourcePixel.x, sourcePixel.y, i, 1u, 0.0f);
+		float distanceFraction = mathRandom_Uniform01(sourcePixel.x, sourcePixel.y, i, 1u + rngSeed, 0.0f);
 		float distanceScale = lerp(0.1f, 1.0f, distanceFraction * distanceFraction);
 		float3 samplePosition = sampleOrigin + sampleRadius * distanceScale * direction;
 
@@ -87,12 +87,4 @@ float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSi
 
 
 
-// Apply strength after reconstruction, before writing the G-buffer:
-float Ssao_GetAmbientOcclusion(float occlusion)
-{
-	return saturate(1.0f - occlusionStrength * occlusion);
-}
-
-
-
-#endif // __INCLUDE_GUARD_screenSpaceAmbientOcclusion_hlsli__
+#endif // __INCLUDE_GUARD_ssao_hlsli__

@@ -28,8 +28,8 @@
 #include "outlineEditorWindow.h"
 #include "projectEditorWindow.h"
 #include "sceneEditorWindow.h"
-#include "screenSpaceAmbientOcclusionDispatcherEditorWindow.h"
-#include "screenSpaceReflectionDispatcherEditorWindow.h"
+#include "ssaoDispatcherEditorWindow.h"
+#include "ssrDispatcherEditorWindow.h"
 // System:
 #include <exception>
 #include <memory>
@@ -54,8 +54,8 @@ namespace emberApplication
 	std::unique_ptr<emberEditor::OutlineEditorWindow> Application::m_pOutlineEditorWindow;
 	std::unique_ptr<emberEditor::ProjectEditorWindow> Application::m_pProjectEditorWindow;
 	std::unique_ptr<emberEditor::SceneEditorWindow> Application::m_pSceneEditorWindow;
-	std::unique_ptr<emberEditor::ScreenSpaceAmbientOcclusionDispatcherEditorWindow> Application::m_pScreenSpaceAmbientOcclusionDispatcherEditorWindow;
-	std::unique_ptr<emberEditor::ScreenSpaceReflectionDispatcherEditorWindow> Application::m_pScreenSpaceReflectionDispatcherEditorWindow;
+	std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> Application::m_pSsaoDispatcherEditorWindow;
+	std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> Application::m_pSsrDispatcherEditorWindow;
 
 
 
@@ -111,8 +111,8 @@ namespace emberApplication
 			m_pOutlineEditorWindow = std::make_unique<emberEditor::OutlineEditorWindow>();
 			m_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
 			m_pSceneEditorWindow = std::make_unique<emberEditor::SceneEditorWindow>();
-			m_pScreenSpaceAmbientOcclusionDispatcherEditorWindow = std::make_unique<emberEditor::ScreenSpaceAmbientOcclusionDispatcherEditorWindow>();
-			m_pScreenSpaceReflectionDispatcherEditorWindow = std::make_unique<emberEditor::ScreenSpaceReflectionDispatcherEditorWindow>();
+			m_pSsaoDispatcherEditorWindow = std::make_unique<emberEditor::SsaoDispatcherEditorWindow>();
+			m_pSsrDispatcherEditorWindow = std::make_unique<emberEditor::SsrDispatcherEditorWindow>();
 
 			return true;
 		}
@@ -124,8 +124,8 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-		m_pScreenSpaceReflectionDispatcherEditorWindow.reset();
-		m_pScreenSpaceAmbientOcclusionDispatcherEditorWindow.reset();
+		m_pSsrDispatcherEditorWindow.reset();
+		m_pSsaoDispatcherEditorWindow.reset();
 		m_pSceneEditorWindow.reset();
 		m_pProjectEditorWindow.reset();
 		m_pOutlineEditorWindow.reset();
@@ -212,8 +212,8 @@ namespace emberApplication
 	{
 		m_pActiveScene = pScene;
 		m_pHierarchyEditorWindow->SetScene(pScene);
-		m_pScreenSpaceAmbientOcclusionDispatcherEditorWindow->SetScene(pScene);
-		m_pScreenSpaceReflectionDispatcherEditorWindow->SetScene(pScene);
+		m_pSsaoDispatcherEditorWindow->SetScene(pScene);
+		m_pSsrDispatcherEditorWindow->SetScene(pScene);
 	}
 
 
@@ -263,12 +263,12 @@ namespace emberApplication
 	{
 		return m_pSceneEditorWindow.get();
 	}
-	emberEditor::ScreenSpaceAmbientOcclusionDispatcherEditorWindow* Application::GetScreenSpaceAmbientOcclusionDispatcherEditorWindow()
+	emberEditor::SsaoDispatcherEditorWindow* Application::GetSsaoDispatcherEditorWindow()
 	{
-		return m_pScreenSpaceAmbientOcclusionDispatcherEditorWindow.get();
+		return m_pSsaoDispatcherEditorWindow.get();
 	}
-	emberEditor::ScreenSpaceReflectionDispatcherEditorWindow* Application::GetScreenSpaceReflectionDispatcherEditorWindow()
+	emberEditor::SsrDispatcherEditorWindow* Application::GetSsrDispatcherEditorWindow()
 	{
-		return m_pScreenSpaceReflectionDispatcherEditorWindow.get();
+		return m_pSsrDispatcherEditorWindow.get();
 	}
 }

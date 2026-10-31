@@ -1,12 +1,14 @@
-#define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_NONE
+#define EMBER_SCENE_COLOR_ACCESS EMBER_SCENE_COLOR_ACCESS_READ
 #include "computeShaderCommon.hlsli"
 #include "bilateralUpsampling.hlsli"
-#include "screenSpaceReflectionUtility.hlsli"
+#include "reflectionLighting.hlsli"
+#include "ssrUtility.hlsli"
 
 
 
 // Bindings:
-[[vk::image_format("rgba16")]] RWTexture2D<float4> reflectionUvMap : register(u200, CALL_SET);
+TextureCube<float4> environmentMap : register(t100, CALL_SET);
+[[vk::image_format("rgba16f")]] RWTexture2D<float4> reflectionMap : register(u200, CALL_SET);
 
 
 
@@ -19,7 +21,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	// Reflection map size:
 	uint reflectionWidth;
 	uint reflectionHeight;
-	reflectionUvMap.GetDimensions(reflectionWidth, reflectionHeight);
+	reflectionMap.GetDimensions(reflectionWidth, reflectionHeight);
 	float2 reflectionSize = float2(reflectionWidth, reflectionHeight);
 
 	// Screen size:
@@ -35,7 +37,7 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float3 worldPosition;
 	if (TryGetGeometryWorldPosition(sourcePixel, screenSize, worldPosition) == false)
 	{
-		reflectionUvMap[threadID.xy] = 0.0f;	// miss.
+		reflectionMap[threadID.xy] = 0.0f;	// miss.
 		return;
 	}
 
@@ -48,9 +50,23 @@ void main(uint3 threadID : SV_DispatchThreadID)
 	float3 reflectionDirection = normalize(reflect(cameraRayDirection, worldNormal));
 	math_Ray worldRay = {rayOrigin, reflectionDirection};
 
-	// Store hit uvs coordinates and has hit for composit pass:
+	// Screen space ray marching:
 	uint2 hitPixel;
 	float2 hitUv;
 	bool hasHit = ScreenSpaceRayMarch(sourcePixel, worldRay, screenSize, hitPixel, hitUv);
-	reflectionUvMap[threadID.xy] = float4(hitUv, hasHit ? 1.0f : 0.0f, 1.0f);
+
+	// Reflect skybox when ray hit misses:
+	float roughness = gbufferSurfacePropertiesSampleTexture.Load(int3(sourcePixel, 0))[DEFERRED_SURFACE_PROPERTIES_ROUGHNESS_CHANNEL];
+	float3 reflectionColor = Reflection_GetEnvironmentColor(environmentMap, reflectionDirection, roughness);
+
+	// Fade reflections near screen boundaries to hide cut off broken reflections:
+	if (hasHit)
+	{
+		float edgeDistance = min(min(hitUv.x, 1.0f - hitUv.x), min(hitUv.y, 1.0f - hitUv.y));
+		float edgeFade = saturate(10.0f * edgeDistance);
+		reflectionColor = lerp(reflectionColor, Scene_GetColor(hitPixel).rgb, edgeFade);
+	}
+
+	// Store reflection color and has hit (alpha=1) for composit pass:
+	reflectionMap[threadID.xy] = float4(reflectionColor, 1.0f);
 }
