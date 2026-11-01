@@ -3,10 +3,21 @@
 
 
 
+// Bindings:
 Texture2D<float4> gbufferAlbedo : register(t100, SHADER_SET);
 Texture2D<float4> gbufferNormal : register(t101, SHADER_SET);
 Texture2D<float4> gbufferSurfaceProperties : register(t102, SHADER_SET);
 Texture2D<float> gbufferDepth : register(t103, SHADER_SET);
+cbuffer Settings : register(b300, SHADER_SET)
+{
+    int renderMode;	// 0 = Normal lighting, 1 = albedo, 2 = world normals, 3 = metallicity, 4 = roughnes, 5 = ambient occlusion, 6... maps to 0
+};
+static const uint renderMode_Lighting = 0;
+static const uint renderMode_Albedo = 1;
+static const uint renderMode_Normals = 2;
+static const uint renderMode_Metallicity = 3;
+static const uint renderMode_Roughness = 4;
+static const uint renderMode_AmbientOcclusion = 5;
 
 
 
@@ -53,6 +64,30 @@ float4 main(FragmentInput input) : SV_TARGET
     uint flagBitMask = uint(round(surfacePropertiesData[DEFERRED_SURFACE_PROPERTIES_FLAG_BIT_MASK_CHANNEL] * DEFERRED_SURFACE_FLAG_BIT_MASK_MAX));
     bool receiveShadows = (flagBitMask & DEFERRED_SURFACE_FLAG_RECEIVE_SHADOWS) != 0;
 	bool lit = (flagBitMask & DEFERRED_SURFACE_FLAG_LIT) != 0;
+
+	// Debugging render modes:
+	switch (renderMode)
+	{
+		case renderMode_Albedo:
+			return float4(albedo, 1.0f);
+			break;
+		case renderMode_Normals:
+			return float4(worldNormal, 1.0f);
+			break;
+		case renderMode_Metallicity:
+			return float4(metallicity.xxx, 1.0f);
+			break;
+		case renderMode_Roughness:
+			return float4(roughness.xxx, 1.0f);
+			break;
+		case renderMode_AmbientOcclusion:
+			return float4(ambientOcclusion.xxx, 1.0f);
+			break;
+		case renderMode_Lighting:
+			break;
+	}
+
+	// Default render mode:
 	if (lit)
 	{
 		// Lighting:

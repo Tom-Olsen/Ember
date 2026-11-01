@@ -136,6 +136,7 @@ namespace vulkanRendererBackend
 		float GetDepthBiasSlopeFactor() override;
 		const Float4& GetOutlineColor() const override;
 		int GetOutlineThickness() const override;
+		int GetDeferredLightingRenderMode() const override;
 		uint32_t GetFrameIndex() const override;
 		bool IsFrameFinished(uint32_t frameIndex) const override;
 
@@ -148,6 +149,7 @@ namespace vulkanRendererBackend
 		void SetDepthBiasSlopeFactor(float depthBiasSlopeFactor) override;
 		void SetOutlineColor(const Float4& outlineColor) override;
 		void SetOutlineThickness(int outlineThickness) override;
+		void SetDeferredLightingRenderMode(int renderMode) override;
 
 		// Functionality forwarding:
 		void CollectGarbage() override;

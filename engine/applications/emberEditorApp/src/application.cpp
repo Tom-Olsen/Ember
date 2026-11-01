@@ -20,6 +20,7 @@
 // Editor Windows:
 #include "backendDebugWindow.h"
 #include "consoleEditorWindow.h"
+#include "deferredLightingEditorWindow.h"
 #include "depthBiasEditorWindow.h"
 #include "fpsEditorWindow.h"
 #include "gameEditorWindow.h"
@@ -46,6 +47,7 @@ namespace emberApplication
 	emberEcs::Scene* Application::m_pActiveScene;
 	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
 	std::unique_ptr<emberEditor::ConsoleEditorWindow> Application::m_pConsoleEditorWindow;
+	std::unique_ptr<emberEditor::DeferredLightingEditorWindow> Application::m_pDeferredLightingEditorWindow;
 	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::m_pDepthBiasEditorWindow;
 	std::unique_ptr<emberEditor::FpsEditorWindow> Application::m_pFpsEditorWindow;
 	std::unique_ptr<emberEditor::GameEditorWindow> Application::m_pGameEditorWindow;
@@ -103,6 +105,7 @@ namespace emberApplication
 			// Editor windows:
 			m_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
 			m_pConsoleEditorWindow = std::make_unique<emberEditor::ConsoleEditorWindow>();
+			m_pDeferredLightingEditorWindow = std::make_unique<emberEditor::DeferredLightingEditorWindow>();
 			m_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
 			m_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
 			m_pGameEditorWindow = std::make_unique<emberEditor::GameEditorWindow>();
@@ -134,6 +137,7 @@ namespace emberApplication
 		m_pGameEditorWindow.reset();
 		m_pFpsEditorWindow.reset();
 		m_pDepthBiasEditorWindow.reset();
+		m_pDeferredLightingEditorWindow.reset();
 		m_pConsoleEditorWindow.reset();
 		m_pBackendDebugEditorWindow.reset();
 
@@ -230,6 +234,10 @@ namespace emberApplication
 	emberEditor::ConsoleEditorWindow* Application::GetConsoleEditorWindow()
 	{
 		return m_pConsoleEditorWindow.get();
+	}
+	emberEditor::DeferredLightingEditorWindow* Application::GetDeferredLightingEditorWindow()
+	{
+		return m_pDeferredLightingEditorWindow.get();
 	}
 	emberEditor::DepthBiasEditorWindow* Application::GetDepthBiasEditorWindow()
 	{

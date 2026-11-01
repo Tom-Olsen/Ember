@@ -1,0 +1,11 @@
+{
+    "computeShaderName": "ssaoBitmaskSampled",
+    "sourcePath": "../src/compute/ssaoBitmaskSampled.comp.hlsl",
+    "binaryPath": "../bin/ssaoBitmaskSampled.comp.spv",
+    "accessRights":
+    {
+        "isAccessible": true,
+        "isDeletable": true,
+        "isMutable": true
+    }
+}

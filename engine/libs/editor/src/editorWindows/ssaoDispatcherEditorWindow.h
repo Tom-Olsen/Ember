@@ -15,13 +15,17 @@ namespace emberEditor
 		emberEcs::Scene* m_pScene = nullptr;
 		emberEcs::SsaoDispatcher* m_pDispatcher = nullptr;
 		// Settings:
-		bool m_ssaoEnabled;
+		emberEcs::SsaoDispatcher::SsaoMode m_ssaoMode;
 		float m_resolutionScale;
 		// Sampling parameters:
 		int m_sampleCount;
 		float m_sampleRadius;
 		float m_sampleBias;
 		float m_occlusionStrength;
+		// Bitmask sampling parameters:
+		int m_sliceCount;
+		int m_samplesPerSide;
+		float m_sampleThickness;
 		// Temporal reconstruction parameters:
 		float m_temporalHistoryWeight;
 		float m_temporalMinimumDepthTolerance;
@@ -80,12 +84,24 @@ namespace emberEditor
 			GetData();
 
 			// Settings:
-			emberCore::Gui::Checkbox("SSAO enabled", &m_ssaoEnabled);
+			if (emberCore::Gui::Selectable("Off", m_ssaoMode == emberEcs::SsaoDispatcher::SsaoMode::off))
+				m_ssaoMode = emberEcs::SsaoDispatcher::SsaoMode::off;
+			if (emberCore::Gui::Selectable("Kernel sampled", m_ssaoMode == emberEcs::SsaoDispatcher::SsaoMode::kernelSampled))
+				m_ssaoMode = emberEcs::SsaoDispatcher::SsaoMode::kernelSampled;
+			if (emberCore::Gui::Selectable("Bitmask sampled", m_ssaoMode == emberEcs::SsaoDispatcher::SsaoMode::bitmaskSampled))
+				m_ssaoMode = emberEcs::SsaoDispatcher::SsaoMode::bitmaskSampled;
 			emberCore::Gui::DragFloat("Resolution scale", &m_resolutionScale, 0.01f, 0.1f, "%.4f");
 
 			// Sampling parameters:
 			emberCore::Gui::SeparatorText("Sampling parameters");
-			emberCore::Gui::DragInt("Sample count", &m_sampleCount, 1);
+			if (m_ssaoMode == emberEcs::SsaoDispatcher::SsaoMode::kernelSampled)
+				emberCore::Gui::DragInt("Sample count", &m_sampleCount, 1);
+			else if (m_ssaoMode == emberEcs::SsaoDispatcher::SsaoMode::bitmaskSampled)
+			{
+				emberCore::Gui::DragInt("Slice count", &m_sliceCount, 1);
+				emberCore::Gui::DragInt("Samples per side", &m_samplesPerSide, 1);
+				emberCore::Gui::DragFloat("Sample thickness", &m_sampleThickness, 0.01f, 0.0f);
+			}
 			emberCore::Gui::DragFloat("Sample radius", &m_sampleRadius, 0.01f, 0.1f);
 			emberCore::Gui::DragFloat("Sample bias", &m_sampleBias, 0.001f, 0.01f);
 			emberCore::Gui::DragFloat("Occlusion strength", &m_occlusionStrength, 0.1f, 1.0f);
@@ -115,13 +131,17 @@ namespace emberEditor
 		void GetData()
 		{
 			// Settings:
-			m_ssaoEnabled = m_pDispatcher->GetSsaoEnabled();
+			m_ssaoMode = m_pDispatcher->GetSsaoMode();
 			m_resolutionScale = m_pDispatcher->GetResolutionScale();
 			// Sampling parameters:
 			m_sampleCount = m_pDispatcher->GetSampleCount();
 			m_sampleRadius = m_pDispatcher->GetSampleRadius();
 			m_sampleBias = m_pDispatcher->GetSampleBias();
 			m_occlusionStrength = m_pDispatcher->GetOcclusionStrength();
+			// Bitmask sampling parameters:
+			m_sliceCount = m_pDispatcher->GetSliceCount();
+			m_samplesPerSide = m_pDispatcher->GetSamplesPerSide();
+			m_sampleThickness = m_pDispatcher->GetSampleThickness();
 			// Temporal reconstruction parameters:
 			m_temporalHistoryWeight = m_pDispatcher->GetTemporalHistoryWeight();
 			m_temporalMinimumDepthTolerance = m_pDispatcher->GetTemporalMinimumDepthTolerance();
@@ -138,13 +158,17 @@ namespace emberEditor
 		void SetData()
 		{
 			// Settings:
-			m_pDispatcher->SetSsaoEnabled(m_ssaoEnabled);
+			m_pDispatcher->SetSsaoMode(m_ssaoMode);
 			m_pDispatcher->SetResolutionScale(m_resolutionScale);
 			// Sampling parameters:
 			m_pDispatcher->SetSampleCount(m_sampleCount);
 			m_pDispatcher->SetSampleRadius(m_sampleRadius);
 			m_pDispatcher->SetSampleBias(m_sampleBias);
 			m_pDispatcher->SetOcclusionStrength(m_occlusionStrength);
+			// Bitmask sampling parameters:
+			m_pDispatcher->SetSliceCount(m_sliceCount);
+			m_pDispatcher->SetSamplesPerSide(m_samplesPerSide);
+			m_pDispatcher->SetSampleThickness(m_sampleThickness);
 			// Temporal reconstruction parameters:
 			m_pDispatcher->SetTemporalHistoryWeight(m_temporalHistoryWeight);
 			m_pDispatcher->SetTemporalMinimumDepthTolerance(m_temporalMinimumDepthTolerance);

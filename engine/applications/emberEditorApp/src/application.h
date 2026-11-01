@@ -18,6 +18,7 @@ namespace emberEditor
 {
 	class BackendDebugEditorWindow;
 	class ConsoleEditorWindow;
+	class DeferredLightingEditorWindow;
 	class DepthBiasEditorWindow;
 	class FpsEditorWindow;
 	class GameEditorWindow;
@@ -55,6 +56,7 @@ namespace emberApplication
 		static emberEcs::Scene* m_pActiveScene;
 		static std::unique_ptr<emberEditor::BackendDebugEditorWindow> m_pBackendDebugEditorWindow;
 		static std::unique_ptr<emberEditor::ConsoleEditorWindow> m_pConsoleEditorWindow;
+		static std::unique_ptr<emberEditor::DeferredLightingEditorWindow> m_pDeferredLightingEditorWindow;
 		static std::unique_ptr<emberEditor::DepthBiasEditorWindow> m_pDepthBiasEditorWindow;
 		static std::unique_ptr<emberEditor::FpsEditorWindow> m_pFpsEditorWindow;
 		static std::unique_ptr<emberEditor::GameEditorWindow> m_pGameEditorWindow;
@@ -80,6 +82,7 @@ namespace emberApplication
 		static emberEcs::Scene* GetActiveScene();
 		static emberEditor::BackendDebugEditorWindow* GetBackendDebugEditorWindow();
 		static emberEditor::ConsoleEditorWindow* GetConsoleEditorWindow();
+		static emberEditor::DeferredLightingEditorWindow* GetDeferredLightingEditorWindow();
 		static emberEditor::DepthBiasEditorWindow* GetDepthBiasEditorWindow();
 		static emberEditor::FpsEditorWindow* GetFpsEditorWindow();
 		static emberEditor::GameEditorWindow* GetGameEditorWindow();

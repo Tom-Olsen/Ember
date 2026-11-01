@@ -11,15 +11,27 @@ namespace emberEcs
 {
 	class SsaoDispatcher : public Component
 	{
+	public: // Enums:
+		enum class SsaoMode
+		{
+			off,
+			kernelSampled,
+			bitmaskSampled
+		};
+
 	private: // Members:
 		// Settings:
-		bool m_ssaoEnabled = true;
+		SsaoMode m_ssaoMode = SsaoMode::kernelSampled;
 		float m_resolutionScale = 0.5f;
 		// Sampling parameters:
 		int m_sampleCount = 32;
 		float m_sampleRadius = 2.0f;
 		float m_sampleBias = 0.01f;
 		float m_occlusionStrength = 3.0f;
+		// Bitmask sampling parameters:
+		int m_sliceCount = 4;
+		int m_samplesPerSide = 8;
+		float m_sampleThickness = 0.2f;
 		// Temporal reconstruction parameters:
 		float m_temporalHistoryWeight = 0.9f;
 		float m_temporalMinimumDepthTolerance = 0.05f;
@@ -42,7 +54,8 @@ namespace emberEcs
 		uint32_t m_historyWriteIndex = 0;
 		uint32_t m_rngSeed = 0;
 		// Compute shaders (internal):
-		emberCore::ComputeShader m_ssaoComputeShader;
+		emberCore::ComputeShader m_ssaoKernelSampledComputeShader;
+		emberCore::ComputeShader m_ssaoBitmaskSampledComputeShader;
 		emberCore::ComputeShader m_ssaoTemporalComputeShader;
 		emberCore::ComputeShader m_ssaoUpsampleBlurComputeShader;
 		// Textures (internal):
@@ -63,13 +76,17 @@ namespace emberEcs
 
 		// Setters:
 		// Settings:
-		void SetSsaoEnabled(bool ssaoEnabled);
+		void SetSsaoMode(SsaoMode ssaoMode);
 		void SetResolutionScale(float resolutionScale);
 		// Sampling parameters:
 		void SetSampleCount(int sampleCount);
 		void SetSampleRadius(float sampleRadius);
 		void SetSampleBias(float sampleBias);
 		void SetOcclusionStrength(float occlusionStrength);
+		// Bitmask sampling parameters:
+		void SetSliceCount(int sliceCount);
+		void SetSamplesPerSide(int samplesPerSide);
+		void SetSampleThickness(float sampleThickness);
 		// Temporal reconstruction parameters:
 		void SetTemporalHistoryWeight(float temporalHistoryWeight);
 		void SetTemporalMinimumDepthTolerance(float temporalMinimumDepthTolerance);
@@ -85,13 +102,17 @@ namespace emberEcs
 
 		// Getters:
 		// Settings:
-		bool GetSsaoEnabled() const;
+		SsaoMode GetSsaoMode() const;
 		float GetResolutionScale() const;
 		// Sampling parameters:
 		int GetSampleCount() const;
 		float GetSampleRadius() const;
 		float GetSampleBias() const;
 		float GetOcclusionStrength() const;
+		// Bitmask sampling parameters:
+		int GetSliceCount() const;
+		int GetSamplesPerSide() const;
+		float GetSampleThickness() const;
 		// Temporal reconstruction parameters:
 		float GetTemporalHistoryWeight() const;
 		float GetTemporalMinimumDepthTolerance() const;

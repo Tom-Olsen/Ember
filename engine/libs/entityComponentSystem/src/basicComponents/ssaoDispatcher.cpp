@@ -19,7 +19,8 @@ namespace emberEcs
 	// Constructor/Destructor:
 	SsaoDispatcher::SsaoDispatcher()
 	{
-		m_ssaoComputeShader = ComputeShaderManager::TryGetComputeShader("ssao");
+		m_ssaoKernelSampledComputeShader = ComputeShaderManager::TryGetComputeShader("ssaoKernelSampled");
+		m_ssaoBitmaskSampledComputeShader = ComputeShaderManager::TryGetComputeShader("ssaoBitmaskSampled");
 		m_ssaoTemporalComputeShader = ComputeShaderManager::TryGetComputeShader("ssaoTemporal");
 		m_ssaoUpsampleBlurComputeShader = ComputeShaderManager::TryGetComputeShader("ssaoUpsampleBlur");
 		UpdateTextures();
@@ -43,11 +44,8 @@ namespace emberEcs
 	void SsaoDispatcher::LateUpdate()
 	{
 		// No SSAO:
-		if (!m_ssaoEnabled)
-		{
-			ResetHistory();
+		if (m_ssaoMode == SsaoMode::off)
 			return;
-		}
 
 		// Prepare gpu resources:
 		SetSamplingParameters();
@@ -55,7 +53,8 @@ namespace emberEcs
 
 		// Queue SSAO:
 		{
-			CallProperties callProperties = Compute::PostGeometry::RecordComputeShader(m_ssaoComputeShader, Uint3(m_aoWidth, m_aoHeight, 1));
+			ComputeShader& ssaoComputeShader = m_ssaoMode == SsaoMode::bitmaskSampled ? m_ssaoBitmaskSampledComputeShader : m_ssaoKernelSampledComputeShader;
+			CallProperties callProperties = Compute::PostGeometry::RecordComputeShader(ssaoComputeShader, Uint3(m_aoWidth, m_aoHeight, 1));
 			callProperties.SetTexture("ambientOcclusionMap", m_ssaoTexture.GetTexture());
 		}
 		Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeReadWrite();
@@ -97,11 +96,13 @@ namespace emberEcs
 
 	// Setters:
 	// Settings:
-	void SsaoDispatcher::SetSsaoEnabled(bool ssaoEnabled)
+	void SsaoDispatcher::SetSsaoMode(SsaoMode ssaoMode)
 	{
-		m_ssaoEnabled = ssaoEnabled;
-		if (!m_ssaoEnabled)
+		if (m_ssaoMode != ssaoMode)
+		{
+			m_ssaoMode = ssaoMode;
 			ResetHistory();
+		}
 	}
 	void SsaoDispatcher::SetResolutionScale(float resolutionScale)
 	{
@@ -110,7 +111,7 @@ namespace emberEcs
 	// Sampling parameters:
 	void SsaoDispatcher::SetSampleCount(int sampleCount)
 	{
-		sampleCount = math::Clamp(sampleCount, 1, SSAO_MAX_SAMPLE_COUNT);
+		sampleCount = math::Clamp(sampleCount, 1, SSAO_KERNEL_MAX_SAMPLES);
 		if (m_sampleCount == sampleCount)
 			return;
 		m_sampleCount = sampleCount;
@@ -128,6 +129,27 @@ namespace emberEcs
 	void SsaoDispatcher::SetOcclusionStrength(float occlusionStrength)
 	{
 		m_occlusionStrength = math::Max(0.0f, occlusionStrength);
+	}
+	// Bitmask sampling parameters:
+	void SsaoDispatcher::SetSliceCount(int sliceCount)
+	{
+		sliceCount = math::Clamp(sliceCount, 1, SSAO_BITMASK_MAX_SLICES);
+		if (m_sliceCount == sliceCount)
+			return;
+		m_sliceCount = sliceCount;
+		ResetHistory();
+	}
+	void SsaoDispatcher::SetSamplesPerSide(int samplesPerSide)
+	{
+		samplesPerSide = math::Clamp(samplesPerSide, 1, SSAO_BITMASK_MAX_SAMPLES_PER_SIDE);
+		if (m_samplesPerSide == samplesPerSide)
+			return;
+		m_samplesPerSide = samplesPerSide;
+		ResetHistory();
+	}
+	void SsaoDispatcher::SetSampleThickness(float sampleThickness)
+	{
+		m_sampleThickness = math::Max(0.0f, sampleThickness);
 	}
 	// Temporal reconstruction parameters:
 	void SsaoDispatcher::SetTemporalHistoryWeight(float temporalHistoryWeight)
@@ -177,9 +199,9 @@ namespace emberEcs
 
 	// Getters:
 	// Settings:
-	bool SsaoDispatcher::GetSsaoEnabled() const
+	SsaoDispatcher::SsaoMode SsaoDispatcher::GetSsaoMode() const
 	{
-		return m_ssaoEnabled;
+		return m_ssaoMode;
 	}
 	float SsaoDispatcher::GetResolutionScale() const
 	{
@@ -201,6 +223,19 @@ namespace emberEcs
 	float SsaoDispatcher::GetOcclusionStrength() const
 	{
 		return m_occlusionStrength;
+	}
+	// Bitmask sampling parameters:
+	int SsaoDispatcher::GetSliceCount() const
+	{
+		return m_sliceCount;
+	}
+	int SsaoDispatcher::GetSamplesPerSide() const
+	{
+		return m_samplesPerSide;
+	}
+	float SsaoDispatcher::GetSampleThickness() const
+	{
+		return m_sampleThickness;
 	}
 	// Temporal reconstruction parameters:
 	float SsaoDispatcher::GetTemporalHistoryWeight() const
@@ -287,14 +322,26 @@ namespace emberEcs
 			Radians angle = Radians(math::goldenAngle * float(i));
 			float diskRadius = math::Sqrt(directionFraction);
 			Float3 direction(diskRadius * math::Cos(angle), diskRadius * math::Sin(angle), math::Sqrt(1.0f - directionFraction));
-			m_ssaoComputeShader.SetValue("SsaoSamplingKernel", "sampleDirections", uint32_t(i), direction);
+			m_ssaoKernelSampledComputeShader.SetValue("SamplingKernel", "sampleDirections", uint32_t(i), direction);
 		}
 	}
 	void SsaoDispatcher::SetSamplingParameters()
 	{
-		m_ssaoComputeShader.SetValue("SsaoSamplingParameters", "sampleCount", m_sampleCount);
-		m_ssaoComputeShader.SetValue("SsaoSamplingParameters", "sampleRadius", m_sampleRadius);
-		m_ssaoComputeShader.SetValue("SsaoSamplingParameters", "sampleBias", m_sampleBias);
-		m_ssaoComputeShader.SetValue("SsaoSamplingParameters", "rngSeed", int(m_rngSeed));
+		if (m_ssaoMode == SsaoMode::kernelSampled)
+		{
+			m_ssaoKernelSampledComputeShader.SetValue("SsaoSamplingParameters", "sampleCount", m_sampleCount);
+			m_ssaoKernelSampledComputeShader.SetValue("SsaoSamplingParameters", "sampleRadius", m_sampleRadius);
+			m_ssaoKernelSampledComputeShader.SetValue("SsaoSamplingParameters", "sampleBias", m_sampleBias);
+			m_ssaoKernelSampledComputeShader.SetValue("SsaoSamplingParameters", "rngSeed", int(m_rngSeed));
+		}
+		else if (m_ssaoMode == SsaoMode::bitmaskSampled)
+		{
+			m_ssaoBitmaskSampledComputeShader.SetValue("SsaoSamplingParameters", "sliceCount", m_sliceCount);
+			m_ssaoBitmaskSampledComputeShader.SetValue("SsaoSamplingParameters", "samplesPerSide", m_samplesPerSide);
+			m_ssaoBitmaskSampledComputeShader.SetValue("SsaoSamplingParameters", "sampleRadius", m_sampleRadius);
+			m_ssaoBitmaskSampledComputeShader.SetValue("SsaoSamplingParameters", "sampleBias", m_sampleBias);
+			m_ssaoBitmaskSampledComputeShader.SetValue("SsaoSamplingParameters", "sampleThickness", m_sampleThickness);
+			m_ssaoBitmaskSampledComputeShader.SetValue("SsaoSamplingParameters", "rngSeed", int(m_rngSeed));
+		}
 	}
 }

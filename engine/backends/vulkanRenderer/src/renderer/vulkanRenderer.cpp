@@ -494,6 +494,10 @@ namespace vulkanRendererBackend
 	{
 		return m_outlineThickness;
 	}
+	int Renderer::GetDeferredLightingRenderMode() const
+	{
+		return DefaultGpuResources::Get().GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding()->GetInt("Settings", "renderMode");
+	}
 	uint32_t Renderer::GetFrameIndex() const
 	{
 		return Context::GetFrameIndex();
@@ -541,6 +545,10 @@ namespace vulkanRendererBackend
 	void Renderer::SetOutlineThickness(int outlineThickness)
 	{
 		m_outlineThickness = outlineThickness;
+	}
+	void Renderer::SetDeferredLightingRenderMode(int renderMode)
+	{
+		DefaultGpuResources::Get().GetDefaultDeferredLightingMaterial()->GetDescriptorSetBinding()->SetInt("Settings", "renderMode", renderMode);
 	}
 
 

@@ -301,6 +301,10 @@ namespace emberCore
 	{
 		return s_pIRenderer->GetOutlineThickness();
 	}
+	int Renderer::GetDeferredLightingRenderMode()
+	{
+		return s_pIRenderer->GetDeferredLightingRenderMode();
+	}
 	uint32_t Renderer::GetFrameIndex()
 	{
 		return s_pIRenderer ? s_pIRenderer->GetFrameIndex() : 0;
@@ -336,6 +340,10 @@ namespace emberCore
 	void Renderer::SetOutlineThickness(int outlineThickness)
 	{
 		s_pIRenderer->SetOutlineThickness(outlineThickness);
+	}
+	void Renderer::SetDeferredLightingRenderMode(int renderMode)
+	{
+		s_pIRenderer->SetDeferredLightingRenderMode(renderMode);
 	}
 
 

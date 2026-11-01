@@ -1,11 +1,12 @@
-#ifndef __INCLUDE_GUARD_ssao_hlsli__
-#define __INCLUDE_GUARD_ssao_hlsli__
+#include "computeShaderCommon.hlsli"
+#include "bilateralUpsampling.hlsli"
 #include "descriptorSetMacros.h"
 #include "ssaoConstants.h"
 
 
 
-// Sampling parameters:
+// Bindings:
+[[vk::image_format("r16f")]] RWTexture2D<float> ambientOcclusionMap : register(u200, CALL_SET);
 cbuffer SsaoSamplingParameters : register(b300, SHADER_SET)
 {
 	uint sampleCount;
@@ -17,15 +18,15 @@ cbuffer SsaoSamplingParameters : register(b300, SHADER_SET)
 
 
 // Cosine weighted local hemisphere, regenerated on the CPU when sampleCount changes:
-cbuffer SsaoSamplingKernel : register(b301, SHADER_SET)
+cbuffer SamplingKernel : register(b301, SHADER_SET)
 {
-	float3 sampleDirections[SSAO_MAX_SAMPLE_COUNT];
+	float3 sampleDirections[SSAO_KERNEL_MAX_SAMPLES];
 };
 
 
 
 // Screen space ambient occlusion algorithm:
-float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSize)
+float Occlusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSize)
 {
 	// Reconstruct the source surface and orient the sampling hemisphere along its world-space normal:
 	float3 worldPosition = Camera_GetWorldPosition(sourcePixel, sourceNdcDepth, screenSize);
@@ -87,4 +88,29 @@ float Ssao_GetOcclusion(uint2 sourcePixel, float sourceNdcDepth, float2 screenSi
 
 
 
-#endif // __INCLUDE_GUARD_ssao_hlsli__
+[numthreads(8, 8, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+	if (threadID.x >= pc.threadCount.x || threadID.y >= pc.threadCount.y)
+		return;
+
+	// Ambient occlusion map size:
+	uint aoWidth;
+	uint aoHeight;
+	ambientOcclusionMap.GetDimensions(aoWidth, aoHeight);
+	if (threadID.x >= aoWidth || threadID.y >= aoHeight)
+		return;
+
+	// Screen size:
+	uint screenWidth;
+	uint screenHeight;
+	sceneDepthTexture.GetDimensions(screenWidth, screenHeight);
+
+	// Compute ambient occlusion:
+	float occlusion = 0.0f;
+	uint2 sourcePixel = Bilateral_LowResolutionPixelToScreenPixel(threadID.xy, uint2(screenWidth, screenHeight), float2(aoWidth, aoHeight));
+	float sourceNdcDepth = Scene_GetNdcDepth(sourcePixel);
+	if (sourceNdcDepth < 1.0f)
+		occlusion = Occlusion(sourcePixel, sourceNdcDepth, float2(screenWidth, screenHeight));
+	ambientOcclusionMap[threadID.xy] = occlusion;
+}
