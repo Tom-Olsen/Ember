@@ -1,0 +1,384 @@
+Render Resources and Mipmaps
+===========================
+
+Status: design and implementation plan, 2026-11-01.
+The experimental image-state/render-graph implementation has been discarded.
+This document replaces ToDoTextureLayoutsAndRenderGraph.txt. No implementation step below is complete.
+
+
+Objective and scope
+-------------------
+
+Keep Ember's existing static render graph, stage order, and queue topology.
+Make image synchronization predictable and efficient, and provide coherent mipmap support across texture types.
+The immediate consumers are ordinary sampled assets, render targets, runtime-generated mip chains, hierarchical depth for SSR, and roughness-dependent reflection sampling.
+
+Use existing subsystem boundaries: backend-independent texture selections in common/interfaces/core; native image state, views, and Vulkan synchronization in the Vulkan backend; image algorithms in engine shaders.
+Keep existing buffer synchronization working. A general rewrite of buffer management, resource allocation/aliasing, dynamic graph scheduling, or dynamic rendering is outside this task.
+A mip-generation operation may expand into ordered blits/dispatches inside an existing static stage; that does not require a dynamically constructed render graph.
+
+
+Review and implementation discipline
+-----------------------------------
+
+- Implement one requested checkpoint at a time, build it, and leave it ready for review before moving on.
+- Aim for one concept and roughly 2-5 source files per checkpoint. This is a review target, not a reason to split an atomic correctness change unsafely.
+- If a checkpoint would require a broad migration, split out mechanical groundwork first and review it separately. Do not silently turn a small checkpoint into a renderer-wide rewrite.
+- For repeated texture-family or stage migrations, each family/resource named in the plan is a separate checkpoint, even when they share an implementation pattern.
+- Each checkpoint must compile independently and preserve working rendering for existing callers. Explicitly identify behavior that becomes available only in a later checkpoint.
+- Keep functional changes separate from unrelated formatting, include cleanup, renames, and command-buffer lifecycle refactors.
+- Follow AGENTS.md, including header/source pairing and method/comment ordering. Add no unit tests unless explicitly requested.
+- Use existing builds/checks and focused runtime verification appropriate to the checkpoint. Do not launch a large verification matrix for a simple structural edit.
+- During migration, unconverted resources may retain the old synchronization path. For any one image range and operation boundary, exactly one system owns synchronization and state mutation.
+- An unavoidable legacy handoff must name the entering/exiting state and completion dependency, have a clear removal checkpoint, and never duplicate an active transition.
+- Once the API has settled, consider a small repository skill for the repeated texture-family/stage migration workflow. Do not automate away the review checkpoints.
+
+
+Resource contracts and ownership
+--------------------------------
+
+Distinguish access behavior from allocation ownership. A user-created render target and a renderer-owned render target follow the same synchronization rules.
+Persistent lifetime does not imply immutable contents, and storage capability does not imply a permanent GENERAL layout.
+
+Stable sampled assets:
+
+- Upload/initialization produces a ready-to-sample resource with defined contents, layout, shader-read visibility, and queue access for the consumers covered by its publication contract.
+- Normal material sampling uses that contract. Do not rediscover or transition all albedo/normal/roughness textures for every draw or every frame.
+- Establish readiness for the relevant graphics/compute queues and shader stages. Completing an upload or choosing a descriptor layout alone is not the full publication contract.
+- Updating data, streaming mips, reallocating, or making a published asset writable requires an explicit handoff. Synchronize outstanding consumers of the affected ranges before publishing the updated version.
+- Publish complete initialized ranges; retain the old allocation/view until its outstanding GPU consumers finish when replacing a resource.
+
+Graph-managed images:
+
+- Stages/operations declare selected views/ranges and semantic access, such as sampled read, storage write, attachment access, transfer, or presentation.
+- The graph owns inter-operation synchronization and predicted state for these accesses. Stages do not select predecessor-specific barriers or manually mirror render-pass final layouts.
+- Include render targets, mutable/history textures, compute outputs, mip-generation outputs, and user textures whose accesses change during graph execution.
+- Material bindings that reference graph-managed images contribute explicit dependencies to their consuming pass. A material binding must not conceal a changing render target behind the stable-asset contract.
+
+External operations:
+
+- Uploads, readback, standalone async compute, ImGui/editor previews, and presentation participate through explicit access/publication/import/export contracts.
+- A shared backend synchronization implementation may support these boundaries; render-graph orchestration does not require ordinary asset uploads to become frame passes.
+- External code cannot silently change a graph-owned range's layout or contents. Ownership changes include both state and execution/completion information.
+
+
+Pass preparation and efficient dependency collection
+---------------------------------------------------
+
+Declare attachment and shared frame-resource requirements at pass granularity.
+Declare ordered compute accesses at dispatch/operation granularity wherever successive operations have a dependency.
+Use the same prepared physical-image/view selection for synchronization, descriptors, and framebuffer/dispatch recording.
+Resolve frame-in-flight and scene-color ping-pong selections consistently; a logical role is not an image identity.
+
+Avoid the prototype's repeated discovery work:
+
+- Cache shader access metadata when the shader/pipeline is created. Cached reflection can assist declarations; it is not a reason to walk every descriptor of every draw during synchronization planning.
+- Maintain compact dependency lists for bindings that reference graph-managed resources. Build/invalidate these when the relevant bindings, shader metadata, or resource classification changes.
+- Include a shared material/shader dependency set once per consuming pass; collect call-specific mutable dependencies while preparing the draw/dispatch work, without an extra full traversal of all material textures.
+- Resolve resource handles safely across destruction, replacement, and descriptor changes. Cache invalidation must include resource generations and selected ranges.
+- Deduplicate using indexed resource identities, generation stamps, or suitable lookup tables. Do not linearly search all previously collected images for each binding.
+- The binding description and access declaration share their selected resource/view and intended access layout, so they cannot drift into separate policies.
+
+Cache the static graph's resource relationships and reusable barrier templates.
+Resolve physical images and variable operation requirements for the current frame before recording affected work.
+Rebuild affected planning data when declarations, optional operations, selected ranges, ping-pong roles, or resource configurations change.
+Recreation invalidates native handles; cached topology/templates do not make old VkImage/VkImageView values reusable.
+Do not claim every barrier can be frozen once: first use, next-frame entry state, external handoffs, and variable compute sequences still need correct resolution.
+
+
+Image state and synchronization
+-------------------------------
+
+Separate allocation capabilities, view selection, required access, and predicted scheduled state.
+A small ImageUsage-style declaration and ImageState-style representation are useful concepts; their final names and storage location are not fixed by the discarded prototype.
+State may live passively on the physical image or in a lifetime-safe backend registry. Choose one storage owner; do not duplicate mutable state in texture wrappers and descriptors.
+
+Required behavior:
+
+- Track layout, relevant access/pipeline scopes, and queue-family ownership per supported subresource range.
+- Persist physical state between executions; initialize it from creation/import and discard it when that physical allocation is replaced.
+- Track the relevant writer, outstanding reader groups, and synchronization already established for subsequent consumers. A permanent accumulated write bit is not a sufficient hazard model.
+- Publish a writer to compatible known reader scopes together where valid. Add dependencies for reader scopes that have not yet been covered; avoid repeating satisfied read dependencies.
+- Before a later write or layout transition, account for every outstanding overlapping reader/writer that matters to the actual queue schedule.
+- Handle same-layout hazards. GENERAL-to-GENERAL storage accesses can require synchronization even with no layout change.
+- Compatible ordered reads in the same layout need no new dependency when producer visibility is already established. Unordered queue branches still require a valid common layout and synchronization contract.
+- Use compact per-resource/per-queue dependency summaries or frontiers. Do not replay an ever-growing vector of all earlier accesses for each new use.
+- Analyze overlapping mip/layer/aspect ranges; disjoint ranges retain independent state. State storage and hazard analysis must have matching granularity.
+- Batch compatible dependencies at a common boundary. Use image barriers for layout/ownership changes and suitable memory dependencies for visibility-only hazards; select precise scopes.
+- Coordinate barriers with the existing semaphore edges. A barrier alone does not synchronize independent queues; avoid duplicating visibility work already provided by the semaphore contract.
+- The current backend selects queues from one family. Validate that existing invariant; a genuinely different-family import requires a matching ownership handoff, not ignored family indices.
+- Do not silently serialize unrelated branches to accommodate an undeclared conflict. Make the affected dependencies explicit and review any required schedule change.
+- Detailed misuse/history validation belongs in development diagnostics. Required synchronization planning must remain active in release builds.
+
+Render-pass and descriptor boundaries:
+
+- For migrated single-subpass attachments, prefer initial/final layouts equal to the attachment layout and let graph-owned barriers establish/leave it.
+- Preserve necessary internal subpass dependencies; remove external dependencies only when their replacements are active.
+- Declare load/clear/discard/store behavior as part of attachment usage. Discarding contents does not remove the need to order conflicting GPU accesses.
+- Include load/store accesses in synchronization. Read-only depth testing can still have store writes; use a supported no-store operation when appropriate or account for those writes explicitly.
+- Derive descriptor layouts from intended accesses, never from the tracked layout at descriptor-update time.
+- Allow updates before recording, including the first frame after creation/recreation. Descriptors do not themselves transition images.
+- Export only what an external consumer requires. Do not restore every image to a generic end-of-frame layout.
+
+
+Texture allocation, views, and subresources
+------------------------------------------
+
+Provide one consistent mip/range model through the frontend, interfaces, resource factories, backend allocations, descriptors, attachments, transfers, and graph declarations.
+Callers select meaningful mip/face/layer ranges without constructing Vulkan view types or raw synchronization flags.
+
+Keep distinct operations:
+
+1. Allocating mip levels.
+2. Uploading or rendering defined contents into selected levels.
+3. Generating/rebuilding dependent levels with an explicitly selected algorithm.
+4. Selecting a view and sampling valid levels.
+
+Selecting a view or binding a texture performs none of the other operations implicitly.
+Changing a source mip makes derived levels stale; regeneration must be scheduled before they are consumed.
+Track validity at operation/publication boundaries or invalidate published selections when writes are prepared. Do not introduce a per-draw traversal of every mip to discover stale contents.
+
+Allocation/view requirements:
+
+- Expose one-level, explicitly sized chain, and full-chain allocation policies with validation. Preserve existing defaults until an explicit reviewed API change. Use a shared texture creation description where it avoids repeated factory signature churn.
+- Calculate mip extents from spatial dimensions, clamping each active dimension to at least one; validate the maximum mip count against the original extent.
+- For 3D textures, width, height, and depth shrink. Array layer counts and cube-face counts do not shrink with mip level.
+- Cover 1D, 2D, 3D, cube, and array texture shapes, across applicable sampled, storage, combined sampled/storage, render-target, and depth uses.
+- The existing 1D path is incomplete and its factory entry is commented out. Complete it through dedicated checkpoints rather than claiming universal support after changing only the working 2D path.
+- Inventory existing array APIs separately from any new public array/cube-array families. Agree their frontend shape before introducing missing classes; do not model nonexistent 3D array textures.
+- Cache native image views by complete immutable descriptions. Keep allocation ownership separate from views; invalidate/rebuild views when replacing an allocation.
+- Typed selection must preserve shape: normal 2D/3D/cube/array views, 2D cube-face views, and appropriate single-layer views. Do not wrap one allocation in a misleading second owning texture type.
+- A sampled view may span initialized mips. An attachment or storage-image binding explicitly selects one mip; layered views may still be valid.
+- An All() selection denotes the allocated chain, not a guarantee of initialized contents. Reject invalid consumption or publish a restricted view/LOD range until the relevant levels are ready.
+- The view bound to a shader and the graph's declared accessible range must agree, including implicit/fractional LOD sampling that can touch multiple levels.
+- Configure sampler mip filtering and LOD bounds consistently with the published view/chain. Remove hidden mip-0-only clamps from ordinary mipmapped sampling paths.
+- Support uploading supplied mip chains and selected mip/layer ranges with correct offsets, extents, row pitches, and 3D slice pitches. Readback preserves unrelated ranges.
+- Multisampled allocations have a single mip level. Resolve or explicitly reduce into a suitable single-sample resource before generating a pyramid.
+
+Universal shape support does not mean every format supports every algorithm.
+Query format features, image usages, view compatibility, filtering support, and device limits before choosing a generation path.
+Compressed, integer, sRGB, depth/stencil, and storage-image formats need explicit policies. Prefer a supported shader/intermediate path or supplied offline mips when the requested result is supported; otherwise report the unsupported combination clearly.
+Never silently force one mip, change a reduction operator, or treat a partial range as the whole allocation.
+
+
+Mipmap generation inside the static graph
+----------------------------------------
+
+Represent mip generation as an explicit image operation at a chosen point in an existing stage.
+It declares its source contents, destination mip range, selected layers/faces, algorithm, and consuming usages.
+The graph's synchronization machinery owns the inter-level dependencies; a specialized generator records the blits/dispatches using that machinery.
+Neither texture accessors nor unrelated stages hide internal transitions.
+
+A simple implementation may process one destination mip at a time:
+
+    producer writes mip 0
+    read mip 0, write mip 1
+    read mip 1, write mip 2
+    ...
+    consumer samples the completed selected chain
+
+Source and destination levels can legitimately require different layouts at the same time.
+Both state tracking and overlap analysis must support this before graph-visible independent mip uses are enabled.
+An encapsulated generator may optimize its internal command sequence, but it must preserve/report exact affected-range states; it cannot collapse mixed layouts into an invented whole-image state.
+Support generation from a selected source level and partial regeneration without touching unrelated layers/faces or overwriting supplied mips unexpectedly.
+
+Choose generation semantics deliberately:
+
+- Ordinary color mipmaps: appropriate spatial low-pass filtering; sRGB content must be filtered with correct linear-light semantics.
+- Data/normal/material maps: select a meaningful reduction or supplied offline chain; color averaging is not a universal data reduction.
+- Hi-Z: explicit conservative minimum, maximum, or min/max reduction matching the depth convention and traversal algorithm. Never use ordinary color averaging as a depth hierarchy.
+- Roughness-selected reflection sampling: expose usable filtered mip chains and explicit/fractional LOD sampling. A blurred scene-color chain is an SSR approximation, with its own quality limitations.
+- Environment/specular reflection mips: provide a distinct roughness-prefilter operation when required. BRDF-aware environment prefiltering and ordinary box/linear mip generation are different products.
+
+Start with straightforward inter-level blits/dispatches and precise synchronization.
+Do not begin with a complex single-dispatch pyramid algorithm. Consider such optimizations only after correctness, reviewability, and measurements justify them.
+
+
+Hi-Z and reflection acceptance scenarios
+----------------------------------------
+
+Hi-Z depth hierarchy:
+
+- Preserve the scene-depth attachment and construct a separately sampled/storage-capable floating-point pyramid when native depth-format storage/reduction is unsuitable.
+- Explicitly define the depth representation, forward/reversed-Z convention, reduction operator, clear/background values, and traversal comparisons together.
+- Ensure conservative coverage for odd and non-power-of-two sizes; a naive fixed 2x2 reduction can miss an edge when standard mip dimensions round down.
+- Handle degenerate 1xN/Nx1 sizes, resize, regeneration each required frame, and frame-in-flight selection.
+- Build/inspect the hierarchy independently before changing SSR traversal. Then compare hierarchical traversal with the current linear march for hits, misses, and image quality.
+
+Roughness and reflection sampling:
+
+- Confirm actual mip selection with a diagnostic view before changing the reflection model.
+- Agree which source is being filtered: scene color/reflection output for SSR, environment radiance for IBL, or both as separate operations.
+- Define roughness-to-LOD mapping and chain length consistently with the chosen filter, sampler, and material roughness convention.
+- Preserve cubemap face continuity for environment filtering; independent face blits are not a substitute for a defined specular prefilter.
+- Keep infrastructure, scene-color mip generation, Hi-Z traversal, and BRDF/environment filtering as separate reviewable changes.
+
+
+Performance and correctness acceptance
+--------------------------------------
+
+- Stable sampled assets receive no repeated per-frame transitions/barriers after their publication contract is satisfied, until an explicit update changes that contract.
+- Reusing an unchanged material in more draws does not rebuild the same graph dependency list for every draw.
+- Planning scales with unique declared mutable-resource uses, actual dependency edges, and emitted mip operations, including necessary subresource-overlap work; avoid quadratic binding merges and full-history rescans.
+- State and cache memory remain bounded by live resources, supported ranges, and outstanding queue dependencies. Prevent unbounded range fragmentation/history growth.
+- Read dependencies already satisfied are not repeatedly emitted merely because an old writer remains in the bookkeeping.
+- The cached static plan remains correct through optional operations, ping-pong output changes, texture replacement, and swapchain recreation.
+- Measure usage-preparation/planning CPU time, allocations, barrier/transition counts, GPU timestamps, and relevant queue overlap against a baseline.
+- Compare both realistic scenes and scaling cases: more draws sharing resources, more unique mutable resources, and longer dependent compute/mip sequences.
+- Verify output and run Vulkan core/synchronization validation after each functional migration. Use GPU-assisted validation separately when needed.
+- Each supported texture-family/format-path combination has a focused manual verification case for allocation, view shape, upload/generation, sampling, and preservation of unaffected ranges. Unsupported combinations fail clearly.
+- Completion requires correct rendered output, defined mip contents at sampling time, no layout/synchronization errors in representative workloads, and investigated/accepted performance changes.
+
+
+References and earlier work
+---------------------------
+
+Design references, not a requirement to copy another engine's API:
+
+- Pass resource declarations and preparation/execution separation: [Unreal RDG](https://dev.epicgames.com/documentation/en-us/unreal-engine/render-dependency-graph-in-unreal-engine).
+- Explicit stable read-only external access: [Unreal external access mode](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/RenderCore/FRDGBuilder/UseExternalAccessMode).
+- Dependencies, compatible reader scopes, and semaphore interaction: [Khronos synchronization examples](https://docs.vulkan.org/guide/latest/synchronization_examples.html).
+- Format-dependent blit generation and shader alternatives: [Khronos mipmap generation](https://docs.vulkan.org/samples/latest/samples/api/texture_mipmap_generation/README.html).
+- Spatial mip sizing versus array layers: [Khronos image copies](https://docs.vulkan.org/guide/latest/image_copies.html).
+- Multisample/mip allocation restrictions: [VkImageCreateInfo](https://docs.vulkan.org/refpages/latest/refpages/source/VkImageCreateInfo.html).
+- Practical separate depth hierarchy for SSR: [AMD FidelityFX SSSR](https://gpuopen.com/manuals/fidelityfx_sdk/techniques/stochastic-screen-space-reflections/).
+- Roughness-dependent environment prefiltering: [Filament lighting design](https://google.github.io/filament/Filament.html).
+
+Historical mipmap snapshots, separate from the discarded render-graph experiment:
+
+- 7fef97d5c74c7d83b6d71388eb7ca9ec94aa6e68: Full mipmap refactor before isolated VmaImage support, 2026-10-14.
+- 5d48f29b54a96b4c34cb7deb7998d99518bb2b00: Reviewed isolated VmaImage mipmap support and design notes, 2026-10-15.
+
+These snapshots overlap. Inspect relevant ideas only; do not apply either broad snapshot as the implementation plan, or apply both sequentially.
+Use commit IDs rather than mutable stash indices. The discarded prototype is not the architectural baseline.
+
+
+Step-by-step implementation plan
+--------------------------------
+
+Each numbered item is a code implementation checkpoint. Items that explicitly repeat per resource/family are separate checkpoints for each named resource/family.
+Keep each checkpoint focused on a small file set and split broad migrations into smaller implementation changes.
+Do not introduce independent graph mip/face/layer accesses before checkpoint 6 establishes range-aware state and dependency planning together.
+
+1. Introduce the shared mip/range primitives.
+   Add small common header/source pairs for mip selection, subresource selection, and validated extent/count calculations.
+   Implement full/single/partial selections, odd dimensions, 1D/2D/3D extents, array counts, and rejection of invalid ranges.
+
+2. Add native view descriptions and caching to VmaImage.
+   Limit this to VmaImage and, if needed, one native view-description pair. Preserve its current default view for existing callers.
+   Implement selected mip/layer/aspect views and their lifetime management without changing layout or descriptor policy.
+
+3. Add the typed 2D view selection path.
+   Add one backend/interface selection path and one narrowly scoped descriptor-view consumer. Preserve the existing default selection for existing callers.
+   Support full-chain sampled selection and explicit single-mip attachment/storage selection without hidden generation or transitions.
+
+4. Introduce semantic image access and state primitives.
+   Add small Vulkan backend data types and the central usage-to-state mapping, without migrating stages.
+   Include attachment content behavior, range identity, physical-image identity, and representation of satisfied reader dependencies. Do not reproduce the prototype's permanent-write-bit policy.
+
+5. Implement physical subresource state storage.
+   Implement the selected state owner and its lifetime/reset rules, with an explicit boundary to import state from the still-active legacy path.
+   Support mixed mip/layer states, preservation of unrelated ranges, recreation, and separate frame images. Keep legacy state coherent for resources not yet migrated.
+
+6. Implement dependency planning for declared ranges.
+   Add the compact planner and prepared dependency records without changing the full renderer schedule.
+   Handle overlapping/disjoint ranges, multiple readers, satisfied visibility, same-layout writes, and queue relationships without per-use full-history replay.
+   State representation and overlap analysis must support independent ranges before any graph-visible mip work is enabled.
+
+7. Establish stable sampled-asset publication on the existing 2D upload path.
+   Implement one upload/initialization path and its readiness handoff, using the new state machinery where that path takes ownership.
+   Establish upload-to-sampling visibility once and preserve sampled reuse without repeated upload-write barriers. Leave other texture families on their current path until separately migrated.
+
+8. Add cached dependencies for material/call bindings that reference mutable resources.
+   Add binding metadata/cache and invalidation for one binding path, not all rendering stages.
+   Invalidate affected entries on resource generation, selected range, and classification changes. Reuse shared material dependencies and exclude stable sampled bindings from per-draw transition discovery.
+
+9. Add reusable graph synchronization boundaries.
+   Add graph-owned boundary/planning integration usable from one stage at a time. Preserve existing command-buffer lifecycles initially.
+   Make preparation and recording consume the same physical resource selections without refactoring every stage signature in this checkpoint.
+
+10. Migrate one complete G-buffer image, starting with albedo.
+    Migrate that image's geometry write, lighting read, attachment boundary, descriptor layout, other actual consumers, and any required explicit legacy handoffs.
+    Remove its corresponding manual bookkeeping only when graph ownership is active, including creation and frame-reuse state handling.
+
+11. Migrate the remaining G-buffer images individually.
+    Repeat as separate checkpoints: normal, velocity, scene depth, then surface properties.
+    For each image, include every actual consumer and content-preservation rule. Keep unrelated attachments/stages on their existing path.
+
+12. Integrate ordered compute image operations using the surface-properties chain.
+    Integrate the post-geometry producer/consumer sequence and its per-dispatch access preparation.
+    Handle optional/empty compute work, repeated readers, and same-layout storage hazards without broadening all compute-stage synchronization.
+
+13. Migrate scene-color processing in small ownership segments.
+    Separate checkpoints: deferred-lighting output; post-lighting compute and A/B selection; forward opaque/transparent attachment boundaries; post-render compute and final sampling.
+    Prepare mechanical boundary hooks separately if needed. Make temporary segment handoffs explicit and remove them as the next segment migrates.
+    Resolve both possible final physical images and preserve correct state through empty compute sequences.
+
+14. Migrate the other built-in image chains individually.
+    Separate checkpoints: shadows and sampling; outline rendering and compute consumption; gizmo color/depth/MSAA resolve.
+    Integrate their branch dependencies and the existing compute-queue handoff without combining all render-pass migrations into one change.
+
+15. Integrate external consumers one boundary at a time.
+    Separate checkpoints: ImGui/editor sampled-image declarations; swapchain acquire/present; standalone async compute; range-aware readback.
+    Derive descriptors from declared accesses before recording and include platform-window/external submission completion in resource-recycling dependencies.
+
+16. Expose configurable mip allocation for 2D textures.
+    Introduce the shared creation description and integrate the 2D factory/backend/frontend path. Preserve each existing texture type's allocation/generation defaults; sampled textures that already receive full chains must keep them.
+    Implement allocation counts, selected extents/views, format/usage checks, and memory sizing. Keep allocated levels distinct from initialized contents.
+
+17. Extend typed views and configurable allocation to 3D textures.
+    Integrate the 3D family using the reviewed common contracts without a global factory redesign.
+    Implement volume-depth shrink, slice pitches, per-mip storage views, and consistent sampled/storage variants.
+
+18. Extend typed views and configurable allocation to cube textures.
+    Integrate the cube family, cube/face selections, and shared-allocation ownership rules.
+    Support all six faces, selected face/mip storage or attachment views, and complete sampled-chain selection.
+
+19. Extend views and mip allocation to array families individually.
+    Begin with the existing depth-array path; add each agreed public array family as a separate checkpoint.
+    Preserve fixed layer counts and support selected layers/cube groups without writing or transitioning unrelated layers.
+
+20. Finish the 1D path through small backend/frontend checkpoints.
+    Separate backend allocation/view/factory support from frontend exposure and binding support if both cannot be reviewed comfortably together.
+    Implement sampled/storage variants, full and selected mip chains, and explicit rejection of invalid dimensions.
+
+21. Support supplied mip-chain uploads and selected-range updates.
+    Separate checkpoints for the common transfer description and each affected family-specific packing path: 2D, 3D, cube, arrays, and 1D.
+    Publish only completed valid ranges and implement replacement/streaming handoffs and selected-range readback while preserving other levels/layers.
+
+22. Add the first graph-recorded ordinary mip-generation operation.
+    Implement a 2D color chain, selected source/destination levels, a supported blit path, and one explicit invocation in an existing stage.
+    Use the graph's range planner between levels and at the consumer boundary. Support regeneration after source writes and partial generation.
+
+23. Add a shader generation path for the next required format/policy.
+    Implement one selected shader/intermediate path and capability-based selection using the same operation/dependency API.
+    Apply the agreed sRGB/linear-light and data-reduction policies, provide supported fallback paths, and report unsupported combinations explicitly.
+
+24. Extend generation and stable publication across texture families individually.
+    Separate checkpoints: 3D volume reduction; cube faces; array layers; 1D; and any remaining sampled/storage variants.
+    Reuse the operation/synchronization contracts and integrate each family's upload, generation, and sampling paths with capability checks.
+    Keep cube specular prefiltering separate from ordinary per-face mips.
+
+25. Add a standalone graph-recorded Hi-Z pyramid builder.
+    Add a suitable floating-point hierarchy resource and conservative reduction shaders, with scene depth as the declared input.
+    Implement the agreed depth representation/reduction operator, conservative odd-size edge coverage, background handling, frame selection, and resize independently of SSR traversal.
+
+26. Integrate hierarchical depth traversal into SSR.
+    Implement the traversal shader and its explicit pyramid binding/usages.
+    Keep this separate from roughness filtering and general texture API changes.
+
+27. Add mip generation for the chosen SSR color/reflection source.
+    Add a declared snapshot/source chain at the correct point in scene-color processing, with explicit synchronization against concurrent modifications.
+    Resolve the intended current-frame ping-pong source and preserve every sampled mip through its SSR consumer.
+
+28. Add roughness-dependent LOD sampling.
+    Implement the agreed scene-color/reflection sampling policy, sampler configuration, and fractional LOD selection.
+    Keep this sampling policy distinct from BRDF-aware environment prefiltering.
+
+29. Add environment roughness prefiltering if the agreed reflection design requires it.
+    Add a separate cube-filter operation and explicit roughness-to-mip convention, splitting preparation/generation and shader consumption into separate checkpoints where needed.
+    Implement face-continuous filtering and reuse graph range synchronization while keeping SSR and environment filter policies distinct.
+
+30. Remove obsolete synchronization/API paths after their final caller migrates.
+    Split by owner: texture/layout mutation helpers, stage bookkeeping/render-pass external dependencies, descriptor current-layout defaults, then temporary handoffs/view adapters.
+    Restrict mutation to the responsible graph/external synchronization owners. Keep explicit upload/readback/standalone contracts available.
