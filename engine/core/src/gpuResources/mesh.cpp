@@ -436,8 +436,8 @@ namespace emberCore
 
 
 	// Mesh operations:
-	// Submeshes of all meshes are kept, in order, so each stays addressable in the merged mesh.
-	Mesh Mesh::Merge(const std::vector<Mesh>& meshes, const std::string& name)
+	// Submeshes are preserved in order unless mergeSubmeshes is true, which combines them into one range covering the entire mesh.
+	Mesh Mesh::Merge(const std::vector<Mesh>& meshes, const std::string& name, bool mergeSubmeshes)
 	{
 		// Get total counts and the optional attributes present in all meshes:
 		size_t vertexCount = 0;
@@ -451,7 +451,8 @@ namespace emberCore
 		{
 			vertexCount += mesh.GetVertexCount();
 			triangleCount += mesh.GetTriangleCount();
-			submeshCount += mesh.GetSubmeshCount();
+			if (!mergeSubmeshes)
+				submeshCount += mesh.GetSubmeshCount();
 			hasNormals = hasNormals && mesh.m_normals.size() == mesh.GetVertexCount();
 			hasTangents = hasTangents && mesh.m_tangents.size() == mesh.GetVertexCount();
 			hasColors = hasColors && mesh.m_colors.size() == mesh.GetVertexCount();
@@ -493,11 +494,14 @@ namespace emberCore
 				geometry.triangles.push_back(triangle + Uint3(vertexOffset));
 
 			// Append submeshes with ranges relative to the merged mesh:
-			for (emberCommon::Submesh submesh : mesh.m_submeshes)
+			if (!mergeSubmeshes)
 			{
-				submesh.firstVertex += vertexOffset;
-				submesh.firstTriangle += triangleOffset;
-				geometry.submeshes.push_back(submesh);
+				for (emberCommon::Submesh submesh : mesh.m_submeshes)
+				{
+					submesh.firstVertex += vertexOffset;
+					submesh.firstTriangle += triangleOffset;
+					geometry.submeshes.push_back(submesh);
+				}
 			}
 		}
 

@@ -132,8 +132,8 @@ namespace emberCore
 		void ComputeTangents();
 
 		// Mesh operations:
-		// Submeshes of all meshes are kept, in order, so each stays addressable in the merged mesh.
-		static Mesh Merge(const std::vector<Mesh>& meshes, const std::string& name = "");
+		// Submeshes are preserved in order unless mergeSubmeshes is true, which combines them into one range covering the entire mesh.
+		static Mesh Merge(const std::vector<Mesh>& meshes, const std::string& name = "", bool mergeSubmeshes = false);
 
 	private: // Methods:
 		// Backend access:

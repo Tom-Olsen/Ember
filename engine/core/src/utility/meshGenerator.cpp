@@ -80,7 +80,7 @@ namespace emberCore
 			faces.reserve(2);
 			faces.emplace_back(std::move(Quad()));
 			faces.emplace_back(std::move(Quad().Rotate(Float4x4::rot180x)));
-			return Mesh::Merge(faces, "unitQuadTwoSided");
+			return Mesh::Merge(faces, "unitQuadTwoSided", true);
 		}
 		Mesh FullScreenRenderQuad()
 		{
@@ -452,7 +452,7 @@ namespace emberCore
 				meshes.emplace_back(std::move(body));
 			}
 
-			return Mesh::Merge(meshes, name);
+			return Mesh::Merge(meshes, name, true);
 		}
 
 		Mesh Disk(float radius, int cornerCount, const std::string& name)
@@ -654,7 +654,7 @@ namespace emberCore
 				faces.emplace_back(std::move(face));
 			}
 
-			return Mesh::Merge(faces, name);
+			return Mesh::Merge(faces, name, true);
 		}
 		Mesh ConeSmooth(float radius, float height, int cornerCount, const std::string& name)
 		{
@@ -662,7 +662,7 @@ namespace emberCore
 			meshes.reserve(2);
 			meshes.emplace_back(std::move(ConeMantleSmooth(radius, height, cornerCount, "coneSmooth0")));
 			meshes.emplace_back(std::move(Disk(radius, cornerCount, "coneSmooth1").Rotate(Float3x3::rot180x)));
-			return Mesh::Merge(meshes, name);
+			return Mesh::Merge(meshes, name, true);
 		}
 		Mesh ConeFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
@@ -670,7 +670,7 @@ namespace emberCore
 			meshes.reserve(2);
 			meshes.emplace_back(std::move(ConeMantleFlat(radius, height, cornerCount, "coneFlat0")));
 			meshes.emplace_back(std::move(Disk(radius, cornerCount, "coneFlat1").Rotate(Float3x3::rot180x)));
-			return Mesh::Merge(meshes, name);
+			return Mesh::Merge(meshes, name, true);
 		}
 
 		Mesh ZylinderMantleSmooth(float radius, float height, int cornerCount, const std::string& name)
@@ -747,7 +747,7 @@ namespace emberCore
 				faces.emplace_back(std::move(face));
 			}
 
-			return Mesh::Merge(faces, name);
+			return Mesh::Merge(faces, name, true);
 		}
 		Mesh ZylinderSmooth(float radius, float height, int cornerCount, const std::string& name)
 		{
@@ -756,7 +756,7 @@ namespace emberCore
 			meshes.emplace_back(std::move(ZylinderMantleSmooth(radius, height, cornerCount, "zylinderSmooth0")));
 			meshes.emplace_back(std::move(Disk(radius, cornerCount, "zylinderSmooth1").Translate(0.5f * height * Float3::up)));
 			meshes.emplace_back(std::move(meshes[1].GetCopy("zylinderSmooth2").Rotate(Float3x3::rot180x)));
-			return Mesh::Merge(meshes, name);
+			return Mesh::Merge(meshes, name, true);
 		}
 		Mesh ZylinderFlat(float radius, float height, int cornerCount, const std::string& name)
 		{
@@ -765,7 +765,7 @@ namespace emberCore
 			meshes.emplace_back(std::move(ZylinderMantleFlat(radius, height, cornerCount, "zylinderFlat0")));
 			meshes.emplace_back(std::move(Disk(radius, cornerCount, "zylinderFlat1").Translate(0.5f * height * Float3::up)));
 			meshes.emplace_back(std::move(meshes[1].GetCopy("zylinderFlat2").Rotate(Float3x3::rot180x)));
-			return Mesh::Merge(meshes, name);
+			return Mesh::Merge(meshes, name, true);
 		}
 
 		Mesh ArrowSmooth(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
@@ -790,7 +790,7 @@ namespace emberCore
 			meshes.emplace_back(std::move(ConeMantleSmooth(headRadius, headHeight, cornerCount, "arrowSmooth3").Translate(bodyHeight * Float3::up)));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
-			return Mesh::Merge(meshes, name).Rotate(rotation);
+			return Mesh::Merge(meshes, name, true).Rotate(rotation);
 		}
 		Mesh ArrowFlat(Float3 direction, float bodyHeight, float bodyRadius, float headHeight, float headRadius, int cornerCount, const std::string& name)
 		{
@@ -814,7 +814,7 @@ namespace emberCore
 			meshes.emplace_back(std::move(ConeMantleFlat(headRadius, headHeight, cornerCount, "arrowFlat3").Translate(bodyHeight * Float3::up)));
 
 			Float4x4 rotation = Float4x4::RotateFromTo(Float3::up, direction);
-			return Mesh::Merge(meshes, name).Rotate(rotation);
+			return Mesh::Merge(meshes, name, true).Rotate(rotation);
 		}
 
 		Mesh ThreeLeg()
@@ -829,7 +829,7 @@ namespace emberCore
 			meshes[1].AddColor(Float4::green);
 			meshes[2].AddColor(Float4::blue);
 
-			return Mesh::Merge(meshes, "threeLeg");
+			return Mesh::Merge(meshes, "threeLeg", true);
 		}
 		Mesh FourLeg()
 		{
@@ -845,7 +845,7 @@ namespace emberCore
 			meshes[2].AddColor(Float4::blue);
 			meshes[3].AddColor(Float4::white);
 
-			return Mesh::Merge(meshes, "fourLeg");
+			return Mesh::Merge(meshes, "fourLeg", true);
 		}
 
 		Mesh Camera()
@@ -866,7 +866,7 @@ namespace emberCore
 			meshes[3].Rotate(Float3x3::rot45z).Translate(0.35f * Float3::down);
 			meshes[3].AddColor(Float4::gray);
 
-			return Mesh::Merge(meshes, "camera");
+			return Mesh::Merge(meshes, "camera", true);
 		}
 		Mesh Frame(float radius, const Float3& lengths)
 		{
@@ -909,7 +909,7 @@ namespace emberCore
 						meshes.emplace_back(std::move(mesh));
 					}
 
-			return Mesh::Merge(meshes, "frame");
+			return Mesh::Merge(meshes, "frame", true);
 		}
 
         Mesh EMBER_CORE_API TranslateHandleFrame(float width, float length, Float4 colorX, Float4 colorY, Float4 colorZ)
@@ -966,14 +966,14 @@ namespace emberCore
 
             // Merge all meshes together and copy+rotate the entire thing twice:
 			std::vector<Mesh> meshes2;
-            meshes2.emplace_back(Mesh::Merge(meshes));
+            meshes2.emplace_back(Mesh::Merge(meshes, "", true));
 			meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), Radians(2.0f * math::pi / 3.0f))));
 			meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), Radians(4.0f * math::pi / 3.0f))).GetCopy());
             // Give each copy its own color:
             meshes2[0].AddColor(colorZ);    // orthogonal to z.
             meshes2[1].AddColor(colorX);    // orthogonal to x.
             meshes2[2].AddColor(colorY);    // orthogonal to y.
-			return Mesh::Merge(meshes2, "translateHandleFrame");
+			return Mesh::Merge(meshes2, "translateHandleFrame", true);
         }
 	}
 }
