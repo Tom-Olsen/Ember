@@ -6,11 +6,12 @@
 
 namespace vulkanRendererBackend
 {
-	ShadowDrawCall::ShadowDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, uint32_t instanceCount)
+	ShadowDrawCall::ShadowDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, uint32_t instanceCount, uint32_t submeshIndex)
 		: pMesh(pMesh)
 		, pMaterial(pMaterial)
 		, descriptorSetBindingHandle(descriptorSetBindingHandle)
 		, instanceCount(instanceCount)
+		, submeshIndex(submeshIndex)
 	{
 		assert(pMesh != nullptr);
 		assert(pMaterial != nullptr);

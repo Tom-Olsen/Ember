@@ -96,17 +96,17 @@ namespace emberCore
 		
 		std::filesystem::path leb9File = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "meshes/Leb9.csv").make_preferred();
 		Mesh leb9("leb9");
-		leb9.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(leb9File));
+		leb9.MoveGeometry(emberAssetLoader::MeshAssetLoader::LoadCsv(leb9File));
 		AddMesh(std::move(leb9));
 
 		std::filesystem::path monkeyFile = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "meshes/monkey.csv").make_preferred();
 		Mesh monkey("monkey");
-		monkey.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(monkeyFile));
+		monkey.MoveGeometry(emberAssetLoader::MeshAssetLoader::LoadCsv(monkeyFile));
 		AddMesh(std::move(monkey));
 
 		std::filesystem::path spotLightFile = (std::filesystem::path(ENGINE_RESOURCES_DIR) / "meshes/spotLight.csv").make_preferred();
 		Mesh spotLight("spotLight");
-		spotLight.MoveMeshAsset(emberAssetLoader::MeshAssetLoader::LoadCsv(spotLightFile));
+		spotLight.MoveGeometry(emberAssetLoader::MeshAssetLoader::LoadCsv(spotLightFile));
 		AddMesh(std::move(spotLight));
 
         Mesh translateHandleFrame = MeshGenerator::TranslateHandleFrame(0.5f, 5.0f);

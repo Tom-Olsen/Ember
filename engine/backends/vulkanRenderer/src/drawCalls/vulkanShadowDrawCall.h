@@ -19,9 +19,10 @@ namespace vulkanRendererBackend
 		Material* pMaterial;
 		DescriptorSetBindingHandle descriptorSetBindingHandle;
 		uint32_t instanceCount;
+		uint32_t submeshIndex;
 
 	public: // Methods:
-		ShadowDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, uint32_t instanceCount);
+		ShadowDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, uint32_t instanceCount, uint32_t submeshIndex);
 		~ShadowDrawCall();
 	};
 }

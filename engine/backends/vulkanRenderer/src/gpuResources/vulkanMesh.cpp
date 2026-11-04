@@ -22,6 +22,8 @@ namespace vulkanRendererBackend
 		size_t frames = Context::GetFramesInFlight();
 		m_pVertexBuffers.resize(frames);
 		m_pIndexBuffers.resize(frames);
+		m_submeshes.resize(frames);
+		m_bounds.resize(frames);
 		m_buffersCache.resize(frames);
 		m_offsetsCache.resize(frames);
 	}
@@ -39,8 +41,12 @@ namespace vulkanRendererBackend
 		, m_vertexMemoryLayout(other.m_vertexMemoryLayout)
 		, m_pVertexStagingBuffer(std::move(other.m_pVertexStagingBuffer))
 		, m_pIndexStagingBuffer(std::move(other.m_pIndexStagingBuffer))
+		, m_stagingSubmeshes(std::move(other.m_stagingSubmeshes))
+		, m_stagingBounds(other.m_stagingBounds)
 		, m_pVertexBuffers(std::move(other.m_pVertexBuffers))
 		, m_pIndexBuffers(std::move(other.m_pIndexBuffers))
+		, m_submeshes(std::move(other.m_submeshes))
+		, m_bounds(std::move(other.m_bounds))
 		, m_buffersCache(std::move(other.m_buffersCache))
 		, m_offsetsCache(std::move(other.m_offsetsCache))
 	{
@@ -55,8 +61,12 @@ namespace vulkanRendererBackend
 			m_vertexMemoryLayout = other.m_vertexMemoryLayout;
 			m_pVertexStagingBuffer = std::move(other.m_pVertexStagingBuffer);
 			m_pIndexStagingBuffer = std::move(other.m_pIndexStagingBuffer);
+			m_stagingSubmeshes = std::move(other.m_stagingSubmeshes);
+			m_stagingBounds = other.m_stagingBounds;
 			m_pVertexBuffers = std::move(other.m_pVertexBuffers);
 			m_pIndexBuffers = std::move(other.m_pIndexBuffers);
+			m_submeshes = std::move(other.m_submeshes);
+			m_bounds = std::move(other.m_bounds);
 			m_buffersCache = std::move(other.m_buffersCache);
 			m_offsetsCache = std::move(other.m_offsetsCache);
 			if (Context::GetRenderer())
@@ -142,7 +152,7 @@ namespace vulkanRendererBackend
 
 		QueueUpdateIfReady();
 	}
-	void Mesh::UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount)
+	void Mesh::UpdateIndexBuffer(const std::vector<Uint3>& triangles, const std::vector<emberCommon::Submesh>& submeshes, const emberMath::Bounds& bounds, uint32_t vertexCount)
 	{
 		static_assert(sizeof(Uint3) == 3 * sizeof(uint32_t));
 		size_t triangleCount = triangles.size();
@@ -186,12 +196,15 @@ namespace vulkanRendererBackend
 				m_pIndexStagingBuffer->SetData(reinterpret_cast<const uint32_t*>(triangles.data()), size);
 			}
 		}
+
+		m_stagingSubmeshes = submeshes;
+		m_stagingBounds = bounds;
 		QueueUpdateIfReady();
 	}
 
 
 
-	// Backend only:
+	// Backend only getters:
 	uint32_t Mesh::GetVertexCount() const
 	{
 		return m_pVertexBuffers[Context::GetFrameIndex()]->GetCount();
@@ -199,6 +212,20 @@ namespace vulkanRendererBackend
 	uint32_t Mesh::GetIndexCount() const
 	{
 		return m_pIndexBuffers[Context::GetFrameIndex()]->GetCount();
+	}
+	emberCommon::Submesh Mesh::GetSubmesh(uint32_t submeshIndex) const
+	{
+		if (submeshIndex == emberCommon::Submesh::entireMesh)
+			return emberCommon::Submesh{ .firstVertex = 0, .vertexCount = GetVertexCount(), .firstTriangle = 0, .triangleCount = GetIndexCount() / 3, .bounds = m_bounds[Context::GetFrameIndex()] };
+
+		// Changing mesh submesh count after draw call recording in the same frame can lead to stale submeshIndex in the draw call:
+		const std::vector<emberCommon::Submesh>& submeshes = m_submeshes[Context::GetFrameIndex()];
+		if (submeshIndex >= submeshes.size())
+		{
+			LOG_WARN("Mesh::GetSubmesh(...) submesh index {} exceeds submesh count {}. Mesh was modified after the draw call was submitted.", submeshIndex, submeshes.size());
+			return emberCommon::Submesh();
+		}
+		return submeshes[submeshIndex];
 	}
 	VkIndexType Mesh::GetVkIndexType() const
 	{
@@ -235,6 +262,7 @@ namespace vulkanRendererBackend
 
 
 
+	// Record mesh updates:
 	void Mesh::RecordUpdateCommand(VkCommandBuffer vkCommandBuffer, uint32_t frameIndex)
 	{
 		uint32_t vertexCount = m_pVertexStagingBuffer->GetCount();
@@ -260,6 +288,8 @@ namespace vulkanRendererBackend
 
 		m_pVertexStagingBuffer->UploadToBuffer(vkCommandBuffer, static_cast<Buffer*>(m_pVertexBuffers[frameIndex].get()));
 		m_pIndexStagingBuffer->UploadToBuffer(vkCommandBuffer, static_cast<Buffer*>(m_pIndexBuffers[frameIndex].get()));
+		m_submeshes[frameIndex] = m_stagingSubmeshes;
+		m_bounds[frameIndex] = m_stagingBounds;
 	}
 
 

@@ -31,10 +31,11 @@ namespace emberCore
 			std::vector<Uint3> triangles;
 			triangles.emplace_back(Uint3(0, 1, 2));
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -65,10 +66,11 @@ namespace emberCore
 			triangles.emplace_back(Uint3(0, 2, 1));
 			triangles.emplace_back(Uint3(1, 2, 3));
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -106,10 +108,11 @@ namespace emberCore
 			triangles.emplace_back(Uint3(0, 2, 1));
 			triangles.emplace_back(Uint3(1, 2, 3));
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -140,10 +143,11 @@ namespace emberCore
 			triangles.emplace_back(Uint3(0, 3, 1));
 			triangles.emplace_back(Uint3(1, 3, 2));
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -183,10 +187,11 @@ namespace emberCore
 				}
 			}
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -258,11 +263,12 @@ namespace emberCore
 				}
 			}
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveTangents(std::move(tangents));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.tangents = std::move(tangents),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			return mesh;
 		}
 		Mesh HalfCube(int gridResolution)
@@ -333,11 +339,12 @@ namespace emberCore
 				}
 			}
 
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveTangents(std::move(tangents));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.tangents = std::move(tangents),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			return mesh;
 		}
 
@@ -436,11 +443,12 @@ namespace emberCore
 					}
 				}
 
-				body.MovePositions(std::move(positions));
-				body.MoveNormals(std::move(normals));
-				body.MoveTangents(std::move(tangents));
-				body.MoveUVs(std::move(uvs));
-				body.MoveTriangles(std::move(triangles));
+				body.MoveGeometry({
+					.positions = std::move(positions),
+					.normals = std::move(normals),
+					.tangents = std::move(tangents),
+					.uvs = std::move(uvs),
+					.triangles = std::move(triangles) });
 				meshes.emplace_back(std::move(body));
 			}
 
@@ -476,10 +484,11 @@ namespace emberCore
 			triangles.push_back(Uint3(0, cornerCount, cornerCount - 1));
 
 			Mesh mesh(name);
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -521,10 +530,11 @@ namespace emberCore
 			}
 
 			Mesh mesh(name);
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -566,10 +576,11 @@ namespace emberCore
 			}
 
 			Mesh mesh(name);
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -607,10 +618,11 @@ namespace emberCore
 				triangles.push_back(Uint3(i, i + 1, cornerCount + 1));
 
 			Mesh mesh(name);
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -637,7 +649,7 @@ namespace emberCore
 				uvs[0] = Float4(0.5f * (x0 + 1.0f), 0.5f * (y0 + 1.0f), 0.0f, 0.0f);
 				uvs[1] = Float4(0.5f * (x1 + 1.0f), 0.5f * (y1 + 1.0f), 0.0f, 0.0f);
 				uvs[2] = Float4(0.5f, 0.5f, 0.0f, 0.0f);
-				face.SetUVs(uvs);
+				face.ModifyUVs([&uvs](std::span<Float4> faceUvs) { std::copy(uvs.begin(), uvs.end(), faceUvs.begin()); });
 
 				faces.emplace_back(std::move(face));
 			}
@@ -696,10 +708,11 @@ namespace emberCore
 			}
 
 			Mesh mesh(name);
-			mesh.MovePositions(std::move(positions));
-			mesh.MoveNormals(std::move(normals));
-			mesh.MoveUVs(std::move(uvs));
-			mesh.MoveTriangles(std::move(triangles));
+			mesh.MoveGeometry({
+				.positions = std::move(positions),
+				.normals = std::move(normals),
+				.uvs = std::move(uvs),
+				.triangles = std::move(triangles) });
 			mesh.ComputeTangents();
 			return mesh;
 		}
@@ -729,7 +742,7 @@ namespace emberCore
 				uvs[1] = Float4((i + 0.0f) / cornerCount, 1.0f, 0.0f, 0.0f);
 				uvs[2] = Float4((i + 1.0f) / cornerCount, 0.0f, 0.0f, 0.0f);
 				uvs[3] = Float4((i + 1.0f) / cornerCount, 1.0f, 0.0f, 0.0f);
-				face.SetUVs(uvs);
+				face.ModifyUVs([&uvs](std::span<Float4> faceUvs) { std::copy(uvs.begin(), uvs.end(), faceUvs.begin()); });
 
 				faces.emplace_back(std::move(face));
 			}
@@ -812,9 +825,9 @@ namespace emberCore
 			meshes.emplace_back(std::move(ArrowFlat(Float3::right, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg0")));
 			meshes.emplace_back(std::move(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg1")));
 			meshes.emplace_back(std::move(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "threeLeg2")));
-			meshes[0].SetUniformColor(Float4::red);
-			meshes[1].SetUniformColor(Float4::green);
-			meshes[2].SetUniformColor(Float4::blue);
+			meshes[0].AddColor(Float4::red);
+			meshes[1].AddColor(Float4::green);
+			meshes[2].AddColor(Float4::blue);
 
 			return Mesh::Merge(meshes, "threeLeg");
 		}
@@ -827,10 +840,10 @@ namespace emberCore
 			meshes.emplace_back(std::move(ArrowFlat(Float3::forward, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg1")));
 			meshes.emplace_back(std::move(ArrowFlat(Float3::up, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg2")));
 			meshes.emplace_back(std::move(ArrowFlat(Float3::down, 0.8f, 0.1f, 0.2f, 0.2f, 8, "fourLeg3")));
-			meshes[0].SetUniformColor(Float4::red);
-			meshes[1].SetUniformColor(Float4::green);
-			meshes[2].SetUniformColor(Float4::blue);
-			meshes[3].SetUniformColor(Float4::white);
+			meshes[0].AddColor(Float4::red);
+			meshes[1].AddColor(Float4::green);
+			meshes[2].AddColor(Float4::blue);
+			meshes[3].AddColor(Float4::white);
 
 			return Mesh::Merge(meshes, "fourLeg");
 		}
@@ -842,16 +855,16 @@ namespace emberCore
 
 			meshes.emplace_back(std::move(ZylinderSmooth(0.1f, 0.05f, 16, "Roll0")));
 			meshes[0].Rotate(Float3x3::rot90y).Translate(0.2f * Float3::forward + 0.1f * Float3::down);
-			meshes[0].SetUniformColor(Float4::gray);
+			meshes[0].AddColor(Float4::gray);
 			meshes.emplace_back(std::move(ZylinderSmooth(0.1f, 0.05f, 16, "Roll1")));
 			meshes[1].Rotate(Float3x3::rot90y).Translate(0.2f * Float3::forward + 0.1f * Float3::up);
-			meshes[1].SetUniformColor(Float4::gray);
+			meshes[1].AddColor(Float4::gray);
 			meshes.emplace_back(std::move(Cube()));
 			meshes[2].Scale(Float3(0.15f, 0.2f, 0.5f));
-			meshes[2].SetUniformColor(Float4(1.0f, 0.4f, 0.4f));
+			meshes[2].AddColor(Float4(1.0f, 0.4f, 0.4f));
 			meshes.emplace_back(std::move(ConeFlat(0.15f, 0.15f, 4, "CameraHead")));
 			meshes[3].Rotate(Float3x3::rot45z).Translate(0.35f * Float3::down);
-			meshes[3].SetUniformColor(Float4::gray);
+			meshes[3].AddColor(Float4::gray);
 
 			return Mesh::Merge(meshes, "camera");
 		}
@@ -957,9 +970,9 @@ namespace emberCore
 			meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), Radians(2.0f * math::pi / 3.0f))));
 			meshes2.emplace_back(meshes2[0].GetCopy().Rotate(Float4x4::Rotate(Float3::one.Normalize(), Radians(4.0f * math::pi / 3.0f))).GetCopy());
             // Give each copy its own color:
-            meshes2[0].SetColor(colorZ);    // orthogonal to z.
-            meshes2[1].SetColor(colorX);    // orthogonal to x.
-            meshes2[2].SetColor(colorY);    // orthogonal to y.
+            meshes2[0].AddColor(colorZ);    // orthogonal to z.
+            meshes2[1].AddColor(colorX);    // orthogonal to x.
+            meshes2[2].AddColor(colorY);    // orthogonal to y.
 			return Mesh::Merge(meshes2, "translateHandleFrame");
         }
 	}

@@ -1,4 +1,5 @@
 #include "vulkanShadowStage.h"
+#include "commonSubmesh.h"
 #include "descriptorSetMacros.h"
 #include "logger.h"
 #include "profiler.h"
@@ -123,7 +124,8 @@ namespace vulkanRendererBackend
 							vkCmdPushConstants(commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(DefaultPushConstant), &pushConstant);
 
 							// Dispatch:
-							vkCmdDrawIndexed(commandBuffer, drawCall.pMesh->GetIndexCount(), std::max(drawCall.instanceCount, (uint32_t)1), 0, 0, 0);
+							emberCommon::Submesh submesh = drawCall.pMesh->GetSubmesh(drawCall.submeshIndex);
+							vkCmdDrawIndexed(commandBuffer, 3 * submesh.triangleCount, std::max(drawCall.instanceCount, (uint32_t)1), 3 * submesh.firstTriangle, 0, 0);
 							DEBUG_LOG_INFO("Light {}, mesh = {}", shadowMapIndex, drawCall.pMesh->GetName());
 						}
 					}

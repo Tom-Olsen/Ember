@@ -75,6 +75,8 @@ namespace emberCore
 		static void DrawOutline(const Float4x4& localToWorldMatrix, const Mesh& mesh);
 		static CallProperties DrawMesh(const DrawData& drawData);
 		static void DrawMesh(const DrawData& drawData, CallProperties& callProperties);
+		static CallProperties DrawSubmesh(const DrawData& drawData, uint32_t submeshIndex);
+		static void DrawSubmesh(const DrawData& drawData, uint32_t submeshIndex, CallProperties& callProperties);
 		static CallProperties DrawGizmo(const DrawData& drawData);
 		static void DrawGizmo(const DrawData& drawData, CallProperties& callProperties);
 
@@ -118,6 +120,7 @@ namespace emberCore
 	private: // Methods:
 		// Draw mesh helpers:
 		static void ValidateDrawData(const DrawData& drawData);
+		static bool IsDrawEmpty(const Mesh& mesh, uint32_t submeshIndex);
 		static emberCommon::CullMode ResolveCullMode(const DrawData& drawData, emberBackendInterface::IMaterial* pIMaterial);
 		
 		// Set default bindings:
@@ -125,8 +128,8 @@ namespace emberCore
 		static void SetInstanceBuffer(const DrawData& drawData, CallProperties& callProperties);
 
 		// Shadow draws calls:
-		static CallProperties DrawMeshShadow(const DrawData& drawData);
-		static void DrawMeshShadow(const DrawData& drawData, CallProperties& callProperties);
+		static CallProperties DrawMeshShadow(const DrawData& drawData, uint32_t submeshIndex);
+		static void DrawMeshShadow(const DrawData& drawData, CallProperties& callProperties, uint32_t submeshIndex);
 
 		// Material resolution:
 		static emberBackendInterface::IMaterial* ResolveSurfaceMaterial(const Material& material);

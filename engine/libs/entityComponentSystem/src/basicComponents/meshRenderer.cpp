@@ -18,11 +18,7 @@ namespace emberEcs
 		m_cullMode = emberCommon::CullMode::materialDefault;
         m_drawLocalBounds = false;
         m_drawWorldBounds = false;
-
 		m_pMesh = nullptr;
-		m_material = MaterialManager::TryGetMaterial("errorMaterial");
-		m_callProperties = CallProperties(m_material);
-
 		m_raycastEnabled = true;
 	}
 	MeshRenderer::~MeshRenderer()
@@ -49,14 +45,21 @@ namespace emberEcs
 	void MeshRenderer::SetMesh(Mesh& mesh)
 	{
 		m_pMesh = &mesh;
+		SyncSubmeshProperties();
 	}
-	void MeshRenderer::SetMaterial(const Material& material)
+	void MeshRenderer::SetMaterial(const Material& material, uint32_t submeshIndex)
 	{
-		if (m_material.GetName() != material.GetName())
-		{
-			m_material = material;
-			m_callProperties = CallProperties{ material };
-		}
+		SyncSubmeshProperties();
+		if (submeshIndex >= m_submeshProperties.size())
+			return;
+		AssignMaterial(submeshIndex, material);
+	}
+	void MeshRenderer::SetMaterials(const std::vector<Material>& materials)
+	{
+		SyncSubmeshProperties();
+		Material errorMaterial = MaterialManager::TryGetMaterial("errorMaterial");
+		for (size_t submeshIndex = 0; submeshIndex < m_submeshProperties.size(); submeshIndex++)
+			AssignMaterial(static_cast<uint32_t>(submeshIndex), submeshIndex < materials.size() ? materials[submeshIndex] : errorMaterial);
 	}
 	void MeshRenderer::SetRaycastEnabled(bool raycastEnabled)
 	{
@@ -102,13 +105,26 @@ namespace emberEcs
 	{
 		return *m_pMesh;
 	}
-	Material& MeshRenderer::GetMaterial()
+	Material MeshRenderer::GetMaterial(uint32_t submeshIndex) const
 	{
-		return m_material;
+		SyncSubmeshProperties();
+		if (submeshIndex >= m_submeshProperties.size())
+			return MaterialManager::TryGetMaterial("errorMaterial");
+		return m_submeshProperties[submeshIndex].material;
 	}
-	CallProperties& MeshRenderer::GetCallProperties()
+	std::vector<Material> MeshRenderer::GetMaterials() const
 	{
-		return m_callProperties;
+		SyncSubmeshProperties();
+		std::vector<Material> materials;
+		materials.reserve(m_submeshProperties.size());
+		for (const SubmeshProperties& submeshProperties : m_submeshProperties)
+			materials.push_back(submeshProperties.material);
+		return materials;
+	}
+	CallProperties& MeshRenderer::GetCallProperties(uint32_t submeshIndex)
+	{
+		SyncSubmeshProperties();
+		return m_submeshProperties.at(submeshIndex).callProperties;
 	}
 	bool MeshRenderer::GetRaycastEnabled() const
 	{
@@ -123,12 +139,50 @@ namespace emberEcs
 		Float4x4 localToWorldMatrix = GetTransform()->GetLocalToWorldMatrix();
 		if (m_pMesh != nullptr)
 		{
-			DrawData drawData(localToWorldMatrix, *m_pMesh, m_material, m_receiveShadows, m_castShadows, m_cullMode);
-			Renderer::DrawMesh(drawData, m_callProperties);
+			// Submesh count can change when the mesh is modified after SetMesh(...):
+			SyncSubmeshProperties();
+			for (uint32_t submeshIndex = 0; submeshIndex < m_pMesh->GetSubmeshCount(); submeshIndex++)
+			{
+				SubmeshProperties& submeshProperties = m_submeshProperties[submeshIndex];
+				DrawData drawData(localToWorldMatrix, *m_pMesh, submeshProperties.material, m_receiveShadows, m_castShadows, m_cullMode);
+				Renderer::DrawSubmesh(drawData, submeshIndex, submeshProperties.callProperties);
+			}
 			if (m_drawLocalBounds)
 				Gizmo::DrawBounds(localToWorldMatrix, GetLocalBounds());
 			if (m_drawWorldBounds)
 				Gizmo::DrawBounds(Float4x4::identity, GetWorldBounds());
 		}
+	}
+
+
+
+	// Private methods:
+	// Submesh properties:
+	void MeshRenderer::SyncSubmeshProperties() const
+	{
+		// Slot count follows the submesh count of the mesh. New slots use the error material until a material is assigned:
+		size_t submeshCount = (m_pMesh != nullptr) ? m_pMesh->GetSubmeshCount() : 0;
+		size_t oldCount = m_submeshProperties.size();
+		if (submeshCount == oldCount)
+			return;
+
+		Material errorMaterial = MaterialManager::TryGetMaterial("errorMaterial");
+		m_submeshProperties.resize(submeshCount);
+		for (size_t submeshIndex = oldCount; submeshIndex < submeshCount; submeshIndex++)
+		{
+			m_submeshProperties[submeshIndex].material = errorMaterial;
+			m_submeshProperties[submeshIndex].callProperties = CallProperties(errorMaterial);
+		}
+	}
+	void MeshRenderer::AssignMaterial(uint32_t submeshIndex, const Material& material)
+	{
+		// Invalid materials fall back to the error material.
+		// CallProperties are bound to a material and only rebuilt when it changes:
+		Material resolvedMaterial = material.IsValid() ? material : MaterialManager::TryGetMaterial("errorMaterial");
+		SubmeshProperties& submeshProperties = m_submeshProperties[submeshIndex];
+		if (submeshProperties.material.GetName() == resolvedMaterial.GetName())
+			return;
+		submeshProperties.material = resolvedMaterial;
+		submeshProperties.callProperties = CallProperties(resolvedMaterial);
 	}
 }

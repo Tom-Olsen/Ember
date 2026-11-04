@@ -7,7 +7,7 @@
 
 namespace vulkanRendererBackend
 {
-	ForwardDrawCall::ForwardDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
+	ForwardDrawCall::ForwardDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount, uint32_t submeshIndex)
 		: worldPosition(worldPosition)
 		, pMesh(pMesh)
 		, pMaterial(pMaterial)
@@ -15,6 +15,7 @@ namespace vulkanRendererBackend
 		, cullMode(cullMode)
 		, receiveShadows(receiveShadows)
 		, instanceCount(instanceCount)
+		, submeshIndex(submeshIndex)
 	{
 		assert(pMesh != nullptr);
 		assert(pMaterial != nullptr);

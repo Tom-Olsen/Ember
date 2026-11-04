@@ -1,4 +1,5 @@
 #pragma once
+#include "commonSubmesh.h"
 #include "commonVertexMemoryLayout.h"
 #include "emberMath.h"
 #include "iMesh.h"
@@ -46,8 +47,12 @@ namespace vulkanRendererBackend
 		emberCommon::VertexMemoryLayout m_vertexMemoryLayout = emberCommon::VertexMemoryLayout::interleaved;
 		std::unique_ptr<StagingBuffer> m_pVertexStagingBuffer;
 		std::unique_ptr<StagingBuffer> m_pIndexStagingBuffer;
+		std::vector<emberCommon::Submesh> m_stagingSubmeshes;
+		emberMath::Bounds m_stagingBounds;
 		std::vector<std::unique_ptr<VertexBuffer>> m_pVertexBuffers;
 		std::vector<std::unique_ptr<IndexBuffer>> m_pIndexBuffers;
+		std::vector<std::vector<emberCommon::Submesh>> m_submeshes;
+		std::vector<emberMath::Bounds> m_bounds;
 		std::vector<std::vector<VkBuffer>> m_buffersCache;
 		std::vector<std::vector<VkDeviceSize>> m_offsetsCache;
 
@@ -74,11 +79,12 @@ namespace vulkanRendererBackend
 		// Update GPU buffers:
 		void UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs, emberCommon::VertexMemoryLayout vertexMemoryLayout) override;
 		void UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs) override;
-		void UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount = 0) override;
+		void UpdateIndexBuffer(const std::vector<Uint3>& triangles, const std::vector<emberCommon::Submesh>& submeshes, const emberMath::Bounds& bounds, uint32_t vertexCount = 0) override;
 
-		// Backend only:
+		// Backend only getters:
 		uint32_t GetVertexCount() const;
 		uint32_t GetIndexCount() const;
+		emberCommon::Submesh GetSubmesh(uint32_t submeshIndex) const;
 		VkIndexType GetVkIndexType() const;
 		const VertexBuffer* GetVertexBuffer() const;
 		const VertexBuffer* GetVertexBuffer(uint32_t frameIndex) const;
@@ -87,6 +93,8 @@ namespace vulkanRendererBackend
 		const VkBuffer* GetVkBuffers() const;
 		const VkDeviceSize* GetOffsets() const;
 		uint32_t GetVertexBindingCount() const;
+
+		// Record mesh updates:
 		void RecordUpdateCommand(VkCommandBuffer vkCommandBuffer, uint32_t frameIndex);
 		
 	private:

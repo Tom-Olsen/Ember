@@ -283,6 +283,7 @@ inline Scene* DefaultScene()
 		pTransform->SetPosition(Float3(2.0f, 0.0f, 0.0f));
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
 		pMeshRenderer->SetMaterial(meshTesterMaterial);
 
 		MeshTester* pMeshTester = entity.AddComponent<MeshTester>(pMeshRenderer);

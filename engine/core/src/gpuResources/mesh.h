@@ -1,8 +1,11 @@
 #pragma once
+#include "commonMeshGeometry.h"
+#include "commonSubmesh.h"
 #include "emberCoreExport.h"
 #include "emberMath.h"
-#include "meshAsset.h"
+#include <functional>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -40,9 +43,9 @@ namespace emberCore
 		std::vector<Float4> m_colors;
 		std::vector<Float4> m_uvs;
 		std::vector<Uint3> m_triangles;
+		std::vector<emberCommon::Submesh> m_submeshes = { emberCommon::Submesh() };
         Bounds m_bounds;
 		std::unique_ptr<emberBackendInterface::IMesh> m_pIMesh;
-		emberBackendInterface::IMesh* const GetInterfaceHandle() const;
 
 	public: // Methods:
 		// Constructors/Destructor:
@@ -59,40 +62,48 @@ namespace emberCore
 		Mesh(Mesh&& other) noexcept;
 		Mesh& operator=(Mesh&& other);
 
-		// Setters: (copy the vector)
+		// Setters:
 		void SetName(const std::string& name);
-		void SetPositions(const std::vector<Float3>& positions);
-		void SetNormals(const std::vector<Float3>& normals);
-		void SetTangents(const std::vector<Float3>& tangents);
-        void SetColor(const Float4& color);
-		void SetColors(const std::vector<Float4>& colors);
-		void SetUniformColor(const Float4& color);
-		void SetUVs(const std::vector<Float4>& uvs);
-		void SetTriangles(const std::vector<Uint3>& triangles);
 
-		// Movers: (take ownership of vector)
-		void MovePositions(std::vector<Float3>&& positions);
-		void MoveNormals(std::vector<Float3>&& normals);
-		void MoveTangents(std::vector<Float3>&& tangents);
-		void MoveColors(std::vector<Float4>&& colors);
-		void MoveUVs(std::vector<Float4>&& uvs);
-		void MoveTriangles(std::vector<Uint3>&& triangles);
-		void MoveMeshAsset(emberAssetLoader::MeshAsset&& meshAsset);
+		// Geometry: (validates and replaces entire mesh data)
+		void SetGeometry(const emberCommon::MeshGeometry& geometry);
+		void MoveGeometry(emberCommon::MeshGeometry&& geometry);
+
+		// Optional vertex attributes: (added attributes must match the vertex count, adding an existing attribute is ignored)
+		void AddNormals(const std::vector<Float3>& normals);
+		void AddTangents(const std::vector<Float3>& tangents);
+		void AddColors(const std::vector<Float4>& colors);
+		void AddColor(const Float4& color);
+		void AddUVs(const std::vector<Float4>& uvs);
+		void RemoveNormals();
+		void RemoveTangents();
+		void RemoveColors();
+		void RemoveUVs();
+
+		// In-place vertex attribute edits: (changes are uploaded after the modifier returns)
+		void ModifyPositions(const std::function<void(std::span<Float3>)>& modifier);
+		void ModifyNormals(const std::function<void(std::span<Float3>)>& modifier);
+		void ModifyTangents(const std::function<void(std::span<Float3>)>& modifier);
+		void ModifyColors(const std::function<void(std::span<Float4>)>& modifier);
+		void ModifyUVs(const std::function<void(std::span<Float4>)>& modifier);
 
 		// Getters:
 		const std::string& GetName() const;
 		uint32_t GetVertexCount() const;
 		uint32_t GetTriangleCount() const;
-		std::vector<Float3>& GetPositions();
-		std::vector<Float3>& GetNormals();
-		std::vector<Float3>& GetTangents();
-		std::vector<Float4>& GetColors();
-		std::vector<Float4>& GetUVs();
-		std::vector<Uint3>& GetTriangles();
+		uint32_t GetSubmeshCount() const;
+		const std::vector<Float3>& GetPositions() const;
+		const std::vector<Float3>& GetNormals() const;
+		const std::vector<Float3>& GetTangents() const;
+		const std::vector<Float4>& GetColors() const;
+		const std::vector<Float4>& GetUVs() const;
+		const std::vector<Uint3>& GetTriangles() const;
+		const emberCommon::Submesh& GetSubmesh(uint32_t submeshIndex) const;
+		const std::vector<emberCommon::Submesh>& GetSubmeshes() const;
+		emberCommon::MeshGeometry GetGeometry() const;
         Bounds GetBounds() const;
 		RayMeshHit IntersectRay(const Ray& localRay) const;
-		void RegisterUpdate(bool updateBounds = true);
-		Mesh GetCopy(const std::string& newName = "");
+		Mesh GetCopy(const std::string& newName = "") const;
 
 		// Mesh transformations (changes *this):
 		Mesh& Translate(const Float3& translation) &;
@@ -121,10 +132,18 @@ namespace emberCore
 		void ComputeTangents();
 
 		// Mesh operations:
-		static Mesh Merge(std::vector<Mesh>& meshes, const std::string& name = "");
+		// Submeshes of all meshes are kept, in order, so each stays addressable in the merged mesh.
+		static Mesh Merge(const std::vector<Mesh>& meshes, const std::string& name = "");
 
 	private: // Methods:
-        void UpdateBounds();
+		// Backend access:
+		emberBackendInterface::IMesh* const GetInterfaceHandle() const;
+		// Validation:
+		static void ValidateGeometry(const emberCommon::MeshGeometry& geometry);
+		static void ValidateAttributeCount(size_t attributeCount, size_t vertexCount, const std::string& attributeName);
+		// GPU upload/Bounds:
+		void RegisterUpdate();
+		void UpdateBounds();
 		// Mesh modifiers:
 		void ApplyTranslate(const Float3& translation);
 		void ApplyRotate(const Float3x3& rotation);

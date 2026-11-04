@@ -29,9 +29,10 @@ namespace vulkanRendererBackend
 		emberCommon::CullMode cullMode;
 		bool receiveShadows;
 		uint32_t instanceCount;
+		uint32_t submeshIndex;
 
 	public: // Methods:
-		DeferredDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount);
+		DeferredDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount, uint32_t submeshIndex);
 		~DeferredDrawCall();
 	};
 }

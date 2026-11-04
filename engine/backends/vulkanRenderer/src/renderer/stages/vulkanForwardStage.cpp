@@ -1,4 +1,5 @@
 #include "vulkanForwardStage.h"
+#include "commonSubmesh.h"
 #include "descriptorSetMacros.h"
 #include "logger.h"
 #include "profiler.h"
@@ -157,7 +158,8 @@ namespace vulkanRendererBackend
 					vkCmdBindIndexBuffer(commandBuffer, drawCall->pMesh->GetIndexBuffer()->GetVmaBuffer()->GetVkBuffer(), 0, drawCall->pMesh->GetVkIndexType());
 
 					// Dispatch:
-					vkCmdDrawIndexed(commandBuffer, drawCall->pMesh->GetIndexCount(), std::max(drawCall->instanceCount, (uint32_t)1), 0, 0, 0);
+					emberCommon::Submesh submesh = drawCall->pMesh->GetSubmesh(drawCall->submeshIndex);
+					vkCmdDrawIndexed(commandBuffer, 3 * submesh.triangleCount, std::max(drawCall->instanceCount, (uint32_t)1), 3 * submesh.firstTriangle, 0, 0);
 					DEBUG_LOG_TRACE("Forward draw call, mesh = {}, material = {}", drawCall->pMesh->GetName(), pForwardMaterial->GetDebugName());
 				}
 			}

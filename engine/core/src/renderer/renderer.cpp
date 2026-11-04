@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "callProperties.h"
 #include "commonMaterialPass.h"
+#include "commonSubmesh.h"
 #include "compute.h"
 #include "emberTime.h"
 #include "gpuResourceFactory.h"
@@ -88,7 +89,7 @@ namespace emberCore
 
 
 
-	// Draw mesh:
+	// Draw calls:
     void Renderer::DrawOutline(const Float4x4& localToWorldMatrix, const Mesh& mesh)
     {
 		emberBackendInterface::IMesh* pIMesh = mesh.GetInterfaceHandle();
@@ -106,7 +107,17 @@ namespace emberCore
     }
 	CallProperties Renderer::DrawMesh(const DrawData& drawData)
 	{
+		return DrawSubmesh(drawData, emberCommon::Submesh::entireMesh);
+	}
+	void Renderer::DrawMesh(const DrawData& drawData, CallProperties& callProperties)
+	{
+		DrawSubmesh(drawData, emberCommon::Submesh::entireMesh, callProperties);
+	}
+	CallProperties Renderer::DrawSubmesh(const DrawData& drawData, uint32_t submeshIndex)
+	{
 		ValidateDrawData(drawData);
+		if (IsDrawEmpty(drawData.mesh, submeshIndex))
+			return CallProperties();
 		emberBackendInterface::IMaterial* pIMaterial = ResolveSurfaceMaterial(drawData.material);
 		emberCommon::CullMode cullMode = ResolveCullMode(drawData, pIMaterial);
 		emberBackendInterface::IMesh* pIMesh = drawData.mesh.GetInterfaceHandle();
@@ -125,17 +136,19 @@ namespace emberCore
 			receiveShadows = castShadows = false;
 
 		// Valid draw call:
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, receiveShadows, drawData.instanceCount);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, receiveShadows, drawData.instanceCount, submeshIndex);
 		CallProperties callProperties(pICallDescriptorSetBinding);
 		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		if (castShadows)
-			callProperties.SetShadowProperties(DrawMeshShadow(drawData));
+			callProperties.SetShadowProperties(DrawMeshShadow(drawData, submeshIndex));
 		return callProperties;
 	}
-	void Renderer::DrawMesh(const DrawData& drawData, CallProperties& callProperties)
+	void Renderer::DrawSubmesh(const DrawData& drawData, uint32_t submeshIndex, CallProperties& callProperties)
 	{
 		ValidateDrawData(drawData);
+		if (IsDrawEmpty(drawData.mesh, submeshIndex))
+			return;
 		emberBackendInterface::IMaterial* pIMaterial = ResolveSurfaceMaterial(drawData.material);
 		emberCommon::CullMode cullMode = ResolveCullMode(drawData, pIMaterial);
 		emberBackendInterface::IMesh* pIMesh = drawData.mesh.GetInterfaceHandle();
@@ -150,7 +163,7 @@ namespace emberCore
 		// Error material fallback:
 		if (pIMaterial == MaterialManager::s_pIErrorMaterial)
 		{
-			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, false, drawData.instanceCount));
+			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, false, drawData.instanceCount, submeshIndex));
 			SetModelData(drawData.localToWorldMatrix, fallbackCallProperties);
 			SetInstanceBuffer(drawData, fallbackCallProperties);
 			return;
@@ -161,24 +174,24 @@ namespace emberCore
 		if (pICallDescriptorSetBinding == nullptr)
 		{
 			LOG_WARN("Renderer::DrawMesh(...) received invalid CallProperties. Drawing with default call properties. Reassign CallProperties before reusing it for another draw call.");
-			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, drawData.receiveShadows, drawData.instanceCount));
+			CallProperties fallbackCallProperties(s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, cullMode, drawData.receiveShadows, drawData.instanceCount, submeshIndex));
 			SetModelData(drawData.localToWorldMatrix, fallbackCallProperties);
 			SetInstanceBuffer(drawData, fallbackCallProperties);
 			if (drawData.castShadows)
-				fallbackCallProperties.SetShadowProperties(DrawMeshShadow(drawData));
+				fallbackCallProperties.SetShadowProperties(DrawMeshShadow(drawData, submeshIndex));
 			return;
 		}
 
 		// Valid draw call:
 		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
-		s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, pICallDescriptorSetBinding, cullMode, drawData.receiveShadows, drawData.instanceCount);
+		s_pIRenderer->DrawMesh(drawData.localToWorldMatrix.GetTranslation(), pIMesh, pIMaterial, pICallDescriptorSetBinding, cullMode, drawData.receiveShadows, drawData.instanceCount, submeshIndex);
 		if (drawData.castShadows)
 		{
 			if (callProperties.HasShadowProperties())
-				DrawMeshShadow(drawData, callProperties.GetShadowProperties());
+				DrawMeshShadow(drawData, callProperties.GetShadowProperties(), submeshIndex);
 			else
-				callProperties.SetShadowProperties(DrawMeshShadow(drawData));
+				callProperties.SetShadowProperties(DrawMeshShadow(drawData, submeshIndex));
 		}
 	}
 	CallProperties Renderer::DrawGizmo(const DrawData& drawData)
@@ -385,6 +398,11 @@ namespace emberCore
 		if (drawData.instanceCount > 0 && drawData.pInstanceBuffer != nullptr && drawData.instanceCount > drawData.pInstanceBuffer->GetCount())
 			LOG_WARN("Renderer received an instanceCount that exceeds the instance buffer element count.");
 	}
+	bool Renderer::IsDrawEmpty(const Mesh& mesh, uint32_t submeshIndex)
+	{
+		uint32_t triangleCount = (submeshIndex == emberCommon::Submesh::entireMesh) ? mesh.GetTriangleCount() : mesh.GetSubmesh(submeshIndex).triangleCount;
+		return triangleCount == 0 || mesh.GetVertexCount() == 0;
+	}
 	emberCommon::CullMode Renderer::ResolveCullMode(const DrawData& drawData, emberBackendInterface::IMaterial* pIMaterial)
 	{
 		assert(pIMaterial != nullptr);
@@ -439,7 +457,7 @@ namespace emberCore
 
 
 	// Shadow draws calls:
-	CallProperties Renderer::DrawMeshShadow(const DrawData& drawData)
+	CallProperties Renderer::DrawMeshShadow(const DrawData& drawData, uint32_t submeshIndex)
 	{
 		ShadowMaterial shadowMaterial = drawData.material.GetShadowMaterial();
 		emberBackendInterface::IMaterial* pIMaterial = shadowMaterial.TryGetInterfaceHandle();
@@ -448,13 +466,13 @@ namespace emberCore
 
 		// Valid draw call:
 		emberBackendInterface::IMesh* pIMesh = drawData.mesh.GetInterfaceHandle();
-		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMeshShadow(pIMesh, pIMaterial, drawData.instanceCount);
+		emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding = s_pIRenderer->DrawMeshShadow(pIMesh, pIMaterial, drawData.instanceCount, submeshIndex);
 		CallProperties callProperties(pICallDescriptorSetBinding);
 		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		return callProperties;
 	}
-	void Renderer::DrawMeshShadow(const DrawData& drawData, CallProperties& callProperties)
+	void Renderer::DrawMeshShadow(const DrawData& drawData, CallProperties& callProperties, uint32_t submeshIndex)
 	{
 		ShadowMaterial shadowMaterial = drawData.material.GetShadowMaterial();
 		emberBackendInterface::IMaterial* pIMaterial = shadowMaterial.TryGetInterfaceHandle();
@@ -466,7 +484,7 @@ namespace emberCore
 		if (pICallDescriptorSetBinding == nullptr)
 		{
 			LOG_WARN("Renderer::DrawMesh(...) received invalid shadow CallProperties. Drawing the shadow with default call properties.");
-			CallProperties fallbackCallProperties = DrawMeshShadow(drawData);
+			CallProperties fallbackCallProperties = DrawMeshShadow(drawData, submeshIndex);
 			return;
 		}
 
@@ -474,7 +492,7 @@ namespace emberCore
 		SetModelData(drawData.localToWorldMatrix, callProperties);
 		SetInstanceBuffer(drawData, callProperties);
 		emberBackendInterface::IMesh* pIMesh = drawData.mesh.GetInterfaceHandle();
-		s_pIRenderer->DrawMeshShadow(pIMesh, pIMaterial, pICallDescriptorSetBinding, drawData.instanceCount);
+		s_pIRenderer->DrawMeshShadow(pIMesh, pIMaterial, pICallDescriptorSetBinding, drawData.instanceCount, submeshIndex);
 	}
 
 

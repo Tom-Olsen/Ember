@@ -1,5 +1,6 @@
 #pragma once
 #include "commonVertexMemoryLayout.h"
+#include "commonSubmesh.h"
 #include "emberMath.h"
 #include <vector>
 
@@ -23,6 +24,6 @@ namespace emberBackendInterface
 		// Update GPU buffers:
 		virtual void UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs, emberCommon::VertexMemoryLayout vertexMemoryLayout) = 0;
 		virtual void UpdateVertexBuffer(const std::vector<Float3>& positions, std::vector<Float3>* pNormals, std::vector<Float3>* pTangents, std::vector<Float4>* pColors, std::vector<Float4>* pUvs) = 0;
-		virtual void UpdateIndexBuffer(const std::vector<Uint3>& triangles, uint32_t vertexCount = 0) = 0;
+		virtual void UpdateIndexBuffer(const std::vector<Uint3>& triangles, const std::vector<emberCommon::Submesh>& submeshes, const emberMath::Bounds& bounds, uint32_t vertexCount = 0) = 0;
     };
 }

@@ -7,13 +7,14 @@
 
 namespace vulkanRendererBackend
 {
-	DeferredDrawCall::DeferredDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount)
+	DeferredDrawCall::DeferredDrawCall(Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount, uint32_t submeshIndex)
 		: pMesh(pMesh)
 		, pMaterial(pMaterial)
 		, descriptorSetBindingHandle(descriptorSetBindingHandle)
 		, cullMode(cullMode)
 		, receiveShadows(receiveShadows)
 		, instanceCount(instanceCount)
+		, submeshIndex(submeshIndex)
 	{
 		assert(pMesh != nullptr);
 		assert(pMaterial != nullptr);

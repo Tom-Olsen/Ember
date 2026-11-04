@@ -31,9 +31,10 @@ namespace vulkanRendererBackend
 		emberCommon::CullMode cullMode;
 		bool receiveShadows;
 		uint32_t instanceCount;
+		uint32_t submeshIndex;
 
 	public: // Methods:
-		ForwardDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount);
+		ForwardDrawCall(const Float3& worldPosition, Mesh* pMesh, Material* pMaterial, const DescriptorSetBindingHandle& descriptorSetBindingHandle, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount, uint32_t submeshIndex);
 		~ForwardDrawCall();
 	};
 }
