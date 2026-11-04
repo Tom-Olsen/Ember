@@ -327,6 +327,21 @@ inline Scene* DefaultScene()
 
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
+	{// Submesh test:
+		Entity entity = Entity::Create("SubmeshTest");
+		Transform* pTransform = entity.GetTransform();
+		pTransform->SetPosition(Float3(3.5f, 0.0f, 0.0f));
+
+		std::vector<Mesh> subMeshes;
+		subMeshes.reserve(2);
+		subMeshes.emplace_back(MeshManager::GetMesh("cube").GetCopy());
+		subMeshes.emplace_back(MeshManager::GetMesh("halfCubeSphere").GetCopy().Translate(0.5f * Float3::up));
+		MeshManager::AddMesh(Mesh::Merge(subMeshes, "submeshTest", false));
+
+		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
+		pMeshRenderer->SetMesh(MeshManager::GetMesh("submeshTest"));
+		pMeshRenderer->SetMaterials({meshTesterMaterial, sphere0Material});
+	}
 	//{// Transparent quad:
 	//	Entity entity = Entity::Create("TransparentQuad");
 	//	Transform* pTransform = entity.GetTransform();
