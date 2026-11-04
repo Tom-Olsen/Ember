@@ -1,8 +1,9 @@
 #pragma once
 #include "emberCoreExport.h"
-#include <unordered_map>
+#include <filesystem>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 
 
@@ -19,8 +20,6 @@ namespace emberCore
     /// </summary>
     class EMBER_CORE_API MeshManager
     {
-    public: // Members
-
     private: // Members
         static bool s_isInitialized;
         static std::unordered_map<std::string, std::unique_ptr<Mesh>> s_meshes;
@@ -31,11 +30,16 @@ namespace emberCore
         //static void UnloadAllMeshes();    // ember::ToDo: not sure if this is needed
         static void Clear();
 
+        // Asset loading:
+        static void LoadMeshAssets(const std::filesystem::path& directoryPath);
+
+        // Add/Get/Delete:
         static void AddMesh(Mesh&& mesh);  // must be called as AddMesh(std::move(mesh)). Leaves input mesh empty.
         static Mesh& GetMesh(const std::string& name);
         static Mesh* TryGetMesh(const std::string& name);
         static void DeleteMesh(const std::string& name);
 
+        // Debugging:
         static void Print();
 
     private: // Methods
