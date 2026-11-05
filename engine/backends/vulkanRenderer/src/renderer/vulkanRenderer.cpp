@@ -147,7 +147,7 @@ namespace vulkanRendererBackend
 		sceneColorPair.BeginFrame(m_frameExecutionData.frameIndex);
 
 		SortDrawCallPointers();
-		QueueRendererOwnedComputeShaders();
+		DispatchRendererOwnedComputeShaders();
 		UpdateShaderData();
 
 		// Record and submit current frame commands:
@@ -236,7 +236,7 @@ namespace vulkanRendererBackend
     }
 	void Renderer::DrawMesh(const Float3& worldPosition, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount, uint32_t submeshIndex)
 	{
-		// Record static draw call.
+		// Queue static draw call.
 		assert(cullMode != emberCommon::CullMode::count);
 		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
@@ -272,7 +272,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawMesh(const Float3& worldPosition, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, bool receiveShadows, uint32_t instanceCount, uint32_t submeshIndex)
 	{
-		// Record dynamic draw call.
+		// Queue dynamic draw call.
 		assert(cullMode != emberCommon::CullMode::count);
 		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
@@ -358,7 +358,7 @@ namespace vulkanRendererBackend
 	}
 	void Renderer::DrawGizmo(const Float3& worldPosition, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberBackendInterface::IDescriptorSetBinding* pICallDescriptorSetBinding, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
-		// Record static gizmo draw call.
+		// Queue static gizmo draw call.
 		assert(cullMode != emberCommon::CullMode::count);
 		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
@@ -388,7 +388,7 @@ namespace vulkanRendererBackend
 	}
 	emberBackendInterface::IDescriptorSetBinding* Renderer::DrawGizmo(const Float3& worldPosition, emberBackendInterface::IMesh* pIMesh, emberBackendInterface::IMaterial* pIMaterial, emberCommon::CullMode cullMode, uint32_t instanceCount)
 	{
-		// Record dynamic gizmo draw call.
+		// Queue dynamic gizmo draw call.
 		assert(cullMode != emberCommon::CullMode::count);
 		assert(cullMode != emberCommon::CullMode::materialDefault);
 		if (!pIMesh)
@@ -817,7 +817,7 @@ namespace vulkanRendererBackend
 	{
 		m_frameRenderData[m_frameExecutionData.frameIndex].SortDrawCalls(m_activeCamera);
 	}
-	void Renderer::QueueRendererOwnedComputeShaders()
+	void Renderer::DispatchRendererOwnedComputeShaders()
 	{
 		// Outline mask:
 		ComputeQueue* pPostOutlineCompute = m_pCompute->GetPostOutlineCompute();
@@ -833,20 +833,20 @@ namespace vulkanRendererBackend
 			Uint3 threadCount = { pInputMask->GetWidth(), pInputMask->GetHeight(), 1 };
 			ComputeShader* pHorizontalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineHorizontalMaskExpansionComputeShader();
 			pHorizontalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
-			DescriptorSetBinding* pHorizontalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostOutlineCompute->RecordComputeShader(pHorizontalExpansionComputeShader, threadCount));
+			DescriptorSetBinding* pHorizontalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostOutlineCompute->DispatchComputeShader(pHorizontalExpansionComputeShader, threadCount));
 			if (!pHorizontalExpansionCallDescriptorSetBinding)
-				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the horizontal outline mask expansion compute shader.");
+				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not dispatch the horizontal outline mask expansion compute shader.");
 			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pInputMask);
 			pHorizontalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pHorizontalExpandedMask);
 
-			pPostOutlineCompute->RecordBarrier(emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead);
+			pPostOutlineCompute->DispatchBarrier(emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead);
 
 			// Expand mask vertically and remove the original mask (postOutlineCompute):
 			ComputeShader* pVerticalExpansionComputeShader = DefaultGpuResources::Get().GetOutlineVerticalMaskExpansionComputeShader();
 			pVerticalExpansionComputeShader->GetDescriptorSetBinding()->SetInt("OutlineProperties", "outlineRadius", m_outlineThickness);
-			DescriptorSetBinding* pVerticalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostOutlineCompute->RecordComputeShader(pVerticalExpansionComputeShader, threadCount));
+			DescriptorSetBinding* pVerticalExpansionCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostOutlineCompute->DispatchComputeShader(pVerticalExpansionComputeShader, threadCount));
 			if (!pVerticalExpansionCallDescriptorSetBinding)
-				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the vertical outline mask expansion compute shader.");
+				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not dispatch the vertical outline mask expansion compute shader.");
 			pVerticalExpansionCallDescriptorSetBinding->SetTexture("inputMask", pHorizontalExpandedMask);
 			pVerticalExpansionCallDescriptorSetBinding->SetTexture("originalMask", pInputMask);
 			pVerticalExpansionCallDescriptorSetBinding->SetTexture("outputMask", pExpandedMask);
@@ -854,15 +854,15 @@ namespace vulkanRendererBackend
 			// Composite outline into render texture (postRenderCompute):
 			ComputeShader* pOutlineCompositeComputeShader = DefaultGpuResources::Get().GetOutlineCompositeComputeShader();
 			pOutlineCompositeComputeShader->GetDescriptorSetBinding()->SetFloat4("OutlineProperties", "outlineColor", m_outlineColor);
-			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->RecordComputeShader(pOutlineCompositeComputeShader, Uint3(GetRenderWidth(), GetRenderHeight(), 1)));
+			DescriptorSetBinding* pCompositeCallDescriptorSetBinding = static_cast<DescriptorSetBinding*>(pPostRenderCompute->DispatchComputeShader(pOutlineCompositeComputeShader, Uint3(GetRenderWidth(), GetRenderHeight(), 1)));
 			if (!pCompositeCallDescriptorSetBinding)
-				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the outline composite compute shader.");
+				throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not dispatch the outline composite compute shader.");
 			pCompositeCallDescriptorSetBinding->SetTexture("outlineMask", pExpandedMask);
 		}
 
 		// Renderer uses linear color space, tone mapping + gamma correction is always the final post-render operation:
-		if (pPostRenderCompute->RecordComputeShader(DefaultGpuResources::Get().GetGammaCorrectionComputeShader(), Uint3(GetRenderWidth(), GetRenderHeight(), 1)) == nullptr)
-			throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not record the gamma correction compute shader.");
+		if (pPostRenderCompute->DispatchComputeShader(DefaultGpuResources::Get().GetGammaCorrectionComputeShader(), Uint3(GetRenderWidth(), GetRenderHeight(), 1)) == nullptr)
+			throw std::runtime_error("Renderer::RenderFrame(...) failed. Could not dispatch the gamma correction compute shader.");
 	}
 	void Renderer::UpdateShaderData()
 	{

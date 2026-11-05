@@ -26,6 +26,6 @@ namespace emberEcs
 	{
 		Uint3 threadCount = Uint3(emberCore::Renderer::GetRenderWidth(), emberCore::Renderer::GetRenderHeight(), 1);
 		for (ComputeShader& computeShader : effects)
-			CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(computeShader, threadCount);
+			CallProperties callProperties = Compute::PostRender::DispatchPostProcessingShader(computeShader, threadCount);
 	}
 }

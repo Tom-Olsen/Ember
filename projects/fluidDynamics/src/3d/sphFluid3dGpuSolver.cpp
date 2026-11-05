@@ -243,9 +243,9 @@ namespace fluidDynamics
 		BufferView<Float3>& orderedVelocityBufferView = settings.useHashGridOptimization ? scratchData.tempBuffer1.GetBufferView() : tempVelocityBufferView;
 
 		// First Leap Frog step:
-		Compute::RecordBarrier(computeShaders.computeType, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
+		Compute::DispatchBarrier(computeShaders.computeType, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
 		ComputeLeapFrogStep1(computeShaders, dt, sourcePositionBufferView, sourceVelocityBufferView, tempPositionBufferView, tempVelocityBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
 
 		// Resolve boundary collisions:
 		ComputeBoundaryCollisions(computeShaders, tempPositionBufferView, tempVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
@@ -258,7 +258,7 @@ namespace fluidDynamics
 		ComputeLeapFrogStep2(computeShaders, dt, scratchData.forceDensityBuffer.GetBufferView(), tripleData.densityBuffer.GetBufferView(destinationDataIndex), orderedPositionBufferView, orderedVelocityBufferView, destinationPositionBufferView, destinationVelocityBufferView);
 
 		// Resolve boundary collisions:
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
 		ComputeBoundaryCollisions(computeShaders, destinationPositionBufferView, destinationVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
 	}
 	void SphFluid3dGpuSolver::TimeStepVelocityVerlet(float dt, const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t sourceDataIndex, uint32_t destinationDataIndex)
@@ -281,7 +281,7 @@ namespace fluidDynamics
 		// First Velocity Verlet step:
 		ComputeNeighborFields(computeShaders, scratchData, tripleData, destinationDataIndex, currentPositionBufferView, currentVelocityBufferView);
 		ComputeVelocityVerletStep1(computeShaders, dt, scratchData.forceDensityBuffer.GetBufferView(), tripleData.densityBuffer.GetBufferView(destinationDataIndex), currentPositionBufferView, currentVelocityBufferView, tempPositionBufferView, tempVelocityBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
 
 		// Resolve boundary collisions:
 		ComputeBoundaryCollisions(computeShaders, tempPositionBufferView, tempVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
@@ -294,7 +294,7 @@ namespace fluidDynamics
 		ComputeVelocityVerletStep2(computeShaders, dt, scratchData.forceDensityBuffer.GetBufferView(), tripleData.densityBuffer.GetBufferView(destinationDataIndex), orderedPositionBufferView, orderedVelocityBufferView, destinationPositionBufferView, destinationVelocityBufferView);
 
 		// Resolve boundary collisions:
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
 		ComputeBoundaryCollisions(computeShaders, destinationPositionBufferView, destinationVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
 	}
 	void SphFluid3dGpuSolver::TimeStepRungeKutta2(float dt, const Settings& settings, ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t sourceDataIndex, uint32_t destinationDataIndex)
@@ -329,11 +329,11 @@ namespace fluidDynamics
 		// First Runge-Kutta step:
 		ComputeNeighborFields(computeShaders, scratchData, tripleData, destinationDataIndex, currentPositionBufferView, currentVelocityBufferView);
 		ComputeRungeKutta2Step1(computeShaders, dt, forceDensityBufferView, destinationDensityBufferView, currentPositionBufferView, currentVelocityBufferView, kp1BufferView, kv1BufferView, tempPositionBufferView, tempVelocityBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
 		// Resolve boundary collisions for the intermediate Runge-Kutta state:
 		ComputeBoundaryCollisions(computeShaders, tempPositionBufferView, tempVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
 		// Build hash grid for second Runge-Kutta step and align first steps data:
 		BufferView<Float3>& secondStepPositionBufferView = settings.useHashGridOptimization ? tempBufferView2 : tempPositionBufferView;
@@ -345,7 +345,7 @@ namespace fluidDynamics
 			GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, kv1BufferView, tempBufferView5, computeShaders.sessionID);
 			GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, currentPositionBufferView, tempBufferView6, computeShaders.sessionID);
 			GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, currentVelocityBufferView, tempBufferView7, computeShaders.sessionID);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		}
 		BufferView<Float3>& secondStepKp1BufferView = settings.useHashGridOptimization ? tempBufferView4 : kp1BufferView;
 		BufferView<Float3>& secondStepKv1BufferView = settings.useHashGridOptimization ? tempBufferView5 : kv1BufferView;
@@ -355,7 +355,7 @@ namespace fluidDynamics
 		// Second Runge-Kutta step:
 		ComputeNeighborFields(computeShaders, scratchData, tripleData, destinationDataIndex, secondStepPositionBufferView, secondStepVelocityBufferView);
 		ComputeRungeKutta2Step2(computeShaders, dt, forceDensityBufferView, destinationDensityBufferView, secondStepKp1BufferView, secondStepKv1BufferView, secondStepVelocityBufferView, orderedSourcePositionBufferView, orderedSourceVelocityBufferView, destinationPositionBufferView, destinationVelocityBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
 		// Resolve boundary collisions:
 		ComputeBoundaryCollisions(computeShaders, destinationPositionBufferView, destinationVelocityBufferView, settings.fluidBounds, settings.collisionDampening);
@@ -368,7 +368,7 @@ namespace fluidDynamics
 	{
 		int hashGridSize = math::NextPrimeAbove(2 * tripleData.ParticleCount());
 		Uint3 threadCount(tripleData.ParticleCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetDataComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.resetDataComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "hashGridSize", hashGridSize);
 		callProperties.SetValue("CallValues", "initialDistributionRadius", initialDistributionRadius);
 		callProperties.SetValue("CallValues", "initialDistributionPosition", initialDistributionPosition);
@@ -391,7 +391,7 @@ namespace fluidDynamics
 		callProperties.SetBuffer("tempBuffer6", scratchData.tempBuffer6.GetBuffer());
 		callProperties.SetBuffer("tempBuffer7", scratchData.tempBuffer7.GetBuffer());
 
-		CallProperties rungeKuttaCallProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.resetRungeKuttaComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties rungeKuttaCallProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.resetRungeKuttaComputeShader, threadCount, computeShaders.sessionID);
 		rungeKuttaCallProperties.SetBuffer("kp1Buffer", scratchData.kp1Buffer.GetBuffer());
 		rungeKuttaCallProperties.SetBuffer("kv1Buffer", scratchData.kv1Buffer.GetBuffer());
 		rungeKuttaCallProperties.SetBuffer("tempPositionBuffer", scratchData.tempPositionBuffer.GetBuffer());
@@ -401,7 +401,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeCellKeys(ComputeShaders& computeShaders, const BufferView<uint32_t>& cellKeyBufferView, const BufferView<Float3>& positionBufferView)
 	{
 		Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.cellKeysComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.cellKeysComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
 	}
@@ -410,14 +410,14 @@ namespace fluidDynamics
 		// Reset start index buffer:
 		{
 			Uint3 threadCount(startIndexBufferView.GetCount(), 1, 1);	// reset all possible start indices.
-			CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesResetComputeShader, threadCount, computeShaders.sessionID);
+			CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.startIndicesResetComputeShader, threadCount, computeShaders.sessionID);
 			callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
 		}
 		// Compute start indices:
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		{
 			Uint3 threadCount(cellKeyBufferView.GetCount(), 1, 1);	// start indices only needed for each particle.
-			CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, threadCount, computeShaders.sessionID);
+			CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.startIndicesComputeShader, threadCount, computeShaders.sessionID);
 			callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
 			callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		}
@@ -425,7 +425,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeDensities(ComputeShaders& computeShaders, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(densityBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.densityComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
 		callProperties.SetBuffer("nearDensityBuffer", nearDensityBufferView.GetBuffer());
 		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
@@ -435,7 +435,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeNormalsAndCurvatures(ComputeShaders& computeShaders, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(normalBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.normalAndCurvatureComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.normalAndCurvatureComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetBuffer("normalBuffer", normalBufferView.GetBuffer());
 		callProperties.SetBuffer("curvatureBuffer", curvatureBufferView.GetBuffer());
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -446,7 +446,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeForceDensities(ComputeShaders& computeShaders, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<float>& nearDensityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& normalBufferView, const BufferView<float>& curvatureBufferView, const BufferView<uint32_t>& startIndexBufferView, const BufferView<uint32_t>& cellKeyBufferView)
 	{
 		Uint3 threadCount(forceDensityBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.forceDensityComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.forceDensityComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetBuffer("cellKeyBuffer", cellKeyBufferView.GetBuffer());
 		callProperties.SetBuffer("startIndexBuffer", startIndexBufferView.GetBuffer());
 		callProperties.SetBuffer("positionBuffer", positionBufferView.GetBuffer());
@@ -460,7 +460,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeLeapFrogStep1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.leapFrogStep1ComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.leapFrogStep1ComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "dt", dt);
 		callProperties.SetBuffer("sourcePositionBuffer", sourcePositionBufferView.GetBuffer());
 		callProperties.SetBuffer("sourceVelocityBuffer", sourceVelocityBufferView.GetBuffer());
@@ -470,7 +470,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeLeapFrogStep2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.leapFrogStep2ComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.leapFrogStep2ComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "dt", dt);
 		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -482,7 +482,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeVelocityVerletStep1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.velocityVerletStep1ComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.velocityVerletStep1ComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "dt", dt);
 		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -494,7 +494,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeVelocityVerletStep2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.velocityVerletStep2ComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.velocityVerletStep2ComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "dt", dt);
 		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -506,7 +506,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeRungeKutta2Step1(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempPositionBufferView, const BufferView<Float3>& tempVelocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step1ComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step1ComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "dt", dt);
 		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -520,7 +520,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeRungeKutta2Step2(ComputeShaders& computeShaders, float dt, const BufferView<Float3>& forceDensityBufferView, const BufferView<float>& densityBufferView, const BufferView<Float3>& kp1BufferView, const BufferView<Float3>& kv1BufferView, const BufferView<Float3>& tempVelocityBufferView, const BufferView<Float3>& sourcePositionBufferView, const BufferView<Float3>& sourceVelocityBufferView, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step2ComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.rungeKutta2Step2ComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "dt", dt);
 		callProperties.SetBuffer("forceDensityBuffer", forceDensityBufferView.GetBuffer());
 		callProperties.SetBuffer("densityBuffer", densityBufferView.GetBuffer());
@@ -535,7 +535,7 @@ namespace fluidDynamics
 	void SphFluid3dGpuSolver::ComputeBoundaryCollisions(ComputeShaders& computeShaders, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView, const RotatedBounds& fluidBounds, float collisionDampening)
 	{
 		Uint3 threadCount(positionBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.boundaryCollisionsComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.boundaryCollisionsComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
 		callProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
 		callProperties.SetValue("CallValues", "collisionDampening", collisionDampening);
@@ -558,16 +558,16 @@ namespace fluidDynamics
 
 		// Build hash grid:
 		ComputeCellKeys(computeShaders, cellKeyBufferView, positionBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		GpuSort<uint32_t>::SortPermutation(computeShaders.computeType, cellKeyBufferView, sortPermutationBufferView, computeShaders.sessionID);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		ComputeStartIndices(computeShaders, startIndexBufferView, cellKeyBufferView);
 		GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, positionBufferView, sortedPositionBufferView, computeShaders.sessionID);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 
         // Compute density texture3d:
 		Uint3 threadCount(densityTexture.GetWidth(), densityTexture.GetHeight(), densityTexture.GetDepth());
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.densityTexture3dComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.densityTexture3dComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "particleCount", (int)positionBufferView.GetCount());
 		callProperties.SetValue("CallValues", "boundsMin", fluidBounds.localBounds.GetMin());
 		callProperties.SetValue("CallValues", "boundsMax", fluidBounds.localBounds.GetMax());
@@ -586,7 +586,7 @@ namespace fluidDynamics
 		const RotatedBounds& lightBounds = tripleData.opticalDepthBounds[dataIndex];
 
 		Uint3 threadCount(opticalDepthTexture.GetWidth(), opticalDepthTexture.GetHeight(), 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeShaders.computeType, computeShaders.opticalDepthTexture3dComputeShader, threadCount, computeShaders.sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeShaders.computeType, computeShaders.opticalDepthTexture3dComputeShader, threadCount, computeShaders.sessionID);
 		callProperties.SetValue("CallValues", "lightBoundsMin", lightBounds.localBounds.GetMin());
 		callProperties.SetValue("CallValues", "lightBoundsMax", lightBounds.localBounds.GetMax());
 		callProperties.SetValue("CallValues", "lightToSimulationRotation", lightBounds.GetRotation4x4());
@@ -608,17 +608,17 @@ namespace fluidDynamics
 		BufferView<uint32_t>& sortPermutationBufferView = scratchData.sortPermutationBuffer.GetBufferView();
 
 		// Scratch buffers are reused across force evaluations and simulation substeps:
-		Compute::RecordBarrier(computeShaders.computeType, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
+		Compute::DispatchBarrier(computeShaders.computeType, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, emberCommon::ComputeBarrierFlag::storageRead | emberCommon::ComputeBarrierFlag::storageWrite, computeShaders.sessionID);
 		if (settings.useHashGridOptimization)
 		{
 			ComputeCellKeys(computeShaders, cellKeyBufferView, positionBufferView);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 			GpuSort<uint32_t>::SortPermutation(computeShaders.computeType, cellKeyBufferView, sortPermutationBufferView, computeShaders.sessionID);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 			ComputeStartIndices(computeShaders, startIndexBufferView, cellKeyBufferView);
 			GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, positionBufferView, orderedPositionBufferView, computeShaders.sessionID);
 			GpuSort<Float3>::ApplyPermutation(computeShaders.computeType, sortPermutationBufferView, velocityBufferView, orderedVelocityBufferView, computeShaders.sessionID);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		}
 	}
 	void SphFluid3dGpuSolver::ComputeNeighborFields(ComputeShaders& computeShaders, ScratchData& scratchData, TripleData& tripleData, uint32_t dataIndex, const BufferView<Float3>& positionBufferView, const BufferView<Float3>& velocityBufferView)
@@ -630,10 +630,10 @@ namespace fluidDynamics
 		const BufferView<float>& curvatureBufferView = tripleData.curvatureBuffer.GetBufferView(dataIndex);
 
 		ComputeDensities(computeShaders, densityBufferView, scratchData.nearDensityBuffer.GetBufferView(), positionBufferView, startIndexBufferView, cellKeyBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		ComputeNormalsAndCurvatures(computeShaders, normalBufferView, curvatureBufferView, densityBufferView, positionBufferView, startIndexBufferView, cellKeyBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 		ComputeForceDensities(computeShaders, scratchData.forceDensityBuffer.GetBufferView(), densityBufferView, scratchData.nearDensityBuffer.GetBufferView(), positionBufferView, velocityBufferView, normalBufferView, curvatureBufferView, startIndexBufferView, cellKeyBufferView);
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeShaders.computeType, computeShaders.sessionID);
 	}
 }

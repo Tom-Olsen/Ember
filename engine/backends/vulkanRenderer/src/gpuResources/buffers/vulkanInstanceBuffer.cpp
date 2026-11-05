@@ -46,7 +46,7 @@ namespace vulkanRendererBackend
 
 
 	// History copy requests:
-	void InstanceBuffer::RecordCopyToOldBuffer(emberBackendInterface::ICompute::IQueue& queue)
+	void InstanceBuffer::DispatchCopyToOldBuffer(emberBackendInterface::ICompute::IQueue& queue)
 	{
 		using emberCommon::ComputeBarrierFlag;
 		using emberCommon::PipelineStage;
@@ -57,21 +57,21 @@ namespace vulkanRendererBackend
 		PipelineStage stages = PipelineStage::vertexShader | PipelineStage::computeShader | PipelineStage::copy;
 
 		// Make current instance data readable by the copy:
-		queue.RecordBufferBarrier(this, stages,
+		queue.DispatchBufferBarrier(this, stages,
 			ComputeBarrierFlag::shaderRead | ComputeBarrierFlag::shaderWrite | ComputeBarrierFlag::transferWrite,
 			PipelineStage::copy, ComputeBarrierFlag::transferRead);
 		// Finish reading old instance data before overwriting it:
-		queue.RecordBufferBarrier(m_pHistoryBuffer.get(), stages,
+		queue.DispatchBufferBarrier(m_pHistoryBuffer.get(), stages,
 			ComputeBarrierFlag::shaderRead | ComputeBarrierFlag::transferRead | ComputeBarrierFlag::transferWrite,
 			PipelineStage::copy, ComputeBarrierFlag::transferWrite);
 
-		queue.RecordBufferCopy(this, m_pHistoryBuffer.get(), m_size);
+		queue.DispatchBufferCopy(this, m_pHistoryBuffer.get(), m_size);
 
 		// Make the copied data readable by the next frame's vertex shaders:
-		queue.RecordBufferBarrier(m_pHistoryBuffer.get(), PipelineStage::copy, ComputeBarrierFlag::transferWrite,
+		queue.DispatchBufferBarrier(m_pHistoryBuffer.get(), PipelineStage::copy, ComputeBarrierFlag::transferWrite,
 			PipelineStage::vertexShader, ComputeBarrierFlag::shaderRead);
 		// Finish copying current data before subsequent updates can overwrite it:
-		queue.RecordBufferBarrier(this, stages,
+		queue.DispatchBufferBarrier(this, stages,
 			ComputeBarrierFlag::shaderRead | ComputeBarrierFlag::shaderWrite | ComputeBarrierFlag::transferRead | ComputeBarrierFlag::transferWrite,
 			stages, ComputeBarrierFlag::transferWrite | ComputeBarrierFlag::shaderRead | ComputeBarrierFlag::shaderWrite);
 

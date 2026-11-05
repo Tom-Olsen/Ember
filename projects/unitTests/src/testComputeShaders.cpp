@@ -185,7 +185,7 @@ TEST_F(TEST_ComputeShaders, AsyncSessionsGrowAndReuse)
 	for (uint32_t batchIndex = 0; batchIndex < 3; batchIndex++)
 	{
 		std::array<uint32_t, sessionCount> sessions;
-		// Keep every slot recording so completed GPU work cannot hide the need to grow.
+		// Keep every slot open for queuing so completed GPU work cannot hide the need to grow.
 		for (uint32_t index = 0; index < sessionCount; index++)
 		{
 			sessions[index] = async.CreateComputeSession();
@@ -195,7 +195,7 @@ TEST_F(TEST_ComputeShaders, AsyncSessionsGrowAndReuse)
 		EXPECT_EQ(uniqueSessions.size(), sessionCount);
 
 		for (uint32_t sessionID : sessions)
-			async.DispatchComputeSession(sessionID, 0.0f, 0.0f);
+			async.SubmitComputeSession(sessionID, 0.0f, 0.0f);
 		for (auto session = sessions.rbegin(); session != sessions.rend(); session++)
 			async.WaitForFinish(*session);
 		for (uint32_t sessionID : sessions)
@@ -205,7 +205,7 @@ TEST_F(TEST_ComputeShaders, AsyncSessionsGrowAndReuse)
 
 
 
-TEST_F(TEST_ComputeShaders, AsyncSessionGrowthPreservesRecordedWork)
+TEST_F(TEST_ComputeShaders, AsyncSessionGrowthPreservesQueuedWork)
 {
 	constexpr uint32_t sessionCount = 33;
 	constexpr uint32_t elementCount = 257;
@@ -223,13 +223,13 @@ TEST_F(TEST_ComputeShaders, AsyncSessionGrowthPreservesRecordedWork)
 		{
 			buffers[index].Upload(initialValues.data(), elementCount);
 			sessions[index] = Compute::Async::CreateComputeSession();
-			CallProperties properties = Compute::Async::RecordComputeShader(sessions[index], shader, Uint3(elementCount, 1, 1));
+			CallProperties properties = Compute::Async::DispatchComputeShader(sessions[index], shader, Uint3(elementCount, 1, 1));
 			properties.SetBuffer("indexBuffer", buffers[index].GetBuffer());
 		}
 
-		// Growth must preserve the calls and bindings recorded in earlier sessions.
+		// Growth must preserve the calls and bindings queued in earlier sessions.
 		for (uint32_t sessionID : sessions)
-			Compute::Async::DispatchComputeSession(sessionID);
+			Compute::Async::SubmitComputeSession(sessionID);
 		for (auto session = sessions.rbegin(); session != sessions.rend(); session++)
 			Compute::Async::WaitForFinish(*session);
 

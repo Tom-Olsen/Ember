@@ -232,9 +232,9 @@ namespace fluidDynamics
 		void EndBenchmark();
 
 		// Reset and rendering:
-		void RecordReset();
+		void DispatchReset();
 		void RefreshRenderData();
-		void RecordVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex);
+		void DispatchVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex);
 		bool TryGetDirectionalLightBounds(RotatedBounds& lightBounds);
 	};
 }

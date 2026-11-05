@@ -21,7 +21,7 @@ namespace vulkanRendererBackend
 		struct Session
 		{
 		public: // Enums:
-			enum class State { idle, running, recording };
+			enum class State { idle, running, queuing };
 
 		public: // Members:
 			ComputeQueue computeQueue;
@@ -50,15 +50,15 @@ namespace vulkanRendererBackend
 		Async(Async&& other) noexcept;
 		Async& operator=(Async&& other) noexcept;
 
-		// Dispatch logic:
+		// Submission logic:
 		uint32_t CreateComputeSession() override;
-		void DispatchComputeSession(uint32_t sessionID, float time, float deltaTime) override;
+		void SubmitComputeSession(uint32_t sessionID, float time, float deltaTime) override;
 		bool IsFinished(uint32_t sessionID) override;
 		void WaitForFinish(uint32_t sessionID) override;
 		void CollectFinishedSessions();
 
-		// Workload recording:
-		emberBackendInterface::ICompute::IQueue& GetRecordingQueue(uint32_t sessionID) override;
+		// Workload dispatch:
+		emberBackendInterface::ICompute::IQueue& GetActiveQueue(uint32_t sessionID) override;
 
 		// Debugging:
 		void PrintSessionsState();

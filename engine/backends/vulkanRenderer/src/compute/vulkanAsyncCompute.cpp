@@ -51,7 +51,7 @@ namespace vulkanRendererBackend
 
 
 
-	// Dispatch logic:
+	// Submission logic:
 	uint32_t Async::CreateComputeSession()
 	{
 		if (m_pendingSessionCounts.empty())
@@ -65,15 +65,15 @@ namespace vulkanRendererBackend
 		uint32_t sessionID = m_freeIndices.front();
 		m_freeIndices.pop();
 		m_computeSessions[sessionID]->computeQueue.Reset();
-		m_computeSessions[sessionID]->state = Session::State::recording;
+		m_computeSessions[sessionID]->state = Session::State::queuing;
 
 		return sessionID;
 	}
-	void Async::DispatchComputeSession(uint32_t sessionID, float time, float deltaTime)
+	void Async::SubmitComputeSession(uint32_t sessionID, float time, float deltaTime)
 	{
 		if (sessionID >= m_computeSessions.size())
-			throw std::out_of_range("compute::Async::DispatchComputeSession(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
-		if (m_computeSessions[sessionID]->state == Session::State::recording)
+			throw std::out_of_range("compute::Async::SubmitComputeSession(...) sessionID '" + std::to_string(sessionID) + "' out of range.");
+		if (m_computeSessions[sessionID]->state == Session::State::queuing)
 		{
 			CollectFinishedSessions();
 
@@ -165,14 +165,14 @@ namespace vulkanRendererBackend
 
 
 
-	// Workload recording:
-	emberBackendInterface::ICompute::IQueue& Async::GetRecordingQueue(uint32_t sessionID)
+	// Workload dispatch:
+	emberBackendInterface::ICompute::IQueue& Async::GetActiveQueue(uint32_t sessionID)
 	{
 		if (sessionID >= m_computeSessions.size())
-			throw std::out_of_range("Async::GetRecordingQueue(...) sessionID is out of range.");
+			throw std::out_of_range("Async::GetActiveQueue(...) sessionID is out of range.");
 		Session& session = *m_computeSessions[sessionID];
-		if (session.state != Session::State::recording)
-			throw std::logic_error("Async::GetRecordingQueue(...) session is not recording.");
+		if (session.state != Session::State::queuing)
+			throw std::logic_error("Async::GetActiveQueue(...) session is not queuing.");
 		return session.computeQueue;
 	}
 
@@ -202,7 +202,7 @@ namespace vulkanRendererBackend
 		{
 			if (m_computeSessions[sessionID]->state == Session::State::running)
 				WaitForFinish(sessionID);
-			else if (m_computeSessions[sessionID]->state == Session::State::recording)
+			else if (m_computeSessions[sessionID]->state == Session::State::queuing)
 				ResetComputeSession(sessionID);
 		}
 		m_pendingSessionCounts.clear();

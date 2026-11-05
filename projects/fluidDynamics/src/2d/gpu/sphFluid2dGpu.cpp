@@ -93,7 +93,7 @@ namespace fluidDynamics
 	{
 		if (m_reset)
 		{
-			RecordReset();
+			DispatchReset();
 			return;
 		}
 		if (!m_isRunning)
@@ -110,7 +110,7 @@ namespace fluidDynamics
 		{
 			float deltaT = math::Min(dt, restTime);
 			SphFluid2dGpuSolver::TimeStepRungeKutta2(deltaT, m_settings, m_attractor, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
-			m_tripleBufferState.CommitWrite(Compute::Physics::GetRecordingSessionID());
+			m_tripleBufferState.CommitWrite(Compute::Physics::GetActiveSessionID());
 			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 			destinationDataIndex = m_tripleBufferState.GetDstIndex();
 			restTime -= deltaT;
@@ -502,7 +502,7 @@ namespace fluidDynamics
 
 
 	// Private methods:
-	void SphFluid2dGpu::RecordReset()
+	void SphFluid2dGpu::DispatchReset()
 	{
 		if (m_pendingResetSessionID != Compute::Physics::invalidPhysicsSessionID)
 		{
@@ -518,18 +518,18 @@ namespace fluidDynamics
 		LOG_INFO("reset");
 		m_timeStep = 0;
 		m_tripleBufferState.Reset();
-		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
+		m_pendingResetSessionID = Compute::Physics::GetActiveSessionID();
 		m_scratchData.Reallocate(m_particleCount);
 		m_tripleData.Reallocate(m_particleCount);
 
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		// Reset all buffer slots:
 		for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 		{
 			SphFluid2dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius);
-			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		}
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 
 		m_isRunning = false;
 	}

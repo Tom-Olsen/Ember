@@ -1,7 +1,6 @@
 #include "gpuSort.h"
 #include "callProperties.h"
 #include "computeShaderManager.h"
-#include <assert.h>
 
 
 
@@ -168,8 +167,6 @@ namespace emberCore
 	template <typename T>
 	void GpuSort<T>::Sort(ComputeType computeType, BufferView<T>& bufferView, uint32_t sessionID)
 	{
-		// Post render compute derives dispatch size from the render target and does not record barriers, so sorting is unsupported:
-		assert(computeType != ComputeType::postRender);
 		if (!s_localBitonicSortComputeShader.IsValid())
 			throw std::runtime_error("GpuSort::Sort: shaders for this type not implemented yet.");
 
@@ -184,38 +181,38 @@ namespace emberCore
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
 		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
 
-		// Record compute shaders:
+		// Dispatch compute shaders:
 		{
 			// Local bitonic sort for each block:
-			CallProperties callProperties = Compute::RecordComputeShader(computeType, s_localBitonicSortComputeShader, threadCountLocal, sessionID);
+			CallProperties callProperties = Compute::DispatchComputeShader(computeType, s_localBitonicSortComputeShader, threadCountLocal, sessionID);
 			callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 			callProperties.SetValue("Values", "bufferSize", bufferSize);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
-				callProperties = Compute::RecordComputeShader(computeType, s_bigFlipComputeShader, threadCountBig, sessionID);
+				callProperties = Compute::DispatchComputeShader(computeType, s_bigFlipComputeShader, threadCountBig, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetValue("Values", "flipHeight", flipHeight);
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+				Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
-					callProperties = Compute::RecordComputeShader(computeType, s_bigDisperseComputeShader, threadCountBig, sessionID);
+					callProperties = Compute::DispatchComputeShader(computeType, s_bigDisperseComputeShader, threadCountBig, sessionID);
 					callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 					callProperties.SetValue("Values", "disperseHeight", disperseHeight);
 					callProperties.SetValue("Values", "bufferSize", bufferSize);
-					Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+					Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 				}
 
 				// Local disperse:
-				callProperties = Compute::RecordComputeShader(computeType, s_localDisperseComputeShader, threadCountLocal, sessionID);
+				callProperties = Compute::DispatchComputeShader(computeType, s_localDisperseComputeShader, threadCountLocal, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+				Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 			}
 		}
 	}
@@ -226,8 +223,6 @@ namespace emberCore
 	template <typename T>
 	void GpuSort<T>::SortPermutation(ComputeType computeType, BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView, uint32_t sessionID)
 	{
-		// Post render compute derives dispatch size from the render target and does not record barriers, so sorting is unsupported:
-		assert(computeType != ComputeType::postRender);
 		if (!s_localBitonicSortPermutationComputeShader.IsValid())
 			throw std::runtime_error("GpuSort::SortPermutation: shaders for this type not implemented yet.");
 
@@ -238,52 +233,52 @@ namespace emberCore
 		Uint3 threadCountLocal = Uint3(bufferSize / 2, 1, 1);		// local bitonicSort/dispere only ever need to check entries up to buffer size.
 		Uint3 threadCountBig = Uint3(height / 2, 1, 1);				// needed to make sure that big flip/disperse hit all swap indices.
 
-		// Record compute shaders:
+		// Queue compute shaders:
 		{
 			// Initialize index(permutation) buffer:
 			Uint3 threadCountInit = Uint3(permutationBufferView.GetCount(), 1, 1);
-			CallProperties callProperties = Compute::RecordComputeShader(computeType, s_initIndexBufferComputeShader, threadCountInit, sessionID);
+			CallProperties callProperties = Compute::DispatchComputeShader(computeType, s_initIndexBufferComputeShader, threadCountInit, sessionID);
 			callProperties.SetBuffer("indexBuffer", permutationBufferView.GetBuffer());
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			// The identity permutation is complete for a single entry:
 			if (bufferSize == 1)
 				return;
 
 			// Local bitonic sort for each block:
-			callProperties = Compute::RecordComputeShader(computeType, s_localBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
+			callProperties = Compute::DispatchComputeShader(computeType, s_localBitonicSortPermutationComputeShader, threadCountLocal, sessionID);
 			callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 			callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 			callProperties.SetValue("Values", "bufferSize", bufferSize);
-			Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 			for (int flipHeight = 2 * blockSize; flipHeight <= height; flipHeight *= 2)
 			{
 				// Big flip:
-				callProperties = Compute::RecordComputeShader(computeType, s_bigFlipPermutationComputeShader, threadCountBig, sessionID);
+				callProperties = Compute::DispatchComputeShader(computeType, s_bigFlipPermutationComputeShader, threadCountBig, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 				callProperties.SetValue("Values", "flipHeight", flipHeight);
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+				Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 
 				for (int disperseHeight = flipHeight / 2; disperseHeight > blockSize; disperseHeight /= 2)
 				{
 					// Big disperse:
-					callProperties = Compute::RecordComputeShader(computeType, s_bigDispersePermutationComputeShader, threadCountBig, sessionID);
+					callProperties = Compute::DispatchComputeShader(computeType, s_bigDispersePermutationComputeShader, threadCountBig, sessionID);
 					callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 					callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 					callProperties.SetValue("Values", "disperseHeight", disperseHeight);
 					callProperties.SetValue("Values", "bufferSize", bufferSize);
-					Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+					Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 				}
 
 				// Local disperse:
-				callProperties = Compute::RecordComputeShader(computeType, s_localDispersePermutationComputeShader, threadCountLocal, sessionID);
+				callProperties = Compute::DispatchComputeShader(computeType, s_localDispersePermutationComputeShader, threadCountLocal, sessionID);
 				callProperties.SetBuffer("dataBuffer", bufferView.GetBuffer());
 				callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 				callProperties.SetValue("Values", "bufferSize", bufferSize);
-				Compute::RecordBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
+				Compute::DispatchBarrierWaitStorageWriteBeforeRead(computeType, sessionID);
 			}
 		}
 	}
@@ -295,7 +290,7 @@ namespace emberCore
 	void GpuSort<T>::ApplyPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeType, s_applyPermutationComputeShader, threadCount, sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeType, s_applyPermutationComputeShader, threadCount, sessionID);
 		callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 		callProperties.SetBuffer("inBuffer", inBufferView.GetBuffer());
 		callProperties.SetBuffer("outBuffer", outBufferView.GetBuffer());
@@ -307,7 +302,7 @@ namespace emberCore
 	void GpuSort<T>::InvertPermutation(ComputeType computeType, BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView, uint32_t sessionID)
 	{
 		Uint3 threadCount = Uint3(permutationBufferView.GetCount(), 1, 1);
-		CallProperties callProperties = Compute::RecordComputeShader(computeType, s_invertPermutationComputeShader, threadCount, sessionID);
+		CallProperties callProperties = Compute::DispatchComputeShader(computeType, s_invertPermutationComputeShader, threadCount, sessionID);
 		callProperties.SetBuffer("permutationBuffer", permutationBufferView.GetBuffer());
 		callProperties.SetBuffer("inversePermutationBuffer", inversePermutationBufferView.GetBuffer());
 	}
@@ -320,28 +315,28 @@ namespace emberCore
 	{
 		uint32_t sessionID = Compute::Async::CreateComputeSession();
 		Sort(ComputeType::async, bufferView, sessionID);
-		Compute::Async::DispatchComputeSessionAndWait(sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(sessionID);
 	}
 	template <typename T>
 	void GpuSort<T>::SortPermutationAndWait(BufferView<T>& bufferView, BufferView<uint32_t>& permutationBufferView)
 	{
 		uint32_t sessionID = Compute::Async::CreateComputeSession();
 		SortPermutation(ComputeType::async, bufferView, permutationBufferView, sessionID);
-		Compute::Async::DispatchComputeSessionAndWait(sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(sessionID);
 	}
 	template <typename T>
 	void GpuSort<T>::ApplyPermutationAndWait(BufferView<uint32_t>& permutationBufferView, BufferView<T>& inBufferView, BufferView<T>& outBufferView)
 	{
 		uint32_t sessionID = Compute::Async::CreateComputeSession();
 		ApplyPermutation(ComputeType::async, permutationBufferView, inBufferView, outBufferView, sessionID);
-		Compute::Async::DispatchComputeSessionAndWait(sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(sessionID);
 	}
 	template <typename T>
 	void GpuSort<T>::InvertPermutationAndWait(BufferView<uint32_t>& permutationBufferView, BufferView<uint32_t>& inversePermutationBufferView)
 	{
 		uint32_t sessionID = Compute::Async::CreateComputeSession();
 		InvertPermutation(ComputeType::async, permutationBufferView, inversePermutationBufferView, sessionID);
-		Compute::Async::DispatchComputeSessionAndWait(sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(sessionID);
 	}
 
     // Explicit template instantiations:

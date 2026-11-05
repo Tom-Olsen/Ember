@@ -101,7 +101,7 @@ namespace fluidDynamics
 	{
 		if (m_reset)
 		{
-			RecordReset();
+			DispatchReset();
 			return;
 		}
 		if (m_pendingVolumetricDensityResolutionChange || m_pendingVolumetricLightingResolutionChange)
@@ -130,7 +130,7 @@ namespace fluidDynamics
 		{
 			float deltaT = math::Min(dt, restTime);
 			SphFluid3dGpuSolver::TimeStep(deltaT, m_settings, m_computeShaders, m_scratchData, m_tripleData, sourceDataIndex, destinationDataIndex);
-			m_tripleBufferState.CommitWrite(Compute::Physics::GetRecordingSessionID());
+			m_tripleBufferState.CommitWrite(Compute::Physics::GetActiveSessionID());
 			physicsDataWritten = true;
 			sourceDataIndex = m_tripleBufferState.GetSrcIndex();
 			destinationDataIndex = m_tripleBufferState.GetDstIndex();
@@ -141,7 +141,7 @@ namespace fluidDynamics
 		// Refresh volume textures for the newly written particle state:
 		if (physicsDataWritten && (m_renderMode == RenderMode::cloud || m_renderMode == RenderMode::water))
 		{
-			RecordVolumetricRenderData(m_computeShaders, sourceDataIndex);
+			DispatchVolumetricRenderData(m_computeShaders, sourceDataIndex);
 			m_pendingRenderRefresh = false;
 		}
 	}
@@ -290,7 +290,7 @@ namespace fluidDynamics
 					* fluidBounds.GetRotation4x4();
 				Float3 fluidHalfSize = 0.5f * fluidBounds.localBounds.GetSize();
 
-				CallProperties callProperties = Compute::PostRender::RecordPostProcessingShader(m_waterComputeShader, Uint3(emberCore::Renderer::GetRenderWidth(), emberCore::Renderer::GetRenderHeight(), 1));
+				CallProperties callProperties = Compute::PostRender::DispatchPostProcessingShader(m_waterComputeShader, Uint3(emberCore::Renderer::GetRenderWidth(), emberCore::Renderer::GetRenderHeight(), 1));
 				callProperties.SetValue("CallValues", "worldToFluidMatrix", fluidToWorld.Inverse());
 				callProperties.SetValue("CallValues", "fluidBoundsMin", -fluidHalfSize);
 				callProperties.SetValue("CallValues", "fluidBoundsMax", fluidHalfSize);
@@ -957,7 +957,7 @@ namespace fluidDynamics
 	}
 
 	// Reset and rendering:
-	void SphFluid3dGpu::RecordReset()
+	void SphFluid3dGpu::DispatchReset()
 	{
 		if (m_pendingResetSessionID != Compute::Physics::invalidPhysicsSessionID)
 		{
@@ -973,22 +973,22 @@ namespace fluidDynamics
 		LOG_INFO("reset");
 		m_timeStep = 0;
 		m_tripleBufferState.Reset();
-		m_pendingResetSessionID = Compute::Physics::GetRecordingSessionID();
+		m_pendingResetSessionID = Compute::Physics::GetActiveSessionID();
 		m_scratchData.Reallocate(m_particleCount);
 		m_tripleData.Reallocate(m_particleCount, m_volumetricDensityResolution, m_volumetricLightingResolution);
 
 		// Reset all buffer slots:
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		for (uint32_t i = 0; i < PhysicsTripleBufferState::bufferCount; i++)
 		{
 			SphFluid3dGpuSolver::ResetData(m_computeShaders, m_scratchData, m_tripleData, i, m_initialDistributionRadius, m_initialDistributionPosition);
 			if (m_renderMode == RenderMode::cloud || m_renderMode == RenderMode::water)
-				RecordVolumetricRenderData(m_computeShaders, i);
+				DispatchVolumetricRenderData(m_computeShaders, i);
 			else
 				m_tripleData.hasOpticalDepthTexture3d[i] = false;
-			Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(m_computeShaders.computeType, m_computeShaders.sessionID);
 		}
-		Compute::RecordBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeRead(m_computeShaders.computeType, m_computeShaders.sessionID);
 
 		m_pendingRenderRefresh = false;
 		m_isRunning = false;
@@ -1006,14 +1006,14 @@ namespace fluidDynamics
 			SphFluid3dGpuSolver::ComputeShaders computeShaders = m_computeShaders;
 			computeShaders.computeType = ComputeType::async;
 			computeShaders.sessionID = Compute::Async::CreateComputeSession();
-			RecordVolumetricRenderData(computeShaders, m_tripleBufferState.GetReadIndex());
-			Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+			DispatchVolumetricRenderData(computeShaders, m_tripleBufferState.GetReadIndex());
+			Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		}
 		m_pendingRenderRefresh = false;
 	}
-	void SphFluid3dGpu::RecordVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex)
+	void SphFluid3dGpu::DispatchVolumetricRenderData(SphFluid3dGpuSolver::ComputeShaders& computeShaders, uint32_t dataIndex)
 	{
-		Compute::RecordBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
+		Compute::DispatchBarrierWaitStorageWriteBeforeReadWrite(computeShaders.computeType, computeShaders.sessionID);
 		m_tripleData.fluidBounds[dataIndex] = m_settings.fluidBounds;
 		m_tripleData.extinctionCoefficients[dataIndex] = Float3(m_volumetricDensityAbsorption) + m_volumetricScattering;
 		SphFluid3dGpuSolver::ComputeDensityTexture3d(computeShaders, m_scratchData, m_tripleData, dataIndex);
@@ -1022,7 +1022,7 @@ namespace fluidDynamics
 		{
 			m_tripleData.opticalDepthBounds[dataIndex] = lightBounds;
 			m_tripleData.hasOpticalDepthTexture3d[dataIndex] = true;
-			Compute::RecordBarrierWaitStorageWriteBeforeSampleReadStorageWrite(computeShaders.computeType, computeShaders.sessionID);
+			Compute::DispatchBarrierWaitStorageWriteBeforeSampleReadStorageWrite(computeShaders.computeType, computeShaders.sessionID);
 			SphFluid3dGpuSolver::ComputeOpticalDepthTexture3d(computeShaders, m_tripleData, dataIndex);
 		}
 		else

@@ -451,7 +451,7 @@ namespace emberCore
 		emberBackendInterface::IInstanceBuffer& instanceBuffer = dynamic_cast<emberBackendInterface::IInstanceBuffer&>(*drawData.pInstanceBuffer->GetInterfaceHandle());
 		if (callProperties.HasBinding("instanceBufferOld"))
 			callProperties.SetBuffer("instanceBufferOld", instanceBuffer.GetBufferOld());
-		instanceBuffer.RecordCopyToOldBuffer(*Compute::PostRender::GetInterfaceHandle());
+		instanceBuffer.DispatchCopyToOldBuffer(*Compute::PostRender::GetInterfaceHandle());
 	}
 
 

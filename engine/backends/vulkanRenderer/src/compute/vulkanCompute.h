@@ -62,6 +62,6 @@ namespace vulkanRendererBackend
 		void RetireAllFrames();
 
 	private: // Methods:
-		std::array<ComputeQueue*, 5> GetRecordingQueues();
+		std::array<ComputeQueue*, 5> GetActiveQueues();
 	};
 }

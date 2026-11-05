@@ -22,6 +22,6 @@ namespace emberBackendInterface
 		virtual void ResetHistory() = 0;
 
 		// History copy requests:
-		virtual void RecordCopyToOldBuffer(ICompute::IQueue& queue) = 0;
+		virtual void DispatchCopyToOldBuffer(ICompute::IQueue& queue) = 0;
 	};
 }

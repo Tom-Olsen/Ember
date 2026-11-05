@@ -191,7 +191,7 @@ namespace vulkanRendererBackend
 		void RebuildSwapchain();
 		bool AcquireImage();
 		void SortDrawCallPointers();
-		void QueueRendererOwnedComputeShaders();
+		void DispatchRendererOwnedComputeShaders();
 		void UpdateShaderData();
 		bool PresentImage();
 	};

@@ -54,14 +54,14 @@ namespace emberEcs
 		// Queue SSAO:
 		{
 			ComputeShader& ssaoComputeShader = m_ssaoMode == SsaoMode::bitmaskSampled ? m_ssaoBitmaskSampledComputeShader : m_ssaoKernelSampledComputeShader;
-			CallProperties callProperties = Compute::PostGeometry::RecordComputeShader(ssaoComputeShader, Uint3(m_aoWidth, m_aoHeight, 1));
+			CallProperties callProperties = Compute::PostGeometry::DispatchComputeShader(ssaoComputeShader, Uint3(m_aoWidth, m_aoHeight, 1));
 			callProperties.SetTexture("ambientOcclusionMap", m_ssaoTexture.GetTexture());
 		}
-		Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeReadWrite();
+		Compute::PostGeometry::DispatchBarrierWaitStorageWriteBeforeReadWrite();
 
 		// Queue SSAO temporal:
 		{
-			CallProperties callProperties = Compute::PostGeometry::RecordComputeShader(m_ssaoTemporalComputeShader, Uint3(m_aoWidth, m_aoHeight, 1));
+			CallProperties callProperties = Compute::PostGeometry::DispatchComputeShader(m_ssaoTemporalComputeShader, Uint3(m_aoWidth, m_aoHeight, 1));
 			callProperties.SetTexture("rawAmbientOcclusionMap", m_ssaoTexture.GetTexture());
 			callProperties.SetTexture("previousAmbientOcclusionMap", m_ambientOcclusionHistoryTextures[1 - m_historyWriteIndex].GetTexture());
 			callProperties.SetTexture("previousNormalDepth", m_normalDepthHistoryTextures[1 - m_historyWriteIndex].GetTexture());
@@ -73,7 +73,7 @@ namespace emberEcs
 			callProperties.SetValue("SsaoTemporalParameters", "relativeDepthTolerance", m_temporalRelativeDepthTolerance);
 			callProperties.SetValue("SsaoTemporalParameters", "minimumNormalSimilarity", m_temporalMinimumNormalSimilarity);
 		}
-		Compute::PostGeometry::RecordBarrierWaitStorageWriteBeforeRead();
+		Compute::PostGeometry::DispatchBarrierWaitStorageWriteBeforeRead();
 
 		// Update history:
 		Texture2d currentAmbientOcclusionTexture = m_ambientOcclusionHistoryTextures[m_historyWriteIndex].GetTexture();
@@ -82,7 +82,7 @@ namespace emberEcs
 		m_rngSeed = (m_rngSeed + 1) % uint32_t(m_temporalRngSeedModulo);
 
 		// Queue temporal reconstruction:
-		CallProperties callProperties = Compute::PostGeometry::RecordComputeShader(m_ssaoUpsampleBlurComputeShader, Uint3(m_renderWidth, m_renderHeight, 1));
+		CallProperties callProperties = Compute::PostGeometry::DispatchComputeShader(m_ssaoUpsampleBlurComputeShader, Uint3(m_renderWidth, m_renderHeight, 1));
 		callProperties.SetTexture("ambientOcclusionMap", currentAmbientOcclusionTexture);
 		callProperties.SetValue("SsaoReconstructionParameters", "blurRadius", std::min(m_blurRadius, int(std::max(m_aoWidth, m_aoHeight))));
 		callProperties.SetValue("SsaoReconstructionParameters", "spatialWeightScale", m_blurSpatialWeightScale);

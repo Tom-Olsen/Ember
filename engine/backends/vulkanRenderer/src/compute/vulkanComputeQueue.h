@@ -19,7 +19,7 @@ namespace vulkanRendererBackend
 	private: // Members:
 		std::vector<ComputeCall> m_computeCalls;
 		bool m_supportsSceneColor;
-		bool m_isRecording;
+		bool m_isQueuing;
 
 	public: // Methods:
 		// Constructor/Destructor:
@@ -34,11 +34,11 @@ namespace vulkanRendererBackend
 		ComputeQueue(ComputeQueue&& other) noexcept;
 		ComputeQueue& operator=(ComputeQueue&& other) noexcept;
 
-		// Workload recording:
-		emberBackendInterface::IDescriptorSetBinding* RecordComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
-		void RecordBufferCopy(emberBackendInterface::IBuffer* pSource, emberBackendInterface::IBuffer* pDestination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0) override;
-		void RecordBufferBarrier(emberBackendInterface::IBuffer* pBuffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX) override;
-		void RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags) override;
+		// Workload dispatch:
+		emberBackendInterface::IDescriptorSetBinding* DispatchComputeShader(emberBackendInterface::IComputeShader* pComputeShader, Uint3 threadCount) override;
+		void DispatchBufferCopy(emberBackendInterface::IBuffer* pSource, emberBackendInterface::IBuffer* pDestination, uint64_t size, uint64_t sourceOffset = 0, uint64_t destinationOffset = 0) override;
+		void DispatchBufferBarrier(emberBackendInterface::IBuffer* pBuffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset = 0, uint64_t size = UINT64_MAX) override;
+		void DispatchBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags) override;
 
 		// Management:
 		void Close();
@@ -50,6 +50,6 @@ namespace vulkanRendererBackend
 		bool IsEmpty() const;
 
 	private: // Methods:
-		void ValidateRecording() const;
+		void ValidateQueuing() const;
 	};
 }

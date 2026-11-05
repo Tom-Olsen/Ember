@@ -93,7 +93,7 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 	ComputeShader sortCS = ComputeShaderManager::TryGetComputeShader("localBitonicSortInt");
 	Uint3 threadCount(count / 2, 1, 1);
 	uint32_t sessionID = Compute::Async::CreateComputeSession();
-	CallProperties callProperties = Compute::Async::RecordComputeShader(sessionID, sortCS, threadCount);
+	CallProperties callProperties = Compute::Async::DispatchComputeShader(sessionID, sortCS, threadCount);
 	callProperties.SetBuffer("dataBuffer", buffer);
 	callProperties.SetValue("Values", "bufferSize", count);
 
@@ -101,7 +101,7 @@ TEST_F(TEST_GpuSort, LocalBitonicSort)
 	std::vector<int> sortedDataCpu = math::CopySort(uploadData, [](int a, int b) { return a < b; });
 
 	// Sort array on gpu:
-	Compute::Async::DispatchComputeSessionAndWait(sessionID);
+	Compute::Async::SubmitComputeSessionAndWait(sessionID);
 
 	// Buffer download:
 	std::vector<int> sortedDataGpu(count);

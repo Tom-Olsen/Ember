@@ -100,18 +100,18 @@ namespace emberApplication
 					// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
 					//if (Time::UpdatePhysics(true))
 					//{
-					//	Compute::Physics::BeginRecording();
+					//	Compute::Physics::BeginSession();
 					//	m_pActiveScene->FixedUpdate();
-					//	Compute::Physics::EndRecording();
+					//	Compute::Physics::EndSession();
 					//}
 					// Batch delayed physics updates:
 					// Runs every pending fixed update. This preserves fixed-step catch-up, but can create large frames.
 					if (Time::ShouldUpdatePhysics())
 					{
-						Compute::Physics::BeginRecording();
+						Compute::Physics::BeginSession();
 						while (Time::UpdatePhysics())
 							m_pActiveScene->FixedUpdate();
-						Compute::Physics::EndRecording();
+						Compute::Physics::EndSession();
 					}
 				}
 

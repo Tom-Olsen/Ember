@@ -38,7 +38,7 @@ namespace vulkanRendererBackend
 		void ResetHistory() override;
 
 		// History copy requests:
-		void RecordCopyToOldBuffer(emberBackendInterface::ICompute::IQueue& queue) override;
+		void DispatchCopyToOldBuffer(emberBackendInterface::ICompute::IQueue& queue) override;
 
 		// Debugging:
 		void SetDebugName(const std::string& name) override;

@@ -20,7 +20,7 @@ namespace vulkanRendererBackend
 	// Public methods:
 	// Constructor/Destructor:
 	ComputeQueue::ComputeQueue(bool supportsSceneColor)
-		: m_supportsSceneColor(supportsSceneColor), m_isRecording(true)
+		: m_supportsSceneColor(supportsSceneColor), m_isQueuing(true)
 	{
 		
 	}
@@ -33,7 +33,7 @@ namespace vulkanRendererBackend
 
 	// Movable:
 	ComputeQueue::ComputeQueue(ComputeQueue&& other) noexcept
-		: m_supportsSceneColor(other.m_supportsSceneColor), m_isRecording(other.m_isRecording)
+		: m_supportsSceneColor(other.m_supportsSceneColor), m_isQueuing(other.m_isQueuing)
 	{
 		m_computeCalls.swap(other.m_computeCalls);
 	}
@@ -44,25 +44,25 @@ namespace vulkanRendererBackend
 			Reset();
 			m_computeCalls.swap(other.m_computeCalls);
 			m_supportsSceneColor = other.m_supportsSceneColor;
-			m_isRecording = other.m_isRecording;
+			m_isQueuing = other.m_isQueuing;
 		}
 		return *this;
 	}
 
 
 
-	// Workload recording:
-	emberBackendInterface::IDescriptorSetBinding* ComputeQueue::RecordComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
+	// Workload dispatch:
+	emberBackendInterface::IDescriptorSetBinding* ComputeQueue::DispatchComputeShader(emberBackendInterface::IComputeShader* pIComputeShader, Uint3 threadCount)
 	{
-		ValidateRecording();
+		ValidateQueuing();
 		if (!pIComputeShader)
 		{
-			LOG_ERROR("ComputeQueue::RecordComputeShader(...) requires a compute shader.");
+			LOG_ERROR("ComputeQueue::DispatchComputeShader(...) requires a compute shader.");
 			return nullptr;
 		}
 		if (threadCount.x == 0 || threadCount.y == 0 || threadCount.z == 0)
 		{
-			LOG_ERROR("ComputeQueue::RecordComputeShader(...) threadCount has a zero dimension.");
+			LOG_ERROR("ComputeQueue::DispatchComputeShader(...) threadCount has a zero dimension.");
 			return nullptr;
 		}
 
@@ -71,7 +71,7 @@ namespace vulkanRendererBackend
 		// Compute shader requiring scene color issued to queue that does'nt support it:
 		if (!m_supportsSceneColor && (pComputeShader->GetFeatures().ReadsSceneColor() || pComputeShader->GetFeatures().WritesSceneColor()))
 		{
-			LOG_ERROR("ComputeQueue::RecordComputeShader(...) '{}' requires scene color, which this queue does not provide.", pComputeShader->GetDebugName());
+			LOG_ERROR("ComputeQueue::DispatchComputeShader(...) '{}' requires scene color, which this queue does not provide.", pComputeShader->GetDebugName());
 			return nullptr;
 		}
 
@@ -81,7 +81,7 @@ namespace vulkanRendererBackend
 		if (!pBinding)
 			return nullptr;
 
-		// Record compute shader call:
+		// Dispatch compute shader call:
 		ComputeCall computeCall = { threadCount, ShaderHandle(*pComputeShader), bindingHandle, AccessMasks::None::none, AccessMasks::None::none, pComputeShader->GetFeatures().FlipsSceneColor() };
 		try
 		{
@@ -95,50 +95,50 @@ namespace vulkanRendererBackend
 		pComputeShader->AddPendingUse();
 		return pBinding;
 	}
-	void ComputeQueue::RecordBufferCopy(emberBackendInterface::IBuffer* pISource, emberBackendInterface::IBuffer* pIDestination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
+	void ComputeQueue::DispatchBufferCopy(emberBackendInterface::IBuffer* pISource, emberBackendInterface::IBuffer* pIDestination, uint64_t size, uint64_t sourceOffset, uint64_t destinationOffset)
 	{
-		ValidateRecording();
+		ValidateQueuing();
 		if (!pISource || !pIDestination)
-			throw std::invalid_argument("ComputeQueue::RecordBufferCopy(...) requires source and destination buffers.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferCopy(...) requires source and destination buffers.");
 		Buffer* pSource = static_cast<Buffer*>(pISource);
 		Buffer* pDestination = static_cast<Buffer*>(pIDestination);
 		if (!pSource->GetVmaBuffer() || !pDestination->GetVmaBuffer())
-			throw std::invalid_argument("ComputeQueue::RecordBufferCopy(...) buffers must have valid allocations.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferCopy(...) buffers must have valid allocations.");
 		if (size == 0 || sourceOffset > pISource->GetSize() || size > pISource->GetSize() - sourceOffset || destinationOffset > pIDestination->GetSize() || size > pIDestination->GetSize() - destinationOffset)
-			throw std::out_of_range("ComputeQueue::RecordBufferCopy(...) copy range is empty or outside the buffers.");
+			throw std::out_of_range("ComputeQueue::DispatchBufferCopy(...) copy range is empty or outside the buffers.");
 		if (pISource == pIDestination && sourceOffset < destinationOffset + size && destinationOffset < sourceOffset + size)
-			throw std::invalid_argument("ComputeQueue::RecordBufferCopy(...) source and destination ranges overlap.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferCopy(...) source and destination ranges overlap.");
 		if ((pSource->GetVmaBuffer()->GetBufferCreateInfo().usage & VK_BUFFER_USAGE_TRANSFER_SRC_BIT) == 0 || (pDestination->GetVmaBuffer()->GetBufferCreateInfo().usage & VK_BUFFER_USAGE_TRANSFER_DST_BIT) == 0)
-			throw std::invalid_argument("ComputeQueue::RecordBufferCopy(...) buffers do not support the requested transfer usage.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferCopy(...) buffers do not support the requested transfer usage.");
 
 		ComputeCall computeCall{};
 		computeCall.bufferCommand = ComputeCall::BufferCopy{ BufferHandle(*pSource), BufferHandle(*pDestination), size, sourceOffset, destinationOffset };
 		m_computeCalls.push_back(computeCall);
 	}
-	void ComputeQueue::RecordBufferBarrier(emberBackendInterface::IBuffer* pIBuffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
+	void ComputeQueue::DispatchBufferBarrier(emberBackendInterface::IBuffer* pIBuffer, emberCommon::PipelineStage sourceStages, emberCommon::ComputeBarrierFlag sourceAccess, emberCommon::PipelineStage destinationStages, emberCommon::ComputeBarrierFlag destinationAccess, uint64_t offset, uint64_t size)
 	{
-		ValidateRecording();
+		ValidateQueuing();
 		if (!pIBuffer)
-			throw std::invalid_argument("ComputeQueue::RecordBufferBarrier(...) requires a buffer.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferBarrier(...) requires a buffer.");
 		Buffer* pBuffer = static_cast<Buffer*>(pIBuffer);
 		if (!pBuffer->GetVmaBuffer())
-			throw std::invalid_argument("ComputeQueue::RecordBufferBarrier(...) buffer must have a valid allocation.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferBarrier(...) buffer must have a valid allocation.");
 		if (offset >= pIBuffer->GetSize())
-			throw std::out_of_range("ComputeQueue::RecordBufferBarrier(...) offset is outside the buffer.");
+			throw std::out_of_range("ComputeQueue::DispatchBufferBarrier(...) offset is outside the buffer.");
 		if (size == UINT64_MAX)
 			size = pIBuffer->GetSize() - offset;
 		if (size == 0 || size > pIBuffer->GetSize() - offset)
-			throw std::out_of_range("ComputeQueue::RecordBufferBarrier(...) range is empty or outside the buffer.");
+			throw std::out_of_range("ComputeQueue::DispatchBufferBarrier(...) range is empty or outside the buffer.");
 		if ((sourceStages == emberCommon::PipelineStage::none && sourceAccess != emberCommon::ComputeBarrierFlag::none) || (destinationStages == emberCommon::PipelineStage::none && destinationAccess != emberCommon::ComputeBarrierFlag::none))
-			throw std::invalid_argument("ComputeQueue::RecordBufferBarrier(...) access flags require pipeline stages.");
+			throw std::invalid_argument("ComputeQueue::DispatchBufferBarrier(...) access flags require pipeline stages.");
 
 		ComputeCall computeCall{};
 		computeCall.bufferCommand = ComputeCall::BufferBarrier{ BufferHandle(*pBuffer), PipelineStageCommonToVulkan(sourceStages), ComputeBarrierFlagsToVulkanAccessMask(sourceAccess), PipelineStageCommonToVulkan(destinationStages), ComputeBarrierFlagsToVulkanAccessMask(destinationAccess), offset, size };
 		m_computeCalls.push_back(computeCall);
 	}
-	void ComputeQueue::RecordBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags)
+	void ComputeQueue::DispatchBarrier(emberCommon::ComputeBarrierFlag srcBarrierFlags, emberCommon::ComputeBarrierFlag dstBarrierFlags)
 	{
-		ValidateRecording();
+		ValidateQueuing();
 		ComputeCall computeCall = { Uint3::zero, ShaderHandle(), DescriptorSetBindingHandle(), ComputeBarrierFlagsToVulkanAccessMask(srcBarrierFlags), ComputeBarrierFlagsToVulkanAccessMask(dstBarrierFlags) };
 		m_computeCalls.push_back(computeCall);
 	}
@@ -148,7 +148,7 @@ namespace vulkanRendererBackend
 	// Management:
 	void ComputeQueue::Close()
 	{
-		m_isRecording = false;
+		m_isQueuing = false;
 	}
 	void ComputeQueue::Reset()
 	{
@@ -160,7 +160,7 @@ namespace vulkanRendererBackend
 			computeCall.GetComputeShader()->RemovePendingUse();
 		}
 		m_computeCalls.clear();
-		m_isRecording = true;
+		m_isQueuing = true;
 	}
 	void ComputeQueue::UpdateShaderData(uint32_t frameIndex, SceneColorPair* pSceneColorPair)
 	{
@@ -204,9 +204,9 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	void ComputeQueue::ValidateRecording() const
+	void ComputeQueue::ValidateQueuing() const
 	{
-		if (!m_isRecording)
-			throw std::logic_error("ComputeQueue is closed for recording until its workload has completed.");
+		if (!m_isQueuing)
+			throw std::logic_error("ComputeQueue is closed for queuing until its workload has completed.");
 	}
 }

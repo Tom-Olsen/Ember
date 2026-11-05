@@ -177,16 +177,16 @@ TEST_F(TEST_SphFluid2dGpu, WithoutHashGrid)
         // Single simulation step:
         computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(computeShaders, normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeForceDensities(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeRungeKutta2Step1(computeShaders, dt, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), kp1Buffer.GetBufferView(), kv1Buffer.GetBufferView(), tempPositionBuffer.GetBufferView(), tempVelocityBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 
 		positionBuffer.Download(positionsGpu);
 		velocityBuffer.Download(velocitiesGpu);
@@ -397,11 +397,11 @@ TEST_F(TEST_SphFluid2dGpu, WithHashGrid)
 		// Hash grid setup:
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeCellKeys(computeShaders, cellKeyBuffer.GetBufferView(), positionBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
         GpuSort<uint32_t>::SortPermutationAndWait(cellKeyBuffer.GetBufferView(), sortPermutationBuffer.GetBufferView());
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeStartIndices(computeShaders, startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		GpuSort<Float2>::ApplyPermutationAndWait(sortPermutationBuffer.GetBufferView(), positionBuffer.GetBufferView(), tempBuffer0.GetBufferView());
 		std::swap(positionBuffer, tempBuffer0);
 		GpuSort<Float2>::ApplyPermutationAndWait(sortPermutationBuffer.GetBufferView(), velocityBuffer.GetBufferView(), tempBuffer0.GetBufferView());
@@ -410,16 +410,16 @@ TEST_F(TEST_SphFluid2dGpu, WithHashGrid)
         // Single simulation step:
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeDensities(computeShaders, densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeNormalsAndCurvatures(computeShaders, normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeForceDensities(computeShaders, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), normalBuffer.GetBufferView(), curvatureBuffer.GetBufferView(), startIndexBuffer.GetBufferView(), cellKeyBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 		computeShaders.sessionID = Compute::Async::CreateComputeSession();
 		fluidDynamics::SphFluid2dGpuSolver::ComputeRungeKutta2Step1(computeShaders, dt, forceDensityBuffer.GetBufferView(), densityBuffer.GetBufferView(), positionBuffer.GetBufferView(), velocityBuffer.GetBufferView(), kp1Buffer.GetBufferView(), kv1Buffer.GetBufferView(), tempPositionBuffer.GetBufferView(), tempVelocityBuffer.GetBufferView());
-		Compute::Async::DispatchComputeSessionAndWait(computeShaders.sessionID);
+		Compute::Async::SubmitComputeSessionAndWait(computeShaders.sessionID);
 
 		// Undo sorting (for comparison):	
 		GpuSort<uint32_t>::InvertPermutationAndWait(sortPermutationBuffer.GetBufferView(), inverseSortPermutationBuffer.GetBufferView());

@@ -111,6 +111,6 @@ namespace fluidDynamics
 		void Print();
 
 	private: // Methods:
-		void RecordReset();
+		void DispatchReset();
 	};
 }

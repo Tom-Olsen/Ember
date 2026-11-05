@@ -9,7 +9,7 @@ Before recording GPU work, the renderer:
 3. Acquires a swapchain image.
 4. Resets the frame's command pools and prepares its scene-color target.
 5. Sorts collected draw calls, queues renderer-owned compute work, and updates shader-visible data.
-6. Builds a frame context containing execution data, render workloads, frame resources, render targets, GUI integration, and the compute calls recorded for each in-frame queue.
+6. Builds a frame context containing execution data, render workloads, frame resources, render targets, GUI integration, and the compute calls queued for each in-frame stage.
 
 After the graph has recorded and submitted the work, the renderer commits compute usage, resets the collected frame calls, presents the acquired image, and advances the frame index.
 

@@ -119,19 +119,19 @@ namespace vulkanRendererBackend
 	void Compute::CommitFrame(uint32_t frameIndex)
 	{
 		std::array<ComputeQueue, 5>& submitted = m_submittedQueues.at(frameIndex);
-		std::array<ComputeQueue*, 5> recording = GetRecordingQueues();
+		std::array<ComputeQueue*, 5> queuing = GetActiveQueues();
 
 		// Check if all old commands were executed:
 		for (const ComputeQueue& queue : submitted)
 			if (!queue.IsEmpty())
 				throw std::logic_error("Compute::CommitFrame(...) frame has not been retired.");
 
-		// Retain submitted commands and reset the recording queues for reuse:
-		for (uint32_t index = 0; index < recording.size(); index++)
+		// Retain submitted commands and reset the queues for new work:
+		for (uint32_t index = 0; index < queuing.size(); index++)
 		{
-			submitted[index] = std::move(*recording[index]);
+			submitted[index] = std::move(*queuing[index]);
 			submitted[index].Close();
-			recording[index]->Reset();
+			queuing[index]->Reset();
 		}
 	}
 	void Compute::RetireFrame(uint32_t frameIndex)
@@ -151,7 +151,7 @@ namespace vulkanRendererBackend
 
 
 	// Private methods:
-	std::array<ComputeQueue*, 5> Compute::GetRecordingQueues()
+	std::array<ComputeQueue*, 5> Compute::GetActiveQueues()
 	{
 		return { m_pPreRenderComputeQueue.get(), m_pPostOutlineComputeQueue.get(), m_pPostGeometryComputeQueue.get(), m_pPostLightingComputeQueue.get(), m_pPostRenderComputeQueue.get() };
 	}
