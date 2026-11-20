@@ -21,7 +21,7 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SOURCE_FILES "${ENGINE_APPLICATIONS_DIR}/src/*.*")
+file(GLOB SOURCE_FILES CONFIGURE_DEPENDS "${ENGINE_APPLICATIONS_DIR}/src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 # ---------------------------------------------------
  

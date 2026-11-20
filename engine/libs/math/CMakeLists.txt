@@ -19,16 +19,16 @@ endif()
 
 # ------------------- File Lists --------------------
 # src/*:
-file(GLOB SRC_FILES "src/*.*")
+file(GLOB SRC_FILES CONFIGURE_DEPENDS "src/*.*")
 source_group("Source Files" FILES ${SRC_FILES})
 
-file(GLOB GEOMETRY_FILES "src/geometry/*.*")
+file(GLOB GEOMETRY_FILES CONFIGURE_DEPENDS "src/geometry/*.*")
 source_group("Geometry" FILES ${SRC_FILES})
 
-file(GLOB TYPES_FILES "src/types/*.*")
+file(GLOB TYPES_FILES CONFIGURE_DEPENDS "src/types/*.*")
 source_group("Types" FILES ${SRC_FILES})
 
-file(GLOB UTILITY_FILES "src/utility/*.*")
+file(GLOB UTILITY_FILES CONFIGURE_DEPENDS "src/utility/*.*")
 source_group("Utility" FILES ${SRC_FILES})
 # ---------------------------------------------------
 

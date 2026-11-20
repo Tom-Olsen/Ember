@@ -27,73 +27,73 @@ include("${ENGINE_CMAKE_DIR}/emberVulkanOptions.cmake")
 
 
 # ------------------- File Lists --------------------
-file(GLOB COMPUTE_FILES "src/compute/*.*")
+file(GLOB COMPUTE_FILES CONFIGURE_DEPENDS "src/compute/*.*")
 source_group("Compute" FILES ${COMPUTE_FILES})
 
-file(GLOB CONTEXT_FILES "src/context/*.*")
+file(GLOB CONTEXT_FILES CONFIGURE_DEPENDS "src/context/*.*")
 source_group("Context" FILES ${CONTEXT_FILES})
 
-file(GLOB DESCRIPTOR_SET_LAYOUTS_FILES "src/descriptorSetLayouts/*.*")
+file(GLOB DESCRIPTOR_SET_LAYOUTS_FILES CONFIGURE_DEPENDS "src/descriptorSetLayouts/*.*")
 source_group("Descriptor Set Layouts" FILES ${DESCRIPTOR_SET_LAYOUTS_FILES})
 
-file(GLOB DRAW_CALLS_FILES "src/drawCalls/*.*")
+file(GLOB DRAW_CALLS_FILES CONFIGURE_DEPENDS "src/drawCalls/*.*")
 source_group("Draw Calls" FILES ${DRAW_CALLS_FILES})
 
-file(GLOB GPU_RESOURCE_POOLS_FILES "src/gpuResourcePools/*.*")
+file(GLOB GPU_RESOURCE_POOLS_FILES CONFIGURE_DEPENDS "src/gpuResourcePools/*.*")
 source_group("Gpu Resource Pools" FILES ${GPU_RESOURCE_POOLS_FILES})
 
-file(GLOB GPU_RESOURCES_FILES "src/gpuResources/*.*")
+file(GLOB GPU_RESOURCES_FILES CONFIGURE_DEPENDS "src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
 
-file(GLOB BUFFERS_FILES "src/gpuResources/buffers/*.*")
+file(GLOB BUFFERS_FILES CONFIGURE_DEPENDS "src/gpuResources/buffers/*.*")
 source_group("Gpu Resources/Buffers" FILES ${BUFFERS_FILES})
 
-file(GLOB SAMPLERS_FILES "src/gpuResources/samplers/*.*")
+file(GLOB SAMPLERS_FILES CONFIGURE_DEPENDS "src/gpuResources/samplers/*.*")
 source_group("Gpu Resources/Samplers" FILES ${SAMPLERS_FILES})
 
-file(GLOB TEXTURES_FILES "src/gpuResources/textures/*.*")
+file(GLOB TEXTURES_FILES CONFIGURE_DEPENDS "src/gpuResources/textures/*.*")
 source_group("Gpu Resources/Textures" FILES ${TEXTURES_FILES})
 
-file(GLOB TEXTURE_1D_FILES "src/gpuResources/textures/texture1d/*.*")
+file(GLOB TEXTURE_1D_FILES CONFIGURE_DEPENDS "src/gpuResources/textures/texture1d/*.*")
 source_group("Gpu Resources/Textures/Texture1d" FILES ${TEXTURE_1D_FILES})
 
-file(GLOB TEXTURE_2D_FILES "src/gpuResources/textures/texture2d/*.*")
+file(GLOB TEXTURE_2D_FILES CONFIGURE_DEPENDS "src/gpuResources/textures/texture2d/*.*")
 source_group("Gpu Resources/Textures/Texture2d" FILES ${TEXTURE_2D_FILES})
 
-file(GLOB TEXTURE_3D_FILES "src/gpuResources/textures/texture3d/*.*")
+file(GLOB TEXTURE_3D_FILES CONFIGURE_DEPENDS "src/gpuResources/textures/texture3d/*.*")
 source_group("Gpu Resources/Textures/Texture3d" FILES ${TEXTURE_3D_FILES})
 
-file(GLOB TEXTURE_CUBE_FILES "src/gpuResources/textures/textureCube/*.*")
+file(GLOB TEXTURE_CUBE_FILES CONFIGURE_DEPENDS "src/gpuResources/textures/textureCube/*.*")
 source_group("Gpu Resources/Textures/TextureCube" FILES ${TEXTURE_CUBE_FILES})
 
-file(GLOB PIPELINES_FILES "src/pipelines/*.*")
+file(GLOB PIPELINES_FILES CONFIGURE_DEPENDS "src/pipelines/*.*")
 source_group("Pipelines" FILES ${PIPELINES_FILES})
 
-file(GLOB PUSH_CONSTANTS_FILES "src/pushConstants/*.*")
+file(GLOB PUSH_CONSTANTS_FILES CONFIGURE_DEPENDS "src/pushConstants/*.*")
 source_group("Push Constants" FILES ${PUSH_CONSTANTS_FILES})
 
-file(GLOB RENDERER_FILES "src/renderer/*.*")
+file(GLOB RENDERER_FILES CONFIGURE_DEPENDS "src/renderer/*.*")
 source_group("Renderer" FILES ${RENDERER_FILES})
 
-file(GLOB RENDER_STAGE_FILES "src/renderer/stages/*.*")
+file(GLOB RENDER_STAGE_FILES CONFIGURE_DEPENDS "src/renderer/stages/*.*")
 source_group("Render Stages" FILES ${RENDER_STAGE_FILES})
 
-file(GLOB RENDER_PASSES_FILES "src/renderPasses/*.*")
+file(GLOB RENDER_PASSES_FILES CONFIGURE_DEPENDS "src/renderPasses/*.*")
 source_group("Render Passes" FILES ${RENDER_PASSES_FILES})
 
-file(GLOB UTILITY_FILES "src/utility/*.*")
+file(GLOB UTILITY_FILES CONFIGURE_DEPENDS "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
+file(GLOB COMMON_FILES CONFIGURE_DEPENDS "${ENGINE_COMMON_DIR}/*.*")
 source_group("Common" FILES ${COMMON_FILES})
 
-file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*")
+file(GLOB GUI_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/gui/*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 
-file(GLOB RENDERER_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/renderer/*.*")
+file(GLOB RENDERER_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
+file(GLOB WINDOW_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
 

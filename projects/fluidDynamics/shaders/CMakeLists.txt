@@ -28,10 +28,10 @@ message(STATUS "FLUID_DYNAMICS_WATER_SHADER_DEBUG_INFO: ${FLUID_DYNAMICS_WATER_S
 
 # ------------------- File Lists --------------------
 # Gather shader source files and includes from all subdirectories:
-file(GLOB COMPUTE_SHADERS "src/*.comp.hlsl")
-file(GLOB FRAGMENT_SHADERS "src/*.frag.hlsl")
-file(GLOB VERTEX_SHADERS "src/*.vert.hlsl")
-file(GLOB SHADER_INCLUDES "src/*.hlsli" "${ENGINE_SHADERS_DIR}/src/includes/*.*" "${ENGINE_SHADERS_DIR}/src/includesCppHlsl/*.*")
+file(GLOB COMPUTE_SHADERS CONFIGURE_DEPENDS "src/*.comp.hlsl")
+file(GLOB FRAGMENT_SHADERS CONFIGURE_DEPENDS "src/*.frag.hlsl")
+file(GLOB VERTEX_SHADERS CONFIGURE_DEPENDS "src/*.vert.hlsl")
+file(GLOB SHADER_INCLUDES CONFIGURE_DEPENDS "src/*.hlsli" "${ENGINE_SHADERS_DIR}/src/includes/*.*" "${ENGINE_SHADERS_DIR}/src/includesCppHlsl/*.*")
 
 # Combine shader source files:
 file(GLOB SHADER_SOURCES 
@@ -79,7 +79,6 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
-        BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout ${shaderDebugFlags} -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src -I ${ENGINE_SHADERS_DIR}/src/includes -I ${ENGINE_SHADERS_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES}

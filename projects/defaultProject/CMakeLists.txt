@@ -23,13 +23,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .exe
 
 
 # ------------------- File Lists --------------------
-file(GLOB MAIN_FILE "src/main.cpp")
+file(GLOB MAIN_FILE CONFIGURE_DEPENDS "src/main.cpp")
 source_group("/" FILES ${MAIN_FILE})
 
-file(GLOB COMPONENTS_FILES "src/components/*.*")
+file(GLOB COMPONENTS_FILES CONFIGURE_DEPENDS "src/components/*.*")
 source_group("Components" FILES ${COMPONENTS_FILES})
 
-file(GLOB SCENE_FILES "src/scenes/*.*")
+file(GLOB SCENE_FILES CONFIGURE_DEPENDS "src/scenes/*.*")
 source_group("Scenes" FILES ${SCENE_FILES})
 # ---------------------------------------------------
 

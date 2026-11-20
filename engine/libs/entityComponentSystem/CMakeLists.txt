@@ -20,10 +20,10 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB BASIC_COMPONENTS_FILES "src/basicComponents/*.*")
+file(GLOB BASIC_COMPONENTS_FILES CONFIGURE_DEPENDS "src/basicComponents/*.*")
 source_group("Basic Components" FILES ${BASIC_COMPONENTS_FILES})
 
-file(GLOB ECS_CLASSES_FILES "src/ecsClasses/*.*")
+file(GLOB ECS_CLASSES_FILES CONFIGURE_DEPENDS "src/ecsClasses/*.*")
 source_group("ECS Classes" FILES ${ECS_CLASSES_FILES})
 # ---------------------------------------------------
 

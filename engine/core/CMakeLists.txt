@@ -25,46 +25,46 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB ENGINE_FILE "${ENGINE_CORE_DIR}/src/*.*")
+file(GLOB ENGINE_FILE CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/*.*")
 source_group("/" FILES ${ENGINE_FILE})
  
-file(GLOB EDITOR_FILES "${ENGINE_CORE_DIR}/src/editor/*.*")
+file(GLOB EDITOR_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/editor/*.*")
 source_group("Editor" FILES ${EDITOR_FILES})
 
-file(GLOB EVENT_SYSTEM_FILES "${ENGINE_CORE_DIR}/src/eventSystem/*.*")
+file(GLOB EVENT_SYSTEM_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/eventSystem/*.*")
 source_group("Event System" FILES ${EVENT_SYSTEM_FILES})
 
-file(GLOB GPU_RESOURCES_FILES "${ENGINE_CORE_DIR}/src/gpuResources/*.*")
+file(GLOB GPU_RESOURCES_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/gpuResources/*.*")
 source_group("Gpu Resources" FILES ${GPU_RESOURCES_FILES})
  
-file(GLOB GUI_FILES "${ENGINE_CORE_DIR}/src/gui/*.*")
+file(GLOB GUI_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/gui/*.*")
 source_group("Gui" FILES ${GUI_FILES})
  
-file(GLOB MANAGERS_FILES "${ENGINE_CORE_DIR}/src/managers/*.*")
+file(GLOB MANAGERS_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/managers/*.*")
 source_group("Managers" FILES ${MANAGERS_FILES})
  
-file(GLOB PHYSICS_FILES "${ENGINE_CORE_DIR}/src/physics/*.*")
+file(GLOB PHYSICS_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/physics/*.*")
 source_group("Physics" FILES ${PHYSICS_FILES})
  
-file(GLOB RENDERER_FILES "${ENGINE_CORE_DIR}/src/renderer/*.*")
+file(GLOB RENDERER_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/renderer/*.*")
 source_group("Renderer" FILES ${RENDERER_FILES})
  
-file(GLOB UTILITY_FILES "${ENGINE_CORE_DIR}/src/utility/*.*")
+file(GLOB UTILITY_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 
-file(GLOB WINDOW_FILES "${ENGINE_CORE_DIR}/src/window/*.*")
+file(GLOB WINDOW_FILES CONFIGURE_DEPENDS "${ENGINE_CORE_DIR}/src/window/*.*")
 source_group("Window" FILES ${WINDOW_FILES})
 
-file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
+file(GLOB COMMON_FILES CONFIGURE_DEPENDS "${ENGINE_COMMON_DIR}/*.*")
 source_group("Common" FILES ${COMMON_FILES})
 
-file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*.*")
+file(GLOB GUI_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
  
-file(GLOB RENDERER_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/renderer/*.*")
+file(GLOB RENDERER_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/renderer/*.*")
 source_group("Renderer Interface" FILES ${RENDERER_INTERFACE_FILES})
 
-file(GLOB WINDOW_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/window/*.*")
+file(GLOB WINDOW_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/window/*.*")
 source_group("Window Interface" FILES ${WINDOW_INTERFACE_FILES})
 # ---------------------------------------------------
  

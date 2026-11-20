@@ -22,13 +22,13 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SOURCE_FILES "src/*.*")
+file(GLOB SOURCE_FILES CONFIGURE_DEPENDS "src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 
-file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
+file(GLOB COMMON_FILES CONFIGURE_DEPENDS "${ENGINE_COMMON_DIR}/*.*")
 source_group("Commen" FILES ${COMMON_FILES})
 
-file(GLOB GUI_INTERFACE_FILES "${ENGINE_INTERFACES_DIR}/gui/*.*")
+file(GLOB GUI_INTERFACE_FILES CONFIGURE_DEPENDS "${ENGINE_INTERFACES_DIR}/gui/*.*")
 source_group("Gui Interface" FILES ${GUI_INTERFACE_FILES})
 # ---------------------------------------------------
 

@@ -19,13 +19,13 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SRC_FILES "src/*.*")
+file(GLOB SRC_FILES CONFIGURE_DEPENDS "src/*.*")
 source_group("Source Files" FILES ${SRC_FILES})
 
-file(GLOB HANDLES_FILES "src/handles/*.*")
+file(GLOB HANDLES_FILES CONFIGURE_DEPENDS "src/handles/*.*")
 source_group("Handles" FILES ${HANDLES_FILES})
 
-file(GLOB EDITOR_WINDOWS_FILES "src/editorWindows/*.*")
+file(GLOB EDITOR_WINDOWS_FILES CONFIGURE_DEPENDS "src/editorWindows/*.*")
 source_group("Editor Windows" FILES ${EDITOR_WINDOWS_FILES})
 # ---------------------------------------------------
 

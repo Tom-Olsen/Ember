@@ -24,19 +24,19 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # .exe
 
 
 # ------------------- File Lists --------------------
-file(GLOB MAIN_FILE "src/main.cpp")
+file(GLOB MAIN_FILE CONFIGURE_DEPENDS "src/main.cpp")
 source_group("/" FILES ${MAIN_FILE})
 
-file(GLOB 2D_CPU_FILES "src/2d/cpu/*.*")
+file(GLOB 2D_CPU_FILES CONFIGURE_DEPENDS "src/2d/cpu/*.*")
 source_group("2D/cpu" FILES ${2D_CPU_FILES})
 
-file(GLOB 2D_GPU_FILES "src/2d/gpu/*.*")
+file(GLOB 2D_GPU_FILES CONFIGURE_DEPENDS "src/2d/gpu/*.*")
 source_group("2D/gpu" FILES ${2D_GPU_FILES})
 
-file(GLOB 3D_FILES "src/3d/*.*")
+file(GLOB 3D_FILES CONFIGURE_DEPENDS "src/3d/*.*")
 source_group("3D" FILES ${3D_FILES})
 
-file(GLOB UTILITY_FILES "src/utility/*.*")
+file(GLOB UTILITY_FILES CONFIGURE_DEPENDS "src/utility/*.*")
 source_group("Utility" FILES ${UTILITY_FILES})
 # ---------------------------------------------------
 

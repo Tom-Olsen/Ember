@@ -20,7 +20,7 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SOURCE_FILES "src/*.*")
+file(GLOB SOURCE_FILES CONFIGURE_DEPENDS "src/*.*")
 source_group("Source Files" FILES ${SOURCE_FILES})
 # ---------------------------------------------------
  

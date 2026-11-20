@@ -20,10 +20,10 @@ endif()
 
 
 # ------------------- File Lists --------------------
-file(GLOB SRC_FILES "src/*")
+file(GLOB SRC_FILES CONFIGURE_DEPENDS "src/*")
 source_group("Source Files" FILES ${SRC_FILES})
 
-file(GLOB COMMON_FILES "${ENGINE_COMMON_DIR}/*.*")
+file(GLOB COMMON_FILES CONFIGURE_DEPENDS "${ENGINE_COMMON_DIR}/*.*")
 source_group("Common" FILES ${COMMON_FILES})
 # ---------------------------------------------------
 

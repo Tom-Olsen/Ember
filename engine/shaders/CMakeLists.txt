@@ -34,17 +34,17 @@ endif()
 
 # ------------------- File Lists --------------------
 # Gather shader source files and includes from all subdirectories:
-file(GLOB COMPUTE_SHADERS "${COMPUTE_DIR}/*.*")
-    file(GLOB BITONIC_SORT_FLOAT "${COMPUTE_DIR}/bitonicSortFloat/*.*")
-    file(GLOB BITONIC_SORT_FLOAT2 "${COMPUTE_DIR}/bitonicSortFloat2/*.*")
-    file(GLOB BITONIC_SORT_FLOAT3 "${COMPUTE_DIR}/bitonicSortFloat3/*.*")
-    file(GLOB BITONIC_SORT_INT "${COMPUTE_DIR}/bitonicSortInt/*.*")
-    file(GLOB BITONIC_SORT_UINT "${COMPUTE_DIR}/bitonicSortUint/*.*")
-    file(GLOB PERMUTATION "${COMPUTE_DIR}/permutation/*.*")
-file(GLOB FRAGMENT_SHADERS "${FRAGMENT_DIR}/*.*")
-file(GLOB SHADER_INCLUDES "${INCLUDES_DIR}/*.*")
-file(GLOB CPP_HLSL_INCLUDES "${INCLUDES_CPP_HLSL_DIR}/*.*")
-file(GLOB VERTEX_SHADERS "${VERTEX_DIR}/*.*")
+file(GLOB COMPUTE_SHADERS CONFIGURE_DEPENDS "${COMPUTE_DIR}/*.*")
+    file(GLOB BITONIC_SORT_FLOAT CONFIGURE_DEPENDS "${COMPUTE_DIR}/bitonicSortFloat/*.*")
+    file(GLOB BITONIC_SORT_FLOAT2 CONFIGURE_DEPENDS "${COMPUTE_DIR}/bitonicSortFloat2/*.*")
+    file(GLOB BITONIC_SORT_FLOAT3 CONFIGURE_DEPENDS "${COMPUTE_DIR}/bitonicSortFloat3/*.*")
+    file(GLOB BITONIC_SORT_INT CONFIGURE_DEPENDS "${COMPUTE_DIR}/bitonicSortInt/*.*")
+    file(GLOB BITONIC_SORT_UINT CONFIGURE_DEPENDS "${COMPUTE_DIR}/bitonicSortUint/*.*")
+    file(GLOB PERMUTATION CONFIGURE_DEPENDS "${COMPUTE_DIR}/permutation/*.*")
+file(GLOB FRAGMENT_SHADERS CONFIGURE_DEPENDS "${FRAGMENT_DIR}/*.*")
+file(GLOB SHADER_INCLUDES CONFIGURE_DEPENDS "${INCLUDES_DIR}/*.*")
+file(GLOB CPP_HLSL_INCLUDES CONFIGURE_DEPENDS "${INCLUDES_CPP_HLSL_DIR}/*.*")
+file(GLOB VERTEX_SHADERS CONFIGURE_DEPENDS "${VERTEX_DIR}/*.*")
 
 # Combine shader source files:
 file(GLOB SHADER_SOURCES 
@@ -98,7 +98,6 @@ foreach(SHADER_FILE ${SHADER_SOURCES})
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
-        BYPRODUCTS ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${DXC_PATH} -spirv -fvk-use-scalar-layout -T ${SHADER_TYPE} -E main -I ${CMAKE_CURRENT_LIST_DIR}/src/includes -I ${CMAKE_CURRENT_LIST_DIR}/src/includesCppHlsl ${SHADER_FILE} -Fo ${OUTPUT_FILE}
         DEPENDS ${SHADER_FILE} ${SHADER_INCLUDES} ${CPP_HLSL_INCLUDES}
