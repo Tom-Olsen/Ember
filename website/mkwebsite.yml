@@ -120,3 +120,8 @@ nav:
           - GPU Resources and Descriptors: documentation/vulkan-renderer/gpu-resources.md
           - Compute: documentation/vulkan-renderer/compute.md
           - Context and Lifetime: documentation/vulkan-renderer/context-and-lifetime.md
+      - Entity Component System:
+          - documentation/entity-component-system/index.md
+          - Scene: documentation/entity-component-system/scene.md
+          - Entity: documentation/entity-component-system/entity.md
+          - Component: documentation/entity-component-system/component.md

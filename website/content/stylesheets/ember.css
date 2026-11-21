@@ -240,3 +240,8 @@
         transition: none;
     }
 }
+
+.md-typeset table:has(th.ecs-callback-column) td:first-child code {
+    white-space: nowrap;
+    word-break: normal;
+}
