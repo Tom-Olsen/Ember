@@ -241,7 +241,7 @@
     }
 }
 
-.md-typeset table:has(th.ecs-callback-column) td:first-child code {
+.md-typeset table:has(th.nowrap-first-column) td:first-child code {
     white-space: nowrap;
     word-break: normal;
 }

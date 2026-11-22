@@ -1,1 +1,52 @@
 # Scene
+In Ember there only ever exists a single `Scene`, which is enforced by it beeing a static class.
+Initialization and cleanup is automatically managed by the application layer (add link later) and not a user concern.
+The scene owns the ECS regisry, all entities, and their attached component instances.
+
+## Registry
+The scene's registry tracks which entities exist and which component instances belong to each entity.
+It lets the ECS resolve an entity ID to a live entity, query its components by type,
+and find the instances that need callbacks or teardown.
+An entity can have several components of the same type, and the registry tracks each instance separately.
+
+Native code (`C++`) uses [runtime handles](index.md#ids-and-handles) to access live entities and components.
+The registry stays internal so the scene can enforce ownership and lifetime rules consistently.
+
+## Public native API
+| Getters {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `ComponentHandle<Camera>`<br>`GetActiveCamera()` | Active camera used for rendering, invalid handle when none exists. |
+| `Bounds GetBounds()`                             | Combined bounds of all render bounds. |
+| `Bounds GetActiveBounds()`                       | Combined bounds of render bounds of active render components. |
+
+| Entity Methods {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `EntityHandle CreateEntity(name)`                         | Creates a new entity. |
+| `EntityHandle FindEntity(id)`                             | Finds entity by ID. A miss returns an invalid handle. |
+| `std::vector<EntityHandle>`<br>`FindEntitiesByName(name)` | Finds all entities with that name. A miss returns an empty list. |
+| `std::vector<EntityHandle>`<br>`GetEntities()`            | Returns all existing entities. |
+| `uint32_t GetEntityCount()`                               | Number of entities in the scene. |
+| `void DestroyEntity(id)`                                  | Queues destruction of entity by ID. Its handle stops resolving immediately. Children get rebound to entities parent, or to scene if no parent exists. Children keep their current world transform. |
+| `void DestroyEntityAll(id)`                               | Queues destruction of entity and all its descendents by ID. All their handles stop resolving immediatly. |
+
+## Private native API
+The private native API is mostly used in the application layer (add link later) which is a friend of the scene.
+The application initializes the scene on startup, tears it down on shutdown,
+and drives the [Frame Execution Callbacks](index.md#frame-execution-callbacks) in the correct locations during the frame.
+
+| Management {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `Init()` | Initializes all containers to an empty state. |
+| `Clear()` | Calls OnDestroy() for all components, clears the component registry, and destroys all entities. |
+
+| ECS callbacks {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `void OnCreate()` | Dispatch immediately after the component is attached, with its owner and initial configuration available. |
+| `void OnEnable()` | Dispatch before updates when the component first participates or resumes participation. Components activated during a frame wait until the next frame. |
+| `void Start()` | Dispatch once per component instance, before its first scheduled update. |
+| `void EarlyUpdate()` | Dispatch once per frame before physics updates. |
+| `void FixedUpdate()` | Dispatch once per physics tick. A frame can contain zero or more physics ticks. |
+| `void Update()` | Dispatch once per frame after the physics phase. |
+| `void LateUpdate()` | Dispatch once per frame after `Update()`. |
+| `void OnDisable()` | Dispatch after the update phases for components that transitioned from active to inactive. Inactivation suppresses any remaining updates immediately. |
+| `void OnDestroy()` | Dispatch once per affected instance during teardown, immediately before its C++ destructor, including for instances that were never active. |
