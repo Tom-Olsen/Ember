@@ -26,7 +26,7 @@ namespace emberEditor
 	class InspectorEditorWindow;
 	class OutlineEditorWindow;
 	class ProjectEditorWindow;
-	class SceneEditorWindow;
+	class ViewportEditorWindow;
 	class SsaoDispatcherEditorWindow;
 	class SsrDispatcherEditorWindow;
 }
@@ -64,7 +64,7 @@ namespace emberApplication
 		static std::unique_ptr<emberEditor::InspectorEditorWindow> m_pInspectorEditorWindow;
 		static std::unique_ptr<emberEditor::OutlineEditorWindow> m_pOutlineEditorWindow;
 		static std::unique_ptr<emberEditor::ProjectEditorWindow> m_pProjectEditorWindow;
-		static std::unique_ptr<emberEditor::SceneEditorWindow> m_pSceneEditorWindow;
+		static std::unique_ptr<emberEditor::ViewportEditorWindow> m_pViewportEditorWindow;
 		static std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> m_pSsaoDispatcherEditorWindow;
 		static std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> m_pSsrDispatcherEditorWindow;
 
@@ -90,7 +90,7 @@ namespace emberApplication
 		static emberEditor::InspectorEditorWindow* GetInspectorEditorWindow();
 		static emberEditor::OutlineEditorWindow* GetOutlineEditorWindow();
 		static emberEditor::ProjectEditorWindow* GetProjectEditorWindow();
-		static emberEditor::SceneEditorWindow* GetSceneEditorWindow();
+		static emberEditor::ViewportEditorWindow* GetViewportEditorWindow();
 		static emberEditor::SsaoDispatcherEditorWindow* GetSsaoDispatcherEditorWindow();
 		static emberEditor::SsrDispatcherEditorWindow* GetSsrDispatcherEditorWindow();
 

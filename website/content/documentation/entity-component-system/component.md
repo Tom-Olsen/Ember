@@ -2,7 +2,7 @@
 The `Component` class is the base class for components attached to an [entity](entity.md).
 You can define a new component by deriving from `Component` and adding your own data and methods.
 
-The scene owns each component, and each component is attached to one entity.
+The world owns each component, and each component is attached to one entity.
 An entity can have multiple components of the same type, they are differentiated by the `ComponentId`, which is unique for each component.
 
 `Entity::AddComponent<T>(...)` creates a component and returns a copyable `ComponentHandle<T>`.

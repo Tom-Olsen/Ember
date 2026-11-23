@@ -3,14 +3,14 @@ The `Entity` class is a basic container for components and child entities, formi
 Entities are differentiated by an `EntityId`, their names are editable labels and may repeat.
 [`EntityHandle`](#entityhandle) is the copyable reference to an entity.
 
-Creation, lookup, and destruction go through the static [Scene](scene.md#public-native-api) API.
+Creation, lookup, and destruction go through the static [World](world.md#public-native-api) API.
 Destroying an entity immediately removes it from lookup and prevents its components from receiving further updates.
 The application processes queued destruction after `Renderer::RenderFrame()` returns,
 any [frame execution callbacks](index.md#frame-execution-callbacks) already running will finish.
 
 The ECS can load and unload an entity together with its descendants. (API missing)
 Unloading removes an entity and all its descendants from the live ECS, invalidating their runtime handles and removing them from frame execution.
-The scene keeps a reference to the saved data so it can reload those entities with the same EntityId values and fresh handles.
+The world keeps a reference to the saved data so it can reload those entities with the same EntityId values and fresh handles.
 
 Any entity can be saved as a blueprint, turning it and its descendants to a reusable linked building block.
 Modifications to the blueprint apply to all instanced of it.
@@ -28,7 +28,7 @@ If you are unsure whether the entity exists, check `IsValid()` before calling `G
 
 ## Transform
 Each entity always comes with exactly one `Transform` component, which defines its position, rotation, and scale in its parents space.
-An entity with no parent has its tranform in world space; an entity with a parent defines its transform relative to the parent.
+Root entities have transforms in world space, the shared coordinate space of the `World`. Child entities have transforms relative to their parent.
 The transform component is an exception to the multiple-component tule. Any entity can only ever have a single transform component, and it can't be removed.
 
 ## Components
@@ -52,7 +52,7 @@ Besides the required transform component you can attach any amount of components
 | `void SetParent(EntityHandle)`                      | Sets a parent. Entities world transform doesn't change, transform gets updated into parents local space. |
 | `void SetChild(EntityHandle)`                       | Sets a child. Child entities world transform doesn't change, transform gets updated into parents local space. |
 | `void SetChildren`<br>`(std::vector<EntityHandle>)` | Sets multiple children by appending them to existing children. Same behaviour as SetChild(EntityHandle). |
-| `void Destroy()`                                    | Queues entity for destruction, children get rebound to its parent, or to scene if no parent exists. Children keep their current world transform. |
+| `void Destroy()`                                    | Queues the entity for destruction. Its children move to its parent or become root entities if it had no parent. They keep their world transforms. |
 | `void DestroyAll()`                                 | Queues entity and all its descendents for destruction. |
 
 | Components {: .nowrap-first-column } | Explanation |

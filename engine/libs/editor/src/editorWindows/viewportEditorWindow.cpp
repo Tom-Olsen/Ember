@@ -1,4 +1,4 @@
-#include "sceneEditorWindow.h"
+#include "viewportEditorWindow.h"
 #include "commonGuiFlags.h"
 #include "editor.h"
 #include "editorSelection.h"
@@ -24,9 +24,9 @@ namespace emberEditor
     
     // Public methods:
     // Constructor:
-	SceneEditorWindow::SceneEditorWindow()
+	ViewportEditorWindow::ViewportEditorWindow()
 	{
-        m_name = "Scene";
+        m_name = "Viewport";
         m_ID = 0;
         m_windowFlags = emberCommon::GuiWindowFlags::noCollapse | emberCommon::GuiWindowFlags::noScrollbar | emberCommon::GuiWindowFlags::noScrollWithMouse;
         m_wantCaptureEvents = false;
@@ -34,9 +34,9 @@ namespace emberEditor
 	}
 
     // Overrides:
-    void SceneEditorWindow::PreRender()
+    void ViewportEditorWindow::PreRender()
     {
-        // Scene window closed:
+        // Viewport window closed:
         if (!m_isOpen)
         {
 			m_transformHandleTarget.SetTransform(nullptr);
@@ -83,7 +83,7 @@ namespace emberEditor
 			emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
 		}
     }
-    void SceneEditorWindow::Render()
+    void ViewportEditorWindow::Render()
     {
         // Prepare render texture:
         emberCore::Texture2d finalRenderTexture = emberCore::Renderer::GetFinalRenderTexture();

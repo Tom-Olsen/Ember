@@ -28,9 +28,9 @@
 #include "inspectorEditorWindow.h"
 #include "outlineEditorWindow.h"
 #include "projectEditorWindow.h"
-#include "sceneEditorWindow.h"
 #include "ssaoDispatcherEditorWindow.h"
 #include "ssrDispatcherEditorWindow.h"
+#include "viewportEditorWindow.h"
 // System:
 #include <exception>
 #include <memory>
@@ -55,7 +55,7 @@ namespace emberApplication
 	std::unique_ptr<emberEditor::InspectorEditorWindow> Application::m_pInspectorEditorWindow;
 	std::unique_ptr<emberEditor::OutlineEditorWindow> Application::m_pOutlineEditorWindow;
 	std::unique_ptr<emberEditor::ProjectEditorWindow> Application::m_pProjectEditorWindow;
-	std::unique_ptr<emberEditor::SceneEditorWindow> Application::m_pSceneEditorWindow;
+	std::unique_ptr<emberEditor::ViewportEditorWindow> Application::m_pViewportEditorWindow;
 	std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> Application::m_pSsaoDispatcherEditorWindow;
 	std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> Application::m_pSsrDispatcherEditorWindow;
 
@@ -113,7 +113,7 @@ namespace emberApplication
 			m_pInspectorEditorWindow = std::make_unique<emberEditor::InspectorEditorWindow>();
 			m_pOutlineEditorWindow = std::make_unique<emberEditor::OutlineEditorWindow>();
 			m_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
-			m_pSceneEditorWindow = std::make_unique<emberEditor::SceneEditorWindow>();
+			m_pViewportEditorWindow = std::make_unique<emberEditor::ViewportEditorWindow>();
 			m_pSsaoDispatcherEditorWindow = std::make_unique<emberEditor::SsaoDispatcherEditorWindow>();
 			m_pSsrDispatcherEditorWindow = std::make_unique<emberEditor::SsrDispatcherEditorWindow>();
 
@@ -129,7 +129,7 @@ namespace emberApplication
 	{
 		m_pSsrDispatcherEditorWindow.reset();
 		m_pSsaoDispatcherEditorWindow.reset();
-		m_pSceneEditorWindow.reset();
+		m_pViewportEditorWindow.reset();
 		m_pProjectEditorWindow.reset();
 		m_pOutlineEditorWindow.reset();
 		m_pInspectorEditorWindow.reset();
@@ -267,9 +267,9 @@ namespace emberApplication
 	{
 		return m_pProjectEditorWindow.get();
 	}
-	emberEditor::SceneEditorWindow* Application::GetSceneEditorWindow()
+	emberEditor::ViewportEditorWindow* Application::GetViewportEditorWindow()
 	{
-		return m_pSceneEditorWindow.get();
+		return m_pViewportEditorWindow.get();
 	}
 	emberEditor::SsaoDispatcherEditorWindow* Application::GetSsaoDispatcherEditorWindow()
 	{

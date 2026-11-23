@@ -7,7 +7,7 @@
 
 namespace emberEditor
 {
-	class SceneEditorWindow : public emberCore::EditorWindow
+	class ViewportEditorWindow : public emberCore::EditorWindow
 	{
     private: // Members:
         // Viewport rect:
@@ -21,7 +21,7 @@ namespace emberEditor
 
     public: // Methods:
         // Constructor:
-		SceneEditorWindow();
+		ViewportEditorWindow();
 
         // Overrides:
         void PreRender() override;
