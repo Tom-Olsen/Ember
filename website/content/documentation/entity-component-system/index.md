@@ -19,7 +19,9 @@ The world owns its entity objects and attached component instances.
 `Get()` resolves a valid handle to a borrowed `Entity*` or `T*`.
 Methods that return handles can return an invalid handle. Check `IsValid()` before calling `Get()` when you are unsure whether the instance exists.
 
-Handles stop resolving when their instance is queued for destruction. `World::Clear()` invalidates all remaining handles. `EntityId` and `ComponentId` identify instances in saved data. After loading, the ECS can resolve those IDs to fresh handles. The old handles stay expired.
+Handles stop resolving when their instance is queued for destruction. `World::Clear()` invalidates all remaining handles.
+`EntityId` and `ComponentId` identify live and saved instances.
+After loading an entity, the ECS can resolve those IDs to fresh handles. The old handles stay expired.
 
 ## Active State
 Entities and components have a `isEnabled` boolean flag, which is for bookkeeping and can be queried via `GetIsEnabled()`.
@@ -28,39 +30,32 @@ A component is active when it is enabled and its owning entity is active.
 Entities and components expose this effective state through `GetIsActive()`, and it determines eligibility for [frame execution callbacks](#frame-execution-callbacks).
 Component activation is deferred, meaning if a component gets enabled during one frame its callbacks will not be called until the next frame.
 
-## Frame Execution Callbacks
-The frame execution callbacks are special methods that each component provides
-and that you can override to achieve the desired behaviour.
-Every frame, the world invokes these callbacks in exactly this order:
-
-	OnEnable()
-	Start()
-	EarlyUpdate()
-	FixedUpdate()
-	Update()
-	LateUpdate()
-	OnDisable()
-	OnDestroy()
-
-OnCreate() is special and lives outside the frame execution order,
-running immediately after the component is attached to an entity, even if GetIsActive() == false, serving as an initialization hook.
-
-Note that OnEnable() is deferred to the next frame, analogous to how activity is handeled.
-A component enabled in one frame will not participate in that frame's frame execution but will be deferred to the next frame.
-The only frame execution callback that is exempt from this is OnDestroy(), as it runs for all components, active or not.
-
-### Callbacks
+## Trigger Callbacks
+Each component exposes these virtual callback methods which get called on their respective trigger:
 
 | Callback {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `OnEnable()`    | Runs on all frames before which the component toggles from `GetIsActive() == false` to `true`. A component that is active when created also counts as transitioning from `GetIsActive() == false` to `true`. |
-| `Start()`       | Runs once, in the first frame in which the component's `GetIsActive()` returns `true`, immediately before the component’s first scheduled update. |
+| `OnCreate()`  | Invoked immediately after the component is attached to an entity, even if `GetIsActive() == false`, serving as the first initialization hook. |
+| `OnEnable()`  | Invoked immediatly on `GetIsActive() == false` to `true` toggle. If triggered in an update phase the enabled component will not participate in the current phase but later phases,  will contain it. |
+| `OnDisable()` | Invoked immediatly on `GetIsActive() == true` to `false` toggle. If triggered in an update phase the disabled component will not participate in the current phase, if it was not already invoked. Destroying an entity/component automatically disables it first. |
+| `Start()` | Scheduled on the component’s first `OnEnable()`. The world invokes it once before the first frame execution callback the component is eligible to join. This serves as the second initialization hook. |
+
+## Frame Execution Callbacks
+The frame execution callbacks are special virtual methods that each component provides
+and that you can override to achieve the desired behaviour.
+Every frame, the world invokes these callbacks in exactly this order:
+
+| Callback {: .nowrap-first-column } | Explanation |
+| --- | --- |
 | `EarlyUpdate()` | Runs every frame if `GetIsActive() == true`. |
 | `FixedUpdate()` | Runs every physics frame if `GetIsActive() == true`. |
 | `Update()`      | Runs every frame if `GetIsActive() == true`. |
 | `LateUpdate()`  | Runs every frame if `GetIsActive() == true`. |
-| `OnDisable()`   | Runs on all frames in which the component toggles from `GetIsActive() == true` to `false`. Components disabled in the middle of a frame do not receive their remaining update callbacks. |
 | `OnDestroy()`   | Runs at the very end of the frame after `Renderer::RenderFrame()` returns. Components queued for destruction earlier in the frame do not receive their remaining update callbacks. Removal hides the component from lookup immediately, while an already-running callback can finish before teardown.<br><br>Component removal, entity destruction, and `World::Clear()` during application shutdown all use the same cleanup path. The ECS calls `OnDestroy()` exactly once per affected component, immediately before its C++ destructor, even if it was never active. Repeated destruction requests are ignored. |
+
+A component enabled in the middle of a frame will participate in the remaining frame execution callbacks.
+A componend disabled/destroyed in the middle of a frame will finish all invoked callbacks (e.g. running `Update()`) but not the following ones (e.g. `LateUpdate()`).
+`OnDestroy()` is exempt from this, as it runs at the end of the frame as a deferred destruction callback for all components that get destroyed, active or not.
 
 
 ## Examples
@@ -71,8 +66,39 @@ ComponentHandle<Health> health = guard.Get()->AddComponent<Health>(100);
 health.Get()->ApplyDamage(25);
 ```
 
+Here are some examples for how a components callbacks might be triggered (pseudo code):
+
+```text
+ComponentHandle<T> comp = entity->AddComponent<T>(true) (enabled)
+	OnCreate()
+	OnEnable()
+Frame gets executed
+	Start()
+	EarlyUpdate()
+	FixedUpdate()
+	Update()
+	LateUpdate()
+comp gets destroyed in EarlyUpdate() by another component
+	OnDisable() runs immediatly
+	EarlyUpdate() finishes if already running
+	OnDestroy()
+```
+
+```text
+ComponentHandle<T> comp = entity->AddComponent<T>(false) (disabled)
+	OnCreate()
+comp gets enabled in EarlyUpdate() by another component
+	OnEnable()
+	Start()
+	Update()
+	LateUpdate()
+```
+
+
 
 ## Extra Info
+ToDo: check world/entity/component.md and update anything related to howthe callbacks work.
+
 The four pages are enough to start a native ECS implementation, but I wouldn’t hand them to a fresh Codex chat with “implement everything” yet. They capture the main design decisions: one static World, entity-only hierarchy, multiple components of the same type, persistent IDs separate from runtime handles, Get() with IsValid(), and the lifecycle from OnCreate() through deferred OnDestroy(). [ECS overview](/home/tom/Documents/C++/Ember/website/content/documentation/entity-component-system/index.md) · [Entity API](/home/tom/Documents/C++/Ember/website/content/documentation/entity-component-system/entity.md)
 
 I’d settle these points before the handoff:
