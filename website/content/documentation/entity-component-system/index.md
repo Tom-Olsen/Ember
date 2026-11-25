@@ -28,7 +28,6 @@ Entities and components have an `isEnabled` boolean flag, which is for bookkeepi
 An entity is active when it and all its ancestors are enabled.
 A component is active when it is enabled and its owning entity is active.
 Entities and components expose this effective state through `GetIsActive()`, and it determines eligibility for [frame execution callbacks](#frame-execution-callbacks).
-Component activation is deferred, meaning that if a component gets enabled during one frame, its callbacks will not be called until the next frame.
 
 ## Trigger Callbacks
 Each component exposes these virtual callback methods which get called on their respective triggers:
