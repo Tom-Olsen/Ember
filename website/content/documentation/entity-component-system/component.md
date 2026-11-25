@@ -11,7 +11,8 @@ See [IDs and handles](index.md#ids-and-handles).
 `Entity::RemoveComponent(handle)` queues the specified component for destruction, and its handle stops resolving immediately.
 
 ## ComponentHandle
-A `ComponentHandle<T>` gives borrowed access to one component instance of type `T`. Copies refer to the same instance, and a default-constructed handle is invalid.
+A `ComponentHandle<T>` gives borrowed access to one component instance of type `T`.
+Copies refer to the same instance, and a default-constructed handle is invalid.
 If you are unsure whether the component exists, check `IsValid()` before calling `Get()`.
 
 | Methods {: .nowrap-first-column } | Explanation |
@@ -23,9 +24,9 @@ If you are unsure whether the component exists, check `IsValid()` before calling
 ## Frame Execution Callbacks
 You can override the [Frame Execution Callbacks](index.md#frame-execution-callbacks) to define how a component behaves.
 Use the `C++` constructor to initialize the component's own data.
-`OnCreate()` runs after the component is attached, so setup can use the owning entity and the initial configuration.
+`OnCreate()` runs after the component is attached, here you have access to the owning entity and its transform.
+`Start()` runs before the first update callback, here you have access to other components attached to the same entity.
 `OnDestroy()` runs before the `C++` destructor and gives the component a chance to clean up.
-
 Access to the owning entity and its transform during `OnDestroy()` is always guaranteed.
 
 ## Public native API
@@ -36,19 +37,20 @@ Access to the owning entity and its transform during `OnDestroy()` is always gua
 | `bool GetIsEnabled()`                            | Is the component enabled? |
 | `bool GetIsActive()`                             | Is the component enabled and its owning entity active? See [Active State](index.md#active-state). |
 | `ComponentId GetId()`                            | ID of the component instance. |
-| `EntityHandle GetEntity()`                       | Handle to the owning entity. |
-| `ComponentHandle<Transform>`<br>`GetTransform()` | Handle to the owning entity's `Transform` component. |
-| `ComponentHandle<T>`<br>` GetComponent()`        | Used to access other components attached to the same entity. |
+| `EntityHandle GetEntity()`                       | Handle to the owning entity. Save to use in `OnCreate()`.|
+| `ComponentHandle<Transform>`<br>`GetTransform()` | Handle to the owning entity's `Transform` component. Save to use in `OnCreate()`.|
+| `ComponentHandle<T>`<br>` GetComponent()`        | Used to access other components attached to the same entity. Save to use in `Start()`, but not in `OnCreate()`. |
 
-All components also contain the [frame execution callbacks](index.md#frame-execution-callbacks) as virtual void methods:
+All components also contain the [trigger callbacks](index.md#trigger-callbacks) and [frame execution callbacks](index.md#frame-execution-callbacks) as virtual void methods:
 
+	OnCreate()
 	OnEnable()
+	OnDisable()
 	Start()
 	EarlyUpdate()
 	FixedUpdate()
 	Update()
 	LateUpdate()
-	OnDisable()
 	OnDestroy()
 
 which you can override to achieve the desired behaviour.

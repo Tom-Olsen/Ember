@@ -13,23 +13,24 @@ Unloading removes an entity and all its descendants from the live ECS, invalidat
 The world keeps a reference to the saved data so it can reload those entities with the same EntityId values and fresh handles.
 
 Any entity can be saved as a blueprint, turning it and its descendants to a reusable linked building block.
-Modifications to the blueprint apply to all instanced of it.
-Any blueprint instance can be detached from it, turning that instance and its descendants into an independent entity. (API missing)
+Modifications to the blueprint apply to all instances of it.
+Any blueprint instance can be detached, turning that instance and its descendants into an independent entity. (API missing)
 
 ## EntityHandle
-An `EntityHandle` gives borrowed access to an entity. Copies refer to the same instance, and a default-constructed handle is invalid.
+An `EntityHandle` gives borrowed access to an entity.
+Copies refer to the same instance, and a default-constructed handle is invalid.
 If you are unsure whether the entity exists, check `IsValid()` before calling `Get()`.
 
 | Methods {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `bool IsValid() const` | Checks whether the handle resolves to a live entity. |
-| `Entity* Get() const` | Returns a borrowed pointer to the entity. Requires a valid handle. |
+| `bool IsValid() const`     | Checks whether the handle resolves to a live entity. |
+| `Entity* Get() const`      | Returns a borrowed pointer to the entity. Requires a valid handle. |
 | `operator==`, `operator!=` | Compare the runtime identities held by two handles. |
 
 ## Transform
 Each entity always comes with exactly one `Transform` component, which defines its position, rotation, and scale in its parents space.
 Root entities have transforms in world space, the shared coordinate space of the `World`. Child entities have transforms relative to their parent.
-The transform component is an exception to the multiple-component tule. Any entity can only ever have a single transform component, and it can't be removed.
+The transform component is an exception to the multiple-component rule. Any entity can only ever have a single transform component, and it can't be removed.
 
 ## Components
 Besides the required transform component you can attach any amount of components to an entity, including multiple instances of the same component class.
@@ -62,3 +63,9 @@ Besides the required transform component you can attach any amount of components
 | `ComponentHandle<T>`<br>`AddComponent<T>(...)`            | Creates new component of type T wtih constructor arguments `...`, attaches it to the entity and returns a componentHandle<T> to that component. |
 | `ComponentHandle<T>`<br>`FindComponent<T>(ComponentId)`   | Retrieves componentHandle<T> by componentId. Needed to resolve a componentID back to a handle. |
 | `void RemoveComponent`<br>`(ComponentHandle<T>)`          | Detaches component from entity and queus its destruction. |
+
+
+| Other Methods {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `void DetachChild`<br>`(EntityHandle)` | Detaches child from this entity, turning it into a root entity. The childs world transform doesn't change. |
+| `EntityHandle Copy`<br>`(str::string)` | Creates a new entity with the same copied components and an optional new name. |

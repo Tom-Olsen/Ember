@@ -39,14 +39,11 @@ and drives the [Frame Execution Callbacks](index.md#frame-execution-callbacks) i
 | `Init()` | Initializes all containers to an empty state. |
 | `Clear()` | Calls OnDestroy() for all components, clears the component registry, and destroys all entities. |
 
-| ECS callbacks {: .nowrap-first-column } | Explanation |
+| Frame Execution Callbacks {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `void OnCreate()` | Dispatch immediately after the component is attached, with its owner and initial configuration available. |
-| `void OnEnable()` | Dispatch before updates when the component first participates or resumes participation. Components activated during a frame wait until the next frame. |
-| `void Start()` | Dispatch once per component instance, before its first scheduled update. |
-| `void EarlyUpdate()` | Dispatch once per frame before physics updates. |
-| `void FixedUpdate()` | Dispatch once per physics tick. A frame can contain zero or more physics ticks. |
-| `void Update()` | Dispatch once per frame after the physics phase. |
-| `void LateUpdate()` | Dispatch once per frame after `Update()`. |
-| `void OnDisable()` | Dispatch after the update phases for components that transitioned from active to inactive. Inactivation suppresses any remaining updates immediately. |
-| `void OnDestroy()` | Dispatch once per affected instance during teardown, immediately before its C++ destructor, including for instances that were never active. |
+| `void Start()` | Dispatched, before a components first `EarlyUpdate()` `FixedUpdate()` `Update()` or `LateUpdate()`, whichever is first. |
+| `void EarlyUpdate()` | Dispatched for all active components. |
+| `void FixedUpdate()` | Dispatched for all active components. A frame can contain zero or more physics ticks. |
+| `void Update()` | Dispatched for all active components. |
+| `void LateUpdate()` | Dispatched for all active components. |
+| `void OnDestroy()` | Dispatched for all components queued for destruction, active or not. |
