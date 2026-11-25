@@ -1,18 +1,18 @@
 # Entity
 The `Entity` class is a basic container for components and child entities, forming a basic ancestral hierarchy.
-Entities are differentiated by an `EntityId`, their names are editable labels and may repeat.
+Entities are differentiated by an `EntityId`, and their names are editable labels and may repeat.
 [`EntityHandle`](#entityhandle) is the copyable reference to an entity.
 
 Creation, lookup, and destruction go through the static [World](world.md#public-native-api) API.
 Destroying an entity immediately removes it from lookup and prevents its components from receiving further updates.
 The application processes queued destruction after `Renderer::RenderFrame()` returns,
-any [frame execution callbacks](index.md#frame-execution-callbacks) already running will finish.
+and any [frame execution callbacks](index.md#frame-execution-callbacks) already running will finish.
 
 The ECS can load and unload an entity together with its descendants. (API missing)
 Unloading removes an entity and all its descendants from the live ECS, invalidating their runtime handles and removing them from frame execution.
 The world keeps a reference to the saved data so it can reload those entities with the same EntityId values and fresh handles.
 
-Any entity can be saved as a blueprint, turning it and its descendants to a reusable linked building block.
+Any entity can be saved as a blueprint, turning it and its descendants into a reusable linked building block.
 Modifications to the blueprint apply to all instances of it.
 Any blueprint instance can be detached, turning that instance and its descendants into an independent entity. (API missing)
 
@@ -28,44 +28,44 @@ If you are unsure whether the entity exists, check `IsValid()` before calling `G
 | `operator==`, `operator!=` | Compare the runtime identities held by two handles. |
 
 ## Transform
-Each entity always comes with exactly one `Transform` component, which defines its position, rotation, and scale in its parents space.
+Each entity always comes with exactly one `Transform` component, which defines its position, rotation, and scale in its parent's space.
 Root entities have transforms in world space, the shared coordinate space of the `World`. Child entities have transforms relative to their parent.
 The transform component is an exception to the multiple-component rule. Any entity can only ever have a single transform component, and it can't be removed.
 
 ## Components
-Besides the required transform component you can attach any amount of components to an entity, including multiple instances of the same component class.
+Besides the required transform component, you can attach any number of components to an entity, including multiple instances of the same component class.
 
 ## Public native API
 | Getters {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `bool GetIsEnabled()`                                 | Is entity enabled?. |
-| `bool GetIsActive()`                                  | Is entity and all its ancestors enabled? See [Active State](index.md#active-state). |
+| `bool GetIsEnabled()`                                 | Is the entity enabled? |
+| `bool GetIsActive()`                                  | Are the entity and all its ancestors enabled? See [Active State](index.md#active-state). |
 | `std::string GetName()`                               | Entity name. |
 | `EntityId GetId()`                                    | EntityId of the entity. |
-| `EntityHandle GetParent()`                            | Parent entityHandle, invalid if no parent exists. |
-| `std::vector<EntityHandle>`<br>`GetChildren()`        | Vector of all childrens entityHandles, empty if no children exist. |
-| `ComponentHandle<Transform>`<br>`GetTransform()`      | Transform of the entity relative to parents local space, always exists. |
+| `EntityHandle GetParent()`                            | Parent EntityHandle, invalid if no parent exists. |
+| `std::vector<EntityHandle>`<br>`GetChildren()`        | Vector of all children's EntityHandles, empty if no children exist. |
+| `ComponentHandle<Transform>`<br>`GetTransform()`      | Transform of the entity relative to the parent's local space. It always exists. |
 
 | Setters {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `void SetIsEnabled(bool)`                           | Enables/disabled entity. |
-| `void SetName(std::string)`                         | Renames entity, entityId and entityHandles stay valid. |
-| `void SetParent(EntityHandle)`                      | Sets a parent. Entities world transform doesn't change, transform gets updated into parents local space. |
-| `void SetChild(EntityHandle)`                       | Sets a child. Child entities world transform doesn't change, transform gets updated into parents local space. |
+| `void SetIsEnabled(bool)`                           | Enables/disables the entity. |
+| `void SetName(std::string)`                         | Renames the entity, and its EntityId and EntityHandles stay valid. |
+| `void SetParent(EntityHandle)`                      | Sets a parent. The entity's world transform doesn't change, and the transform gets updated into the parent's local space. |
+| `void SetChild(EntityHandle)`                       | Sets a child. The child entity's world transform doesn't change, and the transform gets updated into the parent's local space. |
 | `void SetChildren`<br>`(std::vector<EntityHandle>)` | Sets multiple children by appending them to existing children. Same behaviour as SetChild(EntityHandle). |
 | `void Destroy()`                                    | Queues the entity for destruction. Its children move to its parent or become root entities if it had no parent. They keep their world transforms. |
-| `void DestroyAll()`                                 | Queues entity and all its descendents for destruction. |
+| `void DestroyAll()`                                 | Queues the entity and all its descendants for destruction. |
 
 | Components {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `bool HasComponent<T>(...)`                               | Entity has component of type T attached to it? |
-| `std::vector<ComponentHandle<T>>`<br>`GetComponents<T>()` | Vector of all componentHandle<T> intances attached to the entity, empty if no T attached to entity. |
-| `ComponentHandle<T>`<br>`AddComponent<T>(...)`            | Creates new component of type T wtih constructor arguments `...`, attaches it to the entity and returns a componentHandle<T> to that component. |
-| `ComponentHandle<T>`<br>`FindComponent<T>(ComponentId)`   | Retrieves componentHandle<T> by componentId. Needed to resolve a componentID back to a handle. |
-| `void RemoveComponent`<br>`(ComponentHandle<T>)`          | Detaches component from entity and queus its destruction. |
+| `bool HasComponent<T>(...)`                               | Does the entity have a component of type T attached to it? |
+| `std::vector<ComponentHandle<T>>`<br>`GetComponents<T>()` | Vector of all ComponentHandle<T> instances attached to the entity, empty if no T is attached to the entity. |
+| `ComponentHandle<T>`<br>`AddComponent<T>(...)`            | Creates a new component of type T with constructor arguments `...`, attaches it to the entity and returns a ComponentHandle<T> to that component. |
+| `ComponentHandle<T>`<br>`FindComponent<T>(ComponentId)`   | Retrieves a ComponentHandle<T> by ComponentId. Needed to resolve a ComponentId back to a handle. |
+| `void RemoveComponent`<br>`(ComponentHandle<T>)`          | Detaches the component from the entity and queues its destruction. |
 
 
 | Other Methods {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `void DetachChild`<br>`(EntityHandle)` | Detaches child from this entity, turning it into a root entity. The childs world transform doesn't change. |
-| `EntityHandle Copy`<br>`(str::string)` | Creates a new entity with the same copied components and an optional new name. |
+| `void DetachChild`<br>`(EntityHandle)` | Detaches a child from this entity, turning it into a root entity. The child's world transform doesn't change. |
+| `EntityHandle Copy`<br>`(std::string)` | Creates a new entity with the same copied components and an optional new name. |

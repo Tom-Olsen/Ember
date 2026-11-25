@@ -24,21 +24,21 @@ Handles stop resolving when their instance is queued for destruction. `World::Cl
 After loading an entity, the ECS can resolve those IDs to fresh handles. The old handles stay expired.
 
 ## Active State
-Entities and components have a `isEnabled` boolean flag, which is for bookkeeping and can be queried via `GetIsEnabled()`.
+Entities and components have an `isEnabled` boolean flag, which is for bookkeeping and can be queried via `GetIsEnabled()`.
 An entity is active when it and all its ancestors are enabled.
 A component is active when it is enabled and its owning entity is active.
 Entities and components expose this effective state through `GetIsActive()`, and it determines eligibility for [frame execution callbacks](#frame-execution-callbacks).
-Component activation is deferred, meaning if a component gets enabled during one frame its callbacks will not be called until the next frame.
+Component activation is deferred, meaning that if a component gets enabled during one frame, its callbacks will not be called until the next frame.
 
 ## Trigger Callbacks
-Each component exposes these virtual callback methods which get called on their respective trigger:
+Each component exposes these virtual callback methods which get called on their respective triggers:
 
 | Callback {: .nowrap-first-column } | Explanation |
 | --- | --- |
 | `OnCreate()`  | Invoked immediately after the component is attached to an entity, even if `GetIsActive() == false`, serving as the first initialization hook. |
-| `OnEnable()`  | Invoked immediatly on `GetIsActive() == false` to `true` toggle. If triggered in an update phase the enabled component will not participate in the current phase but later phases,  will contain it. |
-| `OnDisable()` | Invoked immediatly on `GetIsActive() == true` to `false` toggle. If triggered in an update phase the disabled component will not participate in the current phase, if it was not already invoked. Destroying an entity/component automatically disables it first. |
-| `Start()` | Scheduled on the component’s first `OnEnable()`. The world invokes it once before the first `EarlyUpdate()` `FixedUpdate()` `Update()` or `LateUpdate()` the component is eligible to join, whichever happens first. A component that never gets enabled will trigger its `OnDestroy()` without ever running `Start()`. `Start()` serves as the second initialization hook. |
+| `OnEnable()`  | Invoked immediately on a `GetIsActive()` toggle from `false` to `true`. If the callback is triggered in an update phase, the enabled component will not participate in the current phase, but later phases will contain it. |
+| `OnDisable()` | Invoked immediately on a `GetIsActive()` toggle from `true` to `false`. If the callback is triggered in an update phase, the disabled component will not participate in the current phase if its update callback was not already invoked. Destroying an entity/component automatically disables it first. |
+| `Start()` | Scheduled on the component’s first `OnEnable()`. The world invokes it once before the first `EarlyUpdate()`, `FixedUpdate()`, `Update()`, or `LateUpdate()` the component is eligible to join, whichever happens first. A component that never gets enabled will trigger its `OnDestroy()` without ever running `Start()`. `Start()` serves as the second initialization hook. |
 
 ## Frame Execution Callbacks
 The frame execution callbacks are special virtual methods that each component provides
@@ -54,12 +54,12 @@ Every frame, the world invokes these callbacks in exactly this order:
 | `OnDestroy()`   | Runs at the very end of the frame after `Renderer::RenderFrame()` returns. Components queued for destruction earlier in the frame do not receive their remaining update callbacks. Removal hides the component from lookup immediately, while an already-running callback can finish before teardown. <br><br> Component removal, entity destruction, and `World::Clear()` during application shutdown all use the same cleanup path. The ECS calls `OnDestroy()` exactly once per affected component, immediately before its C++ destructor, even if it was never active. Repeated destruction requests are ignored. |
 
 A component enabled in the middle of a frame will participate in the remaining frame execution callbacks.
-A componend disabled/destroyed in the middle of a frame will finish all invoked callbacks (e.g. running `Update()`) but not the following ones (e.g. `LateUpdate()`).
+A component disabled/destroyed in the middle of a frame will finish all invoked callbacks (e.g. running `Update()`) but not the following ones (e.g. `LateUpdate()`).
 `OnDestroy()` is exempt from this, as it runs at the end of the frame as a deferred destruction callback for all components that get destroyed, active or not.
 
 
 ## Examples
-Here you can find example usecases for the public native (`C++`) API:
+Here you can find example use cases for the public native (`C++`) API:
 
 Entity creation and attaching a component:
 ```cpp
@@ -68,9 +68,9 @@ ComponentHandle<Health> health = guard.Get()->AddComponent<Health>(100);
 health.Get()->ApplyDamage(25);
 ```
 
-Here are some examples for how a components callbacks might be triggered (pseudo code):
+Here are some examples of how a component's callbacks might be triggered (pseudocode):
 
-Component created in enabled state and destroyed mid-frame:
+Component created in an enabled state and destroyed mid-frame:
 ```text
 ComponentHandle<T> comp = entity->AddComponent<T>(true) (enabled)
 	OnCreate()
@@ -82,12 +82,12 @@ Frame gets executed
 	Update()
 	LateUpdate()
 comp gets destroyed in EarlyUpdate() by another component
-	OnDisable() runs immediatly
+	OnDisable() runs immediately
 	EarlyUpdate() finishes if already running
 	OnDestroy()
 ```
 
-Component created in disabled state and enabled mid-frame:
+Component created in a disabled state and enabled mid-frame:
 ```text
 ComponentHandle<T> comp = entity->AddComponent<T>(false) (disabled)
 	OnCreate()
@@ -98,8 +98,8 @@ comp gets enabled in EarlyUpdate() by another component
 	LateUpdate()
 ```
 
-Component disables itself in its own Update() callback.
-This is dangerous, as OnDisable() can change state that Udpate() relies on, breaking it mid-execution:
+A component disables itself in its own Update() callback.
+This is dangerous, as OnDisable() can change state that Update() relies on, breaking it mid-execution:
 ```text
 ComponentHandle<T> comp = entity->AddComponent<T>(true) (enabled)
 	OnCreate()
@@ -109,6 +109,6 @@ Frame gets executed
 	EarlyUpdate()
 comp disables itself in Update()
 	Update()
-	OnDisable() runs immediatly
+	OnDisable() runs immediately
 	Update() finishes if already running
 ```

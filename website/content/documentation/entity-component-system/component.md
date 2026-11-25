@@ -3,7 +3,7 @@ The `Component` class is the base class for components attached to an [entity](e
 You can define a new component by deriving from `Component` and adding your own data and methods.
 
 The world owns each component, and each component is attached to one entity.
-An entity can have multiple components of the same type, they are differentiated by the `ComponentId`, which is unique for each component.
+An entity can have multiple components of the same type, and they are differentiated by the `ComponentId`, which is unique for each component.
 
 `Entity::AddComponent<T>(...)` creates a component and returns a copyable `ComponentHandle<T>`.
 `Get()` on the [component handle](#componenthandle) gives borrowed access to the component.
@@ -24,8 +24,8 @@ If you are unsure whether the component exists, check `IsValid()` before calling
 ## Frame Execution Callbacks
 You can override the [Frame Execution Callbacks](index.md#frame-execution-callbacks) to define how a component behaves.
 Use the `C++` constructor to initialize the component's own data.
-`OnCreate()` runs after the component is attached, here you have access to the owning entity and its transform.
-`Start()` runs before the first update callback, here you have access to other components attached to the same entity.
+`OnCreate()` runs after the component is attached, and here you have access to the owning entity and its transform.
+`Start()` runs before the first update callback, and here you have access to other components attached to the same entity.
 `OnDestroy()` runs before the `C++` destructor and gives the component a chance to clean up.
 Access to the owning entity and its transform during `OnDestroy()` is always guaranteed.
 
@@ -33,13 +33,13 @@ Access to the owning entity and its transform during `OnDestroy()` is always gua
 | Methods {: .nowrap-first-column } | Explanation |
 | --- | --- |
 | `void SetIsEnabled(bool)`                        | Enables or disables the component. |
-| `const std::string& GetName()`                   | Name of the component. Is set automatically to class name. |
+| `const std::string& GetName()`                   | Name of the component. It is set automatically to the class name. |
 | `bool GetIsEnabled()`                            | Is the component enabled? |
 | `bool GetIsActive()`                             | Is the component enabled and its owning entity active? See [Active State](index.md#active-state). |
 | `ComponentId GetId()`                            | ID of the component instance. |
-| `EntityHandle GetEntity()`                       | Handle to the owning entity. Save to use in `OnCreate()`.|
-| `ComponentHandle<Transform>`<br>`GetTransform()` | Handle to the owning entity's `Transform` component. Save to use in `OnCreate()`.|
-| `ComponentHandle<T>`<br>` GetComponent()`        | Used to access other components attached to the same entity. Save to use in `Start()`, but not in `OnCreate()`. |
+| `EntityHandle GetEntity()`                       | Handle to the owning entity. Safe to use in `OnCreate()`.|
+| `ComponentHandle<Transform>`<br>`GetTransform()` | Handle to the owning entity's `Transform` component. Safe to use in `OnCreate()`.|
+| `ComponentHandle<T>`<br>`GetComponent()`        | Used to access other components attached to the same entity. Safe to use in `Start()`, but not in `OnCreate()`. |
 
 All components also contain the [trigger callbacks](index.md#trigger-callbacks) and [frame execution callbacks](index.md#frame-execution-callbacks) as virtual void methods:
 
@@ -53,7 +53,7 @@ All components also contain the [trigger callbacks](index.md#trigger-callbacks) 
 	LateUpdate()
 	OnDestroy()
 
-which you can override to achieve the desired behaviour.
+You can override these methods to achieve the desired behaviour.
 
 ## Examples
 Here is a simple component that stores an entity's health.
