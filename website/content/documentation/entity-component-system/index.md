@@ -1,13 +1,12 @@
 
 # Entity Component System
-
 ## Introduction
 Ember's entity component system is the backbone of the scripting API,
 which allows you to attach instances of custom `Component` classes to an `Entity`.
 
 Ember has one [world](world.md), exposed through the static `World` class.
 It is the orchestrating container which holds entities and the component registry.
-Every frame, it loops over all components in the registry and invokes their [frame execution callbacks](#frame-execution-callbacks).
+Every frame, it loops over all components in the registry and invokes eligible [update callbacks](#update-callbacks) and [deferred callbacks](#deferred-callbacks).
 
 Entities are 'containers' for components, although the components actually reside in the world's registry.
 Entities can be attached to other entities, forming a hierarchical tree of parent-child relationships.
@@ -27,9 +26,10 @@ After loading an entity, the ECS can resolve those IDs to fresh handles. The old
 Entities and components have an `isEnabled` boolean flag, which is for bookkeeping and can be queried via `GetIsEnabled()`.
 An entity is active when it and all its ancestors are enabled.
 A component is active when it is enabled and its owning entity is active.
-Entities and components expose this effective state through `GetIsActive()`, and it determines eligibility for [frame execution callbacks](#frame-execution-callbacks).
+Entities and components expose this effective state through `GetIsActive()`, and it determines eligibility for [update callbacks](#update-callbacks).
 
-## Trigger Callbacks
+## Callbacks
+### Lifecycle Callbacks
 Each component exposes these virtual callback methods which get called on their respective triggers:
 
 | Callback {: .nowrap-first-column } | Explanation |
@@ -39,8 +39,8 @@ Each component exposes these virtual callback methods which get called on their 
 | `OnDisable()` | Invoked immediately on a `GetIsActive()` toggle from `true` to `false`. If the callback is triggered in an update phase, the disabled component will not participate in the current phase if its update callback was not already invoked. Destroying an entity/component automatically disables it first. |
 | `Start()` | Scheduled on the component’s first `OnEnable()`. The world invokes it once before the first `EarlyUpdate()`, `FixedUpdate()`, `Update()`, or `LateUpdate()` the component is eligible to join, whichever happens first. A component that never gets enabled will trigger its `OnDestroy()` without ever running `Start()`. `Start()` serves as the second initialization hook. |
 
-## Frame Execution Callbacks
-The frame execution callbacks are special virtual methods that each component provides
+### Update Callbacks
+The update callbacks are special virtual methods that each component provides
 and that you can override to achieve the desired behaviour.
 Every frame, the world invokes these callbacks in exactly this order:
 
@@ -50,11 +50,17 @@ Every frame, the world invokes these callbacks in exactly this order:
 | `FixedUpdate()` | Runs every physics tick if `GetIsActive() == true`. |
 | `Update()`      | Runs every frame if `GetIsActive() == true`. |
 | `LateUpdate()`  | Runs every frame if `GetIsActive() == true`. |
-| `OnDestroy()`   | Runs at the very end of the frame after `Renderer::RenderFrame()` returns. Components queued for destruction earlier in the frame do not receive their remaining update callbacks. Removal hides the component from lookup immediately, while an already-running callback can finish before teardown. <br><br> Component removal, entity destruction, and `World::Clear()` during application shutdown all use the same cleanup path. The ECS calls `OnDestroy()` exactly once per affected component, immediately before its C++ destructor, even if it was never active. Repeated destruction requests are ignored. |
 
-A component enabled in the middle of a frame will participate in the remaining frame execution callbacks.
+A component enabled in the middle of a frame will participate in the subsequent [update callbacks](#update-callbacks).
 A component disabled/destroyed in the middle of a frame will finish all invoked callbacks (e.g. running `Update()`) but not the following ones (e.g. `LateUpdate()`).
-`OnDestroy()` is exempt from this, as it runs at the end of the frame as a deferred destruction callback for all components that get destroyed, active or not.
+
+### Deferred Callbacks
+Some actions are deferred to the very end of the frame, after all update callbacks and rendering have finished.
+This ensures consistent behaviour around resource lifetime and prevents objects from being destroyed while they are still referenced or processed by other engine subsystems.
+
+| Callback {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `OnDestroy()`   | Components queued for destruction earlier in the frame do not receive their remaining update callbacks. Removal hides the component from lookup immediately, while an already-running callback can finish before teardown. <br><br> Component removal, entity destruction, and `World::Clear()` during application shutdown all use the same cleanup path. The ECS calls `OnDestroy()` exactly once per affected component, immediately before its C++ destructor, even if it was never active. Repeated destruction requests are ignored. |
 
 
 ## Examples
@@ -107,7 +113,7 @@ Frame gets executed
 	Start()
 	EarlyUpdate()
 comp disables itself in Update()
-	Update()
+	Update()	update part before disabling itself
 	OnDisable() runs immediately
-	Update() finishes if already running
+	Update() 	update part after disabling itself, still executes.
 ```

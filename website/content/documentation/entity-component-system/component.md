@@ -21,13 +21,15 @@ If you are unsure whether the component exists, check `IsValid()` before calling
 | `T* Get() const` | Returns a borrowed pointer to the component. Requires a valid handle. |
 | `operator==`, `operator!=` | Compare the runtime identities held by two handles of the same type. |
 
-## Frame Execution Callbacks
-You can override the [Frame Execution Callbacks](index.md#frame-execution-callbacks) to define how a component behaves.
+## Callbacks
+You can override the [lifecycle](index.md#lifecycle-callbacks), [update](index.md#update-callbacks), and [deferred](index.md#deferred-callbacks) callbacks to define how a component behaves.
 Use the `C++` constructor to initialize the component's own data.
-`OnCreate()` runs after the component is attached, and here you have access to the owning entity and its transform.
-`Start()` runs before the first update callback, and here you have access to other components attached to the same entity.
+`OnCreate()` runs after the component is attached. Here you have access to the owning entity and its transform.
+`Start()` runs before the first update callback. Here you have access to other components attached to the same entity.
 `OnDestroy()` runs before the `C++` destructor and gives the component a chance to clean up.
 Access to the owning entity and its transform during `OnDestroy()` is always guaranteed.
+Each component holds a reference to its owning entity, and each entity a reference to its transform, so you can safely call `GetEntity()` and `GetTransform()` during `OnDestroy()`,
+even if the owning entity is itself queued for destruction, and thus all related handles have been invalidated.
 
 ## Public native API
 | Methods {: .nowrap-first-column } | Explanation |
@@ -41,7 +43,7 @@ Access to the owning entity and its transform during `OnDestroy()` is always gua
 | `ComponentHandle<Transform>`<br>`GetTransform()` | Handle to the owning entity's `Transform` component. Safe to use in `OnCreate()`.|
 | `ComponentHandle<T>`<br>`GetComponent()`        | Used to access other components attached to the same entity. Safe to use in `Start()`, but not in `OnCreate()`. |
 
-All components also contain the [trigger callbacks](index.md#trigger-callbacks) and [frame execution callbacks](index.md#frame-execution-callbacks) as virtual void methods:
+All components also contain the [lifecycle](index.md#lifecycle-callbacks), [update](index.md#update-callbacks), and [deferred](index.md#deferred-callbacks) callbacks as virtual void methods:
 
 	OnCreate()
 	OnEnable()

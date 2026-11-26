@@ -32,18 +32,21 @@ The registry stays internal so the world can enforce ownership and lifetime rule
 ## Private native API
 The private native API is mostly used in the application layer (add link later), which is a friend of `World`.
 The application initializes the world on startup, tears it down on shutdown,
-and drives the [Frame Execution Callbacks](index.md#frame-execution-callbacks) in the correct locations during the frame.
+and drives the [update](index.md#update-callbacks) and [deferred](index.md#deferred-callbacks) callbacks in the correct locations during the frame.
 
 | Management {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `Init()` | Initializes all containers to an empty state. |
-| `Clear()` | Calls OnDestroy() for all components, clears the component registry, and destroys all entities. |
+| `void Init()` | Initializes all containers to an empty state. |
+| `void Clear()` | Calls OnDestroy() for all components, clears the component registry, and destroys all entities. |
+| `void Start()` | Dispatched before a component's first [update callback](index.md#update-callbacks). |
 
-| Frame Execution Callbacks {: .nowrap-first-column } | Explanation |
+| Update Callbacks {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `void Start()` | Dispatched before a component's first `EarlyUpdate()`, `FixedUpdate()`, `Update()`, or `LateUpdate()`, whichever is first. |
 | `void EarlyUpdate()` | Dispatched for all active components. |
 | `void FixedUpdate()` | Dispatched for all active components. A frame can contain zero or more physics ticks. |
 | `void Update()` | Dispatched for all active components. |
 | `void LateUpdate()` | Dispatched for all active components. |
+
+| Deferred Callbacks {: .nowrap-first-column } | Explanation |
+| --- | --- |
 | `void OnDestroy()` | Dispatched for all components queued for destruction, active or not. |

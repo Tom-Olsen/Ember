@@ -6,7 +6,7 @@ Entities are differentiated by an `EntityId`, and their names are editable label
 Creation, lookup, and destruction go through the static [World](world.md#public-native-api) API.
 Destroying an entity immediately removes it from lookup and prevents its components from receiving further updates.
 The application processes queued destruction after `Renderer::RenderFrame()` returns,
-and any [frame execution callbacks](index.md#frame-execution-callbacks) already running will finish.
+and any [update callbacks](index.md#update-callbacks) already running will finish.
 
 The ECS can load and unload an entity together with its descendants. (API missing)
 Unloading removes an entity and all its descendants from the live ECS, invalidating their runtime handles and removing them from frame execution.
@@ -29,6 +29,7 @@ If you are unsure whether the entity exists, check `IsValid()` before calling `G
 
 ## Transform
 Each entity always comes with exactly one `Transform` component, which defines its position, rotation, and scale in its parent's space.
+The entity class holds a reference to its transform, ensuring access to it even if the transform component is queued for destruction, and thus all related handles have been invalidated.
 Root entities have transforms in world space, the shared coordinate space of the `World`. Child entities have transforms relative to their parent.
 The transform component is an exception to the multiple-component rule. Any entity can only ever have a single transform component, and it can't be removed.
 
