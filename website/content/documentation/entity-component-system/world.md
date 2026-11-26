@@ -15,9 +15,13 @@ The registry stays internal so the world can enforce ownership and lifetime rule
 ## Public native API
 | Getters {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `ComponentHandle<Camera>`<br>`GetActiveCamera()` | Active camera used for rendering, invalid handle when none exists. |
+| `ComponentHandle<Camera>`<br>`GetActiveCamera()` | Returns the selected camera if it is live and active. Otherwise, returns an invalid handle and rendering is skipped. |
 | `Bounds GetBounds()`                             | Combined bounds of all render bounds. |
 | `Bounds GetActiveBounds()`                       | Combined bounds of render bounds of active render components. |
+
+| Setters {: .nowrap-first-column } | Explanation |
+| --- | --- |
+| `void SetActiveCamera`<br>`(ComponentHandle<Camera>)` | Selects the camera used for rendering. Pass a default-constructed handle to clear the selection. |
 
 | Entity Methods {: .nowrap-first-column } | Explanation |
 | --- | --- |

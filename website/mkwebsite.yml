@@ -125,3 +125,4 @@ nav:
           - World: documentation/entity-component-system/world.md
           - Entity: documentation/entity-component-system/entity.md
           - Component: documentation/entity-component-system/component.md
+          - Scripting (C#): documentation/entity-component-system/scripting(C#).md

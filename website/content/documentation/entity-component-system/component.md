@@ -21,15 +21,24 @@ If you are unsure whether the component exists, check `IsValid()` before calling
 | `T* Get() const` | Returns a borrowed pointer to the component. Requires a valid handle. |
 | `operator==`, `operator!=` | Compare the runtime identities held by two handles of the same type. |
 
+## Copying components
+`Component` has a protected copy constructor that copies the local enabled flag.
+The copy starts detached with fresh lifecycle state and receives a new `ComponentId` when attached to its new entity.
+Copy assignment is deleted.
+
+A derived component can use its default copy constructor, define its own copy constructor for state that needs special handling, or delete it.
+`Entity::Copy()` skips components that cannot be copy-constructed.
+Copied components go through the usual lifecycle when attached to the new entity.
+
 ## Callbacks
 You can override the [lifecycle](index.md#lifecycle-callbacks), [update](index.md#update-callbacks), and [deferred](index.md#deferred-callbacks) callbacks to define how a component behaves.
 Use the `C++` constructor to initialize the component's own data.
 `OnCreate()` runs after the component is attached. Here you have access to the owning entity and its transform.
 `Start()` runs before the first update callback. Here you have access to other components attached to the same entity.
 `OnDestroy()` runs before the `C++` destructor and gives the component a chance to clean up.
-Access to the owning entity and its transform during `OnDestroy()` is always guaranteed.
-Each component holds a reference to its owning entity, and each entity a reference to its transform, so you can safely call `GetEntity()` and `GetTransform()` during `OnDestroy()`,
-even if the owning entity is itself queued for destruction, and thus all related handles have been invalidated.
+During `OnDestroy()`, `GetEntity()` and `GetTransform()` provide access to the owning entity and its transform.
+Handles obtained through these getters are valid until the `OnDestroy()` callback returns.
+Previously expired handles stay expired.
 
 ## Public native API
 | Methods {: .nowrap-first-column } | Explanation |
@@ -41,7 +50,7 @@ even if the owning entity is itself queued for destruction, and thus all related
 | `ComponentId GetId()`                            | ID of the component instance. |
 | `EntityHandle GetEntity()`                       | Handle to the owning entity. Safe to use in `OnCreate()`.|
 | `ComponentHandle<Transform>`<br>`GetTransform()` | Handle to the owning entity's `Transform` component. Safe to use in `OnCreate()`.|
-| `ComponentHandle<T>`<br>`GetComponent()`        | Used to access other components attached to the same entity. Safe to use in `Start()`, but not in `OnCreate()`. |
+| `ComponentHandle<T>`<br>`GetComponent()`         | Used to access other components attached to the same entity. Safe to use in `Start()`, but not in `OnCreate()`. |
 
 All components also contain the [lifecycle](index.md#lifecycle-callbacks), [update](index.md#update-callbacks), and [deferred](index.md#deferred-callbacks) callbacks as virtual void methods:
 

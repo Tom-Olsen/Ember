@@ -6,9 +6,9 @@ which allows you to attach instances of custom `Component` classes to an `Entity
 
 Ember has one [world](world.md), exposed through the static `World` class.
 It is the orchestrating container which holds entities and the component registry.
-Every frame, it loops over all components in the registry and invokes eligible [update callbacks](#update-callbacks) and [deferred callbacks](#deferred-callbacks).
+Every frame, it loops over all components in the registry and invokes eligible [update](#update-callbacks) and [deferred](#deferred-callbacks) callbacks.
 
-Entities are 'containers' for components, although the components actually reside in the world's registry.
+[Entities](entity.md#entity) are 'containers' for [components](component.md#component), although the components actually reside in the world's registry.
 Entities can be attached to other entities, forming a hierarchical tree of parent-child relationships.
 The same type of component can be attached to an entity multiple times, and each component instance is differentiated by an ID.
 
@@ -19,6 +19,7 @@ The world owns its entity objects and attached component instances.
 Methods that return handles can return an invalid handle. Check `IsValid()` before calling `Get()` when you are unsure whether the instance exists.
 
 Handles stop resolving when their instance is queued for destruction. `World::Clear()` invalidates all remaining handles.
+See [component callbacks](component.md#callbacks) for access to the owning entity and its transform during `OnDestroy()`.
 `EntityId` and `ComponentId` identify live and saved instances.
 After loading an entity, the ECS can resolve those IDs to fresh handles. The old handles stay expired.
 
@@ -30,14 +31,14 @@ Entities and components expose this effective state through `GetIsActive()`, and
 
 ## Callbacks
 ### Lifecycle Callbacks
-Each component exposes these virtual callback methods which get called on their respective triggers:
+Each component exposes these virtual callback methods, which get called on their respective triggers:
 
 | Callback {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `OnCreate()`  | Invoked immediately after the component is attached to an entity, even if `GetIsActive() == false`, serving as the first initialization hook. |
+| `OnCreate()`  | Invoked immediately after the component is attached to an entity, even if `GetIsActive() == false`, serving as an initialization hook; here, access to the owning entity and its transform is valid, while access to other components is not safe. |
 | `OnEnable()`  | Invoked immediately on a `GetIsActive()` toggle from `false` to `true`. If the callback is triggered in an update phase, the enabled component will not participate in the current phase, but later phases will contain it. |
-| `OnDisable()` | Invoked immediately on a `GetIsActive()` toggle from `true` to `false`. If the callback is triggered in an update phase, the disabled component will not participate in the current phase if its update callback was not already invoked. Destroying an entity/component automatically disables it first. |
-| `Start()` | Scheduled on the component’s first `OnEnable()`. The world invokes it once before the first `EarlyUpdate()`, `FixedUpdate()`, `Update()`, or `LateUpdate()` the component is eligible to join, whichever happens first. A component that never gets enabled will trigger its `OnDestroy()` without ever running `Start()`. `Start()` serves as the second initialization hook. |
+| `OnDisable()` | Invoked immediately on a `GetIsActive()` toggle from `true` to `false`. If the callback is triggered in an update phase, the disabled component will not participate in the current phase if its update callback was not already invoked. Otherwise, it will finish the callback. Destroying an entity/component automatically disables it first. |
+| `Start()` | Scheduled with the component’s first `OnEnable()`. The world invokes it once before the first [update callback](#update-callbacks) the component is eligible to join. A component that never gets enabled will trigger its `OnDestroy()` without ever running `Start()`. `Start()` serves as a second initialization hook; here, access to other components is valid. |
 
 ### Update Callbacks
 The update callbacks are special virtual methods that each component provides
@@ -60,7 +61,7 @@ This ensures consistent behaviour around resource lifetime and prevents objects 
 
 | Callback {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `OnDestroy()`   | Components queued for destruction earlier in the frame do not receive their remaining update callbacks. Removal hides the component from lookup immediately, while an already-running callback can finish before teardown. <br><br> Component removal, entity destruction, and `World::Clear()` during application shutdown all use the same cleanup path. The ECS calls `OnDestroy()` exactly once per affected component, immediately before its C++ destructor, even if it was never active. Repeated destruction requests are ignored. |
+| `OnDestroy()`   | Components queued for destruction earlier in the frame do not receive their remaining update callbacks. Removal hides the component from lookup immediately, while an already-running callback can finish before teardown. <br> Component removal, entity destruction, and `World::Clear()` during application shutdown all use the same cleanup path. The ECS calls `OnDestroy()` exactly once per affected component, immediately before its C++ destructor, even if it was never active. Repeated destruction requests are ignored. |
 
 
 ## Examples
@@ -73,7 +74,8 @@ ComponentHandle<Health> health = guard.Get()->AddComponent<Health>(100);
 health.Get()->ApplyDamage(25);
 ```
 
-Here are some examples of how a component's callbacks might be triggered (pseudocode):
+Here are some examples of how a component's callbacks might be triggered (pseudocode):<br>
+(In these examples, `T` takes a `bool` constructor argument that sets its initial enabled state.)
 
 Component created in an enabled state and destroyed mid-frame:
 ```text
@@ -115,5 +117,5 @@ Frame gets executed
 comp disables itself in Update()
 	Update()	update part before disabling itself
 	OnDisable() runs immediately
-	Update() 	update part after disabling itself, still executes.
+	Update() 	update part after disabling itself still executes.
 ```
