@@ -11,12 +11,9 @@ using namespace emberEngine;
 
 
 
-inline Scene* DefaultScene()
+inline void DefaultScene()
 {
 	bool showLightFrustums = false;
-
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
 
 	// Ambient light:
 	emberCore::Renderer::SetAmbientLight(Float3(1.0f, 1.0f, 1.0f), 0.35f);
@@ -86,7 +83,7 @@ inline Scene* DefaultScene()
 	mirrorMaterial.SetValue("SurfaceProperties", "surface_metallicity", 1.0f);
 
 	{// Camera:
-		Entity entity = Entity::Create("MainCamera");
+		Entity& entity = *World::CreateEntity("MainCamera").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(5.7867f, -6.1613f, 5.1195f));
 		pTransform->SetRotationEuler(EulerDegrees(45.5620f, 54.4469f, 62.9650f));
@@ -99,10 +96,10 @@ inline Scene* DefaultScene()
 		SsrDispatcher* pSsrDispatcher = entity.AddComponent<SsrDispatcher>(skyboxTexture);
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	//{// Directional Light:
-	//	Entity entity = Entity::Create("DirectionalLight");
+	//	Entity& entity = *World::CreateEntity("DirectionalLight").Get();
 	//	Float3 pos = Float3(0.0f, 3.0f, 0.0f);
 	//	Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
 	//	Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -120,7 +117,7 @@ inline Scene* DefaultScene()
 	//	pDirectionalLight->SetDrawFrustum(false);
 	//}
 	{// PointLight:
-		Entity entity = Entity::Create("PointLight");
+		Entity& entity = *World::CreateEntity("PointLight").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(1.1f, -1.5f, 0.14f));
 		pTransform->SetRotationEuler(EulerDegrees(3.0f, 6.0f, 9.0f));
@@ -140,7 +137,7 @@ inline Scene* DefaultScene()
 		pPointLight->SetShadowType(emberCommon::ShadowType::hard);
 	}
 	{// SpotLight0:
-		Entity entity = Entity::Create("SpotLight0");
+		Entity& entity = *World::CreateEntity("SpotLight0").Get();
 		Float3 pos = Float3(-4.0f, 4.0f, 5.5f);
 		Float3 direction = (Float3(0.0f, 8.3f, 3.0f) - pos).Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -167,7 +164,7 @@ inline Scene* DefaultScene()
 		pSpotLight->SetShadowType(emberCommon::ShadowType::hard);
 	}
 	{// SpotLight1:
-		Entity entity = Entity::Create("SpotLight1");
+		Entity& entity = *World::CreateEntity("SpotLight1").Get();
 		Float3 pos = Float3(0.0f, 4.0f, 5.5f);
 		Float3 direction = (Float3(0.0f, 8.3f, 3.0f) - pos).Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -194,7 +191,7 @@ inline Scene* DefaultScene()
 		pSpotLight->SetShadowType(emberCommon::ShadowType::hard);
 	}
 	{// SpotLight2:
-		Entity entity = Entity::Create("SpotLight2");
+		Entity& entity = *World::CreateEntity("SpotLight2").Get();
 		Float3 pos = Float3(4.0f, 4.0f, 5.5f);
 		Float3 direction = (Float3(0.0f, 8.3f, 3.0f) - pos).Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -222,7 +219,7 @@ inline Scene* DefaultScene()
 		pSpotLight->SetShadowType(emberCommon::ShadowType::hard);
 	}
 	{// Skybox:
-		Entity entity = Entity::Create("Skybox");
+		Entity& entity = *World::CreateEntity("Skybox").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
 
@@ -234,7 +231,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	{ // Floor:
-		Entity entity = Entity::Create("Floor");
+		Entity& entity = *World::CreateEntity("Floor").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.0f, 0.0f, -0.5f));
 		pTransform->SetScale(30.0f);
@@ -244,7 +241,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetMaterial(floorMaterial);
 	}
 	{ // Wall:
-		Entity entity = Entity::Create("Wall");
+		Entity& entity = *World::CreateEntity("Wall").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.0f, 10.0f, 2.5f));
 		pTransform->SetScale(Float3(30.0f, 6.0f, 1.0f));
@@ -255,7 +252,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetMaterial(wallMaterial);
 	}
 	{// ThreeLeg:
-		Entity entity = Entity::Create("ThreeLeg");
+		Entity& entity = *World::CreateEntity("ThreeLeg").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(-1.0f, -0.5f, 0.0f));
 
@@ -266,7 +263,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetReceiveShadows(true);
 	}
 	{// Susanne:
-		Entity entity = Entity::Create("Susanne");
+		Entity& entity = *World::CreateEntity("Susanne").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.0f, 8.3f, 3.0f));
 		pTransform->SetScale(0.66f);
@@ -278,7 +275,7 @@ inline Scene* DefaultScene()
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
 	{// MeshTester:
-		Entity entity = Entity::Create("MeshTester");
+		Entity& entity = *World::CreateEntity("MeshTester").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(2.0f, 0.0f, 0.0f));
 
@@ -306,7 +303,7 @@ inline Scene* DefaultScene()
 		pMeshTester->AddMesh(&MeshManager::GetMesh("fourLeg"));
 	}
 	{// Zylinder:
-		Entity entity = Entity::Create("Zylinder");
+		Entity& entity = *World::CreateEntity("Zylinder").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.5f, 0.0f, 0.0f));
 
@@ -317,7 +314,7 @@ inline Scene* DefaultScene()
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
 	{// Sphere:
-		Entity entity = Entity::Create("Sphere");
+		Entity& entity = *World::CreateEntity("Sphere").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(-0.5f, -2.0f, 0.0f));
 
@@ -328,7 +325,7 @@ inline Scene* DefaultScene()
 		SpinLocal* pSpinLocal = entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
 	{// Submesh test:
-		Entity entity = Entity::Create("SubmeshTest");
+		Entity& entity = *World::CreateEntity("SubmeshTest").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(3.5f, 0.0f, 0.0f));
 
@@ -343,7 +340,7 @@ inline Scene* DefaultScene()
 		pMeshRenderer->SetMaterials({meshTesterMaterial, sphere0Material});
 	}
 	//{// Transparent quad:
-	//	Entity entity = Entity::Create("TransparentQuad");
+	//	Entity& entity = *World::CreateEntity("TransparentQuad").Get();
 	//	Transform* pTransform = entity.GetTransform();
 	//	pTransform->SetPosition(Float3(0.66f, -1.33f, 1.0f));
 	//	pTransform->SetRotationEuler(EulerDegrees(60.0f, 0.0f, 0.0f));
@@ -355,7 +352,7 @@ inline Scene* DefaultScene()
 	//	pMeshRenderer->SetReceiveShadows(false);
 	//}
 	//{// Mirror:
-	//	Entity entity = Entity::Create("Mirror");
+	//	Entity& entity = *World::CreateEntity("Mirror").Get();
 	//	Transform* pTransform = entity.GetTransform();
 	//	pTransform->SetPosition(Float3(-4.0f, 4.0f, 1.0f));
 	//	pTransform->SetScale(Float3(1.0f, 2.0f, 2.0f));
@@ -367,5 +364,4 @@ inline Scene* DefaultScene()
 	//	pMeshRenderer->SetCastShadows(false);
 	//	pMeshRenderer->SetReceiveShadows(false);
 	//}
-	return pScene;
 }

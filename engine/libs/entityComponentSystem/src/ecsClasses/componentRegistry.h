@@ -18,10 +18,15 @@ namespace emberEcs
 
 
 
-		// Register new componet class:
+		// Register the callbacks once per component type:
 		template<typename T>
 		static inline void Register()
 		{
+			// Each Component T only gets registered once:
+			static bool registered = false;
+			if (registered)
+				return;
+
 			auto startCallback = [](entt::registry& registry)
 			{
 				registry.view<T>().each([](entt::entity entity, T& component)
@@ -73,6 +78,7 @@ namespace emberEcs
 			GetUpdateRegistry().push_back(updateCallback);
 			GetLateUpdateRegistry().push_back(lateUpdateCallback);
 			GetDestructionRegistry().push_back(destroyCallback);
+			registered = true;
 		}
 	};
 }

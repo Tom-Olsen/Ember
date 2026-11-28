@@ -1,65 +1,57 @@
 #pragma once
-#include <entt/entt.hpp>
+#include "entityId.h"
+#include <entt/entity/fwd.hpp>
+#include <stdint.h>
+#include <memory>
 #include <string>
-#include <vector>
 
 
 
 namespace emberEcs
 {
-	// Forward decleration:
-	class Component;
-	class EntityState;
+	// Forward declarations:
 	class Transform;
-	class Scene;
+	class World;
 
 
 
-	// Slim wrapper around entt::entity for easier access.
 	class Entity
 	{
 		// Friends:
-		friend class Component;
-		friend class Scene;
+		friend class World;
+		friend struct std::default_delete<Entity>;	// gives default deleter access to private destructor.
 
 	private: // Members:
-		entt::entity m_entityHandle;
+		EntityId m_entityId;
+		uint64_t m_runtimeId;
+		entt::entity m_registryEntry;
 		std::string m_name;
-		Scene* m_pScene;
-
-	private: // Methods:
-		// Constructor/Destructor: (only accessable by Scene)
-		Entity();	// for invalid Entities only.
+		bool m_isEnabled;
 
 	public: // Methods:
-		~Entity();
-		static Entity Create(const std::string& name);	// Registers the entity in the currently active scene.
-		void Destroy();									// Properly disposed entity from ECS registry.
+		// Non-copyable:
+		Entity(const Entity&) = delete;
+		Entity& operator=(const Entity&) = delete;
 
-		// Copyable:
-		Entity(const Entity&) = default;
-		Entity& operator=(const Entity&) = default;
-
-		// Movable:
-		Entity(Entity&& other) noexcept = default;
-		Entity& operator=(Entity&& other) noexcept = default;
+		// None-movable:
+		Entity(Entity&& other) noexcept = delete;
+		Entity& operator=(Entity&& other) noexcept = delete;
 
 		// Setters:
 		void SetName(const std::string& name);
 		void SetIsEnabled(bool isEnabled);
 
-		// Basic Getters:
+		// Getters:
+		EntityId GetId() const;
 		const std::string& GetName() const;
 		bool GetIsEnabled() const;
 		bool GetIsActive() const;
-		bool GetIsValid() const;
-		Scene* const GetScene() const;
-
-		// Component Getters:
 		Transform* GetTransform() const;
-		EntityState* GetEntityState() const;
 
-		// Templated methods:
+		// Entity management:
+		void Destroy();
+
+		// Components:
 		template<typename T, typename... Args>
 		T* AddComponent(Args&&... args);
 		template<typename T>
@@ -68,12 +60,10 @@ namespace emberEcs
 		T* GetComponent() const;
 		template<typename T>
 		void RemoveComponent();
-		
-		// Debugging:
-		void PrintComponents() const;
 
 	private: // Methods:
-		Entity(entt::entity handle, const std::string& name, Scene* pScene);
-		entt::entity GetEntityHandle() const;
+		// Constructor/Destructor:
+		Entity(EntityId entityId, uint64_t runtimeId, entt::entity registryEntry, const std::string& name);
+		~Entity();
 	};
 }

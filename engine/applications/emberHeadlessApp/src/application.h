@@ -10,10 +10,6 @@ namespace emberEngine
 {
 	class Renderer;
 }
-namespace emberEcs
-{
-	class Scene;
-}
 
 
 
@@ -36,21 +32,12 @@ namespace emberApplication
 			uint32_t shadowMapResolution = SHADOW_MAP_RESOLUTION;
 		};
 
-	private: // Members:
-		static emberEcs::Scene* m_pActiveScene;
-
 	public: // Methods:
 		static void Init(const CreateInfo& createInfo);
 		static void Clear();
 
 		// Main loop:
 		static void Run();
-
-		// Setters:
-		static void SetScene(emberEcs::Scene* pScene);
-
-		// Getters:
-		static emberEcs::Scene* GetActiveScene();
 
 	private: // Methods
 		// Delete all constructors:

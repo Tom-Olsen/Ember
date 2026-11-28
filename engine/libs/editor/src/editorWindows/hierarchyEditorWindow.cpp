@@ -3,7 +3,7 @@
 #include "editorSelection.h"
 #include "entity.h"
 #include "gui.h"
-#include "scene.h"
+#include "world.h"
 #include <algorithm>
 
 
@@ -15,6 +15,7 @@ namespace emberEditor
 
 
 
+	// Public Methods:
 	// Constructor/Destructor:
 	HierarchyEditorWindow::HierarchyEditorWindow()
 	{
@@ -23,34 +24,35 @@ namespace emberEditor
 		m_windowFlags = emberCommon::GuiWindowFlags::none;
 		m_wantCaptureEvents = true;
 		m_nameID = m_name + "##" + std::to_string(m_ID);
-		m_pScene = nullptr;
 	}
 	HierarchyEditorWindow::~HierarchyEditorWindow()
 	{
 
 	}
 
-	void HierarchyEditorWindow::SetScene(emberEcs::Scene* pScene)
-	{
-		m_pScene = pScene;
-	}
 
+
+	// Overrides:
 	void HierarchyEditorWindow::Render()
 	{
-		if (m_pScene == nullptr)
-			return;
-
-		std::vector<std::string> entityNames = m_pScene->GetEntityNames();
-		std::sort(entityNames.begin(), entityNames.end());
-		for (const std::string& name : entityNames)
+		std::vector<emberEcs::EntityHandle> entities = emberEcs::World::GetEntities();
+		std::sort(entities.begin(), entities.end(), [](emberEcs::EntityHandle left, emberEcs::EntityHandle right)
 		{
-			bool isSelected = emberEditor::EditorSelection::HasSelectedEntity()
-                           && emberEditor::EditorSelection::GetSelectedEntity().GetName() == name;
-			if (Gui::Selectable(name.c_str(), isSelected))
-			{
-				emberEcs::Entity entity = m_pScene->GetEntity(name);
-				emberEditor::EditorSelection::SetSelectedEntity(entity);
-			}
+			const emberEcs::Entity& leftEntity = *left.Get();
+			const emberEcs::Entity& rightEntity = *right.Get();
+			if (leftEntity.GetName() == rightEntity.GetName())
+				return leftEntity.GetId() < rightEntity.GetId();
+			return leftEntity.GetName() < rightEntity.GetName();
+		});
+
+		for (emberEcs::EntityHandle handle : entities)
+		{
+			const emberEcs::Entity& entity = *handle.Get();
+			const std::string guiId = std::to_string(entity.GetId());
+			Gui::PushID(guiId.c_str());
+			if (Gui::Selectable(entity.GetName().c_str(), EditorSelection::GetSelectedEntity() == handle))
+				EditorSelection::SetSelectedEntity(handle);
+			Gui::PopID();
 		}
 	}
 }

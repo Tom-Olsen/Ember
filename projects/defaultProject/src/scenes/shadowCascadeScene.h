@@ -11,11 +11,8 @@ using namespace emberEngine;
 
 
 
-inline Scene* ShadowCascadeScene()
+inline void ShadowCascadeScene()
 {
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
-
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
 	ForwardMaterial skyboxMaterial = MaterialManager::TryGetForwardMaterial("skyboxMaterial");
@@ -27,7 +24,7 @@ inline Scene* ShadowCascadeScene()
 	cubeArrayMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
 
 	{// Camera:
-		Entity entity = Entity::Create("mainCamera");
+		Entity& entity = *World::CreateEntity("mainCamera").Get();
 		Float3 pos = Float3(0.0f, -40.0f, 20.0f);
 		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 
@@ -41,10 +38,10 @@ inline Scene* ShadowCascadeScene()
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{// Skybox:
-		Entity entity = Entity::Create("skybox");
+		Entity& entity = *World::CreateEntity("skybox").Get();
 
 		MeshRenderer* pMeshRenderer = entity.AddComponent<MeshRenderer>();
 		pMeshRenderer->SetMesh(MeshManager::GetMesh("cube"));
@@ -54,7 +51,7 @@ inline Scene* ShadowCascadeScene()
 		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	//{// ThreeLeg:
-	//	Entity entity = Entity::Create("threeLeg");
+	//	Entity& entity = *World::CreateEntity("threeLeg").Get();
 	//	Float3 pos = Float3(-5.0f, 5.0f, 0.0f);
 	//
 	//	Transform* pTransform = entity.GetTransform();
@@ -69,7 +66,7 @@ inline Scene* ShadowCascadeScene()
 	//}
 	Camera* pShadowCascadeCamera;
 	{// TestCamera:
-		Entity entity = Entity::Create("testCamera");
+		Entity& entity = *World::CreateEntity("testCamera").Get();
 		Float3 pos = Float3(26.0f, 0.0f, 0.0f);
 		Float3x3 matrix = Float3x3::rot90z * Float3x3::rot90x;
 
@@ -94,7 +91,7 @@ inline Scene* ShadowCascadeScene()
 		cameraController->SetIsActive(false);
 	}
 	{// Directional Light:
-		Entity entity = Entity::Create("directionalLight");
+		Entity& entity = *World::CreateEntity("directionalLight").Get();
 		Float3 pos = Float3(0.0f, 3.0f, 0.0f);
 		Float3 direction = Float3(-0.4f, 0.4f, -1.0f).Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -107,13 +104,13 @@ inline Scene* ShadowCascadeScene()
 		pDirectionalLight->SetIntensity(1.0f);
 		pDirectionalLight->SetColor(Float3::white);
 		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
-		pDirectionalLight->SetActiveCamera(pShadowCascadeCamera);
+		pDirectionalLight->SetCamera(pShadowCascadeCamera);
 		pDirectionalLight->SetShadowCascadeCount(4);
 		pDirectionalLight->SetDistributionFactor(0.5f);
 		pDirectionalLight->SetDrawFrustum(true);
 	}
 	{ // Floor:
-		Entity entity = Entity::Create("floor");
+		Entity& entity = *World::CreateEntity("floor").Get();
 		Float3 pos = Float3(0.0f, 0.0f, -0.5f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -128,7 +125,7 @@ inline Scene* ShadowCascadeScene()
 		int N = 25;
 		for (int i = 0; i < N; i++)
 		{
-			Entity entity = Entity::Create("cube" + std::to_string(i));
+			Entity& entity = *World::CreateEntity("cube" + std::to_string(i)).Get();
 			Float3 pos(-2 * i + 25, 0.0f, 0.0f);
 
 			Transform* pTransform = entity.GetTransform();
@@ -139,5 +136,4 @@ inline Scene* ShadowCascadeScene()
 			pMeshRenderer->SetMaterial(cubeArrayMaterial);
 		}
 	}
-	return pScene;
 }

@@ -4,6 +4,7 @@
 #include "entity.inl"
 #include "gui.h"
 #include "ssrDispatcher.h"
+#include "world.h"
 #include <string>
 
 
@@ -13,7 +14,6 @@ namespace emberEditor
 	struct SsrDispatcherEditorWindow : public emberCore::EditorWindow
 	{
 	private: // Members:
-		emberEcs::Scene* m_pScene = nullptr;
 		emberEcs::SsrDispatcher* m_pDispatcher = nullptr;
 		emberEcs::SsrDispatcher::SsrMode m_ssrMode;
 
@@ -26,27 +26,16 @@ namespace emberEditor
 			m_windowFlags = emberCommon::GuiWindowFlags::none;
 			m_wantCaptureEvents = true;
 			m_nameID = m_name + "##" + std::to_string(m_ID);
-			m_pScene = nullptr;
-		}
-
-		// Setters:
-		void SetScene(emberEcs::Scene* pScene)
-		{
-			m_pScene = pScene;
-			m_pDispatcher = nullptr;
 		}
 
 		// Overrides:
 		void Render() override
 		{
-			if (m_pScene == nullptr)
-				return;
-
 			// Find dispatcher:
 			m_pDispatcher = nullptr;
-			for (const std::string& entityName : m_pScene->GetEntityNames())
+			for (emberEcs::EntityHandle handle : emberEcs::World::GetEntities())
 			{
-				emberEcs::Entity entity = m_pScene->GetEntity(entityName);
+				emberEcs::Entity& entity = *handle.Get();
 				if (entity.HasComponent<emberEcs::SsrDispatcher>())
 				{
 					m_pDispatcher = entity.GetComponent<emberEcs::SsrDispatcher>();

@@ -12,13 +12,10 @@ using namespace fluidDynamics;
 
 
 
-Scene* Fluid2dCpuScene()
+void Fluid2dCpuScene()
 {
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
-
 	{// Camera:
-		Entity entity = Entity::Create("mainCamera");
+		Entity& entity = *World::CreateEntity("mainCamera").Get();
 		Float3 pos = Float3(0.0f, 0.0f, 17.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -27,21 +24,17 @@ Scene* Fluid2dCpuScene()
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(200.0f);
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{ // Sph Fluid 2d Cpu:
-		Entity entity = Entity::Create("sphFluid2dCpu");
+		Entity& entity = *World::CreateEntity("sphFluid2dCpu").Get();
 		SphFluid2dCpu* pSphFluid2dCpu = entity.AddComponent<SphFluid2dCpu>();
 	}
-	return pScene;
 }
-Scene* Fluid2dGpuScene()
+void Fluid2dGpuScene()
 {
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
-
 	{// Camera:
-		Entity entity = Entity::Create("mainCamera");
+		Entity& entity = *World::CreateEntity("mainCamera").Get();
 		Float3 pos = Float3(0.0f, 0.0f, 17.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -50,19 +43,15 @@ Scene* Fluid2dGpuScene()
 		Camera* pCamera = entity.AddComponent<Camera>();
 		pCamera->SetFarClip(100.0f);
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{ // Sph Fluid 2d Gpu:
-		Entity entity = Entity::Create("sphFluid2dGpu");
+		Entity& entity = *World::CreateEntity("sphFluid2dGpu").Get();
 		SphFluid2dGpu* pSphFluid2dGpu = entity.AddComponent<SphFluid2dGpu>();
 	}
-	return pScene;
 }
-Scene* Fluid3dScene()
+void Fluid3dScene()
 {
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
-
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
 	Texture skyboxTexture = TextureManager::GetTexture("skybox0");
@@ -83,7 +72,7 @@ Scene* Fluid3dScene()
 	susanneMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(10, 2, 0, 0));
 
 	{// Camera:
-		Entity entity = Entity::Create("Camera");
+		Entity& entity = *World::CreateEntity("Camera").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(17.3513f, -27.4224f, 0.9268f));
 		pTransform->SetRotationEuler(EulerDegrees(54.9628f, 80.8496f, 82.5193f));
@@ -92,10 +81,10 @@ Scene* Fluid3dScene()
 		pCamera->SetFarClip(100.0f);
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{// Directional Light:
-		Entity entity = Entity::Create("DirectionalLight");
+		Entity& entity = *World::CreateEntity("DirectionalLight").Get();
 		Float3 pos = 2.0f * Float3(-16.0f, -9.0f, 9.0f);
 		Float3 direction = -pos.Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -112,7 +101,7 @@ Scene* Fluid3dScene()
 		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
 	{// Skybox:
-		Entity entity = Entity::Create("Skybox");
+		Entity& entity = *World::CreateEntity("Skybox").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
 
@@ -124,7 +113,7 @@ Scene* Fluid3dScene()
 		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	{ // Floor:
-		Entity entity = Entity::Create("Floor");
+		Entity& entity = *World::CreateEntity("Floor").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.0f, 0.0f, -9.9f));
 		pTransform->SetScale(60.0f);
@@ -134,7 +123,7 @@ Scene* Fluid3dScene()
 		pMeshRenderer->SetMaterial(floorMaterial);
 	}
 	{// Cube:
-		Entity entity = Entity::Create("Cube");
+		Entity& entity = *World::CreateEntity("Cube").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.3395f, 13.8969f, -0.6801f));
 		pTransform->SetRotationEuler(EulerDegrees(0.0f, 25.5000f, 0.0000f));
@@ -147,7 +136,7 @@ Scene* Fluid3dScene()
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
 	{// Susanne:
-		Entity entity = Entity::Create("Susanne");
+		Entity& entity = *World::CreateEntity("Susanne").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(-20.2f, 0.0f, -5.0f));
 		pTransform->SetScale(4.0f);
@@ -158,16 +147,12 @@ Scene* Fluid3dScene()
 		pMeshRenderer->SetMaterial(susanneMaterial);
 	}
 	{ // Sph Fluid 3d Gpu:
-		Entity entity = Entity::Create("sphFluid3dGpu");
+		Entity& entity = *World::CreateEntity("sphFluid3dGpu").Get();
 		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>(skyboxTexture, RotatedBounds(Float3::zero, Float3(16.0f, 12.0f, 10.0f)));
 	}
-	return pScene;
 }
-Scene* Fluid3dSceneBig()
+void Fluid3dSceneBig()
 {
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
-
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
 	Texture skyboxTexture = TextureManager::GetTexture("skybox0");
@@ -176,7 +161,7 @@ Scene* Fluid3dSceneBig()
 	DeferredMaterial floorMaterial = MaterialManager::TryGetDeferredMaterial("checkerBoard");
 
 	{// Camera:
-		Entity entity = Entity::Create("Camera");
+		Entity& entity = *World::CreateEntity("Camera").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(66.5733f, -76.2722f, 35.7424f));
 		pTransform->SetRotationEuler(EulerDegrees(45.6632f, 61.3948f, 68.7260f));
@@ -185,10 +170,10 @@ Scene* Fluid3dSceneBig()
 		pCamera->SetFarClip(200.0f);
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{// Directional Light:
-		Entity entity = Entity::Create("DirectionalLight");
+		Entity& entity = *World::CreateEntity("DirectionalLight").Get();
 		Float3 pos = 2.0f * Float3(-16.0f, -9.0f, 9.0f);
 		Float3 direction = -pos.Normalize();
 		Float3x3 matrix = Float3x3::RotateFromTo(Float3::down, direction);
@@ -205,7 +190,7 @@ Scene* Fluid3dSceneBig()
 		pDirectionalLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
 	{// Skybox:
-		Entity entity = Entity::Create("Skybox");
+		Entity& entity = *World::CreateEntity("Skybox").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetRotationEuler(EulerDegrees(90.0f, 0.0f, 0.0f));
 
@@ -217,7 +202,7 @@ Scene* Fluid3dSceneBig()
 		pMeshRenderer->SetRaycastEnabled(false);
 	}
 	{ // Floor:
-		Entity entity = Entity::Create("Floor");
+		Entity& entity = *World::CreateEntity("Floor").Get();
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(Float3(0.0f, 0.0f, 0.0f));
 		pTransform->SetScale(Float3(140.0f, 100.0f, 1.0f));
@@ -227,7 +212,7 @@ Scene* Fluid3dSceneBig()
 		pMeshRenderer->SetMaterial(floorMaterial);
 	}
 	{ // Sph Fluid 3d Gpu:
-		Entity entity = Entity::Create("sphFluid3dGpu");
+		Entity& entity = *World::CreateEntity("sphFluid3dGpu").Get();
 		SphFluid3dGpu* pSphFluid3dGpu = entity.AddComponent<SphFluid3dGpu>(skyboxTexture, RotatedBounds(Float3(0.0f, 0.0f, 20.0f), Float3(60.0f, 40.0f, 20.0f)));
 		pSphFluid3dGpu->SetParticleCount(1000000);
 		pSphFluid3dGpu->SetInitialDistributionRadius(19.0f);
@@ -235,7 +220,6 @@ Scene* Fluid3dSceneBig()
 		pSphFluid3dGpu->SetRenderMode(SphFluid3dGpu::RenderMode::particles);
 		pSphFluid3dGpu->SetPhysicsTimeScale(1.4f);
 	}
-	return pScene;
 }
 
 
@@ -271,17 +255,15 @@ int main()
 		ComputeShaderManager::LoadComputeShaderAssets(shadersDirectory / "computeShaderAssets");
 
 		// Create scene:
-		//Scene* pScene = Fluid2dCpuScene();
-		//Scene* pScene = Fluid2dGpuScene();
-		//Scene* pScene = Fluid3dScene();
-		Scene* pScene = Fluid3dSceneBig();
-		emberApplication::Application::SetScene(pScene);
+		//Fluid2dCpuScene();
+		//Fluid2dGpuScene();
+		//Fluid3dScene();
+		Fluid3dSceneBig();
 
 		// Run app:
 		emberApplication::Application::Run();
 
 		// App shutdown:
-		delete pScene;
 		emberApplication::Application::Clear();
 	}
 	emberTaskSystem::profiler::Session::Get().End();

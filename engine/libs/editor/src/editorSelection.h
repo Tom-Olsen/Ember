@@ -1,13 +1,5 @@
 #pragma once
-#include "entity.h"
-#include <optional>
-
-
-
-namespace emberEcs
-{
-	class Scene;
-}
+#include "entityHandle.h"
 
 
 
@@ -16,14 +8,14 @@ namespace emberEditor
 	class EditorSelection
 	{
 	private: // Members:
-		static std::optional<emberEcs::Entity> s_selectedEntity;
+		static emberEcs::EntityHandle s_selectedEntity;
 
 	public: // Methods:
-		static void SetSelectedEntity(const emberEcs::Entity& entity);
-		static emberEcs::Entity GetSelectedEntity();
+		static void SetSelectedEntity(emberEcs::EntityHandle entity);
+		static emberEcs::EntityHandle GetSelectedEntity();
 		static bool HasSelectedEntity();
 		static void ClearSelection();
-		static bool SelectEntityByMouse(emberEcs::Scene& scene);
+		static bool SelectEntityByMouse();
 
 	private: // Methods:
 		EditorSelection() = delete;

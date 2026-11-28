@@ -6,7 +6,11 @@
 - Do not add unit tests unless i explicitly ask for it.
 
 ## Coding Style
-- Use camelCase for variables/members and PascalCase for functions/methods
+- Use camelCase for variables/members and PascalCase for functions/methods.
+- Prefix non-static private data member names with `m_` and static data member names with `s_`.
+- Use fixed-width integer types such as `uint32_t` and `uint64_t` without the `std::` qualifier.
+- Use `// Forward declarations:` above forward declaration groups and `// Friends:` above friend declarations.
+- In .cpp files, mark method definition groups with `// Public Methods:` and `// Private Methods:` when those sections have definitions.
 - In header files have minimal includes and use forward decleration where possible. An exception to this rule is the #include <vulkan/vulkan.h> in vulkan backend header files.
 - In cpp files inclue the header file first, then all custom includes via "..." and then all system includes via "<...>". Both custom and system includes must be sorted alphabetically. Exception to the alphabetical ordering is the include of the .h file into the .cpp file and the parent interface into the .h file which must always be first.
 - No new line at end of files.

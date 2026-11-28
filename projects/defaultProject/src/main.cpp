@@ -1,8 +1,7 @@
 ﻿#define SDL_MAIN_HANDLED
-#include "profiler.h"
 #include "application.h"
 #include "emberEngine.h"
-#include <memory>
+#include "profiler.h"
 // Scenes:
 #include "defaultScene.h"
 #include "pointLightScene.h"
@@ -41,17 +40,15 @@ int main()
 		else
 		{
 			// Create scene:
-			std::unique_ptr<Scene> pScene(DefaultScene());
-			//std::unique_ptr<Scene> pScene(PointLightScene());
-			//std::unique_ptr<Scene> pScene(ShadowCascadeScene());
-			//std::unique_ptr<Scene> pScene(SingleQuadScene());
-			emberApplication::Application::SetScene(pScene.get());
+			DefaultScene();
+			//PointLightScene();
+			//ShadowCascadeScene();
+			//SingleQuadScene();
 
 			// Run app:
 			emberApplication::Application::Run();
 
 			// App shutdown:
-			pScene.reset();
 			emberApplication::Application::Clear();
 		}
 	}

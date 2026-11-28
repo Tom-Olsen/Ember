@@ -11,12 +11,9 @@ using namespace emberEngine;
 
 
 
-inline Scene* PointLightScene()
+inline void PointLightScene()
 {
 	bool directionalLightsActive = false;
-
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
 
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
@@ -39,7 +36,7 @@ inline Scene* PointLightScene()
 	frameMaterial.SetValue("SurfaceProperties", "surface_scaleOffset", Float4(0.25, 1, 0, 0));
 
 	{// Camera:
-		Entity entity = Entity::Create("mainCamera");
+		Entity& entity = *World::CreateEntity("mainCamera").Get();
 		Float3 pos = Float3(9.0f, -9.0f, 9.0f);
 		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 
@@ -52,10 +49,10 @@ inline Scene* PointLightScene()
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{// PointLight:
-		Entity entity = Entity::Create("pointLight");
+		Entity& entity = *World::CreateEntity("pointLight").Get();
 		Float3 pos = Float3(0.0f, 0.0f, 0.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -76,7 +73,7 @@ inline Scene* PointLightScene()
 		//pPointLight->SetDrawFrustum(true);
 	}
 	{// Room:
-		Entity entity = Entity::Create("room");
+		Entity& entity = *World::CreateEntity("room").Get();
 		Float3 pos = Float3(0.0f, 0.0f, 0.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -88,7 +85,7 @@ inline Scene* PointLightScene()
 		pMeshRenderer->SetMaterial(roomMaterial);
 	}
 	{// Frame:
-		Entity entity = Entity::Create("frame");
+		Entity& entity = *World::CreateEntity("frame").Get();
 		Float3 pos = Float3(0.0f, 0.0f, 0.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -100,5 +97,4 @@ inline Scene* PointLightScene()
 
 		entity.AddComponent<SpinLocal>(Degrees(45.0f));
 	}
-	return pScene;
 }

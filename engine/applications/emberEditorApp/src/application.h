@@ -10,10 +10,6 @@ namespace emberEngine
 {
 	class Renderer;
 }
-namespace emberEcs
-{
-	class Scene;
-}
 namespace emberEditor
 {
 	class BackendDebugEditorWindow;
@@ -53,20 +49,19 @@ namespace emberApplication
 		};
 
 	private: // Members:
-		static emberEcs::Scene* m_pActiveScene;
-		static std::unique_ptr<emberEditor::BackendDebugEditorWindow> m_pBackendDebugEditorWindow;
-		static std::unique_ptr<emberEditor::ConsoleEditorWindow> m_pConsoleEditorWindow;
-		static std::unique_ptr<emberEditor::DeferredLightingEditorWindow> m_pDeferredLightingEditorWindow;
-		static std::unique_ptr<emberEditor::DepthBiasEditorWindow> m_pDepthBiasEditorWindow;
-		static std::unique_ptr<emberEditor::FpsEditorWindow> m_pFpsEditorWindow;
-		static std::unique_ptr<emberEditor::GameEditorWindow> m_pGameEditorWindow;
-		static std::unique_ptr<emberEditor::HierarchyEditorWindow> m_pHierarchyEditorWindow;
-		static std::unique_ptr<emberEditor::InspectorEditorWindow> m_pInspectorEditorWindow;
-		static std::unique_ptr<emberEditor::OutlineEditorWindow> m_pOutlineEditorWindow;
-		static std::unique_ptr<emberEditor::ProjectEditorWindow> m_pProjectEditorWindow;
-		static std::unique_ptr<emberEditor::ViewportEditorWindow> m_pViewportEditorWindow;
-		static std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> m_pSsaoDispatcherEditorWindow;
-		static std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> m_pSsrDispatcherEditorWindow;
+		static std::unique_ptr<emberEditor::BackendDebugEditorWindow> s_pBackendDebugEditorWindow;
+		static std::unique_ptr<emberEditor::ConsoleEditorWindow> s_pConsoleEditorWindow;
+		static std::unique_ptr<emberEditor::DeferredLightingEditorWindow> s_pDeferredLightingEditorWindow;
+		static std::unique_ptr<emberEditor::DepthBiasEditorWindow> s_pDepthBiasEditorWindow;
+		static std::unique_ptr<emberEditor::FpsEditorWindow> s_pFpsEditorWindow;
+		static std::unique_ptr<emberEditor::GameEditorWindow> s_pGameEditorWindow;
+		static std::unique_ptr<emberEditor::HierarchyEditorWindow> s_pHierarchyEditorWindow;
+		static std::unique_ptr<emberEditor::InspectorEditorWindow> s_pInspectorEditorWindow;
+		static std::unique_ptr<emberEditor::OutlineEditorWindow> s_pOutlineEditorWindow;
+		static std::unique_ptr<emberEditor::ProjectEditorWindow> s_pProjectEditorWindow;
+		static std::unique_ptr<emberEditor::ViewportEditorWindow> s_pViewportEditorWindow;
+		static std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> s_pSsaoDispatcherEditorWindow;
+		static std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> s_pSsrDispatcherEditorWindow;
 
 	public: // Methods:
 		static bool Init(const CreateInfo& createInfo);
@@ -75,11 +70,7 @@ namespace emberApplication
 		// Main loop:
 		static void Run();
 
-		// Setters:
-		static void SetScene(emberEcs::Scene* pScene);
-
 		// Getters:
-		static emberEcs::Scene* GetActiveScene();
 		static emberEditor::BackendDebugEditorWindow* GetBackendDebugEditorWindow();
 		static emberEditor::ConsoleEditorWindow* GetConsoleEditorWindow();
 		static emberEditor::DeferredLightingEditorWindow* GetDeferredLightingEditorWindow();

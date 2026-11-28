@@ -25,13 +25,13 @@ The registry stays internal so the world can enforce ownership and lifetime rule
 
 | Entity Methods {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `EntityHandle CreateEntity(name)`                         | Creates a new entity. |
-| `EntityHandle FindEntity(id)`                             | Finds an entity by ID. A miss returns an invalid handle. |
-| `std::vector<EntityHandle>`<br>`FindEntitiesByName(name)` | Finds all entities with that name. A miss returns an empty list. |
+| `EntityHandle CreateEntity(std::string)`                  | Creates a new entity. |
+| `EntityHandle FindEntity(EntityId)`                       | Finds an entity by ID. A miss returns an invalid handle. |
+| `std::vector<EntityHandle>`<br>`FindEntities(std::string)`| Finds all entities with that name. A miss returns an empty list. |
 | `std::vector<EntityHandle>`<br>`GetEntities()`            | Returns all existing entities. |
 | `uint32_t GetEntityCount()`                               | Number of entities in the world. |
-| `void DestroyEntity(id)`                                  | Queues destruction of the entity by ID. Its handle stops resolving immediately. Children move to the destroyed entity's parent or become root entities if it had no parent. They keep their world transforms. |
-| `void DestroyEntityAll(id)`                               | Queues destruction of the entity and all its descendants by ID. All their handles stop resolving immediately. |
+| `void DestroyEntity(EntityId)`                            | Queues destruction of the entity by ID. Its handle stops resolving immediately. Children move to the destroyed entity's parent or become root entities if it had no parent. They keep their world transforms. |
+| `void DestroyEntityAll(EntityId)`                         | Queues destruction of the entity and all its descendants by ID. All their handles stop resolving immediately. |
 
 ## Private native API
 The private native API is mostly used in the application layer (add link later), which is a friend of `World`.
@@ -40,7 +40,7 @@ and drives the [update](index.md#update-callbacks) and [deferred](index.md#defer
 
 | Management {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `void Init()` | Initializes all containers to an empty state. |
+| `void Init()`  | Initializes all containers to an empty state. |
 | `void Clear()` | Calls OnDestroy() for all components, clears the component registry, and destroys all entities. |
 | `void Start()` | Dispatched before a component's first [update callback](index.md#update-callbacks). |
 
@@ -48,8 +48,8 @@ and drives the [update](index.md#update-callbacks) and [deferred](index.md#defer
 | --- | --- |
 | `void EarlyUpdate()` | Dispatched for all active components. |
 | `void FixedUpdate()` | Dispatched for all active components. A frame can contain zero or more physics ticks. |
-| `void Update()` | Dispatched for all active components. |
-| `void LateUpdate()` | Dispatched for all active components. |
+| `void Update()`      | Dispatched for all active components. |
+| `void LateUpdate()`  | Dispatched for all active components. |
 
 | Deferred Callbacks {: .nowrap-first-column } | Explanation |
 | --- | --- |

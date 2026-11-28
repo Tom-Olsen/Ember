@@ -1,20 +1,19 @@
 #include "component.h"
 #include "entity.h"
-#include "scene.h"
 
 
 
 namespace emberEcs
 {
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
-	Component::Component()
+	Component::Component() : m_isEnabled(true)
 	{
-		m_isEnabled = true;
+
 	}
 	Component::~Component()
 	{
-
+		
 	}
 
 
@@ -38,14 +37,16 @@ namespace emberEcs
 	}
 	bool Component::GetIsActive() const
 	{
-		return m_pScene != nullptr && m_isEnabled && GetEntity().GetIsActive();
+		const Entity* pEntity = m_entity.Get();
+		return m_isEnabled && pEntity != nullptr && pEntity->GetIsActive();
 	}
-	Entity const Component::GetEntity() const
+	EntityHandle Component::GetEntity() const
 	{
-		return Entity(m_entityHandle, m_pScene->GetEntityNamesMap()[m_entityHandle], m_pScene);
+		return m_entity;
 	}
 	Transform* Component::GetTransform() const
 	{
-		return GetEntity().GetTransform();
+		const Entity* pEntity = m_entity.Get();
+		return pEntity != nullptr ? pEntity->GetTransform() : nullptr;
 	}
 }

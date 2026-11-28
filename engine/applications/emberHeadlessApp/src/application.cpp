@@ -9,8 +9,8 @@
 #include "logger.h"
 #include "profiler.h"
 #include "renderer.h"
-#include "scene.h"
 #include "window.h"
+#include "world.h"
 // Backends:
 #include "nullWindow.h"
 #include "vulkanBackend.h"
@@ -26,19 +26,12 @@ namespace emberApplication
 
 
     
-	// Static members:
-	emberEcs::Scene* Application::m_pActiveScene;
-
-
-
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
 	void Application::Init(const CreateInfo& applicationCreateInfo)
 	{
 		try
 		{
-			m_pActiveScene = nullptr;
-
 			// Window backend:
 			emberBackendInterface::IWindow* pIWindow = new nullWindowBackend::Window();
 
@@ -61,6 +54,7 @@ namespace emberApplication
 
 			// Init core:
 			Core::Init(pIWindow, pIGpuBackend, pIGui);
+			emberEcs::World::Init();
 		}
 		catch (const std::exception& e)
 		{
@@ -69,6 +63,7 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
+		emberEcs::World::Clear();
 		Core::Clear();
 	}
 
@@ -81,7 +76,7 @@ namespace emberApplication
 		{
 			bool running = true;
 			Time::Reset();
-			m_pActiveScene->Start();
+			emberEcs::World::Start();
 
 			while (running)
 			{
@@ -94,14 +89,14 @@ namespace emberApplication
 				// Frame update loop:
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::game);
-					m_pActiveScene->EarlyUpdate();
+					emberEcs::World::EarlyUpdate();
 
 					// Skip delayed physics updates:
 					// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
 					//if (Time::UpdatePhysics(true))
 					//{
 					//	Compute::Physics::BeginSession();
-					//	m_pActiveScene->FixedUpdate();
+					//	emberEcs::World::FixedUpdate();
 					//	Compute::Physics::EndSession();
 					//}
 					// Batch delayed physics updates:
@@ -110,7 +105,7 @@ namespace emberApplication
 					{
 						Compute::Physics::BeginSession();
 						while (Time::UpdatePhysics())
-							m_pActiveScene->FixedUpdate();
+							emberEcs::World::FixedUpdate();
 						Compute::Physics::EndSession();
 					}
 				}
@@ -122,8 +117,8 @@ namespace emberApplication
 				}
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::game);
-					m_pActiveScene->Update();
-					m_pActiveScene->LateUpdate();
+					emberEcs::World::Update();
+					emberEcs::World::LateUpdate();
 				}
 				Renderer::RenderFrame();
 			}
@@ -133,21 +128,5 @@ namespace emberApplication
 			LOG_ERROR("Exception: {}", e.what());
 		}
 		Renderer::WaitDeviceIdle();
-	}
-
-
-
-	// Setters:
-	void Application::SetScene(emberEcs::Scene* pScene)
-	{
-		m_pActiveScene = pScene;
-	}
-
-
-
-	// Getters:
-	emberEcs::Scene* Application::GetActiveScene()
-	{
-		return m_pActiveScene;
 	}
 }

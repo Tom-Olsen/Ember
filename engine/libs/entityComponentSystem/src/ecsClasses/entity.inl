@@ -3,33 +3,31 @@
 #include "component.h"
 #include "componentRegistry.h"
 #include "logger.h"
-#include "scene.h"
+#include "world.h"
+#include <type_traits>
+#include <utility>
 
 
 
 namespace emberEcs
 {
+	// Components:
 	template<typename T, typename... Args>
 	inline T* Entity::AddComponent(Args&&... args)
 	{
-		entt::registry& registry = m_pScene->GetRegistry();
-		T& component = registry.emplace<T>(m_entityHandle, std::forward<Args>(args)...);
+		// Construct the component in EnTT:
+		entt::registry& registry = World::GetRegistry();
+		T& component = registry.emplace<T>(m_registryEntry, std::forward<Args>(args)...);
 
-		// Set the component name automatically:
+		// Initialize the component name, owning entity, and enabled state:
 		if constexpr (std::is_base_of_v<Component, T>)
 		{
-			component.m_name = std::string(entt::type_name<T>());
-			component.SetIsEnabled(true);
-			component.m_entityHandle = m_entityHandle;
-			component.m_pScene = m_pScene;
+			Component& baseComponent = component;
+			baseComponent.m_name = std::string(entt::type_name<T>());
+			baseComponent.m_entity = EntityHandle(m_entityId, m_runtimeId);
+			baseComponent.SetIsEnabled(true);
 
-			// Lazy one-time registration:
-			static bool registered = false;
-			if (!registered)
-			{
-				ComponentRegistry::Register<T>();
-				registered = true;
-			}
+			ComponentRegistry::Register<T>();
 		}
 
 		return &component;
@@ -38,33 +36,30 @@ namespace emberEcs
 	template<typename T>
 	inline bool Entity::HasComponent() const
 	{
-		return m_pScene->GetRegistry().all_of<T>(m_entityHandle);
+		return World::GetRegistry().all_of<T>(m_registryEntry);
 	}
 
 	template<typename T>
 	inline T* Entity::GetComponent() const
 	{
-		entt::registry& registry = m_pScene->GetRegistry();
-		if (!registry.all_of<T>(m_entityHandle))
-			return nullptr;
-		return &registry.get<T>(m_entityHandle);
+		return World::GetRegistry().try_get<T>(m_registryEntry);
 	}
 
-	template<>
-	inline void Entity::RemoveComponent<Transform>()
-	{
-		LOG_WARN("Transform cannot be removed from Entity '{}'", m_name);
-	}
-	template<>
-	inline void Entity::RemoveComponent<EntityState>()
-	{
-		LOG_WARN("EntityState cannot be removed from Entity '{}'", m_name);
-	}
 	template<typename T>
 	inline void Entity::RemoveComponent()
 	{
-		entt::registry& registry = m_pScene->GetRegistry();
-		if (registry.all_of<T>(m_entityHandle))
-			registry.remove<T>(m_entityHandle);
+		// Transform can't be removed. Gets destroyed automatically with entity via World::DestroyEntity() path:
+		if constexpr (std::is_same_v<T, Transform>)
+			LOG_WARN("Transform cannot be removed from Entity '{}'", m_name);
+		else
+		{
+			// Removing active camera component resets worlds active camera to nullptr:
+			if constexpr (std::is_same_v<T, Camera>)
+			{
+				if (World::s_activeCameraEntity == EntityHandle(m_entityId, m_runtimeId))
+					World::SetActiveCamera(nullptr);
+			}
+			World::GetRegistry().remove<T>(m_registryEntry);
+		}
 	}
 }

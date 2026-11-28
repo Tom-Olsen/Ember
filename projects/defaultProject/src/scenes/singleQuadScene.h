@@ -11,11 +11,8 @@ using namespace emberEngine;
 
 
 
-inline Scene* SingleQuadScene()
+inline void SingleQuadScene()
 {
-	Scene* pScene = new Scene();
-	pScene->SetIsEnabled(true);
-
 	// Materials:
 	DeferredMaterial pbrMaterial = MaterialManager::TryGetDeferredMaterial("pbrDeferredGeometryMaterial");
 	DeferredMaterial lightSourceMaterial = pbrMaterial.CloneWithDefaultBindings("pointLightMaterial");
@@ -28,7 +25,7 @@ inline Scene* SingleQuadScene()
 	//quatMaterial.SetValue("SurfaceProperties", "surface_roughness", 1.0f);
 
 	{// Camera:
-		Entity entity = Entity::Create("mainCamera");
+		Entity& entity = *World::CreateEntity("mainCamera").Get();
 		Float3 pos = Float3(0.0f, -2.0f, 1.5f);
 		Float3x3 matrix = Float3x3::RotateThreeLeg(Float3::down, -pos, Float3::forward, Float3::up);
 
@@ -42,10 +39,10 @@ inline Scene* SingleQuadScene()
 		PostRenderEffects* pPostRenderEffects = entity.AddComponent<PostRenderEffects>();
 		CameraController* cameraController = entity.AddComponent<CameraController>();
 
-		pScene->SetActiveCamera(pCamera);
+		World::SetActiveCamera(pCamera);
 	}
 	{// SpotLight:
-		Entity entity = Entity::Create("light2");
+		Entity& entity = *World::CreateEntity("light2").Get();
 		Float3 pos = Float3(0.0f, 0.0f, 5.0f);
 
 		Transform* pTransform = entity.GetTransform();
@@ -71,7 +68,7 @@ inline Scene* SingleQuadScene()
 		pSpotLight->SetShadowType(emberCommon::ShadowType::soft);
 	}
 	{// Quad:
-		Entity entity = Entity::Create("quad");
+		Entity& entity = *World::CreateEntity("quad").Get();
 
 		Transform* pTransform = entity.GetTransform();
 		pTransform->SetPosition(0.0f, 0.0f, 0.0f);
@@ -85,5 +82,4 @@ inline Scene* SingleQuadScene()
 
 		//DrawMeshData* pDrawMeshData = entity.AddComponent<DrawMeshData>();
 	}
-	return pScene;
 }

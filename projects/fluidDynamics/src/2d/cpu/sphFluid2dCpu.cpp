@@ -1,12 +1,13 @@
 #include "sphFluid2dCpu.h"
 #include "logger.h"
 #include "sphFluid2dCpuEditorWindow.h"
+#include "world.h"
 
 
 
 namespace fluidDynamics
 {
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
 	SphFluid2dCpu::SphFluid2dCpu()
 	{
@@ -346,9 +347,10 @@ namespace fluidDynamics
 		}
 
 		// Mouse left and right click:
-		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or.
+		Camera* pCamera = World::GetActiveCamera();
+		if (pCamera != nullptr && (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)))
 		{
-			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
+			Ray ray = pCamera->GetClickRay();
 			RayHit hit = m_settings.fluidBounds.IntersectRay(ray);
 			if (hit.GetHit())
 			{

@@ -11,8 +11,8 @@
 #include "logger.h"
 #include "profiler.h"
 #include "renderer.h"
-#include "scene.h"
 #include "window.h"
+#include "world.h"
 // Backends:
 #include "sdlWindow.h"
 #include "vulkanBackend.h"
@@ -44,31 +44,28 @@ namespace emberApplication
 
 	
 	// Static members:
-	emberEcs::Scene* Application::m_pActiveScene;
-	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
-	std::unique_ptr<emberEditor::ConsoleEditorWindow> Application::m_pConsoleEditorWindow;
-	std::unique_ptr<emberEditor::DeferredLightingEditorWindow> Application::m_pDeferredLightingEditorWindow;
-	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::m_pDepthBiasEditorWindow;
-	std::unique_ptr<emberEditor::FpsEditorWindow> Application::m_pFpsEditorWindow;
-	std::unique_ptr<emberEditor::GameEditorWindow> Application::m_pGameEditorWindow;
-	std::unique_ptr<emberEditor::HierarchyEditorWindow> Application::m_pHierarchyEditorWindow;
-	std::unique_ptr<emberEditor::InspectorEditorWindow> Application::m_pInspectorEditorWindow;
-	std::unique_ptr<emberEditor::OutlineEditorWindow> Application::m_pOutlineEditorWindow;
-	std::unique_ptr<emberEditor::ProjectEditorWindow> Application::m_pProjectEditorWindow;
-	std::unique_ptr<emberEditor::ViewportEditorWindow> Application::m_pViewportEditorWindow;
-	std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> Application::m_pSsaoDispatcherEditorWindow;
-	std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> Application::m_pSsrDispatcherEditorWindow;
+	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::s_pBackendDebugEditorWindow;
+	std::unique_ptr<emberEditor::ConsoleEditorWindow> Application::s_pConsoleEditorWindow;
+	std::unique_ptr<emberEditor::DeferredLightingEditorWindow> Application::s_pDeferredLightingEditorWindow;
+	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::s_pDepthBiasEditorWindow;
+	std::unique_ptr<emberEditor::FpsEditorWindow> Application::s_pFpsEditorWindow;
+	std::unique_ptr<emberEditor::GameEditorWindow> Application::s_pGameEditorWindow;
+	std::unique_ptr<emberEditor::HierarchyEditorWindow> Application::s_pHierarchyEditorWindow;
+	std::unique_ptr<emberEditor::InspectorEditorWindow> Application::s_pInspectorEditorWindow;
+	std::unique_ptr<emberEditor::OutlineEditorWindow> Application::s_pOutlineEditorWindow;
+	std::unique_ptr<emberEditor::ProjectEditorWindow> Application::s_pProjectEditorWindow;
+	std::unique_ptr<emberEditor::ViewportEditorWindow> Application::s_pViewportEditorWindow;
+	std::unique_ptr<emberEditor::SsaoDispatcherEditorWindow> Application::s_pSsaoDispatcherEditorWindow;
+	std::unique_ptr<emberEditor::SsrDispatcherEditorWindow> Application::s_pSsrDispatcherEditorWindow;
 
 
 
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
 	bool Application::Init(const CreateInfo& applicationCreateInfo)
 	{
 		try
 		{
-			m_pActiveScene = nullptr;
-
 			// Window backend:
 			#if defined(__linux__)
 				constexpr bool forceX11VideoDriver = true;
@@ -98,24 +95,25 @@ namespace emberApplication
 
 			// Init core:
 			Core::Init(pIWindow, pIGpuBackend, pIGui);
+			emberEcs::World::Init();
 
 			// Init application-specific systems:
 			emberEditor::HandleContext::Init();
 
 			// Editor windows:
-			m_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
-			m_pConsoleEditorWindow = std::make_unique<emberEditor::ConsoleEditorWindow>();
-			m_pDeferredLightingEditorWindow = std::make_unique<emberEditor::DeferredLightingEditorWindow>();
-			m_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
-			m_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
-			m_pGameEditorWindow = std::make_unique<emberEditor::GameEditorWindow>();
-			m_pHierarchyEditorWindow = std::make_unique<emberEditor::HierarchyEditorWindow>();
-			m_pInspectorEditorWindow = std::make_unique<emberEditor::InspectorEditorWindow>();
-			m_pOutlineEditorWindow = std::make_unique<emberEditor::OutlineEditorWindow>();
-			m_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
-			m_pViewportEditorWindow = std::make_unique<emberEditor::ViewportEditorWindow>();
-			m_pSsaoDispatcherEditorWindow = std::make_unique<emberEditor::SsaoDispatcherEditorWindow>();
-			m_pSsrDispatcherEditorWindow = std::make_unique<emberEditor::SsrDispatcherEditorWindow>();
+			s_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
+			s_pConsoleEditorWindow = std::make_unique<emberEditor::ConsoleEditorWindow>();
+			s_pDeferredLightingEditorWindow = std::make_unique<emberEditor::DeferredLightingEditorWindow>();
+			s_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
+			s_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
+			s_pGameEditorWindow = std::make_unique<emberEditor::GameEditorWindow>();
+			s_pHierarchyEditorWindow = std::make_unique<emberEditor::HierarchyEditorWindow>();
+			s_pInspectorEditorWindow = std::make_unique<emberEditor::InspectorEditorWindow>();
+			s_pOutlineEditorWindow = std::make_unique<emberEditor::OutlineEditorWindow>();
+			s_pProjectEditorWindow = std::make_unique<emberEditor::ProjectEditorWindow>();
+			s_pViewportEditorWindow = std::make_unique<emberEditor::ViewportEditorWindow>();
+			s_pSsaoDispatcherEditorWindow = std::make_unique<emberEditor::SsaoDispatcherEditorWindow>();
+			s_pSsrDispatcherEditorWindow = std::make_unique<emberEditor::SsrDispatcherEditorWindow>();
 
 			return true;
 		}
@@ -127,21 +125,22 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-		m_pSsrDispatcherEditorWindow.reset();
-		m_pSsaoDispatcherEditorWindow.reset();
-		m_pViewportEditorWindow.reset();
-		m_pProjectEditorWindow.reset();
-		m_pOutlineEditorWindow.reset();
-		m_pInspectorEditorWindow.reset();
-		m_pHierarchyEditorWindow.reset();
-		m_pGameEditorWindow.reset();
-		m_pFpsEditorWindow.reset();
-		m_pDepthBiasEditorWindow.reset();
-		m_pDeferredLightingEditorWindow.reset();
-		m_pConsoleEditorWindow.reset();
-		m_pBackendDebugEditorWindow.reset();
+		s_pSsrDispatcherEditorWindow.reset();
+		s_pSsaoDispatcherEditorWindow.reset();
+		s_pViewportEditorWindow.reset();
+		s_pProjectEditorWindow.reset();
+		s_pOutlineEditorWindow.reset();
+		s_pInspectorEditorWindow.reset();
+		s_pHierarchyEditorWindow.reset();
+		s_pGameEditorWindow.reset();
+		s_pFpsEditorWindow.reset();
+		s_pDepthBiasEditorWindow.reset();
+		s_pDeferredLightingEditorWindow.reset();
+		s_pConsoleEditorWindow.reset();
+		s_pBackendDebugEditorWindow.reset();
 
 		emberEditor::HandleContext::Clear();
+		emberEcs::World::Clear();
 		Core::Clear();
 	}
 
@@ -154,7 +153,7 @@ namespace emberApplication
 		{
 			bool running = true;
 			Time::Reset();
-			m_pActiveScene->Start();
+			emberEcs::World::Start();
 
 			while (running)
 			{
@@ -167,14 +166,14 @@ namespace emberApplication
 				// Frame update loop:
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::scene);
-					m_pActiveScene->EarlyUpdate();
+					emberEcs::World::EarlyUpdate();
 
 					// Skip delayed physics updates:
 					// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
 					if (Time::UpdatePhysics(true))
 					{
 						Compute::Physics::BeginSession();
-						m_pActiveScene->FixedUpdate();
+						emberEcs::World::FixedUpdate();
 						Compute::Physics::EndSession();
 					}
 					// Batch delayed physics updates:
@@ -183,7 +182,7 @@ namespace emberApplication
 					//{
 					//	Compute::Physics::BeginSession();
 					//	while (Time::UpdatePhysics())
-					//		m_pActiveScene->FixedUpdate();
+					//		emberEcs::World::FixedUpdate();
 					//	Compute::Physics::EndSession();
 					//}
 				}
@@ -195,8 +194,8 @@ namespace emberApplication
 				}
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::scene);
-					m_pActiveScene->Update();
-					m_pActiveScene->LateUpdate();
+					emberEcs::World::Update();
+					emberEcs::World::LateUpdate();
 				}
 				Editor::PreRender();
 				Renderer::RenderFrame();
@@ -211,72 +210,57 @@ namespace emberApplication
 
 
 
-	// Setters:
-	void Application::SetScene(emberEcs::Scene* pScene)
-	{
-		m_pActiveScene = pScene;
-		m_pHierarchyEditorWindow->SetScene(pScene);
-		m_pSsaoDispatcherEditorWindow->SetScene(pScene);
-		m_pSsrDispatcherEditorWindow->SetScene(pScene);
-	}
-
-
-
 	// Getters:
-	emberEcs::Scene* Application::GetActiveScene()
-	{
-		return m_pActiveScene;
-	}
 	emberEditor::BackendDebugEditorWindow* Application::GetBackendDebugEditorWindow()
 	{
-		return m_pBackendDebugEditorWindow.get();
+		return s_pBackendDebugEditorWindow.get();
 	}
 	emberEditor::ConsoleEditorWindow* Application::GetConsoleEditorWindow()
 	{
-		return m_pConsoleEditorWindow.get();
+		return s_pConsoleEditorWindow.get();
 	}
 	emberEditor::DeferredLightingEditorWindow* Application::GetDeferredLightingEditorWindow()
 	{
-		return m_pDeferredLightingEditorWindow.get();
+		return s_pDeferredLightingEditorWindow.get();
 	}
 	emberEditor::DepthBiasEditorWindow* Application::GetDepthBiasEditorWindow()
 	{
-		return m_pDepthBiasEditorWindow.get();
+		return s_pDepthBiasEditorWindow.get();
 	}
 	emberEditor::FpsEditorWindow* Application::GetFpsEditorWindow()
 	{
-		return m_pFpsEditorWindow.get();
+		return s_pFpsEditorWindow.get();
 	}
 	emberEditor::GameEditorWindow* Application::GetGameEditorWindow()
 	{
-		return m_pGameEditorWindow.get();
+		return s_pGameEditorWindow.get();
 	}
 	emberEditor::HierarchyEditorWindow* Application::GetHierarchyEditorWindow()
 	{
-		return m_pHierarchyEditorWindow.get();
+		return s_pHierarchyEditorWindow.get();
 	}
 	emberEditor::InspectorEditorWindow* Application::GetInspectorEditorWindow()
 	{
-		return m_pInspectorEditorWindow.get();
+		return s_pInspectorEditorWindow.get();
 	}
 	emberEditor::OutlineEditorWindow* Application::GetOutlineEditorWindow()
 	{
-		return m_pOutlineEditorWindow.get();
+		return s_pOutlineEditorWindow.get();
 	}
 	emberEditor::ProjectEditorWindow* Application::GetProjectEditorWindow()
 	{
-		return m_pProjectEditorWindow.get();
+		return s_pProjectEditorWindow.get();
 	}
 	emberEditor::ViewportEditorWindow* Application::GetViewportEditorWindow()
 	{
-		return m_pViewportEditorWindow.get();
+		return s_pViewportEditorWindow.get();
 	}
 	emberEditor::SsaoDispatcherEditorWindow* Application::GetSsaoDispatcherEditorWindow()
 	{
-		return m_pSsaoDispatcherEditorWindow.get();
+		return s_pSsaoDispatcherEditorWindow.get();
 	}
 	emberEditor::SsrDispatcherEditorWindow* Application::GetSsrDispatcherEditorWindow()
 	{
-		return m_pSsrDispatcherEditorWindow.get();
+		return s_pSsrDispatcherEditorWindow.get();
 	}
 }

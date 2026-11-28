@@ -28,10 +28,10 @@ namespace emberEcs
 		float m_intensity;
 		Float3 m_color;
 		emberCommon::ShadowType m_shadowType;
-		Camera* m_pActiveCamera;
+		Camera* m_camera;	// borrowed camera override for shadow cascades.
 		int m_shadowCascadeCount;
-		float m_distributionFactor;		// €[0,1], 0 = linear, 1 = logarithmic
-		mutable float m_shadowCascadeSplits[5];	// Percentile splits for each shadow cascade € [0,1].
+		float m_distributionFactor;				// €[0,1], 0 = linear, 1 = logarithmic
+		mutable float m_shadowCascadeSplits[5];	// percentile splits for each shadow cascade € [0,1].
 		std::array<emberCore::ShadowCascade*, 4> m_shadowCascades;
 		mutable std::array<bool, 4> m_shadowCascadeMatricesValid;
 		mutable bool m_shadowCascadeSplitsValid;
@@ -45,7 +45,7 @@ namespace emberEcs
 		void SetIntensity(float intensity);
 		void SetColor(const Float3& color);
 		void SetShadowType(emberCommon::ShadowType shadowType);
-		void SetActiveCamera(Camera* pCamera);
+		void SetCamera(Camera* pCamera);	// seta as nullptr to use the world camera for shadow cascades.
 		void SetShadowCascadeCount(int shadowCascadeCount);
 		void SetDistributionFactor(float distributionFactor);
 		void SetDrawFrustum(bool drawFrustum);
@@ -54,7 +54,7 @@ namespace emberEcs
 		float GetIntensity() const;
 		Float3 GetColor() const;
 		emberCommon::ShadowType GetShadowType() const;
-		Camera* GetActiveCamera() const;
+		Camera* GetCamera() const;
 		int GetShadowCascadeCount() const;
 		float GetDistributionFactor() const;
 		float GetShadowCascadeSplit(int index) const;
@@ -66,9 +66,8 @@ namespace emberEcs
 		void LateUpdate() override;
 
 	private: // Methods:
-        void GrabFallbackCamera();
 		void InvalidateShadowCascades() const;
-		void UpdateShadowCascadeSplits() const;
+		void UpdateShadowCascadeSplits(const Camera& camera) const;
 		void UpdateShadowCascade(int shadowCascadeIndex, const Float4x4& cameraLocalToWorldMatrix, const Float4x4& cameraProjectionMatrix, const Float3& direction) const;
 	};
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "component.h"
-#include "entity.h"
+#include "entity.inl"
 
 
 
@@ -9,6 +9,7 @@ namespace emberEcs
 	template<typename T>
 	inline T* Component::GetComponent() const
 	{
-		return GetEntity().GetComponent<T>();
+		const Entity* pEntity = m_entity.Get();
+		return pEntity != nullptr ? pEntity->GetComponent<T>() : nullptr;
 	}
 }

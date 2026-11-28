@@ -25,7 +25,7 @@ If you are unsure whether the entity exists, check `IsValid()` before calling `G
 | --- | --- |
 | `bool IsValid() const`     | Checks whether the handle resolves to a live entity. |
 | `Entity* Get() const`      | Returns a borrowed pointer to the entity. Requires a valid handle. |
-| `operator==`, `operator!=` | Compare the runtime identities held by two handles. |
+| `operator==(EntityHandle)`, `operator!=(EntityHandle)` | Compare the runtime identities held by two handles. |
 
 ## Transform
 Each entity always comes with exactly one `Transform` component, which defines its position, rotation, and scale in its parent's space.
@@ -60,10 +60,10 @@ Besides the required transform component, you can attach any number of component
 
 | Components {: .nowrap-first-column } | Explanation |
 | --- | --- |
-| `bool HasComponent<T>(...)`                               | Does the entity have a component of type T attached to it? |
-| `ComponentHandle<T>`<br>`GetComponent<T>(uint32_t)`          | ComponentHandle attached to the entit. Index picks concrete instance of T, 0 by default. Invalid handle if no T is attached to the entity, or index out of range. |
+| `bool HasComponent<T>()`                                  | Does the entity have a component of type T attached to it? |
+| `ComponentHandle<T>`<br>`GetComponent<T>(uint32_t)`       | ComponentHandle attached to the entit. Index picks concrete instance of T, 0 by default. Invalid handle if no T is attached to the entity, or index out of range. |
 | `std::vector<ComponentHandle<T>>`<br>`GetComponents<T>()` | Vector of all ComponentHandle instances attached to the entity, empty if no T is attached to the entity. |
-| `ComponentHandle<T>`<br>`AddComponent<T>(...)`            | Creates a new component of type T with constructor arguments `...`, attaches it to the entity, and returns a ComponentHandle to that component. |
+| `ComponentHandle<T>`<br>`AddComponent<T>(Args&&...)`      | Creates a new component of type T with the supplied constructor arguments, attaches it to the entity, and returns a ComponentHandle to that component. |
 | `ComponentHandle<T>`<br>`FindComponent<T>(ComponentId)`   | Retrieves a ComponentHandle by ComponentId. Needed to resolve a ComponentId back to a handle. |
 | `void RemoveComponent`<br>`(ComponentHandle<T>)`          | Detaches the component from the entity, then disables and destroys it. |
 

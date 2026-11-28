@@ -1,12 +1,13 @@
 #include "sphFluid2dGpu.h"
 #include "logger.h"
 #include "sphFluid2dGpuEditorWindow.h"
+#include "world.h"
 
 
 
 namespace fluidDynamics
 {
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
 	SphFluid2dGpu::SphFluid2dGpu()
 	{
@@ -163,9 +164,10 @@ namespace fluidDynamics
 		}
 
 		// Mouse left and right click:
-		if (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)) // exlusive or
+		Camera* pCamera = World::GetActiveCamera();
+		if (pCamera != nullptr && (EventSystem::MouseHeld(Input::MouseButton::Left) ^ EventSystem::MouseHeld(Input::MouseButton::Right)))
 		{
-			Ray ray = Scene::GetActiveScene()->GetActiveCamera()->GetClickRay();
+			Ray ray = pCamera->GetClickRay();
 			RayHit hit = m_settings.fluidBounds.IntersectRay(ray);
 			if (hit.GetHit())
 			{
@@ -501,7 +503,7 @@ namespace fluidDynamics
 
 
 
-	// Private methods:
+	// Private Methods:
 	void SphFluid2dGpu::DispatchReset()
 	{
 		if (m_pendingResetSessionID != Compute::Physics::invalidPhysicsSessionID)

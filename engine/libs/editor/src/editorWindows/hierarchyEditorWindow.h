@@ -1,14 +1,5 @@
 #pragma once
 #include "editorWindow.h"
-#include "gui.h"
-
-
-
-// Forward decleration:
-namespace emberEcs
-{
-	class Scene;
-}
 
 
 
@@ -16,14 +7,12 @@ namespace emberEditor
 {
 	struct HierarchyEditorWindow : public emberCore::EditorWindow
 	{
-	private: // Members
-		emberEcs::Scene* m_pScene;
-
-	public: // Methods
+	public: // Methods:
+		// Constructor/Destructor:
 		HierarchyEditorWindow();
 		~HierarchyEditorWindow();
 
-		void SetScene(emberEcs::Scene* pScene);
+		// Overrides:
 		void Render() override;
 	};
 }

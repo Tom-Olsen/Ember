@@ -4,38 +4,36 @@
 #include "entity.inl"
 #include "handleContext.h"
 #include "meshRenderer.h"
-#include "scene.h"
 #include "transform.h"
-#include <assert.h>
+#include "world.h"
 
 
 
 namespace emberEditor
 {
 	// Static members:
-	std::optional<emberEcs::Entity> EditorSelection::s_selectedEntity = std::nullopt;
+	emberEcs::EntityHandle EditorSelection::s_selectedEntity;
 
 
 
-	// Public methods:
-	void EditorSelection::SetSelectedEntity(const emberEcs::Entity& entity)
+	// Public Methods:
+	void EditorSelection::SetSelectedEntity(emberEcs::EntityHandle entity)
 	{
 		s_selectedEntity = entity;
 	}
-	emberEcs::Entity EditorSelection::GetSelectedEntity()
+	emberEcs::EntityHandle EditorSelection::GetSelectedEntity()
 	{
-		assert(s_selectedEntity.has_value());
-		return s_selectedEntity.value();
+		return s_selectedEntity;
 	}
 	bool EditorSelection::HasSelectedEntity()
 	{
-		return s_selectedEntity.has_value() && s_selectedEntity->GetIsValid();
+		return s_selectedEntity.IsValid();
 	}
 	void EditorSelection::ClearSelection()
 	{
-		s_selectedEntity = std::nullopt;
+		s_selectedEntity = emberEcs::EntityHandle();
 	}
-	bool EditorSelection::SelectEntityByMouse(emberEcs::Scene& scene)
+	bool EditorSelection::SelectEntityByMouse()
 	{
 		emberEcs::Camera* pCamera = HandleContext::GetCamera();
 		if (pCamera == nullptr)
@@ -46,11 +44,11 @@ namespace emberEditor
 
 		Ray worldRay = pCamera->GetViewportRay(HandleContext::GetViewportMousePos01());
 		float closestDistanceSq = math::maxValue;
-		std::optional<emberEcs::Entity> closestEntity = std::nullopt;
+		emberEcs::EntityHandle closestEntity;
 
-		for (const std::string& entityName : scene.GetEntityNames())
+		for (emberEcs::EntityHandle handle : emberEcs::World::GetEntities())
 		{
-			emberEcs::Entity entity = scene.GetEntity(entityName);
+			emberEcs::Entity& entity = *handle.Get();
 			if (!entity.GetIsActive())
 				continue;
 
@@ -78,10 +76,10 @@ namespace emberEditor
 				continue;
 
 			closestDistanceSq = distanceSq;
-			closestEntity = entity;
+			closestEntity = handle;
 		}
 
 		s_selectedEntity = closestEntity;
-		return closestEntity.has_value();
+		return closestEntity.IsValid();
 	}
 }

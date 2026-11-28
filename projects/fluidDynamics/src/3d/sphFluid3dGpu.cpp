@@ -1,6 +1,7 @@
 #include "sphFluid3dGpu.h"
 #include "logger.h"
 #include "sphFluid3dGpuEditorWindow.h"
+#include "world.h"
 #include <algorithm>
 #include <stdexcept>
 
@@ -8,7 +9,7 @@
 
 namespace fluidDynamics
 {
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
 	SphFluid3dGpu::SphFluid3dGpu(Texture environmentMap, RotatedBounds bounds)
 		: m_environmentMap(environmentMap)
@@ -845,7 +846,7 @@ namespace fluidDynamics
 	void SphFluid3dGpu::Benchmark()
 	{
 		// Always use same camera setup for consistency:
-		Camera* pCamera = GetEntity().GetScene()->GetActiveCamera();
+		Camera* pCamera = World::GetActiveCamera();
 		if (pCamera == nullptr)
 		{
 			LOG_WARN("Cannot benchmark SPH 3D GPU without an active camera.");
@@ -893,7 +894,7 @@ namespace fluidDynamics
 
 
 
-	// Private methods:
+	// Private Methods:
 	// Benchmark:
 	void SphFluid3dGpu::UpdateBenchmark()
 	{
@@ -948,7 +949,7 @@ namespace fluidDynamics
 		if (!GetIsBenchmarking())
 			return;
 		m_benchmarkState = BenchmarkState::idle;
-		Camera* pCamera = GetEntity().GetScene()->GetActiveCamera();
+		Camera* pCamera = World::GetActiveCamera();
 		if (pCamera != nullptr)
 		{
 			if (CameraController* pController = pCamera->GetComponent<CameraController>())

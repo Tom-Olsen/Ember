@@ -9,9 +9,9 @@
 #include "handleContext.h"
 #include "meshRenderer.h"
 #include "renderer.h"
-#include "scene.h"
 #include "texture2d.h"
 #include "transform.h"
+#include "world.h"
 
 
 
@@ -22,7 +22,7 @@ namespace emberEditor
 
 
     
-    // Public methods:
+    // Public Methods:
     // Constructor:
 	ViewportEditorWindow::ViewportEditorWindow()
 	{
@@ -45,8 +45,8 @@ namespace emberEditor
         }
 
         // Update global handle context:
-        emberEcs::Scene* pScene = emberEcs::Scene::GetActiveScene();
-        HandleContext::SetCamera(pScene == nullptr ? nullptr : pScene->GetActiveCamera());
+        emberEcs::Camera* pCamera = emberEcs::World::GetActiveCamera();
+        HandleContext::SetCamera(pCamera);
         HandleContext::SetViewportSize(m_imageSize);
         HandleContext::SetViewportMousePos(m_viewportMousePos);
         HandleContext::SetViewportMousePos01(m_viewportMousePos01);
@@ -56,7 +56,7 @@ namespace emberEditor
         // Update and draw transform handle:
         if (EditorSelection::HasSelectedEntity())
         {
-            emberEcs::Entity selected = EditorSelection::GetSelectedEntity();
+            emberEcs::Entity& selected = *EditorSelection::GetSelectedEntity().Get();
 			emberEcs::MeshRenderer* pMeshRenderer = selected.GetComponent<emberEcs::MeshRenderer>();
 			if (pMeshRenderer != nullptr && pMeshRenderer->GetIsActive() && pMeshRenderer->HasMesh())
 				emberCore::Renderer::DrawOutline(selected.GetTransform()->GetLocalToWorldMatrix(), pMeshRenderer->GetMesh());
@@ -72,14 +72,13 @@ namespace emberEditor
             m_transformHandle.ClearTarget();
         }
 
-		if (pScene != nullptr
-			&& pScene->GetActiveCamera() != nullptr
+		if (pCamera != nullptr
 			&& m_isHovered
 			&& m_isMouseInsideViewport
 			&& !m_transformHandle.GetIsDragging()
 			&& emberCore::EventSystem::MouseDown(emberCommon::Input::MouseButton::Left))
 		{
-			EditorSelection::SelectEntityByMouse(*pScene);
+			EditorSelection::SelectEntityByMouse();
 			emberCore::EventSystem::ConsumeMouseButton(emberCommon::Input::MouseButton::Left);
 		}
     }

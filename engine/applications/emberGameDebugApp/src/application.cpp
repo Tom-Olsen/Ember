@@ -11,8 +11,8 @@
 #include "logger.h"
 #include "profiler.h"
 #include "renderer.h"
-#include "scene.h"
 #include "window.h"
+#include "world.h"
 // Backends:
 #include "sdlWindow.h"
 #include "vulkanBackend.h"
@@ -34,21 +34,18 @@ namespace emberApplication
 
 
 	// Static members:
-	emberEcs::Scene* Application::m_pActiveScene;
-	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::m_pBackendDebugEditorWindow;
-	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::m_pDepthBiasEditorWindow;
-	std::unique_ptr<emberEditor::FpsEditorWindow> Application::m_pFpsEditorWindow;
+	std::unique_ptr<emberEditor::BackendDebugEditorWindow> Application::s_pBackendDebugEditorWindow;
+	std::unique_ptr<emberEditor::DepthBiasEditorWindow> Application::s_pDepthBiasEditorWindow;
+	std::unique_ptr<emberEditor::FpsEditorWindow> Application::s_pFpsEditorWindow;
 
 
 
-	// Public methods:
+	// Public Methods:
 	// Constructor/Destructor:
 	void Application::Init(const CreateInfo& applicationCreateInfo)
 	{
 		try
 		{
-			m_pActiveScene = nullptr;
-
 			// Window backend:
 			#if defined(__linux__)
 				constexpr bool forceX11VideoDriver = true;
@@ -78,14 +75,15 @@ namespace emberApplication
 
 			// Init core:
 			Core::Init(pIWindow, pIGpuBackend, pIGui);
+			emberEcs::World::Init();
 
 			// Init application-specific systems:
 			emberEditor::HandleContext::Init();
 
 			// Editor windows:
-			m_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
-			m_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
-			m_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
+			s_pBackendDebugEditorWindow = std::make_unique<emberEditor::BackendDebugEditorWindow>();
+			s_pDepthBiasEditorWindow = std::make_unique<emberEditor::DepthBiasEditorWindow>();
+			s_pFpsEditorWindow = std::make_unique<emberEditor::FpsEditorWindow>();
 
 		}
 		catch (const std::exception& e)
@@ -95,11 +93,12 @@ namespace emberApplication
 	}
 	void Application::Clear()
 	{
-		m_pFpsEditorWindow.reset();
-		m_pDepthBiasEditorWindow.reset();
-		m_pBackendDebugEditorWindow.reset();
+		s_pFpsEditorWindow.reset();
+		s_pDepthBiasEditorWindow.reset();
+		s_pBackendDebugEditorWindow.reset();
 
 		emberEditor::HandleContext::Clear();
+		emberEcs::World::Clear();
 		Core::Clear();
 	}
 
@@ -112,7 +111,7 @@ namespace emberApplication
 		{
 			bool running = true;
 			Time::Reset();
-			m_pActiveScene->Start();
+			emberEcs::World::Start();
 
 			while (running)
 			{
@@ -125,14 +124,14 @@ namespace emberApplication
 				// Frame update loop:
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::game);
-					m_pActiveScene->EarlyUpdate();
+					emberEcs::World::EarlyUpdate();
 
 					// Skip delayed physics updates:
 					// Runs at most one fixed update per render frame. This avoids stacking physics work when a frame is late, but drops simulation steps under load.
 					//if (Time::UpdatePhysics(true))
 					//{
 					//	Compute::Physics::BeginSession();
-					//	m_pActiveScene->FixedUpdate();
+					//	emberEcs::World::FixedUpdate();
 					//	Compute::Physics::EndSession();
 					//}
 					// Batch delayed physics updates:
@@ -141,7 +140,7 @@ namespace emberApplication
 					{
 						Compute::Physics::BeginSession();
 						while (Time::UpdatePhysics())
-							m_pActiveScene->FixedUpdate();
+							emberEcs::World::FixedUpdate();
 						Compute::Physics::EndSession();
 					}
 				}
@@ -153,8 +152,8 @@ namespace emberApplication
 				}
 				{
 					EventConsumerScope consumerScope(EventSystem::Consumer::game);
-					m_pActiveScene->Update();
-					m_pActiveScene->LateUpdate();
+					emberEcs::World::Update();
+					emberEcs::World::LateUpdate();
 				}
 				UpdateMainViewportHandleContext();
 				Editor::PreRender();
@@ -170,35 +169,23 @@ namespace emberApplication
 
 
 
-	// Setters:
-	void Application::SetScene(emberEcs::Scene* pScene)
-	{
-		m_pActiveScene = pScene;
-	}
-
-
-
 	// Getters:
-	emberEcs::Scene* Application::GetActiveScene()
-	{
-		return m_pActiveScene;
-	}
 	emberEditor::BackendDebugEditorWindow* Application::GetBackendDebugEditorWindow()
 	{
-		return m_pBackendDebugEditorWindow.get();
+		return s_pBackendDebugEditorWindow.get();
 	}
 	emberEditor::DepthBiasEditorWindow* Application::GetDepthBiasEditorWindow()
 	{
-		return m_pDepthBiasEditorWindow.get();
+		return s_pDepthBiasEditorWindow.get();
 	}
 	emberEditor::FpsEditorWindow* Application::GetFpsEditorWindow()
 	{
-		return m_pFpsEditorWindow.get();
+		return s_pFpsEditorWindow.get();
 	}
 
 
 
-	// Private methods:
+	// Private Methods:
 	void Application::UpdateMainViewportHandleContext()
 	{
 		Uint2 surfaceExtent = Renderer::GetSurfaceExtent();
@@ -210,7 +197,7 @@ namespace emberApplication
 			viewportMousePos01.y >= 0.0f && viewportMousePos01.y <= 1.0f;
 		bool viewportIsHovered = mouseInsideViewport && !Editor::GetHoveredWindowWantCaptureEvents();
 
-		emberEditor::HandleContext::SetCamera(m_pActiveScene == nullptr ? nullptr : m_pActiveScene->GetActiveCamera());
+		emberEditor::HandleContext::SetCamera(emberEcs::World::GetActiveCamera());
 		emberEditor::HandleContext::SetViewportSize(viewportSize);
 		emberEditor::HandleContext::SetViewportMousePos(viewportMousePos);
 		emberEditor::HandleContext::SetViewportMousePos01(viewportMousePos01);
